@@ -323,7 +323,7 @@ A complementary route to interpretability replaces model-generated reasoning wit
 
 \section{Data Augmentation}
 
-CALLM uses LLM role-play to augment clinical interview data \citep{wu2024callm}. Such work addresses scarcity, but synthetic data may encode generator priors and may not capture real comorbidity, nonverbal behavior, or longitudinal context. This thesis uses synthetic corpora for method development while reserving real clinical validation for an IRB-governed follow-on arm. This division of labour is a direct response to the known limitations of synthetic clinical dialogue. Generated conversations can encode the priors of their generator, may under-represent genuine comorbidity and nonverbal signal, and cannot substitute for the variability of real patients. Using them for development and ablation---where reproducibility and controlled comparison matter most---while deferring any effectiveness claim to a prospective, ethically governed study keeps the synthetic-to-clinical gap explicit rather than implicitly assuming that benchmark gains transfer to care.
+CALLM uses LLM role-play to augment clinical interview data \citep{wu2024callm}. Such work addresses scarcity, but synthetic data may encode generator priors and may not capture real comorbidity, nonverbal behavior, or longitudinal context. This thesis uses synthetic corpora for method development while reserving real clinical validation for an IRB-governed follow-on arm. This division of labor is a direct response to the known limitations of synthetic clinical dialogue. Generated conversations can encode the priors of their generator, may under-represent genuine comorbidity and nonverbal signal, and cannot substitute for the variability of real patients. Using them for development and ablation---where reproducibility and controlled comparison matter most---while deferring any effectiveness claim to a prospective, ethically governed study keeps the synthetic-to-clinical gap explicit rather than implicitly assuming that benchmark gains transfer to care.
 
 \section{Knowledge Graphs and Structured Diagnosis}
 
@@ -384,7 +384,7 @@ The coverage-aware construction of the external evaluation is essential to inter
 
 Multiple gold parents are retained for official multilabel metrics. First-listed-primary analyses use the first listed gold parent as a single-label convention. Any-gold Top-1, first-listed accuracy, and Exact Match answer different questions and are never substituted without labeling.
 
-The coexistence of several gold conventions is a feature of multilabel diagnostic data rather than an ambiguity to be resolved by fiat. When a case carries more than one gold parent, an any-gold criterion credits a prediction that matches any of them, a first-listed convention treats the leading gold label as a single designated primary, and an Exact Match (exact-set accuracy) criterion demands that the predicted set equal the gold set exactly. These measure progressively stricter notions of correctness and are appropriate to different questions---candidate adequacy, primary selection, and set calibration respectively. The thesis keeps them explicitly labelled wherever they appear and never silently swaps one for another, because doing so would allow a result to look stronger or weaker purely through choice of convention.
+The coexistence of several gold conventions is a feature of multilabel diagnostic data rather than an ambiguity to be resolved by fiat. When a case carries more than one gold parent, an any-gold criterion credits a prediction that matches any of them, a first-listed convention treats the leading gold label as a single designated primary, and an Exact Match (exact-set accuracy) criterion demands that the predicted set equal the gold set exactly. These measure progressively stricter notions of correctness and are appropriate to different questions---candidate adequacy, primary selection, and set calibration respectively. The thesis keeps them explicitly labeled wherever they appear and never silently swaps one for another, because doing so would allow a result to look stronger or weaker purely through choice of convention.
 
 \section{Metrics}
 
@@ -424,13 +424,13 @@ macro averaging classes equally and weighted averaging by gold support. The two-
 
 \section{Statistics}
 
-Paired binary outcomes use exact McNemar tests. Paired bootstrap intervals are used where available. Two-proportion $z$ statistics appear only in labeled exploratory stratifications. Related BGE comparisons are interpreted with multiplicity correction. Failure to reject a difference is not equivalence. The statistical posture of the thesis is deliberately conservative. Paired binary comparisons use exact McNemar tests so that significance reflects discordant cases rather than marginal rates; bootstrap intervals are reported where available; two-proportion tests appear only inside explicitly labelled exploratory stratifications; and families of related comparisons are interpreted with multiplicity in mind. The repeated insistence that a non-significant difference is not evidence of equivalence is not a rhetorical hedge but a guard against the most tempting misreading of a negative result---that because an intervention did not significantly help, it is therefore known to be neutral, when in fact the experiment may simply lack the power to resolve a small effect.
+Paired binary outcomes use exact McNemar tests. Paired bootstrap intervals are used where available. Two-proportion $z$ statistics appear only in labeled exploratory stratifications. Related BGE comparisons are interpreted with multiplicity correction. Failure to reject a difference is not equivalence. The statistical posture of the thesis is deliberately conservative. Paired binary comparisons use exact McNemar tests so that significance reflects discordant cases rather than marginal rates; bootstrap intervals are reported where available; two-proportion tests appear only inside explicitly labeled exploratory stratifications; and families of related comparisons are interpreted with multiplicity in mind. The repeated insistence that a non-significant difference is not evidence of equivalence is not a rhetorical hedge but a guard against the most tempting misreading of a negative result---that because an intervention did not significantly help, it is therefore known to be neutral, when in fact the experiment may simply lack the power to resolve a small effect.
 
 \section{Run Health}
 
 Every run is checked for expected case count, schema validity, abstention and parse-recovery events, frozen ordering, configuration identity, and candidate integrity. The 4B HiED run required 164 parse recoveries and the 4B single run produced 17 abstentions; all size-ladder runs still produced 1,000 valid outputs and passed health gates.
 
-The run-health gate is reported rather than hidden because it bears directly on the credibility of the comparisons. Quantization, decoding, and prompt formatting can all degrade an otherwise valid run into malformed or empty outputs, and a system that silently drops difficult cases can appear more accurate than it is. Recording expected case counts, schema validity, abstention and parse-recovery events, and frozen ordering for every run ensures that each reported accuracy is computed over a complete and consistently ordered set of cases. The elevated parse-recovery and abstention counts observed at the smallest backbone are themselves informative, indicating that part of that model's apparent behaviour is fragility in producing well-formed structured output rather than diagnostic judgment alone.
+The run-health gate is reported rather than hidden because it bears directly on the credibility of the comparisons. Quantization, decoding, and prompt formatting can all degrade an otherwise valid run into malformed or empty outputs, and a system that silently drops difficult cases can appear more accurate than it is. Recording expected case counts, schema validity, abstention and parse-recovery events, and frozen ordering for every run ensures that each reported accuracy is computed over a complete and consistently ordered set of cases. The elevated parse-recovery and abstention counts observed at the smallest backbone are themselves informative, indicating that part of that model's apparent behavior is fragility in producing well-formed structured output rather than diagnostic judgment alone.
 
 \section{Anti-Leakage and Split Discipline}
 
@@ -454,7 +454,7 @@ This inverts the usual rationale for modular design. Components are added here n
 
 \ThesisFigure{fig_pipeline.pdf}{HiED pipeline. The diagnostician generates a ranked differential and committed primary. Candidate-specific checkers evaluate criteria, deterministic logic summarizes support, and a finalization policy produces the output and audit trace.}{fig:pipeline-thesis}
 
-The transcript is normalized while preserving speaker turns. Retrieval supplies similar cases or anchors. This case retrieval is class-balanced rather than global: the query transcript is encoded into a dense embedding and searched against a training-case index by inner product, but instead of returning the globally most similar cases---which a frequent disorder such as depression would dominate---the retriever returns the single best-matching case for each candidate disorder class, so that every candidate is grounded by a comparable in-context example. This top-one-per-class design is a deliberate countermeasure to class imbalance, keeping rare disorders visible to the diagnostician rather than crowded out by majority-class neighbours; it is separate from the disorder-definition similarity that is evaluated only as a repair in the experimental chapters. The diagnostician produces ranked candidates, a committed primary, optional comorbidity, confidence, and rationale fields. Each candidate is then evaluated by disorder-specific criterion checkers.
+The transcript is normalized while preserving speaker turns. Retrieval supplies similar cases or anchors. This case retrieval is class-balanced rather than global: the query transcript is encoded into a dense embedding and searched against a training-case index by inner product, but instead of returning the globally most similar cases---which a frequent disorder such as depression would dominate---the retriever returns the single best-matching case for each candidate disorder class, so that every candidate is grounded by a comparable in-context example. This top-one-per-class design is a deliberate countermeasure to class imbalance, keeping rare disorders visible to the diagnostician rather than crowded out by majority-class neighbors; it is separate from the disorder-definition similarity that is evaluated only as a repair in the experimental chapters. The diagnostician produces ranked candidates, a committed primary, optional comorbidity, confidence, and rationale fields. Each candidate is then evaluated by disorder-specific criterion checkers.
 
 \section{Criterion States}
 
@@ -482,13 +482,13 @@ Separating the output into independently reviewable facets reflects how clinical
 
 \section{Ontology-Driven Scope Expansion}
 
-The ontology covers 30 ICD-10 parent codes across 39 entries, while the selected benchmark profile activates a smaller scope. Expanding the profile requires a configuration change rather than weight retraining. This is mechanical reconfiguration, not proof of behavioral adaptation. The architectural separation of diagnostic scope from model weights is what enables this reconfiguration: the set of representable disorders is a property of the loaded ontology and active profile, not of the trained network, so additional codes can be made available without retraining. The thesis is careful to present this only as the engineering precondition for retargeting, and the external results are used to show that the precondition does not by itself deliver the behaviour---representable is not the same as recoverable.
+The ontology covers 30 ICD-10 parent codes across 39 entries, while the selected benchmark profile activates a smaller scope. Expanding the profile requires a configuration change rather than weight retraining. This is mechanical reconfiguration, not proof of behavioral adaptation. The architectural separation of diagnostic scope from model weights is what enables this reconfiguration: the set of representable disorders is a property of the loaded ontology and active profile, not of the trained network, so additional codes can be made available without retraining. The thesis is careful to present this only as the engineering precondition for retargeting, and the external results are used to show that the precondition does not by itself deliver the behavior---representable is not the same as recoverable.
 
 \section{Pairwise Differential Reasoning}
 
 Pairwise reasoning activates when candidates are well supported and close under a pre-specified score rule. It is evaluated as an independent run, a controlled replay with identical upstream outputs, and a forced override. The separation is necessary for causal attribution.
 
-The three-way evaluation of the pairwise stage---independent run, controlled replay over identical upstream outputs, and forced override---exists because a single configuration cannot separate local usefulness from global safety. An independent run can look favourable because the stage activates only on cases it is suited to; a controlled replay reveals whether, holding everything else fixed, the stage actually changes committed primaries; and a forced override exposes what happens when the stage is allowed to overrule the diagnostician everywhere. Only the combination distinguishes a locally helpful but globally unsafe operation from a genuine selection improvement, which is the distinction the results turn on.
+The three-way evaluation of the pairwise stage---independent run, controlled replay over identical upstream outputs, and forced override---exists because a single configuration cannot separate local usefulness from global safety. An independent run can look favorable because the stage activates only on cases it is suited to; a controlled replay reveals whether, holding everything else fixed, the stage actually changes committed primaries; and a forced override exposes what happens when the stage is allowed to overrule the diagnostician everywhere. Only the combination distinguishes a locally helpful but globally unsafe operation from a genuine selection improvement, which is the distinction the results turn on.
 
 \section{Computational Configuration}
 
@@ -548,7 +548,7 @@ The repairs are specified concretely so that each failure can be read as evidenc
 
 Robustness is examined across Qwen3 sizes, BGE-M3 similarity modes, in-domain and external corpora, first-listed confusion structure, logic agreement strata, and ontology scope.
 
-Each robustness axis stresses a different assumption behind the headline result. Varying the backbone across the Qwen3 size range tests whether the selection ceiling is an artifact of model capacity; sweeping the dense retrieval representation across several similarity modes tests whether the operating point depends on a particular embedding configuration; evaluating on an external corpus tests transfer under distribution shift; the first-listed confusion structure exposes which disorder boundaries absorb the errors; the logic-agreement strata separate cases by whether the diagnostician and the verifier concur; and the ontology-scope variation tests whether enlarging the representable label space changes committed behaviour. Robustness here means that the central finding survives these perturbations, not that the perturbations are inconsequential.
+Each robustness axis stresses a different assumption behind the headline result. Varying the backbone across the Qwen3 size range tests whether the selection ceiling is an artifact of model capacity; sweeping the dense retrieval representation across several similarity modes tests whether the operating point depends on a particular embedding configuration; evaluating on an external corpus tests transfer under distribution shift; the first-listed confusion structure exposes which disorder boundaries absorb the errors; the logic-agreement strata separate cases by whether the diagnostician and the verifier concur; and the ontology-scope variation tests whether enlarging the representable label space changes committed behavior. Robustness here means that the central finding survives these perturbations, not that the perturbations are inconsequential.
 
 \section{Freeze Discipline}
 
@@ -558,7 +558,7 @@ The internal test split and headline metrics are frozen before evaluation. Sweep
 
 A negative result is informative only when the mechanism and claim boundary are clear. The battery rules out a global threshold, simple fusion, hidden sample consensus, and a globally safe pairwise override as complete explanations of the bottleneck.
 
-The value of these negative results depends entirely on the discipline with which they are obtained, which is why the freeze protocol is stated before the results rather than after. Each intervention is designed to test a specific hypothesized cause of the gap---missing global threshold, absent post-hoc signal, unstable sampling, lack of local comparison---so that its failure eliminates that explanation rather than merely reporting an unsuccessful attempt. Sweeps are conducted on the development lineage, any rule that will face the internal test split is committed beforehand, and post-freeze probes are labelled as such. This converts a collection of things that did not work into a constraint on the space of viable explanations, which is the contribution the chapter intends.
+The value of these negative results depends entirely on the discipline with which they are obtained, which is why the freeze protocol is stated before the results rather than after. Each intervention is designed to test a specific hypothesized cause of the gap---missing global threshold, absent post-hoc signal, unstable sampling, lack of local comparison---so that its failure eliminates that explanation rather than merely reporting an unsuccessful attempt. Sweeps are conducted on the development lineage, any rule that will face the internal test split is committed beforehand, and post-freeze probes are labeled as such. This converts a collection of things that did not work into a constraint on the space of viable explanations, which is the contribution the chapter intends.
 
 
 \chapter{In-Domain Results}
@@ -599,7 +599,7 @@ The logic-confirmed set contains the gold parent in 93.7\% of non-Others cases b
 
 NtS lowers Top-1 to 0.490 but raises Exact Match from 0.409 to 0.437 ($p=0.008$) by emitting fewer labels. Verification improves diagnostic-set control without improving the primary.
 
-The verification results refine rather than contradict the value of the checker bank. That the confirmed set retains the correct parent in the large majority of non-Others cases establishes high recall, but the simultaneous confirmation of roughly half the in-scope disorders per case establishes low selectivity, and the two together explain why verification cannot by itself choose the primary. The Nominate-then-Select comparison makes the same point causally: re-deriving the primary from confirmed candidates lowers Top-1 while raising Exact Match, meaning verification trades primary accuracy for tighter set control by emitting fewer labels. This is a coherent and sometimes desirable behaviour, but it is set calibration, not selection improvement.
+The verification results refine rather than contradict the value of the checker bank. That the confirmed set retains the correct parent in the large majority of non-Others cases establishes high recall, but the simultaneous confirmation of roughly half the in-scope disorders per case establishes low selectivity, and the two together explain why verification cannot by itself choose the primary. The Nominate-then-Select comparison makes the same point causally: re-deriving the primary from confirmed candidates lowers Top-1 while raising Exact Match, meaning verification trades primary accuracy for tighter set control by emitting fewer labels. This is a coherent and sometimes desirable behavior, but it is set calibration, not selection improvement.
 
 \section{Checker Factorial}
 
@@ -632,7 +632,7 @@ CISC $K=5$ & 0.517 & -0.1 pp & $p=1.0$ & negative\\
 
 \Cref{tab:repair-battery} summarizes the probes. Pairwise reasoning is locally useful on filtered close clusters, but controlled replay changes no committed primary. A forced override harms. The 293-rule sweep finds no non-identical development rule that beats DA, and the frozen E3 rule loses four net correct cases on the internal test split. Self-consistency and CISC do not improve selection.
 
-The repair battery is best read as a sequence of eliminations rather than a list of disappointments. The locally favourable pairwise run, once subjected to controlled replay, changes no committed primary, which separates apparent benefit on filtered subsets from causal benefit on the full evaluation; the forced override quantifies the cost of applying that operation indiscriminately. The fusion sweep, the self-consistency variants, and the confidence-weighted aggregation each target a specific hypothesized fix---a missing deterministic rule, instability across samples, and miscalibrated confidence respectively---and each fails to move selection, so each eliminates its hypothesis as the explanation. The convergent negative outcome across structurally different interventions is what licenses the thesis's central interpretation: the gap is not an artifact of any single missing mechanism.
+The repair battery is best read as a sequence of eliminations rather than a list of disappointments. The locally favorable pairwise run, once subjected to controlled replay, changes no committed primary, which separates apparent benefit on filtered subsets from causal benefit on the full evaluation; the forced override quantifies the cost of applying that operation indiscriminately. The fusion sweep, the self-consistency variants, and the confidence-weighted aggregation each target a specific hypothesized fix---a missing deterministic rule, instability across samples, and miscalibrated confidence respectively---and each fails to move selection, so each eliminates its hypothesis as the explanation. The convergent negative outcome across structurally different interventions is what licenses the thesis's central interpretation: the gap is not an artifact of any single missing mechanism.
 
 \section{Backbone Size}
 
@@ -690,11 +690,11 @@ Forty-seven cases are outside the selected 14-disorder scope. These are coverage
 
 \section{Mechanical Expansion}
 
-The active profile is expanded to 30 parent codes across 39 entries without retraining. The configuration executes correctly, but none of 58 newly representable external cases is recovered as the primary. Representation does not produce behavioral adaptation. The expansion result is the empirical counterpart to the architectural claim made earlier: that scope is separable from weights. The configuration correctly executes over the enlarged label space, confirming the engineering property, while none of the newly representable external cases is recovered as a primary, refuting the stronger behavioural claim. The two outcomes together are exactly the dissociation the thesis uses to argue that mechanical reconfiguration and behavioural retargeting must be reported as distinct results.
+The active profile is expanded to 30 parent codes across 39 entries without retraining. The configuration executes correctly, but none of 58 newly representable external cases is recovered as the primary. Representation does not produce behavioral adaptation. The expansion result is the empirical counterpart to the architectural claim made earlier: that scope is separable from weights. The configuration correctly executes over the enlarged label space, confirming the engineering property, while none of the newly representable external cases is recovered as a primary, refuting the stronger behavioral claim. The two outcomes together are exactly the dissociation the thesis uses to argue that mechanical reconfiguration and behavioral retargeting must be reported as distinct results.
 
 \section{Lexical Transfer}
 
-A Lingxi-trained TF--IDF selector reaches 0.610 in-domain but 0.049 on MDD. Training the same family on MDD reaches 0.692 within MDD. The failure is transfer, not inability to fit. The ontology-driven pipeline is more portable in configuration but remains selection-limited.
+A Lingxi-trained TF--IDF selector reaches 0.610 in-domain but 0.049 on MDD (\cref{tab:lexical-transfer}). Training the same family on MDD reaches 0.692 within MDD. The failure is transfer, not inability to fit. The ontology-driven pipeline is more portable in configuration but remains selection-limited.
 
 \begin{table}[htbp]
 \centering
@@ -715,7 +715,7 @@ The lexical-transfer contrast is included because it diagnoses the failure rathe
 
 \section{Repair Battery on the External Distribution}
 
-The selection-repair battery applied in domain is re-run on the external corpus to test whether any intervention that left the in-domain ceiling intact nevertheless transfers to a markedly different distribution. To keep the comparison internal and matched, every method in this battery is scored against a Direct-Answer baseline recomputed on the same external run under identical conditions; that matched baseline reaches a Top-1 of 0.5708 on the full external corpus, which differs from the headline external Top-1 of 0.5805 reported above only by run-to-run decoding variation and is used here solely so that within-battery differences are not confounded by run drift. All cells share one canonical parent-level scoring definition, and McNemar tests are paired against the matched baseline.
+The selection-repair battery applied in domain is re-run on the external corpus to test whether any intervention that left the in-domain ceiling intact nevertheless transfers to a markedly different distribution. To keep the comparison internal and matched, every method in this battery is scored against a Direct-Answer baseline recomputed on the same external run under identical conditions; that matched baseline reaches a Top-1 of 0.5708 on the full external corpus, which differs from the headline external Top-1 of 0.5805 reported above only by run-to-run decoding variation and is used here solely so that within-battery differences are not confounded by run drift. All cells share one canonical parent-level scoring definition, and McNemar tests are paired against the matched baseline (\cref{tab:mdd-repair}).
 
 \begin{table}[htbp]
 \centering
@@ -745,11 +745,11 @@ No intervention improves comparative selection on the external corpus. Three int
 
 \section{Case-Similarity Reranking}
 
-A second retrieval mechanism is tested on the external corpus. Instead of supplying definition text, the system retrieves the most similar training cases and reranks the candidate primaries by neighbour agreement. Four retrieval modes---dense, sparse, ColBERT, and a hybrid combination---are each tuned on the in-domain development split alone: the retrieval depth and the neighbour-vote aggregator are selected only by in-domain Top-1, the external labels are never consulted, and the secondary fusion-tuning stage is deliberately skipped because the available development artifacts do not contain the full ranked pool it would require, which would otherwise risk leaking internal-test labels. Each mode is then frozen and applied to the in-scope external set ($N{=}878$) against the same in-scope Direct-Answer baseline of 0.6116 reported above.
+A second retrieval mechanism is tested on the external corpus. Instead of supplying definition text, the system retrieves the most similar training cases and reranks the candidate primaries by neighbor agreement. Four retrieval modes---dense, sparse, ColBERT, and a hybrid combination---are each tuned on the in-domain development split alone: the retrieval depth and the neighbor-vote aggregator are selected only by in-domain Top-1, the external labels are never consulted, and the secondary fusion-tuning stage is deliberately skipped because the available development artifacts do not contain the full ranked pool it would require, which would otherwise risk leaking internal-test labels. Each mode is then frozen and applied to the in-scope external set ($N{=}878$) against the same in-scope Direct-Answer baseline of 0.6116 reported above (\cref{tab:case-knn}).
 
 \begin{table}[htbp]
 \centering
-\caption{Case-similarity reranking on the in-scope external set ($N{=}878$). Each mode uses the configuration selected on the in-domain development split (depth $20$, neighbour-weighted vote). McNemar $p$ is against the in-scope Direct-Answer baseline.}
+\caption{Case-similarity reranking on the in-scope external set ($N{=}878$). Each mode uses the configuration selected on the in-domain development split (depth $20$, neighbor-weighted vote). McNemar $p$ is against the in-scope Direct-Answer baseline.}
 \label{tab:case-knn}
 \begin{tabular}{lcccc}
 \toprule
@@ -763,7 +763,7 @@ Hybrid & 0.5410 & 0.5182 & $-0.0934$ & $1.4\times10^{-6}$\\
 \end{tabular}
 \end{table}
 
-Every retrieval mode degrades external selection significantly, by six to eleven points. The configuration that looked best in domain does not merely fail to transfer; it actively harms the external primary. This mirrors the lexical-transfer result: a similarity signal fitted or selected on one corpus encodes corpus-specific regularities, so neighbour-vote reranking, like the in-domain lexical selector, collapses under distribution shift. The matched in-scope baseline and the strict separation of tuning from evaluation rule out leakage as an explanation, leaving distribution shift as the operative cause. Case-similarity reranking is therefore recorded as a second negative retrieval result: it does not supply the transferable comparative signal that resolving the selection bottleneck would require.
+Every retrieval mode degrades external selection significantly, by six to eleven points. The configuration that looked best in domain does not merely fail to transfer; it actively harms the external primary. This mirrors the lexical-transfer result: a similarity signal fitted or selected on one corpus encodes corpus-specific regularities, so neighbor-vote reranking, like the in-domain lexical selector, collapses under distribution shift. The matched in-scope baseline and the strict separation of tuning from evaluation rule out leakage as an explanation, leaving distribution shift as the operative cause. Case-similarity reranking is therefore recorded as a second negative retrieval result: it does not supply the transferable comparative signal that resolving the selection bottleneck would require.
 
 
 \section{Interpretation}
@@ -794,7 +794,7 @@ NtS emits fewer labels and improves Exact Match while lowering Top-1. This shows
 
 \section{Out-of-Scope Diagnosis}
 
-If the gold code is outside the active profile, the system cannot emit it. Mechanical expansion makes the code representable, but the 0/58 result shows that the selector still requires adaptation. The out-of-scope archetype connects the coverage accounting of the external chapter to the lived behaviour of the system. When the gold code lies outside the active profile the system is structurally unable to emit it, so such cases must be attributed to scope; and even after the profile is enlarged to represent them, the selector does not recover them as primaries. The archetype thus distinguishes the two reasons a correct diagnosis may never appear---unrepresentable scope and unselected representation---which call for entirely different responses.
+If the gold code is outside the active profile, the system cannot emit it. Mechanical expansion makes the code representable, but the 0/58 result shows that the selector still requires adaptation. The out-of-scope archetype connects the coverage accounting of the external chapter to the lived behavior of the system. When the gold code lies outside the active profile the system is structurally unable to emit it, so such cases must be attributed to scope; and even after the profile is enlarged to represent them, the selector does not recover them as primaries. The archetype thus distinguishes the two reasons a correct diagnosis may never appear---unrepresentable scope and unselected representation---which call for entirely different responses.
 
 \section{Rare-Class Failure}
 
@@ -848,7 +848,7 @@ The Taiwanese context requires Traditional-Chinese prompts, local coding practic
 
 Candidate coverage substantially exceeds primary accuracy. Verification retains the answer but many competitors. Tested repairs yield no stable causal gain. External results remain useful but scope-sensitive. Mechanical expansion is not behavioral adaptation. Richer evidence and structural selection remain plausible but unproven.
 
-The synthesis that the thesis offers is deliberately modest and precisely bounded. Candidate coverage exceeds committed accuracy; verification retains the answer alongside many competitors; the tested repairs yield no stable causal gain; external transfer is real but scope-sensitive; and representational expansion is not behavioural adaptation. Each of these is a measured statement rather than a speculation. The two directions the thesis regards as most promising---supplying the comparative evidence that a single transcript lacks, and replacing flat selection with structured selection over symptoms, criteria, and exclusions---are named as plausible and motivated rather than demonstrated, and their evaluation is reserved for studies with fresh confirmatory data.
+The synthesis that the thesis offers is deliberately modest and precisely bounded. Candidate coverage exceeds committed accuracy; verification retains the answer alongside many competitors; the tested repairs yield no stable causal gain; external transfer is real but scope-sensitive; and representational expansion is not behavioral adaptation. Each of these is a measured statement rather than a speculation. The two directions the thesis regards as most promising---supplying the comparative evidence that a single transcript lacks, and replacing flat selection with structured selection over symptoms, criteria, and exclusions---are named as plausible and motivated rather than demonstrated, and their evaluation is reserved for studies with fresh confirmatory data.
 
 
 \chapter{Limitations and Threats to Validity}
@@ -864,7 +864,7 @@ Top-3 is permissive in multilabel cases. First-listed analysis differs from any-
 
 \section{Model and Method}
 
-The selected model is quantized and served under one stack. Checker states lack clinician-level gold. Evidence traceability does not prove clinical correctness. Deterministic logic inherits checker errors. The model-and-method limitations bound what the audit layer can be taken to establish. The selected backbone is quantized and served under a single stack, so behaviour under other models or serving configurations is not characterized; the checker states are not validated against clinician-level gold, so a reproducible verdict is not a verified one; and because the deterministic logic is a fixed function of the checker outputs, it faithfully propagates whatever errors those checkers make. The auditability claim is therefore a claim about inspectability and reproducibility of the trace, not about the clinical correctness of its individual judgments.
+The selected model is quantized and served under one stack. Checker states lack clinician-level gold. Evidence traceability does not prove clinical correctness. Deterministic logic inherits checker errors. The model-and-method limitations bound what the audit layer can be taken to establish. The selected backbone is quantized and served under a single stack, so behavior under other models or serving configurations is not characterized; the checker states are not validated against clinician-level gold, so a reproducible verdict is not a verified one; and because the deterministic logic is a fixed function of the checker outputs, it faithfully propagates whatever errors those checkers make. The auditability claim is therefore a claim about inspectability and reproducibility of the trace, not about the clinical correctness of its individual judgments.
 
 \section{Statistics}
 
@@ -880,7 +880,7 @@ MDD remains synthetic and depression-skewed. Results do not establish Taiwanese 
 
 \section{Reproducibility}
 
-Reproduction depends on model availability, software, hardware, and data access. Some interventions originated as bounded probes rather than production components. The thesis distinguishes canonical paths from experimental probes. The reproducibility limitations are practical and honestly bounded. Re-deriving the results depends on the availability of the specific model, software, hardware, and data, any of which may change; and several interventions originated as bounded research probes rather than as production-quality components, so they are reproducible as evidence without being engineered for reuse. The thesis manages this by labelling canonical paths distinctly from experimental probes, so that a reader can tell which parts are intended as durable system components and which are diagnostic experiments.
+Reproduction depends on model availability, software, hardware, and data access. Some interventions originated as bounded probes rather than production components. The thesis distinguishes canonical paths from experimental probes. The reproducibility limitations are practical and honestly bounded. Re-deriving the results depends on the availability of the specific model, software, hardware, and data, any of which may change; and several interventions originated as bounded research probes rather than as production-quality components, so they are reproducible as evidence without being engineered for reuse. The thesis manages this by labeling canonical paths distinctly from experimental probes, so that a reader can tell which parts are intended as durable system components and which are diagnostic experiments.
 
 \section{Mitigation}
 
@@ -924,7 +924,7 @@ The planned Chang Gung arm compares the frozen model with treating-clinician dia
 
 \section{Monitoring and Regulation}
 
-Deployment requires drift monitoring, periodic error review, version control, rollback, scope lists, incident reporting, and revalidation after changes. HiED remains a research prototype; regulatory classification and safety/effectiveness are outside this thesis. The monitoring and regulatory requirements are listed to mark the distance between a research prototype and a deployable clinical instrument. Drift monitoring, periodic error review, version control with rollback, maintained scope lists, incident reporting, and revalidation after change are the operational obligations that accompany any clinical software, and none of them is addressed by benchmark evaluation. The thesis names them to be explicit that establishing diagnostic behaviour on retrospective corpora is a necessary early step in a much longer process whose later stages---regulatory classification and demonstrated safety and effectiveness---lie entirely outside its scope.
+Deployment requires drift monitoring, periodic error review, version control, rollback, scope lists, incident reporting, and revalidation after changes. HiED remains a research prototype; regulatory classification and safety/effectiveness are outside this thesis. The monitoring and regulatory requirements are listed to mark the distance between a research prototype and a deployable clinical instrument. Drift monitoring, periodic error review, version control with rollback, maintained scope lists, incident reporting, and revalidation after change are the operational obligations that accompany any clinical software, and none of them is addressed by benchmark evaluation. The thesis names them to be explicit that establishing diagnostic behavior on retrospective corpora is a necessary early step in a much longer process whose later stages---regulatory classification and demonstrated safety and effectiveness---lie entirely outside its scope.
 
 
 \chapter{Conclusions and Future Work}
@@ -1106,7 +1106,7 @@ A help-seeker describes roughly two weeks of persistent low mood with loss of in
 
 \section{Active Candidate Profile and Per-Criterion Evaluation}
 
-The active profile evaluates the candidate disorders against their operational criteria. For the two leading candidates, the per-criterion record assigns each criterion one of three states---met, not-met, or insufficient-evidence---with a grounding span and a confidence.
+The active profile evaluates the candidate disorders against their operational criteria. For the two leading candidates, the per-criterion record assigns each criterion one of three states---met, not-met, or insufficient-evidence---with a grounding span and a confidence (\cref{tab:worked-f32,tab:worked-f41}).
 
 \begin{table}[htbp]
 \centering
@@ -1161,7 +1161,7 @@ The example also exposes the selection bottleneck in its concrete form. Nothing 
 \chapter{Experiment Inventory and Inclusion Decisions}
 \label{app:inventory}
 
-This appendix records how completed and attempted experimental probes were classified for inclusion in the thesis. It is intended to make clear which results support the main claims, which are reported only as robustness or feasibility evidence, and which are excluded as future work or separate research lines. Internal branch names and file paths are omitted; reproducibility information is maintained in the project repository. The classification follows a fixed rule: a probe enters the quantitative evidence base only if it has a frozen artifact with a stated sample size, split, and metric; probes that were executed but produced no comparable number are recorded as feasibility findings; and designs that were not evaluated in this thesis are recorded as future work rather than results.
+This appendix records how completed and attempted experimental probes were classified for inclusion in the thesis (\cref{tab:inventory}). It is intended to make clear which results support the main claims, which are reported only as robustness or feasibility evidence, and which are excluded as future work or separate research lines. Internal branch names and file paths are omitted; reproducibility information is maintained in the project repository. The classification follows a fixed rule: a probe enters the quantitative evidence base only if it has a frozen artifact with a stated sample size, split, and metric; probes that were executed but produced no comparable number are recorded as feasibility findings; and designs that were not evaluated in this thesis are recorded as future work rather than results.
 
 \begin{small}
 \begin{longtable}{@{}p{3cm}p{4.4cm}p{2.9cm}p{2.3cm}@{}}
@@ -1205,7 +1205,7 @@ Criterion-state anatomy & How are criterion states distributed? & internal probe
 \midrule
 External-corpus evaluation & Does performance transfer to a different distribution? & external, complete & External validation\\
 External repair battery & Does any repair transfer to the external corpus? & external, complete & External repair table\\
-Case-similarity reranking & Does case-neighbour reranking transfer? & external, complete & Retrieval control\\
+Case-similarity reranking & Does case-neighbor reranking transfer? & external, complete & Retrieval control\\
 Lexical cross-corpus transfer & Does a lexical selector transfer across corpora? & in-domain and external & Lexical transfer\\
 Calibration and selective prediction & Is confidence usable for selective prediction? & internal test split, complete & Appendix\\
 \midrule
@@ -1218,7 +1218,7 @@ Multi-round debate on the external corpus & Does multi-round debate help on the 
 Heterogeneous-graph selector & Can a typed relational selector repair selection? & not evaluated & Future work\\
 Checker-level self-consistency & Does sampling at the checker agents help? & not evaluated & Future work\\
 Full-list reranking & Does reranking the entire candidate list help? & not evaluated & Future work\\
-Dual-standard criterion retargeting & Does an alternate criteria standard change scope behaviour? & not evaluated & Future work\\
+Dual-standard criterion retargeting & Does an alternate criteria standard change scope behavior? & not evaluated & Future work\\
 \midrule
 \multicolumn{4}{@{}l}{\textit{Excluded (separate research line)}}\\
 \midrule
@@ -1230,7 +1230,7 @@ Cross-lingual and script-transfer arm & Does script or language transfer matter?
 
 A post-freeze true-retriever prompt--retrieval probe examines how
 retrieval interacts with prompt structure under the same FAISS/BGE-M3
-case retriever used by the canonical in-domain runs. Retrieval raises
+case retriever used by the canonical in-domain runs (\cref{tab:prompt-rag-true-retriever}). Retrieval raises
 the direct Single baseline from 0.466 to 0.508
 (McNemar $p=4.0\times10^{-4}$), confirming that case retrieval helps
 direct candidate support. In contrast, a historical rank-only
