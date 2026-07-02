@@ -15,7 +15,9 @@
 \makeatother
 \usepackage{booktabs,array,tabularx,longtable,multirow,adjustbox}
 \usepackage{enumitem,setspace}
-\usepackage[margin=2.7cm]{geometry}
+% CCU 學位論文格式規範（90 年版）版面：上 2.5 / 下 2.5 / 左 3 / 右 2 cm；
+% footskip=1cm 使頁碼落於版面底端上方 1.5 cm 處。若系所模板另有規定，以模板為準。
+\usepackage[top=2.5cm,bottom=2.5cm,left=3cm,right=2cm,footskip=1cm]{geometry}
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage{xcolor,microtype,url}
 \usepackage[pages=all,scale=1,angle=0,opacity=1.0]{background}
@@ -29,21 +31,22 @@
 \setlength{\parindent}{2em}
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{HiED Master's Thesis}
-\fancyhead[R]{\thepage}
+\fancyfoot[C]{\thepage} % CCU 規範：頁碼置於版面底端置中；保守格式：無 running header（若系所模板允許可加回）
+\renewcommand{\headrulewidth}{0pt}
 \setlength{\headheight}{15pt}
 \titleformat{\chapter}[display]{\raggedright\bfseries\LARGE}{Chapter \thechapter}{0.5em}{}
 \newcommand{\placeholder}[1]{\textcolor{red!70!black}{[#1]}}
+
+% Advisor comment macros (Overleaf collaboration). Guard 1: set \showcommentsfalse for the defense PDF.
+\newif\ifshowcomments \showcommentstrue
+\newcommand{\ct}[1]{\ifshowcomments\textcolor{red}{{[CT: #1]}}\fi}
+\newcommand{\wl}[1]{\ifshowcomments\textcolor{blue}{{[WL: #1]}}\fi}
 \newcommand{\ThesisFigure}[4][0.88\textwidth]{\begin{figure}[htbp]\centering
 \IfFileExists{#2}{\includegraphics[width=#1]{#2}}{\fbox{\parbox[c][5.2cm][c]{0.84\textwidth}{\centering Figure placeholder for \texttt{\detokenize{#2}}\\[0.4em]The repository build inserts the frozen figure artifact.}}}
 \caption{#3}\label{#4}\end{figure}}
 \newcommand{\debatemddtopone}{0.3784}
 \newcommand{\debatemdddelta}{$-0.1924$}
 \newcommand{\debatemddp}{$7.0\times10^{-28}$}
-
-\newcommand{\ct}[1]{\textcolor{red}{{[CT: #1]}}}
-\newcommand{\wl}[1]{\textcolor{blue}{{[WL: #1]}}}
-
 \begin{document}
 \begin{titlepage}
 \thispagestyle{empty}
@@ -82,35 +85,48 @@ Common Mental Disorders in the Taiwanese Context\par}
 
 \vspace*{1.6cm}
 \end{titlepage}
+% ---------------------------------------------------------------------
+% 前置頁預留（CCU 學位論文格式規範項次 3–4；口試後插入正式頁面，勿自行仿造版式）：
+%   3. 論文口試委員會審定書（口試通過後之簽名掃描頁）
+%   4. 授權書（圖書館制式頁）
+% 兩頁應插入於中文摘要之前；插入後前置 roman 頁碼將整體位移，最終整稿時再排。
+% ---------------------------------------------------------------------
 \pagenumbering{roman}
 \chapter*{中文摘要}
 \addcontentsline{toc}{chapter}{中文摘要}
-精神科鑑別診斷經常面臨症狀重疊、病程資訊不足，以及單次晤談無法完整呈現排除條件等問題。本研究提出 HiED，一套結合大型語言模型診斷代理人、ICD-10 準則檢查代理人與確定性門檻邏輯引擎的混合式多代理系統。系統輸出主診斷、可選共病、排序後的鑑別診斷，以及逐準則的證據稽核紀錄。
-在預先登錄的 LingxiDiag-16K 內部保留測試集上，HiED 的 Top-1 為 0.518，Top-3 為 0.802。邏輯引擎在非 Others 病例中有 93.7\% 能保留正確疾病父類別，但每案中位數同時確認 14 個疾病中的 6 個。多種邏輯、成對鑑別、辯論、融合、微調及 self-consistency 方法皆未能穩定超越 Direct-Answer。外部 MDD-5k 範圍內病例的 Top-1 為 0.612，F32/F41 二元正確率為 0.922。研究結果將主要限制定位於單次逐字稿下的細粒度主診斷選擇。
+精神科鑑別診斷經常面臨症狀重疊、病程資訊不足，以及單次晤談無法完整呈現排除條件等困難。本研究提出 HiED，一套結合大型語言模型診斷代理人（Qwen3-32B-AWQ，vLLM 本地推論）、ICD-10 逐準則檢查代理人與確定性門檻邏輯引擎的混合式多代理系統。系統輸出主診斷、可選共病、排序後的鑑別診斷，以及逐準則三態（符合／不符合／證據不足）的證據稽核紀錄；類別平衡的相似案例檢索（FAISS／BGE-M3）為固定管線之一部分。
+
+在預先登錄的 LingxiDiag-16K 內部保留測試集（$N=1000$）上，HiED 的 Top-1 為 0.518、Top-3 為 0.802；案例檢索使 Single 基線由 0.466 提升至 0.508（McNemar $p=4.0\times10^{-4}$）。邏輯引擎在非 Others 病例中有 93.7\% 能保留正確疾病父類別，但每案中位數同時確認 14 個疾病中的 6 個：驗證層具高涵蓋率而低選擇性。多種修復策略——邏輯重選、成對鑑別、辯論、293 條確定性融合規則掃描、選擇器微調與（信心加權）self-consistency——皆未能穩定且可因果歸因地超越 Direct-Answer。外部 MDD-5k 範圍內病例（$N=878$）的 Top-1 為 0.612，F32/F41 二元正確率為 0.922；且全部修復策略於外部語料同樣無效或顯著劣化，顯示選擇瓶頸具跨語料不變性。
+
+本研究將主要限制定位於單次逐字稿條件下的細粒度主診斷選擇，並提出以逐字稿盲評人類參照天花板、結構化選擇機制與證據獲取為核心的後續研究路徑。
 
 \noindent\textbf{關鍵詞：}大型語言模型、多代理系統、精神科鑑別診斷、臨床決策支援、ICD-10、可稽核人工智慧
-\chapter*{Abstract}
+
 \ct{Redo. Should careful study how people summarize their work in the abstract.}
+\chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
-This thesis presents HiED, a hybrid multi-agent system combining an LLM diagnostician (Qwen3-32B-AWQ served with vLLM), ICD-10 criterion checkers, and deterministic threshold logic. On a pre-registered LingxiDiag-16K internal test split, HiED achieved Top-1 0.518 and Top-3 0.802. Verification retained the gold parent in 93.7\% of non-Others cases but confirmed a median of six of 14 disorders, providing high audit coverage but limited selective signal. Logic re-selection, pairwise reasoning, debate, 293 fusion rules, selector fine-tuning, and confidence-weighted self-consistency did not produce a stable improvement over Direct-Answer. External in-scope MDD Top-1 was 0.612 and F32/F41 binary accuracy was 0.922. The thesis localizes the dominant residual failure to fine-grained primary selection under transcript-only evidence.
+Psychiatric differential diagnosis from a single consultation transcript is difficult because symptom profiles overlap, illness-course evidence is often incomplete, and exclusion criteria may be absent rather than negated. This thesis presents HiED, a hybrid evidence-grounded multi-agent system for Chinese-language psychiatric differential diagnosis. HiED combines a local Qwen3-32B-AWQ diagnostician served with vLLM, ICD-10 criterion-checking agents, class-balanced FAISS/BGE-M3 case retrieval, and deterministic threshold logic. The system emits a committed primary diagnosis, optional comorbidity, a ranked differential, and an auditable criterion-level trace with met, not-met, and insufficient-evidence states.
+
+On a pre-registered LingxiDiag-16K internal test split ($N=1000$), HiED--DA achieves Top-1 0.518 and Top-3 0.802. Case retrieval improves the direct Single baseline from 0.466 to 0.508 (McNemar $p=4.0\times10^{-4}$), but verification does not by itself solve primary selection: the logic layer retains a gold parent in 93.7\% of non-Others cases while confirming a median of six of fourteen active disorder entries per case. Logic re-selection, pairwise comparison, debate, a 293-rule deterministic-fusion sweep, selector fine-tuning, and confidence-weighted self-consistency do not produce a stable, causally attributable improvement over Direct-Answer. On MDD-5k, in-scope Top-1 is 0.612 and F32/F41 binary accuracy is 0.922, while external repair probes again fail to close the gap. The results localize the dominant residual failure to fine-grained primary selection under transcript-only evidence, motivating transcript-matched human ceilings, structured selection, and evidence-acquisition policies as future work.
 
 \noindent\textbf{Keywords:} Large language models, multi-agent systems, psychiatric differential diagnosis, clinical decision support, ICD-10, auditable AI
 
-\chapter*{Acknowledgements}
-\addcontentsline{toc}{chapter}{Acknowledgements}
+\chapter*{Acknowledgments}
+\addcontentsline{toc}{chapter}{Acknowledgments}
 
-I am deeply grateful to my advisor, Professor Wei-Yang Lin (林維暘),
-for his guidance throughout this work, continuous support, and
-insightful feedback. I also thank Professor Chia-Ling Tsai (蔡佳玲)
-for her guidance and valuable suggestions.
+I am deeply grateful to my advisors, Professor Wei-Yang Lin (林維暘)
+and Professor Chia-Ling Tsai (蔡佳玲), for their guidance throughout
+this work, their continuous support, and their insightful feedback.
+Their complementary perspectives shaped both the direction and the
+rigor of this thesis, and it would not have been completed without
+them.
 
 I owe special thanks to Dr.\ Yu-Shu Huang (黃玉書), Professor and
 Director of the Department of Psychiatry at Linkou Chang Gung Memorial
 Hospital, who served as the clinical principal investigator for this
 research. Her deep expertise in psychiatric diagnosis and her clinical
-guidance shaped the design of the differential-diagnosis framework,
-grounded its evaluation in real clinical practice, and made the
-prospective clinical study possible (IRB No.\ 2606050044). I am
+guidance shaped the design of the differential-diagnosis framework and
+the protocol for the planned prospective clinical study. I am
 sincerely thankful for her generosity with her time and for her
 commitment to bridging clinical psychiatry and computational methods.
 
@@ -123,25 +139,35 @@ helpful discussions.
 
 Finally, I thank my family for their unwavering support and
 encouragement.
+\clearpage
+\tableofcontents
+\clearpage
+\listoftables
+\clearpage
+\listoffigures
+\clearpage
 \chapter*{List of Abbreviations}
 \addcontentsline{toc}{chapter}{List of Abbreviations}
 \begin{longtable}{p{3cm}p{10cm}}
 \toprule Abbreviation & Meaning\\ \midrule
 AI & Artificial intelligence\\
+AURC & Area under the risk--coverage curve\\
+BGE-M3 & Multilingual dense text-embedding model (BAAI General Embedding, M3)\\
 CISC & Confidence-informed self-consistency\\
 DA & Direct-Answer\\
 DDx & Differential diagnosis\\
+DTV & Diagnose-then-Verify\\
+ECE & Expected calibration error\\
+FAISS & Facebook AI Similarity Search (vector-index library)\\
 ICD-10 & International Classification of Diseases, Tenth Revision\\
 LLM & Large language model\\
 MAS & Multi-agent system\\
 NtS & Nominate-then-Select\\
-OOT & Out of target scope\\
 RAG & Retrieval-augmented generation\\
+SC & Self-consistency\\
+TF--IDF & Term frequency--inverse document frequency\\
 \bottomrule
 \end{longtable}
-\tableofcontents
-\listoftables
-\listoffigures
 \clearpage
 \pagenumbering{arabic}
 
@@ -204,7 +230,7 @@ Ontology expansion is treated as mechanical scope reconfiguration rather than su
 
 \section{Thesis Organization}
 
-Chapter~\ref{ch:background} introduces the clinical and technical background. Chapter~\ref{ch:related} reviews related datasets and methods. Chapter~\ref{ch:data} defines datasets, splits, metrics, statistics, and reproducibility. Chapter~\ref{ch:architecture} describes HiED. Chapter~\ref{ch:experimental} presents the failure-mode-driven design, and Chapter~\ref{ch:results} reports in-domain findings. Chapter~\ref{ch:external} covers external validation and scope expansion. Chapter~\ref{ch:error} analyzes error archetypes. Chapters~\ref{ch:discussion}--\ref{ch:deployment} discuss interpretation, limitations, deployment, and governance. Chapter~\ref{ch:conclusion} concludes.
+Chapter~\ref{ch:background} introduces the clinical and technical background. Chapter~\ref{ch:related} reviews related datasets and methods. Chapter~\ref{ch:data} defines datasets, splits, metrics, statistics, and reproducibility. Chapter~\ref{ch:architecture} describes HiED. Chapter~\ref{ch:experimental} presents the failure-mode-driven design, and Chapter~\ref{ch:results} reports in-domain findings. Chapter~\ref{ch:external} covers external validation and scope expansion. Chapter~\ref{ch:error} analyzes error archetypes. Chapter~\ref{ch:discussion} interprets the findings, Chapter~\ref{ch:limitations} states limitations and threats to validity, and Chapter~\ref{ch:deployment} addresses deployment and governance. Chapter~\ref{ch:conclusion} concludes.
 
 
 \chapter{Clinical and Technical Background}
@@ -262,9 +288,9 @@ The narrow reading of auditability is a deliberate guard against two over-claims
 
 For transcript $x$, let $C(x)$ denote the candidate list, $V(d,x)$ the verification state for diagnosis $d$, and $\hat{y}(x)$ the committed primary:
 \begin{align}
-D_k(x) &= \mathbb{1}[y \in C_k(x)],\\
-R(x) &= \mathbb{1}[y \in V^+(x)],\\
-S(x) &= \mathbb{1}[\hat{y}(x)=y].
+D_k(x) &= \mathbf{1}[y \in C_k(x)],\\
+R(x) &= \mathbf{1}[y \in V^+(x)],\\
+S(x) &= \mathbf{1}[\hat{y}(x)=y].
 \end{align}
 Here $D_k(x)$, $R(x)$, and $S(x)$ are the per-case detection, retention, and selection indicators: whether the gold diagnosis $y$ appears among the top-$k$ candidates $C_k(x)$, survives verification into $V^{+}(x)$, and is finally committed, respectively; averaged over cases, their means are Top-$k$ coverage, verification retention, and Top-1 accuracy. A selection bottleneck exists when detection or retention substantially exceeds final selection. High Top-3 does not mean clinical correctness; it means a better selector may have recoverable opportunity. Low Top-1 does not mean candidate generation is useless.
 
@@ -276,7 +302,7 @@ The three indicators defined above are intended to be read jointly rather than r
 
 \section{Chinese Psychiatric Dialogue Resources}
 
-LingxiDiagBench provides a Chinese psychiatric consultation and diagnosis benchmark with synthetic, EMR-aligned dialogues and multiple task granularities \citep{xu2026lingxidiagbench}. This thesis adopts its 12-class paper-parent taxonomy but evaluates a diagnostic system rather than proposing a competing benchmark.
+LingxiDiagBench provides a Chinese psychiatric consultation and diagnosis benchmark with synthetic, EMR-aligned dialogues and multiple task granularities \citep{xu2026lingxidiagbench}. This thesis adopts its 12-class paper-parent taxonomy but evaluates a diagnostic system rather than proposing a competing benchmark. A benchmark-positioning appendix further compares HiED--DA with the public LingxiDiagBench static-evaluation Table~4 on the same public validation cases, where HiED--DA exceeds the strongest reported Top-1 frontier-LLM and classical baselines; this comparison is explicitly limited to 12-class Top-1 and is not used as the thesis headline (\cref{tab:lingxi-public-validation-positioning}).
 
 MDD-5k broadens disorder distribution and dialogue style through a neuro-symbolic multi-agent synthesis pipeline \citep{yin2024mdd5k}. It serves as an external distribution-shift corpus. D4 focuses on depression-oriented dialogue \citep{yao2022d4}, while CPsyCoun emphasizes psychological counseling reconstruction rather than multi-disorder primary diagnosis \citep{zhang2024cpsycoun}. These differences make direct cross-paper accuracy comparisons unreliable.
 
@@ -306,7 +332,7 @@ A complementary route to interpretability replaces model-generated reasoning wit
 
 \section{Data Augmentation}
 
-CALLM uses LLM role-play to augment clinical interview data \citep{wu2024callm}. Such work addresses scarcity, but synthetic data may encode generator priors and may not capture real comorbidity, nonverbal behavior, or longitudinal context. This thesis uses synthetic corpora for method development while reserving real clinical validation for an IRB-governed follow-on arm. This division of labour is a direct response to the known limitations of synthetic clinical dialogue. Generated conversations can encode the priors of their generator, may under-represent genuine comorbidity and nonverbal signal, and cannot substitute for the variability of real patients. Using them for development and ablation---where reproducibility and controlled comparison matter most---while deferring any effectiveness claim to a prospective, ethically governed study keeps the synthetic-to-clinical gap explicit rather than implicitly assuming that benchmark gains transfer to care.
+CALLM uses LLM role-play to augment clinical interview data \citep{wu2024callm}. Such work addresses scarcity, but synthetic data may encode generator priors and may not capture real comorbidity, nonverbal behavior, or longitudinal context. This thesis uses synthetic corpora for method development while reserving real clinical validation for an IRB-governed follow-on arm. This division of labor is a direct response to the known limitations of synthetic clinical dialogue. Generated conversations can encode the priors of their generator, may under-represent genuine comorbidity and nonverbal signal, and cannot substitute for the variability of real patients. Using them for development and ablation---where reproducibility and controlled comparison matter most---while deferring any effectiveness claim to a prospective, ethically governed study keeps the synthetic-to-clinical gap explicit rather than implicitly assuming that benchmark gains transfer to care.
 
 \section{Knowledge Graphs and Structured Diagnosis}
 
@@ -330,14 +356,16 @@ Stated precisely, the gap is not an absence of psychiatric language-model system
 
 The system outputs one committed primary parent diagnosis, an optional comorbid parent, a ranked candidate list, criterion states and evidence, and deterministic logic results. The benchmark taxonomy contains 12 paper-parent classes, including Others. Raw subcodes are projected deterministically before scoring.
 
+The selected benchmark profile activates 14 disorder entries, including subtype-level entries for F41 and F43. These entries are scored after parent projection into the 11 named paper-parent classes plus \emph{Others}, forming the 12-class evaluation space. Thus, ``14 disorders'' refers to the active diagnostic entries, whereas ``12 classes'' refers to the scored parent-label space.
+
 Fixing the task at the level of parent classes is a substantive evaluation decision rather than a convenience. Scoring at the raw-subcode level would conflate two different kinds of error---confusing two disorders and confusing two granularities of the same disorder---and would make the headline figures sensitive to how finely the source benchmark happens to subdivide each category. Projecting predictions and gold labels through the same deterministic mapping before scoring ensures that every system is measured against an identical label space, that the projection cannot be tuned to flatter one configuration, and that the reported accuracies reflect disorder-level discrimination rather than agreement on coding granularity.
 
 \section{LingxiDiag-16K}
 
-LingxiDiag-16K contains 16,000 synthetic psychiatric dialogues \citep{xu2026lingxidiagbench}. The study assigns three roles:
+LingxiDiag-16K contains 16,000 synthetic psychiatric dialogues \citep{xu2026lingxidiagbench}. The study assigns three roles (\cref{tab:data-roles}):
 \begin{table}[htbp]
 \centering
-\caption{LingxiDiag data roles.}
+\caption{LingxiDiag data roles.}\label{tab:data-roles}
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{lrrl}
 \toprule
@@ -353,7 +381,7 @@ Internal test split & 1,000 & frozen headline evaluation & pre-registered, exclu
 
 Because the official LingxiDiagBench test split was unavailable at freeze, we pre-registered a 1,000-case train-carved \emph{internal test split}, excluded it from retrieval, and use this term throughout. It is distinct from the public validation split used for LingxiDiagBench's static benchmark and from the unavailable official test split. The split was committed before any evaluation and held out from the retrieval index and from every selection procedure, so it functions as a held-out test set even though it is carved from training data. Validation remains development-lineage.
 
-Roles are separated by use. The public validation split supports development and sensitivity analysis, whereas the internal test split is reserved for headline evaluation. Because the internal test split is carved from training data, its cleanliness rests on pre-registration and on exclusion from the retrieval index and from every selection procedure rather than on any file-naming convention. The training pool supports retrieval and indexing and is never scored; development designs configuration choices, thresholds, and probes; the internal test split is scored once after the rules freeze. Because the official LingxiDiagBench test split was unavailable, this pre-commitment prevents any internal-test transcript from being returned as its own supporting example. The cost is an internally constructed split rather than a community-standard test set, revisited in the threats-to-validity chapter.
+Roles are separated by use. The public validation split supports development and sensitivity analysis, whereas the internal test split is reserved for headline evaluation. Because the internal test split is carved from training data, its cleanliness rests on pre-registration and on exclusion from the retrieval index and from every selection procedure rather than on any file-naming convention. The training pool supports retrieval and indexing and is never scored; development designs configuration choices, thresholds, and probes; the internal test split is scored once after the rules freeze. This pre-commitment prevents any internal-test transcript from being returned as its own supporting example. The cost is an internally constructed split rather than a community-standard test set, revisited in the threats-to-validity chapter.
 
 \section{MDD-5k}
 
@@ -363,9 +391,9 @@ The coverage-aware construction of the external evaluation is essential to inter
 
 \section{Label Projection}
 
-Multiple gold parents are retained for official multilabel metrics. First-listed-primary analyses use the first listed gold parent as a single-label convention. Any-gold Top-1, first-listed accuracy, and exact-set answer different questions and are never substituted without labeling.
+Multiple gold parents are retained for official multilabel metrics. First-listed-primary analyses use the first listed gold parent as a single-label convention. Any-gold Top-1, first-listed accuracy, and Exact Match each answer different questions and are never substituted without labeling.
 
-The coexistence of several gold conventions is a feature of multilabel diagnostic data rather than an ambiguity to be resolved by fiat. When a case carries more than one gold parent, an any-gold criterion credits a prediction that matches any of them, a first-listed convention treats the leading gold label as a single designated primary, and an exact-set criterion demands that the predicted set equal the gold set exactly. These measure progressively stricter notions of correctness and are appropriate to different questions---candidate adequacy, primary selection, and set calibration respectively. The thesis keeps them explicitly labelled wherever they appear and never silently swaps one for another, because doing so would allow a result to look stronger or weaker purely through choice of convention.
+The coexistence of several gold conventions is a feature of multilabel diagnostic data rather than an ambiguity to be resolved by fiat. When a case carries more than one gold parent, an any-gold criterion credits a prediction that matches any of them, a first-listed convention treats the leading gold label as a single designated primary, and an Exact Match criterion demands that the predicted set equal the gold set exactly. These measure progressively stricter notions of correctness and are appropriate to different questions---candidate adequacy, primary selection, and set calibration respectively. The thesis keeps them explicitly labeled wherever they appear and never silently swaps one for another, because doing so would allow a result to look stronger or weaker purely through choice of convention.
 
 \section{Metrics}
 
@@ -405,13 +433,13 @@ macro averaging classes equally and weighted averaging by gold support. The two-
 
 \section{Statistics}
 
-Paired binary outcomes use exact McNemar tests. Paired bootstrap intervals are used where available. Two-proportion $z$ statistics appear only in labeled exploratory stratifications. Related BGE comparisons are interpreted with multiplicity correction. Failure to reject a difference is not equivalence. The statistical posture of the thesis is deliberately conservative. Paired binary comparisons use exact McNemar tests so that significance reflects discordant cases rather than marginal rates; bootstrap intervals are reported where available; two-proportion tests appear only inside explicitly labelled exploratory stratifications; and families of related comparisons are interpreted with multiplicity in mind. The repeated insistence that a non-significant difference is not evidence of equivalence is not a rhetorical hedge but a guard against the most tempting misreading of a negative result---that because an intervention did not significantly help, it is therefore known to be neutral, when in fact the experiment may simply lack the power to resolve a small effect.
+The statistical posture of the thesis is deliberately conservative. Paired binary comparisons use exact McNemar tests so that significance reflects discordant cases rather than marginal rates; paired bootstrap intervals are reported where available; two-proportion $z$ statistics appear only inside explicitly labeled exploratory stratifications; and families of related exploratory comparisons, such as the BGE-M3 retrieval-mode probes, are interpreted with multiplicity in mind. Failure to reject a difference is not equivalence. The repeated insistence that a non-significant difference is not evidence of equivalence is not a rhetorical hedge but a guard against the most tempting misreading of a negative result---that because an intervention did not significantly help, it is therefore known to be neutral, when in fact the experiment may simply lack the power to resolve a small effect.
 
 \section{Run Health}
 
 Every run is checked for expected case count, schema validity, abstention and parse-recovery events, frozen ordering, configuration identity, and candidate integrity. The 4B HiED run required 164 parse recoveries and the 4B single run produced 17 abstentions; all size-ladder runs still produced 1,000 valid outputs and passed health gates.
 
-The run-health gate is reported rather than hidden because it bears directly on the credibility of the comparisons. Quantization, decoding, and prompt formatting can all degrade an otherwise valid run into malformed or empty outputs, and a system that silently drops difficult cases can appear more accurate than it is. Recording expected case counts, schema validity, abstention and parse-recovery events, and frozen ordering for every run ensures that each reported accuracy is computed over a complete and consistently ordered set of cases. The elevated parse-recovery and abstention counts observed at the smallest backbone are themselves informative, indicating that part of that model's apparent behaviour is fragility in producing well-formed structured output rather than diagnostic judgment alone.
+The run-health gate is reported rather than hidden because it bears directly on the credibility of the comparisons. Quantization, decoding, and prompt formatting can all degrade an otherwise valid run into malformed or empty outputs, and a system that silently drops difficult cases can appear more accurate than it is. Recording expected case counts, schema validity, abstention and parse-recovery events, and frozen ordering for every run ensures that each reported accuracy is computed over a complete and consistently ordered set of cases. The elevated parse-recovery and abstention counts observed at the smallest backbone are themselves informative, indicating that part of that model's apparent behavior is fragility in producing well-formed structured output rather than diagnostic judgment alone.
 
 \section{Anti-Leakage and Split Discipline}
 
@@ -435,7 +463,7 @@ This inverts the usual rationale for modular design. Components are added here n
 
 \ThesisFigure{fig_pipeline.pdf}{HiED pipeline. The diagnostician generates a ranked differential and committed primary. Candidate-specific checkers evaluate criteria, deterministic logic summarizes support, and a finalization policy produces the output and audit trace.}{fig:pipeline-thesis}
 
-The transcript is normalized while preserving speaker turns. Retrieval supplies similar cases or anchors. This case retrieval is class-balanced rather than global: the query transcript is encoded into a dense embedding and searched against a training-case index by inner product, but instead of returning the globally most similar cases---which a frequent disorder such as depression would dominate---the retriever returns the single best-matching case for each candidate disorder class, so that every candidate is grounded by a comparable in-context example. This top-one-per-class design is a deliberate countermeasure to class imbalance, keeping rare disorders visible to the diagnostician rather than crowded out by majority-class neighbours; it is separate from the disorder-definition similarity that is evaluated only as a repair in the experimental chapters. The diagnostician produces ranked candidates, a committed primary, optional comorbidity, confidence, and rationale fields. Each candidate is then evaluated by disorder-specific criterion checkers.
+The transcript is normalized while preserving speaker turns. Retrieval supplies similar cases or anchors. This case retrieval is class-balanced rather than global: the query transcript is encoded into a dense embedding and searched against a training-case index by inner product, but instead of returning the globally most similar cases---which a frequent disorder such as depression would dominate---the retriever returns the single best-matching case for each candidate disorder class, so that every candidate is grounded by a comparable in-context example. This top-one-per-class design is a deliberate countermeasure to class imbalance, keeping rare disorders visible to the diagnostician rather than crowded out by majority-class neighbors; it is separate from the disorder-definition similarity that is evaluated only as a repair in the experimental chapters. The diagnostician produces ranked candidates, a committed primary, optional comorbidity, confidence, and rationale fields. Each candidate is then evaluated by disorder-specific criterion checkers.
 
 \section{Criterion States}
 
@@ -463,13 +491,13 @@ Separating the output into independently reviewable facets reflects how clinical
 
 \section{Ontology-Driven Scope Expansion}
 
-The ontology covers 30 ICD-10 parent codes across 39 entries, while the selected benchmark profile activates a smaller scope. Expanding the profile requires a configuration change rather than weight retraining. This is mechanical reconfiguration, not proof of behavioral adaptation. The architectural separation of diagnostic scope from model weights is what enables this reconfiguration: the set of representable disorders is a property of the loaded ontology and active profile, not of the trained network, so additional codes can be made available without retraining. The thesis is careful to present this only as the engineering precondition for retargeting, and the external results are used to show that the precondition does not by itself deliver the behaviour---representable is not the same as recoverable.
+The ontology covers 30 ICD-10 parent codes across 39 entries, while the selected benchmark profile activates a smaller scope. Expanding the profile requires a configuration change rather than weight retraining. This is mechanical reconfiguration, not proof of behavioral adaptation. The architectural separation of diagnostic scope from model weights is what enables this reconfiguration: the set of representable disorders is a property of the loaded ontology and active profile, not of the trained network, so additional codes can be made available without retraining. The thesis is careful to present this only as the engineering precondition for retargeting, and the external results are used to show that the precondition does not by itself deliver the behavior---representable is not the same as recoverable.
 
 \section{Pairwise Differential Reasoning}
 
 Pairwise reasoning activates when candidates are well supported and close under a pre-specified score rule. It is evaluated as an independent run, a controlled replay with identical upstream outputs, and a forced override. The separation is necessary for causal attribution.
 
-The three-way evaluation of the pairwise stage---independent run, controlled replay over identical upstream outputs, and forced override---exists because a single configuration cannot separate local usefulness from global safety. An independent run can look favourable because the stage activates only on cases it is suited to; a controlled replay reveals whether, holding everything else fixed, the stage actually changes committed primaries; and a forced override exposes what happens when the stage is allowed to overrule the diagnostician everywhere. Only the combination distinguishes a locally helpful but globally unsafe operation from a genuine selection improvement, which is the distinction the results turn on.
+The three-way evaluation of the pairwise stage---independent run, controlled replay over identical upstream outputs, and forced override---exists because a single configuration cannot separate local usefulness from global safety. An independent run can look favorable because the stage activates only on cases it is suited to; a controlled replay reveals whether, holding everything else fixed, the stage actually changes committed primaries; and a forced override exposes what happens when the stage is allowed to overrule the diagnostician everywhere. Only the combination distinguishes a locally helpful but globally unsafe operation from a genuine selection improvement, which is the distinction the results turn on.
 
 \section{Computational Configuration}
 
@@ -481,17 +509,19 @@ Canonical experiments run on one NVIDIA RTX 5090 using Qwen3-32B-AWQ and vLLM. G
 
 \section{Failure-Mode-Driven Ladder}
 
+\Cref{tab:failure-ladder} maps each evaluated variant to the failure mode it interrogates and the evidence it supplies.
+
 \begin{table}[htbp]
 \centering
-\caption{Failure-mode-driven experimental ladder.}
+\caption{Failure-mode-driven experimental ladder.}\label{tab:failure-ladder}
 \begin{tabularx}{\textwidth}{p{2.6cm}X X}
 \toprule
 Variant & Question & Evidence\\
 \midrule
 Single & What can a direct LLM classify? & raw baseline\\
 Single+RAG & Does retrieval help? & candidate support\\
-HiED-DA & Does structure add breadth and auditability? & architecture value\\
-HiED-NtS & Can verified criteria select the primary? & finalization test\\
+HiED--DA & Does structure add breadth and auditability? & architecture value\\
+HiED--NtS & Can verified criteria select the primary? & finalization test\\
 Pairwise & Can local comparison repair ambiguity? & local reranking\\
 Debate & Does more multi-agent reasoning help? & reasoning-round test\\
 Fusion & Is a simple deterministic rule missing? & post-hoc signal test\\
@@ -513,21 +543,21 @@ The threshold-free Top-3/Top-1 gap is primary evidence. A close-cluster oracle p
 
 \section{Verification Experiments}
 
-Verification experiments include DA versus NtS, a global met-ratio sweep, a $2\times3$ checker factorial, disagreement stratification, and exact-set versus Top-1 trade-off.
+Verification experiments include DA versus NtS, a global met-ratio sweep, a $2\times3$ checker factorial, disagreement stratification, and Exact Match versus Top-1 trade-off.
 
-Each verification experiment isolates a different way criterion checking might influence selection. The Direct-Answer versus Nominate-then-Select contrast holds the upstream candidates and criterion trace fixed and varies only the finalization rule, so any difference is attributable to whether the primary is taken from the diagnostician or re-derived from the confirmed set. The deterministic logic engine that produces that confirmed set applies the ontology's count-based threshold to each disorder and orders the survivors by their met ratio---the fraction of required criteria satisfied---so the global met-ratio sweep asks whether moving the confirmation threshold up or down changes which primary is selected. The $2\times3$ checker factorial crosses checker granularity with verification scope to test whether finer or broader criterion evaluation sharpens selection. The disagreement stratification partitions cases by whether the diagnostician and the logic-confirmed set agree, localizing where the two sources of evidence diverge, and the exact-set versus Top-1 contrast measures the trade-off between committing a single correct primary and emitting a correctly-sized diagnostic set.
+Each verification experiment isolates a different way criterion checking might influence selection. The Direct-Answer versus Nominate-then-Select contrast holds the upstream candidates and criterion trace fixed and varies only the finalization rule, so any difference is attributable to whether the primary is taken from the diagnostician or re-derived from the confirmed set. The deterministic logic engine that produces that confirmed set applies the ontology's count-based threshold to each disorder and orders the survivors by their met ratio---the fraction of required criteria satisfied---so the global met-ratio sweep asks whether moving the confirmation threshold up or down changes which primary is selected. The $2\times3$ checker factorial crosses checker granularity with verification scope to test whether finer or broader criterion evaluation sharpens selection. The disagreement stratification partitions cases by whether the diagnostician and the logic-confirmed set agree, localizing where the two sources of evidence diverge, and the Exact Match versus Top-1 contrast measures the trade-off between committing a single correct primary and emitting a correctly-sized diagnostic set.
 
 \section{Selection Repairs}
 
 The battery includes pairwise reasoning, debate, 293 deterministic fusion rules, insufficient-tolerant variants, lexical reranking, selector fine-tuning, residual-evidence loops, explicit evidence extraction, self-consistency, and CISC.
 
-The repairs are specified concretely so that each failure can be read as evidence about a particular mechanism. \emph{Pairwise reasoning} activates only when the top candidates are close: an adjacent close-cluster is formed from ranked neighbours whose scores fall within a fixed gate (a margin threshold of $0.10$), and a differential-comparison agent is run on that cluster to re-decide the primary among the close alternatives. \emph{Debate} reconciles the two leading candidates through a fixed two-round protocol~\citep{du2024debate} in which an advocate argues for each candidate in turn and a judge resolves the exchange if the advocates do not converge; the round count is bounded and the prompt is checked against the model's context budget before generation. \emph{Deterministic fusion} enumerates a family of zero-LLM re-selection rules over the committed-trace signals (ranking, per-criterion met ratio, threshold satisfaction), with a single conservative rule frozen before internal-test scoring. \emph{Self-consistency} and \emph{CISC} sample the diagnostician $K\in\{3,5\}$ times and aggregate its committed primary by plain majority and by confidence-weighted vote respectively. \emph{Lexical reranking} and \emph{selector fine-tuning} fit learned selectors on ranking features, and \emph{explicit evidence extraction} supplies criterion-grounded evidence briefs. Each repair is applied to the same fixed upstream output so that its effect on the committed primary can be measured in isolation.
+The repairs are specified concretely so that each failure can be read as evidence about a particular mechanism. \emph{Pairwise reasoning} activates only when the top candidates are both sufficiently supported and close: an adjacent close-cluster is formed from ranked neighbors with met ratio at least $0.5$ and adjacent met-ratio distance less than $0.10$, and a differential-comparison agent is run on that cluster to re-decide the primary among the close alternatives. \emph{Debate} reconciles the two leading candidates through a fixed two-round protocol~\citep{du2024debate} in which an advocate argues for each candidate in turn and a judge resolves the exchange if the advocates do not converge; the round count is bounded and the prompt is checked against the model's context budget before generation. \emph{Deterministic fusion} enumerates a family of zero-LLM re-selection rules over the committed-trace signals (ranking, per-criterion met ratio, threshold satisfaction), with a single conservative rule frozen before internal-test scoring. \emph{Self-consistency} and \emph{CISC} sample the diagnostician $K\in\{3,5\}$ times and aggregate its committed primary by plain majority and by confidence-weighted vote respectively. \emph{Lexical reranking} and \emph{selector fine-tuning} fit learned selectors on ranking features, and \emph{explicit evidence extraction} supplies criterion-grounded evidence briefs. Each repair is applied to the same fixed upstream output so that its effect on the committed primary can be measured in isolation.
 
 \section{Robustness}
 
 Robustness is examined across Qwen3 sizes, BGE-M3 similarity modes, in-domain and external corpora, first-listed confusion structure, logic agreement strata, and ontology scope.
 
-Each robustness axis stresses a different assumption behind the headline result. Varying the backbone across the Qwen3 size range tests whether the selection ceiling is an artifact of model capacity; sweeping the dense retrieval representation across several similarity modes tests whether the operating point depends on a particular embedding configuration; evaluating on an external corpus tests transfer under distribution shift; the first-listed confusion structure exposes which disorder boundaries absorb the errors; the logic-agreement strata separate cases by whether the diagnostician and the verifier concur; and the ontology-scope variation tests whether enlarging the representable label space changes committed behaviour. Robustness here means that the central finding survives these perturbations, not that the perturbations are inconsequential.
+Each robustness axis stresses a different assumption behind the headline result. Varying the backbone across the Qwen3 size range tests whether the selection ceiling is an artifact of model capacity; sweeping the dense retrieval representation across several similarity modes tests whether the operating point depends on a particular embedding configuration; evaluating on an external corpus tests transfer under distribution shift; the first-listed confusion structure exposes which disorder boundaries absorb the errors; the logic-agreement strata separate cases by whether the diagnostician and the verifier concur; and the ontology-scope variation tests whether enlarging the representable label space changes committed behavior. Robustness here means that the central finding survives these perturbations, not that the perturbations are inconsequential.
 
 \section{Freeze Discipline}
 
@@ -537,7 +567,7 @@ The internal test split and headline metrics are frozen before evaluation. Sweep
 
 A negative result is informative only when the mechanism and claim boundary are clear. The battery rules out a global threshold, simple fusion, hidden sample consensus, and a globally safe pairwise override as complete explanations of the bottleneck.
 
-The value of these negative results depends entirely on the discipline with which they are obtained, which is why the freeze protocol is stated before the results rather than after. Each intervention is designed to test a specific hypothesized cause of the gap---missing global threshold, absent post-hoc signal, unstable sampling, lack of local comparison---so that its failure eliminates that explanation rather than merely reporting an unsuccessful attempt. Sweeps are conducted on the development lineage, any rule that will face the internal test split is committed beforehand, and post-freeze probes are labelled as such. This converts a collection of things that did not work into a constraint on the space of viable explanations, which is the contribution the chapter intends.
+The value of these negative results depends entirely on the discipline with which they are obtained, which is why the freeze protocol is stated before the results rather than after. Each intervention is designed to test a specific hypothesized cause of the gap---missing global threshold, absent post-hoc signal, unstable sampling, lack of local comparison---so that its failure eliminates that explanation rather than merely reporting an unsuccessful attempt. Sweeps are conducted on the development lineage, any rule that will face the internal test split is committed beforehand, and post-freeze probes are labeled as such. This converts a collection of things that did not work into a constraint on the space of viable explanations, which is the contribution the chapter intends.
 
 
 \chapter{In-Domain Results}
@@ -547,11 +577,11 @@ The value of these negative results depends entirely on the discipline with whic
 
 \begin{table}[htbp]
 \centering
-\caption{Internal test split: 12-class architecture ladder ($N=1000$).}
+\caption{Internal test split: 12-class architecture ladder ($N=1000$). Single-label baselines emit no ranked list, so Top-3 is undefined for them.}\label{tab:ladder}
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{lccccc}
 \toprule
-System & Top-1 & Top-3 & Exact-set & Macro-F1 & Weighted-F1\\
+System & Top-1 & Top-3 & Exact Match & Macro-F1 & Weighted-F1\\
 \midrule
 Single & 0.466 & --- & 0.017 & 0.183 & 0.426\\
 Single+RAG & 0.508 & --- & 0.011 & 0.192 & 0.433\\
@@ -562,21 +592,23 @@ HiED--DA & \textbf{0.518} & \textbf{0.802} & 0.409 & 0.178 & 0.434\\
 \end{adjustbox}
 \end{table}
 
-Retrieval accounts for most of the Top-1 improvement. On the paired internal test split, both Single+RAG over Single ($0.466\to0.508$; McNemar $p=4.0\times10^{-4}$) and HiED-DA over Single ($0.466\to0.518$; $p=1.6\times10^{-5}$) are significant, whereas the additional 1.0 percentage point from Single+RAG to DA is not (McNemar $p=0.39$) and is not a robust accuracy claim. The Single+RAG improvement uses the actual FAISS/BGE-M3 class-balanced case retriever over the LingxiDiag training index, confirming that retrieval helps the direct single-agent baseline. HiED's added value is the ranked differential, criterion audit, and error localization. Macro-F1 remains low, showing that rare-class recall is not solved. Read against the decomposition, the ladder isolates retrieval as the component responsible for most of the realized gain over the bare baseline, while the structured Direct-Answer configuration contributes breadth and auditability rather than a further accuracy jump. The small Single+RAG-to-Direct-Answer difference is reported as a non-robust margin precisely so that the architecture's contribution is not overstated as a selection improvement it does not reliably deliver; its justification rests on the ranked differential, the criterion audit, and error localization, all of which the single-label baselines cannot provide.
+\Cref{tab:ladder} reports the frozen architecture ladder. Retrieval accounts for most of the Top-1 improvement. On the paired internal test split, both Single+RAG over Single ($0.466\to0.508$; McNemar $p=4.0\times10^{-4}$) and HiED--DA over Single ($0.466\to0.518$; $p=1.6\times10^{-5}$) are significant, whereas the additional 1.0 percentage point from Single+RAG to DA is not (McNemar $p=0.39$) and is not a robust accuracy claim. The Single+RAG improvement uses the actual FAISS/BGE-M3 class-balanced case retriever over the LingxiDiag training index, confirming that retrieval helps the direct single-agent baseline. HiED's added value is the ranked differential, criterion audit, and error localization. Macro-F1 remains low, showing that rare-class recall is not solved. Read against the decomposition, the ladder isolates retrieval as the component responsible for most of the realized gain over the bare baseline, while the structured Direct-Answer configuration contributes breadth and auditability rather than a further accuracy jump. The small Single+RAG-to-Direct-Answer difference is reported as a non-robust margin precisely so that the architecture's contribution is not overstated as a selection improvement it does not reliably deliver; its justification rests on the ranked differential, the criterion audit, and error localization, all of which the single-label baselines cannot provide.
 
 \section{Candidate Coverage}
 
 \ThesisFigure{fig_b_selection_bottleneck.pdf}{Internal test split detection--selection decomposition.}{fig:bottleneck-thesis}
 
-Top-3 reaches 80.2\% while Top-1 is 51.8\%, leaving a threshold-free 28.4-point gap. The close-cluster oracle reaches 85.6\%, corresponding to 34.9 points of upper-bound headroom. This oracle measures opportunity, not practical recoverability. The gap between candidate coverage and committed accuracy is the quantitative core of the selection-bottleneck claim. That a correct parent is present in the ranked shortlist far more often than it is committed as the primary shows that the system's limitation is not failure to consider the right answer but failure to choose it. The oracle is reported as an upper bound on what a flawless selector could recover from the existing candidates, and is explicitly not a method that could be deployed, because it presupposes knowledge of the gold label; its role is to size the opportunity, not to claim it has been seized.
+Top-3 reaches 80.2\% while Top-1 is 51.8\%, leaving a threshold-free 28.4-point gap. The close-cluster oracle reaches 85.6\%, corresponding to 33.8 points of upper-bound headroom. This oracle measures opportunity, not practical recoverability. The gap between candidate coverage and committed accuracy is the quantitative core of the selection-bottleneck claim. That a correct parent is present in the ranked shortlist far more often than it is committed as the primary shows that the system's limitation is not failure to consider the right answer but failure to choose it. The oracle is reported as an upper bound on what a flawless selector could recover from the existing candidates, and is explicitly not a method that could be deployed, because it presupposes knowledge of the gold label; its role is to size the opportunity, not to claim it has been seized.
 
 \section{Verification}
 
-The logic-confirmed set contains the gold parent in 93.7\% of non-Others cases but confirms a median of six of 14 disorders. Criterion states are 48.3\% met, 23.5\% not met, and 28.3\% insufficient evidence. The checker bank is high coverage but low selectivity.
+The logic-confirmed set contains the gold parent in 93.7\% of non-Others cases but confirms a median of six of 14 disorders. Criterion states are 48.3\% met, 23.5\% not met, and 28.3\% insufficient evidence (\cref{fig:criterion-states-thesis}). The checker bank is high coverage but low selectivity.
 
-NtS lowers Top-1 to 0.490 but raises exact-set from 0.409 to 0.437 ($p=0.008$) by emitting fewer labels. Verification improves diagnostic-set control without improving the primary.
+\ThesisFigure{fig_c_criterion_states.pdf}{Distribution of per-criterion checker states on the internal test split: met, not met, and insufficient evidence.}{fig:criterion-states-thesis}
 
-The verification results refine rather than contradict the value of the checker bank. That the confirmed set retains the correct parent in the large majority of non-Others cases establishes high recall, but the simultaneous confirmation of roughly half the in-scope disorders per case establishes low selectivity, and the two together explain why verification cannot by itself choose the primary. The Nominate-then-Select comparison makes the same point causally: re-deriving the primary from confirmed candidates lowers Top-1 while raising exact-set, meaning verification trades primary accuracy for tighter set control by emitting fewer labels. This is a coherent and sometimes desirable behaviour, but it is set calibration, not selection improvement.
+NtS lowers Top-1 to 0.490 but raises Exact Match from 0.409 to 0.437 ($p=0.008$) by emitting fewer labels. Verification improves diagnostic-set control without improving the primary.
+
+The verification results refine rather than contradict the value of the checker bank. That the confirmed set retains the correct parent in the large majority of non-Others cases establishes high recall, but the simultaneous confirmation of roughly half the in-scope disorders per case establishes low selectivity, and the two together explain why verification cannot by itself choose the primary. The Nominate-then-Select comparison makes the same point causally: re-deriving the primary from confirmed candidates lowers Top-1 while raising Exact Match, meaning verification trades primary accuracy for tighter set control by emitting fewer labels. This is a coherent and sometimes desirable behavior, but it is set calibration, not selection improvement.
 
 \section{Checker Factorial}
 
@@ -588,7 +620,7 @@ A $2\times3$ factorial varying checker granularity and verification scope remain
 
 \begin{table}[htbp]
 \centering
-\caption{Internal test split selection-repair probes.}
+\caption{Internal test split selection-repair probes. Deltas are in percentage points.}\label{tab:repair-battery}
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{lcccl}
 \toprule
@@ -607,15 +639,15 @@ CISC $K=5$ & 0.517 & -0.1 pp & $p=1.0$ & negative\\
 \end{adjustbox}
 \end{table}
 
-Pairwise reasoning is locally useful on filtered close clusters, but controlled replay changes no committed primary. A forced override harms. The 293-rule sweep finds no non-identical development rule that beats DA, and the frozen E3 rule loses four net correct cases on the internal test split. Self-consistency and CISC do not improve selection.
+\Cref{tab:repair-battery} summarizes the probes. Pairwise reasoning is locally useful on filtered close clusters, but controlled replay changes no committed primary. A forced override harms. The 293-rule sweep finds no non-identical development rule that beats DA, and the frozen E3 rule loses four net correct cases on the internal test split. Self-consistency and CISC do not improve selection.
 
-The repair battery is best read as a sequence of eliminations rather than a list of disappointments. The locally favourable pairwise run, once subjected to controlled replay, changes no committed primary, which separates apparent benefit on filtered subsets from causal benefit on the full evaluation; the forced override quantifies the cost of applying that operation indiscriminately. The fusion sweep, the self-consistency variants, and the confidence-weighted aggregation each target a specific hypothesized fix---a missing deterministic rule, instability across samples, and miscalibrated confidence respectively---and each fails to move selection, so each eliminates its hypothesis as the explanation. The convergent negative outcome across structurally different interventions is what licenses the thesis's central interpretation: the gap is not an artifact of any single missing mechanism.
+The repair battery is best read as a sequence of eliminations rather than a list of disappointments. The locally favorable pairwise run, once subjected to controlled replay, changes no committed primary, which separates apparent benefit on filtered subsets from causal benefit on the full evaluation; the forced override quantifies the cost of applying that operation indiscriminately. The fusion sweep, the self-consistency variants, and the confidence-weighted aggregation each target a specific hypothesized fix---a missing deterministic rule, instability across samples, and miscalibrated confidence respectively---and each fails to move selection, so each eliminates its hypothesis as the explanation. The convergent negative outcome across structurally different interventions is what licenses the thesis's central interpretation: the gap is not an artifact of any single missing mechanism.
 
 \section{Backbone Size}
 
 \begin{table}[htbp]
 \centering
-\caption{Qwen3 size scaling on the internal test split.}
+\caption{Qwen3 size scaling on the internal test split.}\label{tab:size-ladder}
 \begin{tabular}{lccc}
 \toprule
 Backbone & Single & HiED & Difference\\
@@ -628,7 +660,9 @@ Backbone & Single & HiED & Difference\\
 \end{tabular}
 \end{table}
 
-The single range is 0.322; HiED remains within 0.041, an 87.3\% reduction in size-driven spread. This supports robustness across tested sizes but not capacity irrelevance. The size results carry a two-sided reading that the thesis is careful to preserve. The sharp narrowing of the Top-1 range when the structured pipeline is applied across backbones indicates that much of a bare model's size sensitivity is absorbed by the architecture, which is a robustness property worth reporting. But the structured configuration does not improve monotonically with scale and the largest backbone does not escape the selection ceiling, so the result cannot be read as evidence that capacity is irrelevant---only that, within the tested family, additional scale does not by itself resolve the comparative-selection problem.
+In \cref{tab:size-ladder}, the single range is 0.322; HiED remains within 0.041, an 87.3\% reduction in size-driven spread (\cref{fig:size-robustness-thesis}).
+
+\ThesisFigure{fig_a_size_robustness.pdf}{Backbone-size robustness on the internal test split: the structured pipeline narrows the single-model Top-1 range of 0.322 to 0.041 across Qwen3 sizes.}{fig:size-robustness-thesis} This supports robustness across tested sizes but not capacity irrelevance. The size results carry a two-sided reading that the thesis is careful to preserve. The sharp narrowing of the Top-1 range when the structured pipeline is applied across backbones indicates that much of a bare model's size sensitivity is absorbed by the architecture, which is a robustness property worth reporting. But the structured configuration does not improve monotonically with scale and the largest backbone does not escape the selection ceiling, so the result cannot be read as evidence that capacity is irrelevant---only that, within the tested family, additional scale does not by itself resolve the comparative-selection problem. Although the 4B HiED run has the highest point estimate, it also required 164 parse recoveries, whereas the 32B run is used as the canonical reference because it provides the most stable full-pipeline configuration under the registered serving setup. The size ladder is therefore interpreted as a robustness probe rather than as a model-selection sweep.
 
 \section{Retrieval Modes and Confusion}
 
@@ -644,7 +678,7 @@ Dense, sparse, hybrid, and ColBERT definition-similarity fusion fail the improve
 
 \begin{table}[htbp]
 \centering
-\caption{External-validation summary.}
+\caption{Internal reference and external-validation summary.}\label{tab:external-summary}
 \begin{tabular}{lrrrr}
 \toprule
 Set & $N$ & Top-1 & Majority & Macro-F1\\
@@ -657,7 +691,7 @@ MDD F32/F41 & 490 & 0.9224 & 0.7837 & 0.9055\\
 \end{tabular}
 \end{table}
 
-Unlike the in-domain LingxiDiag runs, the MDD-5k external evaluation did not use a same-corpus case-index retriever. It therefore evaluates the diagnostic stack under an ontology/checker-supported external setting rather than retrieval from an MDD case index. The reported MDD values should be interpreted as external transcript and scope generalization, not as evidence that case retrieval transfers across corpora. External performance is shaped by the depression--anxiety concentration and by scope. The high F32/F41 result shows strong coarse discrimination, while full multi-way selection remains difficult.\footnote{As an external reference point, a single-LLM baseline evaluated on the same $925$ MDD-5k cases reaches Top-1 $0.536$, significantly below the deployed system on the paired cases (McNemar $p<10^{-4}$; paired-test provenance archived with the project artifacts). This baseline uses a plain-prompt configuration distinct from the canonical in-domain baseline and is reported only as a rough external reference; a canonical-prompt external baseline is deferred to future work.} The external figures should be read through the same coverage-aware lens used to construct them. The strong binary depression-versus-anxiety result demonstrates that coarse discrimination transfers across a markedly different synthetic distribution, which is non-trivial given that the system was developed on a different corpus; the lower full multi-way accuracy reflects the harder fine-grained selection compounded by a depression--anxiety-concentrated class mix. Presenting both prevents either an optimistic reading from the binary subset or a pessimistic reading from the full corpus from standing alone.
+\Cref{tab:external-summary} places the external views against the internal reference. Unlike the in-domain LingxiDiag runs, the MDD-5k external evaluation did not use a same-corpus case-index retriever. It therefore evaluates the diagnostic stack under an ontology/checker-supported external setting rather than retrieval from an MDD case index. The reported MDD values should be interpreted as external transcript and scope generalization, not as evidence that case retrieval transfers across corpora. External performance is shaped by the depression--anxiety concentration and by scope. The high F32/F41 result shows strong coarse discrimination, while full multi-way selection remains difficult.\footnote{As an external reference point, a single-LLM baseline evaluated on the same $925$ MDD-5k cases reaches Top-1 $0.536$, significantly below the deployed system on the paired cases (McNemar $p<10^{-4}$; paired-test provenance archived with the project artifacts). This baseline uses a plain-prompt configuration distinct from the canonical in-domain baseline and is reported only as a rough external reference; a canonical-prompt external baseline is deferred to future work.} The external figures should be read through the same coverage-aware lens used to construct them. The strong binary depression-versus-anxiety result demonstrates that coarse discrimination transfers across a markedly different synthetic distribution, which is non-trivial given that the system was developed on a different corpus; the lower full multi-way accuracy reflects the harder fine-grained selection compounded by a depression--anxiety-concentrated class mix. Presenting both prevents either an optimistic reading from the binary subset or a pessimistic reading from the full corpus from standing alone.
 
 \section{Coverage}
 
@@ -665,11 +699,11 @@ Forty-seven cases are outside the selected 14-disorder scope. These are coverage
 
 \section{Mechanical Expansion}
 
-The active profile is expanded to 30 parent codes across 39 entries without retraining. The configuration executes correctly, but none of 58 newly representable external cases is recovered as the primary. Representation does not produce behavioral adaptation. The expansion result is the empirical counterpart to the architectural claim made earlier: that scope is separable from weights. The configuration correctly executes over the enlarged label space, confirming the engineering property, while none of the newly representable external cases is recovered as a primary, refuting the stronger behavioural claim. The two outcomes together are exactly the dissociation the thesis uses to argue that mechanical reconfiguration and behavioural retargeting must be reported as distinct results.
+The active profile is expanded to 30 parent codes across 39 entries without retraining. The configuration executes correctly, but none of 58 newly representable external cases is recovered as the primary. Representation does not produce behavioral adaptation. The expansion result is the empirical counterpart to the architectural claim made earlier: that scope is separable from weights. The configuration correctly executes over the enlarged label space, confirming the engineering property, while none of the newly representable external cases is recovered as a primary, refuting the stronger behavioral claim. The two outcomes together are exactly the dissociation the thesis uses to argue that mechanical reconfiguration and behavioral retargeting must be reported as distinct results.
 
 \section{Lexical Transfer}
 
-A Lingxi-trained TF--IDF selector reaches 0.610 in-domain but 0.049 on MDD. Training the same family on MDD reaches 0.692 within MDD. The failure is transfer, not inability to fit. The ontology-driven pipeline is more portable in configuration but remains selection-limited.
+A Lingxi-trained TF--IDF selector reaches 0.610 in-domain but 0.049 on MDD (\cref{tab:lexical-transfer}). Training the same family on MDD reaches 0.692 within MDD. The failure is transfer, not inability to fit. The ontology-driven pipeline is more portable in configuration but remains selection-limited.
 
 \begin{table}[htbp]
 \centering
@@ -690,11 +724,11 @@ The lexical-transfer contrast is included because it diagnoses the failure rathe
 
 \section{Repair Battery on the External Distribution}
 
-The selection-repair battery applied in domain is re-run on the external corpus to test whether any intervention that left the in-domain ceiling intact nevertheless transfers to a markedly different distribution. To keep the comparison internal and matched, every method in this battery is scored against a Direct-Answer baseline recomputed on the same external run under identical conditions; that matched baseline reaches a Top-1 of 0.5708 on the full external corpus, which differs from the headline external Top-1 of 0.5805 reported above only by run-to-run decoding variation and is used here solely so that within-battery differences are not confounded by run drift. All cells share one canonical parent-level scoring definition, and McNemar tests are paired against the matched baseline.
+The selection-repair battery applied in domain is re-run on the external corpus to test whether any intervention that left the in-domain ceiling intact nevertheless transfers to a markedly different distribution. To keep the comparison internal and matched, every method in this battery is scored against a Direct-Answer baseline recomputed on the same external run under identical conditions; that matched baseline reaches a Top-1 of 0.5708 on the full external corpus, which differs from the headline external Top-1 of 0.5805 reported above only by run-to-run decoding variation and is used here solely so that within-battery differences are not confounded by run drift. All cells share one canonical parent-level scoring definition, and McNemar tests are paired against the matched baseline (\cref{tab:mdd-repair}).
 
 \begin{table}[htbp]
 \centering
-\caption{Selection-repair battery on the external corpus ($N{=}925$), scored against a matched Direct-Answer baseline.}
+\caption{Selection-repair battery on the external corpus ($N{=}925$), scored against a matched Direct-Answer baseline; $\Delta$ values are absolute Top-1 differences.}
 \label{tab:mdd-repair}
 \begin{tabular}{lccc}
 \toprule
@@ -720,11 +754,11 @@ No intervention improves comparative selection on the external corpus. Three int
 
 \section{Case-Similarity Reranking}
 
-A second retrieval mechanism is tested on the external corpus. Instead of supplying definition text, the system retrieves the most similar training cases and reranks the candidate primaries by neighbour agreement. Four retrieval modes---dense, sparse, ColBERT, and a hybrid combination---are each tuned on the in-domain development split alone: the retrieval depth and the neighbour-vote aggregator are selected only by in-domain Top-1, the external labels are never consulted, and the secondary fusion-tuning stage is deliberately skipped because the available development artifacts do not contain the full ranked pool it would require, which would otherwise risk leaking internal-test labels. Each mode is then frozen and applied to the in-scope external set ($N{=}878$) against the same in-scope Direct-Answer baseline of 0.6116 reported above.
+A second retrieval mechanism is tested on the external corpus. Instead of supplying definition text, the system retrieves the most similar training cases and reranks the candidate primaries by neighbor agreement. Four retrieval modes---dense, sparse, ColBERT, and a hybrid combination---are each tuned on the in-domain development split alone: the retrieval depth and the neighbor-vote aggregator are selected only by in-domain Top-1, the external labels are never consulted, and the secondary fusion-tuning stage is deliberately skipped because the available development artifacts do not contain the full ranked pool it would require, which would otherwise risk leaking internal-test labels. Each mode is then frozen and applied to the in-scope external set ($N{=}878$) against the same in-scope Direct-Answer baseline of 0.6116 reported above (\cref{tab:case-knn}).
 
 \begin{table}[htbp]
 \centering
-\caption{Case-similarity reranking on the in-scope external set ($N{=}878$). Each mode uses the configuration selected on the in-domain development split (depth $20$, neighbour-weighted vote). McNemar $p$ is against the in-scope Direct-Answer baseline.}
+\caption{Case-similarity reranking on the in-scope external set ($N{=}878$). Each mode uses the configuration selected on the in-domain development split (depth $20$, neighbor-weighted vote). McNemar $p$ is against the in-scope Direct-Answer baseline; $\Delta$ values are absolute Top-1 differences.}
 \label{tab:case-knn}
 \begin{tabular}{lcccc}
 \toprule
@@ -738,7 +772,7 @@ Hybrid & 0.5410 & 0.5182 & $-0.0934$ & $1.4\times10^{-6}$\\
 \end{tabular}
 \end{table}
 
-Every retrieval mode degrades external selection significantly, by six to eleven points. The configuration that looked best in domain does not merely fail to transfer; it actively harms the external primary. This mirrors the lexical-transfer result: a similarity signal fitted or selected on one corpus encodes corpus-specific regularities, so neighbour-vote reranking, like the in-domain lexical selector, collapses under distribution shift. The matched in-scope baseline and the strict separation of tuning from evaluation rule out leakage as an explanation, leaving distribution shift as the operative cause. Case-similarity reranking is therefore recorded as a second negative retrieval result: it does not supply the transferable comparative signal that resolving the selection bottleneck would require.
+Every retrieval mode degrades external selection significantly, by six to eleven points. The configuration that looked best in domain does not merely fail to transfer; it actively harms the external primary. This mirrors the lexical-transfer result: a similarity signal fitted or selected on one corpus encodes corpus-specific regularities, so neighbor-vote reranking, like the in-domain lexical selector, collapses under distribution shift. The matched in-scope baseline and the strict separation of tuning from evaluation rule out leakage as an explanation, leaving distribution shift as the operative cause. Case-similarity reranking is therefore recorded as a second negative retrieval result: it does not supply the transferable comparative signal that resolving the selection bottleneck would require.
 
 
 \section{Interpretation}
@@ -765,11 +799,11 @@ The gold parent appears in Top-3 and in the confirmed set, but another candidate
 
 \section{Conservative Set Control}
 
-NtS emits fewer labels and improves exact-set while lowering Top-1. This shows why primary and diagnostic-set metrics must be interpreted together. The conservative-set archetype is the constructive counterpart to the negative finalization result. Nominate-then-Select emits fewer labels and improves set exactness while lowering primary accuracy, which is not a failure so much as a different operating point on the trade-off between primary correctness and set calibration. Recognizing it as a deliberate choice rather than a regression is what justifies reporting primary and set metrics jointly throughout the results.
+NtS emits fewer labels and improves Exact Match while lowering Top-1. This shows why primary and diagnostic-set metrics must be interpreted together. The conservative-set archetype is the constructive counterpart to the negative finalization result. Nominate-then-Select emits fewer labels and improves set exactness while lowering primary accuracy, which is not a failure so much as a different operating point on the trade-off between primary correctness and set calibration. Recognizing it as a deliberate choice rather than a regression is what justifies reporting primary and set metrics jointly throughout the results.
 
 \section{Out-of-Scope Diagnosis}
 
-If the gold code is outside the active profile, the system cannot emit it. Mechanical expansion makes the code representable, but the 0/58 result shows that the selector still requires adaptation. The out-of-scope archetype connects the coverage accounting of the external chapter to the lived behaviour of the system. When the gold code lies outside the active profile the system is structurally unable to emit it, so such cases must be attributed to scope; and even after the profile is enlarged to represent them, the selector does not recover them as primaries. The archetype thus distinguishes the two reasons a correct diagnosis may never appear---unrepresentable scope and unselected representation---which call for entirely different responses.
+If the gold code is outside the active profile, the system cannot emit it. Mechanical expansion makes the code representable, but the 0/58 result shows that the selector still requires adaptation. The out-of-scope archetype connects the coverage accounting of the external chapter to the lived behavior of the system. When the gold code lies outside the active profile the system is structurally unable to emit it, so such cases must be attributed to scope; and even after the profile is enlarged to represent them, the selector does not recover them as primaries. The archetype thus distinguishes the two reasons a correct diagnosis may never appear---unrepresentable scope and unselected representation---which call for entirely different responses.
 
 \section{Rare-Class Failure}
 
@@ -823,7 +857,7 @@ The Taiwanese context requires Traditional-Chinese prompts, local coding practic
 
 Candidate coverage substantially exceeds primary accuracy. Verification retains the answer but many competitors. Tested repairs yield no stable causal gain. External results remain useful but scope-sensitive. Mechanical expansion is not behavioral adaptation. Richer evidence and structural selection remain plausible but unproven.
 
-The synthesis that the thesis offers is deliberately modest and precisely bounded. Candidate coverage exceeds committed accuracy; verification retains the answer alongside many competitors; the tested repairs yield no stable causal gain; external transfer is real but scope-sensitive; and representational expansion is not behavioural adaptation. Each of these is a measured statement rather than a speculation. The two directions the thesis regards as most promising---supplying the comparative evidence that a single transcript lacks, and replacing flat selection with structured selection over symptoms, criteria, and exclusions---are named as plausible and motivated rather than demonstrated, and their evaluation is reserved for studies with fresh confirmatory data.
+The synthesis that the thesis offers is deliberately modest and precisely bounded. Candidate coverage exceeds committed accuracy; verification retains the answer alongside many competitors; the tested repairs yield no stable causal gain; external transfer is real but scope-sensitive; and representational expansion is not behavioral adaptation. Each of these is a measured statement rather than a speculation. The two directions the thesis regards as most promising---supplying the comparative evidence that a single transcript lacks, and replacing flat selection with structured selection over symptoms, criteria, and exclusions---are named as plausible and motivated rather than demonstrated, and their evaluation is reserved for studies with fresh confirmatory data.
 
 
 \chapter{Limitations and Threats to Validity}
@@ -839,7 +873,7 @@ Top-3 is permissive in multilabel cases. First-listed analysis differs from any-
 
 \section{Model and Method}
 
-The selected model is quantized and served under one stack. Checker states lack clinician-level gold. Evidence traceability does not prove clinical correctness. Deterministic logic inherits checker errors. The model-and-method limitations bound what the audit layer can be taken to establish. The selected backbone is quantized and served under a single stack, so behaviour under other models or serving configurations is not characterized; the checker states are not validated against clinician-level gold, so a reproducible verdict is not a verified one; and because the deterministic logic is a fixed function of the checker outputs, it faithfully propagates whatever errors those checkers make. The auditability claim is therefore a claim about inspectability and reproducibility of the trace, not about the clinical correctness of its individual judgments.
+The selected model is quantized and served under one stack. Checker states lack clinician-level gold. Evidence traceability does not prove clinical correctness. Deterministic logic inherits checker errors. The model-and-method limitations bound what the audit layer can be taken to establish. The selected backbone is quantized and served under a single stack, so behavior under other models or serving configurations is not characterized; the checker states are not validated against clinician-level gold, so a reproducible verdict is not a verified one; and because the deterministic logic is a fixed function of the checker outputs, it faithfully propagates whatever errors those checkers make. The auditability claim is therefore a claim about inspectability and reproducibility of the trace, not about the clinical correctness of its individual judgments.
 
 \section{Statistics}
 
@@ -855,7 +889,7 @@ MDD remains synthetic and depression-skewed. Results do not establish Taiwanese 
 
 \section{Reproducibility}
 
-Reproduction depends on model availability, software, hardware, and data access. Some interventions originated as bounded probes rather than production components. The thesis distinguishes canonical paths from experimental probes. The reproducibility limitations are practical and honestly bounded. Re-deriving the results depends on the availability of the specific model, software, hardware, and data, any of which may change; and several interventions originated as bounded research probes rather than as production-quality components, so they are reproducible as evidence without being engineered for reuse. The thesis manages this by labelling canonical paths distinctly from experimental probes, so that a reader can tell which parts are intended as durable system components and which are diagnostic experiments.
+Reproduction depends on model availability, software, hardware, and data access. Some interventions originated as bounded probes rather than production components. The thesis distinguishes canonical paths from experimental probes. The reproducibility limitations are practical and honestly bounded. Re-deriving the results depends on the availability of the specific model, software, hardware, and data, any of which may change; and several interventions originated as bounded research probes rather than as production-quality components, so they are reproducible as evidence without being engineered for reuse. The thesis manages this by labeling canonical paths distinctly from experimental probes, so that a reader can tell which parts are intended as durable system components and which are diagnostic experiments.
 
 \section{Mitigation}
 
@@ -899,7 +933,7 @@ The planned Chang Gung arm compares the frozen model with treating-clinician dia
 
 \section{Monitoring and Regulation}
 
-Deployment requires drift monitoring, periodic error review, version control, rollback, scope lists, incident reporting, and revalidation after changes. HiED remains a research prototype; regulatory classification and safety/effectiveness are outside this thesis. The monitoring and regulatory requirements are listed to mark the distance between a research prototype and a deployable clinical instrument. Drift monitoring, periodic error review, version control with rollback, maintained scope lists, incident reporting, and revalidation after change are the operational obligations that accompany any clinical software, and none of them is addressed by benchmark evaluation. The thesis names them to be explicit that establishing diagnostic behaviour on retrospective corpora is a necessary early step in a much longer process whose later stages---regulatory classification and demonstrated safety and effectiveness---lie entirely outside its scope.
+Deployment requires drift monitoring, periodic error review, version control, rollback, scope lists, incident reporting, and revalidation after changes. HiED remains a research prototype; regulatory classification and safety/effectiveness are outside this thesis. The monitoring and regulatory requirements are listed to mark the distance between a research prototype and a deployable clinical instrument. Drift monitoring, periodic error review, version control with rollback, maintained scope lists, incident reporting, and revalidation after change are the operational obligations that accompany any clinical software, and none of them is addressed by benchmark evaluation. The thesis names them to be explicit that establishing diagnostic behavior on retrospective corpora is a necessary early step in a much longer process whose later stages---regulatory classification and demonstrated safety and effectiveness---lie entirely outside its scope.
 
 
 \chapter{Conclusions and Future Work}
@@ -967,7 +1001,7 @@ Metric & Definition\\
 \midrule
 Top-1 & First predicted parent is contained in the gold parent set.\\
 Top-3 & At least one gold parent appears among the first three predictions.\\
-Exact-set & Predicted parent set exactly equals the gold set.\\
+Exact Match (exact-set accuracy) & Predicted parent set exactly equals the gold set.\\
 Macro-F1 & Multilabel F1 averaged equally across 12 classes.\\
 Weighted-F1 & Multilabel F1 weighted by gold support.\\
 Gold-in-confirmed & A gold parent appears in the logic-confirmed set.\\
@@ -1042,6 +1076,16 @@ Full prompt templates and frozen prompt hashes are preserved in the project repo
 \chapter{Detailed Intervention Implementations}
 \label{app:interventions}
 
+This appendix documents the design and implementation logic of the
+selection-repair interventions evaluated in Chapter~\ref{ch:experimental}.
+The main chapters summarize their empirical outcomes; the purpose here is to
+make the intervention logic sufficiently explicit for methodological review,
+replication, and extension. Implementation code, frozen configurations, and
+supporting artifacts are maintained in the project repository.\footnote{\url{https://github.com/OscarTsao/CultureDx/tree/v1.0.1-school-defense}}
+Internal file paths, development-branch names, and software class names are
+intentionally omitted because they are implementation details rather than part
+of the scientific argument.
+
 \section{Evidence Reasoning}
 
 The evidence-reasoning intervention is a four-stage pipeline whose stage order is extract $\rightarrow$ somatize $\rightarrow$ match $\rightarrow$ assemble. \emph{Extraction} prompts the language model to pull symptom spans from transcript turns, with the transcript clipped to a per-language character budget that preserves turn boundaries and with separate Chinese and English extraction prompts. \emph{Somatization mapping} routes extracted spans to somatic criterion groups, with a dedicated fallback prompt for Chinese somatic presentations. \emph{Criterion matching} scores each span against ICD-10 criterion text by token overlap (Jaccard similarity) rather than by dense embedding, after NFKC text normalization; a syntactic, scope-aware Chinese negation detector that handles positive-negation idioms (for example, 睡不着, 吃不下) and clause boundaries flags genuine contradictions, and when a criterion is negated a fixed contradiction penalty of $0.20$ is subtracted from the fused score. A parallel dense-retrieval path with a sentence-embedding cache and temporal features was also available. \emph{Assembly} compiles the surviving evidence into a per-candidate evidence brief at a minimum confidence of $0.1$ and caches it. The intervention improved inspectability but introduced extraction and negation noise and did not yield a stable selection gain; the main text attributes this to all evidence deriving from a single transcript modality.
@@ -1064,11 +1108,13 @@ The test-time aggregation intervention samples the diagnostician $K\in\{3,5\}$ t
 
 \section{Pairwise Differential}
 
-The pairwise differential intervention activates when top candidates are close under a fixed score gate (a margin threshold of $0.10$): an adjacent close-cluster is assembled from ranked neighbours within the gate, the recorded checker outputs are reconstructed from the decision trace, and a differential-comparison agent re-decides the primary among the clustered alternatives. It was evaluated three ways---an independent run, a controlled replay over identical upstream outputs, and a forced override---plus a committed-policy variant in which the re-decided top candidate overrides the diagnostician's primary. A second phase measured conditional recovery on close-cluster subsets (margin-gated exact match $0.2857$ on LingxiDiag and $0.2398$ on MDD). The controlled replay changed no committed primary under the reference policy, so local subset accuracy did not translate into a full-evaluation gain, and the forced override was harmful.
+The pairwise differential intervention activates only when the top candidates are both sufficiently supported and close: an adjacent close-cluster is assembled from ranked neighbors with met ratio at least $0.5$ and adjacent met-ratio distance less than $0.10$, the recorded checker outputs are reconstructed from the decision trace, and a differential-comparison agent re-decides the primary among the clustered alternatives. It was evaluated three ways---an independent run, a controlled replay over identical upstream outputs, and a forced override---plus a committed-policy variant in which the re-decided top candidate overrides the diagnostician's primary. A second phase measured conditional recovery on close-cluster subsets.
+% D4 (pending): margin-gated conditional-recovery numbers (0.2857 Lingxi / 0.2398 MDD) removed until verified against artifacts. The controlled replay changed no committed primary under the reference policy, so local subset accuracy did not translate into a full-evaluation gain, and the forced override was harmful.
 
 \section{Residual-Evidence Loop}
 
 The residual-evidence loop iteratively feeds the checker outputs and the criteria left unresolved by verification back into the diagnostician for re-invocation, in the hope that a second pass conditioned on the verification result would sharpen the primary. Across tested model families the loop produced unstable trade-offs between over-emission (adding diagnoses) and under-recovery (dropping the gold parent), without a stable net gain. It was developed as ad-hoc orchestration rather than a canonical, committed probe; its negative result is reproducible from archived development artifacts but a clean re-implementation remains an open task, so it is reported as a bounded experimental probe rather than a system component.
+
 
 \chapter{Worked Audit-Trace Example}
 \label{app:worked}
@@ -1081,7 +1127,7 @@ A help-seeker describes roughly two weeks of persistent low mood with loss of in
 
 \section{Active Candidate Profile and Per-Criterion Evaluation}
 
-The active profile evaluates the candidate disorders against their operational criteria. For the two leading candidates, the per-criterion record assigns each criterion one of three states---met, not-met, or insufficient-evidence---with a grounding span and a confidence.
+The active profile evaluates the candidate disorders against their operational criteria. For the two leading candidates, the per-criterion record assigns each criterion one of three states---met, not-met, or insufficient-evidence---with a grounding span and a confidence (\cref{tab:worked-f32,tab:worked-f41}).
 
 \begin{table}[htbp]
 \centering
@@ -1136,7 +1182,7 @@ The example also exposes the selection bottleneck in its concrete form. Nothing 
 \chapter{Experiment Inventory and Inclusion Decisions}
 \label{app:inventory}
 
-This appendix records how completed and attempted experimental probes were classified for inclusion in the thesis. It is intended to make clear which results support the main claims, which are reported only as robustness or feasibility evidence, and which are excluded as future work or separate research lines. Internal branch names and file paths are omitted; reproducibility information is maintained in the project repository. The classification follows a fixed rule: a probe enters the quantitative evidence base only if it has a frozen artifact with a stated sample size, split, and metric; probes that were executed but produced no comparable number are recorded as feasibility findings; and designs that were not evaluated in this thesis are recorded as future work rather than results.
+This appendix records how completed and attempted experimental probes were classified for inclusion in the thesis (\cref{tab:inventory}). It is intended to make clear which results support the main claims, which are reported only as robustness or feasibility evidence, and which are excluded as future work or separate research lines. Internal branch names and file paths are omitted; reproducibility information is maintained in the project repository. The classification follows a fixed rule: a probe enters the quantitative evidence base only if it has a frozen artifact with a stated sample size, split, and metric; probes that were executed but produced no comparable number are recorded as feasibility findings; and designs that were not evaluated in this thesis are recorded as future work rather than results.
 
 \begin{small}
 \begin{longtable}{@{}p{3cm}p{4.4cm}p{2.9cm}p{2.3cm}@{}}
@@ -1167,6 +1213,7 @@ Self-consistency and confidence-weighted variant & Is the primary commitment sam
 \midrule
 Model-size ladder & Is the bottleneck a capacity problem? & internal test split, complete & Robustness\\
 Cross-family backbone probes & Does the observed selection bottleneck depend on one backbone family? & exploratory run; not tabulated because backbone family, quantization, language capability, and context handling were not controlled & Inventory only\\
+Prompt--retrieval interaction probe & Does true case retrieval help equally across prompt families? & post-freeze internal-test probe, complete & Appendix\\
 Checker granularity and scope factorial & Does checker configuration alter Top-1? & internal, complete & Appendix\\
 Disorder-definition retrieval modes & Does a different similarity mode help? & internal probe, complete & Robustness\\
 \midrule
@@ -1179,7 +1226,7 @@ Criterion-state anatomy & How are criterion states distributed? & internal probe
 \midrule
 External-corpus evaluation & Does performance transfer to a different distribution? & external, complete & External validation\\
 External repair battery & Does any repair transfer to the external corpus? & external, complete & External repair table\\
-Case-similarity reranking & Does case-neighbour reranking transfer? & external, complete & Retrieval control\\
+Case-similarity reranking & Does case-neighbor reranking transfer? & external, complete & Retrieval control\\
 Lexical cross-corpus transfer & Does a lexical selector transfer across corpora? & in-domain and external & Lexical transfer\\
 Calibration and selective prediction & Is confidence usable for selective prediction? & internal test split, complete & Appendix\\
 \midrule
@@ -1192,13 +1239,49 @@ Multi-round debate on the external corpus & Does multi-round debate help on the 
 Heterogeneous-graph selector & Can a typed relational selector repair selection? & not evaluated & Future work\\
 Checker-level self-consistency & Does sampling at the checker agents help? & not evaluated & Future work\\
 Full-list reranking & Does reranking the entire candidate list help? & not evaluated & Future work\\
-Dual-standard criterion retargeting & Does an alternate criteria standard change scope behaviour? & not evaluated & Future work\\
+Dual-standard criterion retargeting & Does an alternate criteria standard change scope behavior? & not evaluated & Future work\\
 \midrule
 \multicolumn{4}{@{}l}{\textit{Excluded (separate research line)}}\\
 \midrule
 Cross-lingual and script-transfer arm & Does script or language transfer matter? & reassigned to a separate study & Excluded\\
 \end{longtable}
 \end{small}
+
+\section{Post-Freeze Prompt--Retrieval Interaction Probe}
+
+A post-freeze true-retriever prompt--retrieval probe examines how
+retrieval interacts with prompt structure under the same FAISS/BGE-M3
+case retriever used by the canonical in-domain runs (\cref{tab:prompt-rag-true-retriever}). Retrieval raises
+the direct Single baseline from 0.466 to 0.508
+(McNemar $p=4.0\times10^{-4}$), confirming that case retrieval helps
+direct candidate support. In contrast, a historical rank-only
+Diagnose-then-Verify (DTV v1) variant does not benefit from retrieval
+(0.456 to 0.451, $p=0.73$), and the deployed HiED--DA configuration
+shows only a small, non-significant marginal gain when retrieval is
+added back (0.511 to 0.518, $p=0.43$). The probe supports the main
+interpretation: retrieval helps direct candidate support, but the
+structured HiED ceiling is dominated by primary selection rather than
+by absence of retrieved examples. This probe is therefore used only to
+interpret retrieval sensitivity; it does not replace the frozen
+architecture ladder, where the Single, Single+RAG, and HiED--DA rows
+remain the thesis headline comparisons.
+
+\begin{table}[htbp]
+\centering
+\caption{Post-freeze true-retriever prompt--retrieval interaction probe on the internal test split. Reported as a post-freeze probe; does not replace the frozen architecture ladder.}
+\label{tab:prompt-rag-true-retriever}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lcccl}
+\toprule
+Prompt family & no-RAG & true RAG & $\Delta$ & McNemar $p$ \\
+\midrule
+Single & 0.466 & 0.508 & $+0.042$ & $4.0\times10^{-4}$ \\
+Historical rank-only DTV & 0.456 & 0.451 & $-0.005$ & $0.73$ \\
+HiED--DA & 0.511 & 0.518 & $+0.007$ & $0.43$ \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
 
 The inventory is deliberately complete rather than selective: it lists probes that produced null or negative results alongside those that informed the main claims, and it separates evidence that rests on the one-shot internal test split from internal probes and from the external distribution-shift corpus. The two excluded rows are recorded only to document the inclusion decision; neither contributes to any quantitative claim in this thesis.
 
@@ -1210,7 +1293,7 @@ The project records data fingerprints, model/configuration identity, prompt hash
 
 \begin{table}[htbp]
 \centering
-\caption{Benchmark positioning against the public LingxiDiagBench static-evaluation validation cases. The publicly released LingxiDiagBench static benchmark uses the validation file as its evaluation input. HiED validation rows are scored on the same public validation cases with the frozen HiED configuration; the internal test split column reports the separate train-carved internal test run used as the thesis headline.}
+\caption{Top-1 benchmark positioning on the public LingxiDiagBench static-evaluation validation cases. The publicly released LingxiDiagBench static benchmark uses the validation file as its evaluation input. HiED validation rows are scored on the same public validation cases with the frozen HiED configuration; the internal test split column reports the separate train-carved internal test run used as the thesis headline.}
 \label{tab:lingxi-public-validation-positioning}
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{lcccc}
@@ -1219,6 +1302,8 @@ System & Public validation Top-1 & Internal test split Top-1 & $\Delta$ val--int
 \midrule
 LingxiDiagBench Qwen3-32B zero-shot & 0.470 & --- & --- & same-backbone static baseline\\
 LingxiDiagBench TF--IDF+LR & 0.496 & --- & --- & best public static Table~4 row\\
+LingxiDiagBench Gemini-3-Flash zero-shot & 0.492 & --- & --- & best public frontier-LLM Top-1 row\\
+LingxiDiagBench GPT-5-Mini zero-shot & 0.487 & --- & --- & strong frontier-LLM comparator\\
 HiED Single & 0.466 & 0.466 & 0.000 & direct LLM baseline\\
 HiED Single+RAG & 0.507 & 0.508 & $-0.001$ & retrieval baseline\\
 HiED--DA & \textbf{0.522} & \textbf{0.518} & $+0.004$ & selected structured system\\
@@ -1230,7 +1315,7 @@ HiED--DA & \textbf{0.522} & \textbf{0.518} & $+0.004$ & selected structured syst
 This table is used for benchmark positioning rather than for the
 thesis headline. The public LingxiDiagBench static benchmark is
 reproducibly evaluated on the validation file, whereas the main
-HiED headline uses a separate internal test split.
+HiED headline uses a separate internal test split. On the same public validation cases, HiED--DA reaches 0.522 Top-1, above the best static Table~4 row (TF--IDF+LR, 0.496), the strongest frontier-LLM Top-1 row (Gemini-3-Flash, 0.492), and GPT-5-Mini (0.487). This is a Top-1 positioning comparison only; it does not claim dominance on every LingxiDiagBench metric.\footnote{LingxiDiagBench Table~4 reports additional metrics beyond 12-class Top-1; for example, GPT-5-Mini has the highest reported 12-class Exact Match accuracy (0.409). This positioning is therefore used only for primary-selection comparison, not as a claim of dominance on all metrics.}
 The small validation--internal-test difference for HiED--DA (0.522 vs
 0.518) indicates that comparison on the same public validation cases is
 not explained by a large validation-specific inflation. The comparison
@@ -1240,6 +1325,9 @@ system reports a committed primary rather than a broad multilabel
 hit alone.
 
 
+\renewcommand{\bibname}{References} % IEEE 慣例與 CCU「參考文獻」對齊
+\clearpage\phantomsection
+\addcontentsline{toc}{chapter}{References}
 \bibliographystyle{IEEEtranN}
 \bibliography{references}
 \end{document}
