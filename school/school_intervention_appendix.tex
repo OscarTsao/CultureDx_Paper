@@ -1,0 +1,282 @@
+% =====================================================================
+% SCHOOL VERSION — Appendix: Detailed Intervention Implementations
+% Path-free thesis version: methods, design choices, and findings only.
+% =====================================================================
+
+\chapter{Detailed Intervention Implementations}
+\label{app:interventions}
+
+This appendix documents the design and implementation logic of the
+selection-repair interventions evaluated in Chapter~\ref{ch:experiments}.
+The main chapters summarize their empirical outcomes; the purpose here is to
+make the intervention logic sufficiently explicit for methodological review,
+replication, and extension. Implementation code, frozen configurations, and
+supporting artifacts are maintained in the project repository.\footnote{\url{https://github.com/OscarTsao/CultureDx}}
+Internal file paths, development-branch names, and software class names are
+intentionally omitted because they are implementation details rather than part
+of the scientific argument.
+
+\section{Evidence-Reasoning Pipeline}
+\label{app:evidence}
+
+The clinically explicit evidence-reasoning intervention decomposes the
+transcript into four stages:
+\emph{symptom extraction}, \emph{somatization mapping},
+\emph{criterion matching}, and \emph{evidence-brief assembly}.
+
+\subsection{Symptom Extraction}
+
+An LLM extracts clinically relevant symptom spans from transcript turns.
+Long inputs are bounded to approximately 14{,}000 characters while preserving
+turn boundaries so that quoted evidence remains attributable to a speaker and
+local conversational context. Separate Chinese- and English-language prompt
+templates are used, but both request the same structured output: a concise set
+of symptom spans, their local context, and a confidence estimate.
+
+\subsection{Somatization Mapping}
+
+Extracted symptom spans are mapped to somatic-presentation criterion groups.
+This stage is intended to recover clinically relevant bodily complaints that
+may be expressed indirectly or colloquially rather than in diagnostic
+terminology. A fallback LLM prompt handles spans that cannot be mapped by the
+primary rule-based pass. The output is a set of candidate somatic mappings,
+not a diagnosis.
+
+\subsection{Criterion Matching}
+
+Each extracted span is compared with the ICD-10 criterion text for the active
+candidate disorders. The principal lexical matcher uses token-overlap
+similarity rather than a dense embedding score. Text is normalized using
+Unicode NFKC normalization, and scope-aware negation handling reduces the
+matching score when the evidence explicitly contradicts the criterion. In the
+tested configuration, a fixed contradiction penalty of 0.20 is subtracted
+from the fused score.
+
+A separate dense-retrieval path represents criterion text and transcript spans
+with sentence embeddings and caches the resulting vectors. Temporal features
+are computed independently so that explicit duration or course information can
+be represented without being conflated with lexical overlap.
+
+\subsection{Evidence-Brief Assembly}
+
+Matched evidence is assembled into one evidence brief per candidate disorder.
+The brief includes the supporting or contradicting span, criterion identity,
+matching score, confidence, and temporal information when available. Matches
+below a minimum confidence of 0.1 are excluded. Briefs are cached so that
+downstream reranking and diagnostic agents receive a stable evidence view.
+
+\subsection{Finding and Interpretation}
+
+The intervention did not yield a stable primary-selection gain. Explicit
+decomposition introduced additional failure modes, including extraction
+errors, incorrect negation handling, and noisy somatization mappings. Because
+all evidence originates from the same single-session transcript, the pipeline
+can reorganize observed evidence but cannot recover duration, prior-course,
+substance, medical, or exclusion information that was never elicited. The
+result therefore supports a measured conclusion: clinically explicit
+decomposition can improve inspectability, but noisy extraction may offset its
+potential information value.
+
+\section{Confidence Calibration}
+\label{app:calibration}
+
+The confidence-calibration intervention applies post-hoc Platt scaling to the
+diagnostician's verbalized confidence. Calibration is fitted under five-fold
+cross-validation, avoiding the use of the same case both to fit and evaluate
+its calibration transform.
+
+Two complementary calibration measures are reported:
+
+\begin{itemize}
+  \item \textbf{Expected Calibration Error (ECE):} a ten-bin comparison
+        between confidence and empirical correctness;
+  \item \textbf{Area Under the Risk--Coverage Curve (AURC):} the error
+        accumulated as increasingly low-confidence cases are retained.
+\end{itemize}
+
+Raw and calibrated scores are projected to the paper-parent taxonomy before
+evaluation. Calibration did not improve the system's primary-selection
+operating point and did not consistently improve ECE or AURC. This negative
+result is important because the bottleneck is principally a ranking problem:
+a monotonic calibration map may improve probability interpretation without
+changing which candidate is ranked first.
+
+A broader cross-dataset calibration utility was also developed for
+leave-one-dataset-out analysis, but it is methodologically distinct from the
+canonical intervention reported in the thesis and is not used to support the
+main selection claim.
+
+\section{Learned Re-ranking}
+\label{app:ranker}
+
+Two families of learned rerankers were evaluated: a structured feature
+reranker and a dense similarity reranker.
+
+\subsection{Structured Feature Reranker}
+
+A gradient-boosted ranking model is trained with out-of-fold predictions using
+four groups of features:
+
+\begin{enumerate}
+  \item \textbf{Checker features}: number of criteria met, number of required
+        criteria, and average checker confidence;
+  \item \textbf{Evidence features}: number of evidence spans and mean evidence
+        confidence;
+  \item \textbf{Somatization features}: number of somatic mappings and number
+        of somatic criteria judged met;
+  \item \textbf{Cross-disorder features}: confidence margin, original rank
+        position, and number of logic-confirmed disorders.
+\end{enumerate}
+
+The model improves point accuracy on the development lineage but transfers
+poorly across corpora. This indicates that the fitted decision surface captures
+dataset-specific ranking regularities rather than a robust clinical selection
+rule.
+
+\subsection{Dense Similarity Reranker}
+
+A dense similarity reranker compares the case representation with candidate
+disorder definitions under dense, sparse, multi-vector, and hybrid retrieval
+modes. Each similarity score is fused with the frozen HiED ranking signal under
+a common anti-leakage protocol. None of the tested modes provides a stable
+cross-corpus improvement, and the richer multi-vector mode produces lower
+point estimates in both evaluated corpora.
+
+\subsection{Lexical Transfer Control}
+
+A TF--IDF plus logistic-regression selector recovers part of the in-domain
+ranking headroom but collapses under corpus shift. Training the same model
+family directly on the external corpus restores performance within that
+corpus, showing that the failure is one of transfer rather than an intrinsic
+inability of lexical models to fit diagnostic labels. The result nevertheless
+demonstrates that the learned lexical shortcut is corpus-dependent and does
+not provide a portable solution to primary selection.
+
+\section{Selector Fine-tuning}
+\label{app:finetune}
+
+Selector fine-tuning uses the same candidate-level features as the learned
+reranking probes but optimizes the selector directly for the gold primary. The
+evaluation uses a four-cell train/test matrix:
+
+\begin{enumerate}
+  \item train on LingxiDiag and test on LingxiDiag;
+  \item train on LingxiDiag and test on MDD-5k;
+  \item train on MDD-5k and test on LingxiDiag;
+  \item train on MDD-5k and test on MDD-5k.
+\end{enumerate}
+
+Fine-tuning improves in-corpus point accuracy but does not transfer reliably.
+The result narrows the claim boundary: a fitted selector can exploit corpus-
+specific supervision, but this does not demonstrate a general solution to the
+selection bottleneck across language style, corpus construction, and class
+distribution shifts.
+
+\section{Self-Consistency and Confidence-Informed Aggregation}
+\label{app:selfconsistency}
+
+Test-time aggregation resamples the diagnostician at
+$K\in\{3,5\}$ and combines the committed primary using two rules:
+
+\begin{enumerate}
+  \item \textbf{Self-consistency}: plain majority vote over sampled primaries;
+  \item \textbf{Confidence-informed self-consistency}: a confidence-weighted
+        vote using the diagnostician's verbalized confidence.
+\end{enumerate}
+
+The $K=3$ result is computed from the first three samples of the same
+five-sample set used for $K=5$, preserving a nested comparison. Ties are
+resolved deterministically. A single-sample temperature ladder at
+temperatures 0.0, 0.3, and 0.7 provides a control for sampling diversity.
+
+None of the tested aggregation rules significantly improves Top-1 over greedy
+Direct-Answer. The highest point estimate remains effectively unchanged, while
+higher-temperature sampling reduces accuracy. These results suggest that the
+selection error is not simply caused by insufficient sampling diversity or a
+hidden majority consensus among independently sampled diagnostic commitments.
+
+Aggregation is applied to the diagnostician because it is the component that
+commits the primary diagnosis. Checker-level aggregation remains a separate
+future-work question.
+
+\section{Pairwise Differential Reasoning}
+\label{app:pairwise}
+
+The pairwise differential intervention targets cases in which two or more
+candidates are both well supported and have closely matched criterion scores.
+A close cluster is formed when candidate support exceeds the pre-specified
+threshold and adjacent met-ratio differences fall below the distance
+threshold. A differential agent then compares only the candidates inside this
+cluster and selects the locally preferred primary.
+
+The intervention is evaluated in three distinct ways:
+
+\begin{enumerate}
+  \item an independently generated comparison run;
+  \item a controlled replay using identical frozen upstream outputs;
+  \item a forced-override variant in which the pairwise choice replaces the
+        diagnostician's committed primary.
+\end{enumerate}
+
+On recoverable close-cluster subsets, the local differential selects the gold
+candidate in 28.6\% of LingxiDiag cases and 24.0\% of MDD-5k cases. However,
+the controlled replay changes the ranked top candidate without changing any
+committed primary under the reference finalization policy. The higher point
+estimate in the independent comparison run is therefore not causally
+attributable to the pairwise stage. When the pairwise choice is forced to
+override the diagnostician, overall Top-1 falls sharply. Pairwise reasoning is
+thus informative as a local ambiguity probe but is not supported as the
+deployed selector.
+
+\section{Residual-Evidence Loop}
+\label{app:residual}
+
+The residual-evidence intervention iteratively feeds checker outputs and
+unresolved evidence back to the diagnostician. Its intended cycle is:
+
+\begin{enumerate}
+  \item identify criteria that remain insufficient or contradictory;
+  \item summarize residual evidence and unresolved distinctions;
+  \item ask the diagnostician to reconsider the candidate set;
+  \item repeat under a bounded number of rounds.
+\end{enumerate}
+
+This intervention was evaluated through one-off sandbox orchestration rather
+than a fully canonicalized release implementation. The available analyses are
+sufficient to support the reported negative result, but the intervention
+should be reimplemented as a clean, versioned module before further extension.
+
+Across the tested model-family probes, the loop exhibits unstable trade-offs:
+some configurations recover secondary labels while over-emitting on
+single-label controls, whereas others remain conservative but fail to recover
+missing labels. The result supports the thesis-level conclusion that repeatedly
+feeding residual evidence back into the same transcript-only reasoning path
+does not reliably resolve the selection bottleneck.
+
+\section{Methodological Reproducibility and Scope}
+\label{app:successor}
+
+The interventions in this appendix differ in maturity. Some are integrated
+into the canonical evaluation pipeline, whereas others originated as bounded
+development probes. For reproducibility, each quantitative claim should be
+interpreted together with its frozen configuration, dataset fingerprint,
+prediction artifact, and statistical definition.
+
+The methodological lessons are nevertheless independent of repository layout:
+
+\begin{itemize}
+  \item evidence extraction must separate observed evidence from missing
+        information;
+  \item calibration must be evaluated separately from ranking;
+  \item learned rerankers require out-of-corpus validation;
+  \item resampling methods must preserve nested sample sets and deterministic
+        aggregation rules;
+  \item local reranking requires a controlled replay to establish causal
+        attribution;
+  \item sandbox interventions should be canonicalized before being treated as
+        reusable system components.
+\end{itemize}
+
+The repository preserves the implementation history and frozen artifacts, but
+the thesis treats those materials as reproducibility support rather than as
+part of the scientific prose.

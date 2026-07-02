@@ -1,0 +1,48 @@
+% fig_methods_tikz.tex
+% Selection-repair methods comparison (standalone TikZ).
+% Compile:  pdflatex fig_methods_tikz.tex  ->  fig_methods_tikz.pdf
+% Shows that four repair families each fail to exceed Direct-Answer; the bottleneck is ranking.
+
+\documentclass[border=3pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+
+\definecolor{tealFill}{HTML}{E1F5EE}\definecolor{tealDraw}{HTML}{0F6E56}\definecolor{tealText}{HTML}{085041}
+\definecolor{corFill}{HTML}{FAECE7}\definecolor{corDraw}{HTML}{993C1D}\definecolor{corText}{HTML}{712B13}
+\definecolor{gry}{HTML}{888780}\definecolor{gryFill}{HTML}{F1EFE8}\definecolor{txt}{HTML}{2C2C2A}
+
+\begin{document}
+\begin{tikzpicture}[
+  font=\small,
+  box/.style={rectangle, rounded corners=3pt, draw, line width=0.5pt, align=center,
+              inner sep=4pt, minimum height=15mm},
+  da/.style={box, fill=tealFill, draw=tealDraw, text=tealText, minimum width=92mm},
+  rep/.style={box, fill=gryFill, draw=gry, text=txt, minimum width=58mm},
+  conc/.style={box, fill=corFill, draw=corDraw, text=corText, minimum width=126mm},
+  arr/.style={-{Stealth[length=4pt,width=4pt]}, line width=0.5pt, draw=gry},
+]
+
+% ---- Direct-Answer baseline ----
+\node[da] (da) at (6.3,0)
+   {\textbf{Direct-Answer (deployed baseline)}\\[-1pt]{\scriptsize Diagnostician-committed primary $\cdot$ Top-1 0.518}};
+
+\node[font=\scriptsize, text=txt] at (6.3,-1.55)
+   {No repair family gives a stable or causally attributable gain over DA};
+
+% ---- 2x2 repair grid ----
+\node[rep] (r1) at (3.3,-2.95) {Pairwise / debate\\[-1pt]{\scriptsize Re-rank close cluster}\\[-1pt]{\scriptsize no gain ($\approx$0.52)}};
+\node[rep] (r2) at (9.3,-2.95) {Deterministic fusion\\[-1pt]{\scriptsize 293 rule families}\\[-1pt]{\scriptsize 0.514}};
+\node[rep] (r3) at (3.3,-4.85) {Self-consistency / CISC\\[-1pt]{\scriptsize Resample, majority vote}\\[-1pt]{\scriptsize 0.510--0.517}};
+\node[rep] (r4) at (9.3,-4.85) {Learned selector\\[-1pt]{\scriptsize Fine-tune re-ranker}\\[-1pt]{\scriptsize dev-only, poor transfer}};
+
+% ---- Convergence arrow to conclusion ----
+\draw[arr] (6.3,-5.75) -- (6.3,-6.25);
+
+% ---- Conclusion ----
+\node[conc] (c) at (6.3,-6.95)
+   {\textbf{Dominant bottleneck: primary ranking --- not closed by the tested repair methods}\\[-1pt]{\scriptsize Gold in candidate pool 85.6\%, ranked first only $\sim$52\%}};
+
+\end{tikzpicture}
+\end{document}
