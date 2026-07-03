@@ -1,0 +1,62 @@
+\chapter{Discussion}
+\label{ch:discussion}
+
+\section{Main Finding}
+
+The main lesson of HiED is not that a hybrid multi-agent system achieves autonomous psychiatric diagnosis. It is that transcript-only psychiatric diagnosis can be decomposed into stages whose failures differ. HiED detects and verifies plausible diagnoses more often than it selects the correct primary, and this mismatch persists across repair probes and external synthetic shift.
+
+This reframes the system's contribution. The architecture is not justified primarily by a leaderboard-style Top-1 improvement. It is justified because it turns a single final accuracy number into a stage-wise account of behavior. Retrieval improves candidate support. Verification retains the correct diagnosis at high rates but also retains many alternatives. Final selection remains the dominant measured bottleneck. The contribution is therefore failure localization under a reproducible protocol.
+
+\section{What Decomposition Achieves}
+
+A flat classifier can only be right or wrong. A decomposed system can be wrong in diagnosable ways. If the gold parent is absent from the candidate list, the failure is candidate detection. If it appears but fails criterion verification, the failure is verification or evidence interpretation. If it appears and survives verification but is not committed, the failure is primary selection. This distinction changes the implied remedy.
+
+The internal results show that candidate coverage and verification retention exceed committed Top-1. The external results preserve the same pattern under distribution shift. This means the system's strength and weakness coexist: it can often keep the right diagnosis in view, but it cannot reliably choose it as primary. The decomposition makes that coexistence visible.
+
+\section{Why Verification Does Not Select}
+
+Verification fails to select because compatibility is not primacy. A criterion checker asks whether a disorder is supported by the transcript. Primary selection asks which supported disorder best explains the case. These are different comparisons. The first is one diagnosis against the evidence; the second is one diagnosis against other plausible diagnoses.
+
+The distinction is especially important in psychiatric transcripts. Several disorders share sleep disturbance, fatigue, concentration difficulty, somatic tension, avoidance, and functional impairment. The facts that resolve primacy often involve duration, onset, exclusion, recurrence, and longitudinal course. When those facts are missing, a checker can correctly retain multiple disorders without being able to rank them.
+
+NtS demonstrates this point causally. Re-selecting from the verified set improves diagnostic-set control but lowers Top-1. Verification therefore contributes auditability and set calibration, not primary selection. This does not make verification useless; it defines what verification is good for.
+
+\section{Why Simple Repairs Fail}
+
+The repair battery constrains the solution space. Pairwise comparison does not provide a safe global override. Debate does not add useful comparative evidence on average and can degrade external performance. Deterministic fusion does not uncover a missing rule over existing signals. Self-consistency does not reveal a hidden majority consensus. Confidence-weighted aggregation does not correct the commitment.
+
+These failures are mechanistically diverse, which makes their convergence informative. If the bottleneck were caused by a missing threshold, a simple post-hoc signal, unstable sampling, or lack of generic reasoning rounds, at least one repair should produce a stable causal gain under the frozen protocol. The absence of such a gain supports the interpretation that the residual problem is comparative selection under incomplete evidence.
+
+This conclusion is bounded. The thesis does not show that logic, pairwise reasoning, debate, fusion, or learned reranking can never help. It shows that the tested implementations do not close this gap. The result motivates more structured selectors and more selective routing of difficult cases rather than unconditional escalation.
+
+\section{Method Limitation versus Modality Limitation}
+
+Some failures are method-limited: the transcript contains subtle comparative evidence, but the current selector does not use it. Other failures are modality-limited: the transcript simply lacks the facts needed to distinguish primary from secondary diagnoses. Benchmark performance alone cannot separate these possibilities.
+
+A transcript-only human ceiling is therefore a central future measurement. If blinded clinicians reading the same transcripts also struggle to identify the benchmark primary, the ceiling may reflect the modality. If clinicians can reliably resolve cases that HiED misses, the bottleneck is more likely methodological. This distinction is necessary before interpreting the remaining gap as a model failure, a data limitation, or an inherent ambiguity of the diagnostic labels.
+
+The planned clinical arm and the transcript-only ceiling answer different questions. Treating clinicians observe more than the transcript and can ask follow-up questions, so disagreement with them cannot be attributed solely to model error. Blinded transcript-only experts hold the input fixed and directly test what can be inferred from the same evidence.
+
+\section{External Robustness and Transfer}
+
+The external MDD-5k evaluation shows useful but distribution-dependent transfer. Coarse F32/F41 discrimination transfers strongly, and in-scope external Top-1 exceeds the majority baseline. At the same time, full multi-way selection remains difficult, lexical selectors fail across corpora, and case-similarity reranking degrades external performance.
+
+This pattern distinguishes portable structure from corpus-specific shortcuts. The ontology, checker logic, and transcript pipeline can run on an external corpus, but fitted lexical or similarity signals may encode source-corpus regularities. The external results therefore support the value of structured evaluation while warning against overinterpreting in-domain reranking gains.
+
+\section{Auditability versus Trust}
+
+Auditability is necessary for review but insufficient for trust. A criterion trace allows a reviewer to inspect evidence, criterion states, and deterministic logic outputs. It does not prove clinical correctness, calibration, fairness, or safety. Trustworthy clinical use requires validated data, human-factor evidence, monitoring, governance, and demonstrated safety under the intended workflow.
+
+This distinction is not a disclaimer added after the fact; it follows from the results. Because primary selection remains the dominant measured weakness, HiED should not be positioned as an autonomous diagnostic system. Its appropriate role is to organize a differential, expose evidence, and flag missing information for clinician review.
+
+\section{Taiwanese Clinical Informatics}
+
+The Taiwanese context motivates the deployment objective but is not established by the current evidence. The experiments use synthetic Chinese corpora rather than real Taiwanese patient data. The title and system design reflect intended use in a Taiwanese clinical setting: Traditional-Chinese interaction, local governance, offline inference, and clinician-facing audit. They do not imply completed Taiwanese validation.
+
+This boundary must remain visible because cultural and institutional factors can affect symptom expression, somatization, language choice, and diagnostic practice. Future Taiwanese evaluation should therefore be stratified by language variety, age, socioeconomic context, institution, and presentation style. The current thesis supplies the architecture and failure analysis needed to design that evaluation, not the final clinical answer.
+
+\section{Synthesis}
+
+The thesis supports five measured statements. Candidate coverage exceeds committed primary accuracy. Criterion verification retains the gold parent but also retains many competitors. Tested repairs do not provide a stable causal gain. External synthetic transfer is useful but scope-sensitive. Mechanical ontology expansion is not behavioral adaptation.
+
+The strongest interpretation is therefore modest but sharp: under transcript-only evidence, psychiatric LLM diagnosis is not limited only by generating plausible candidates. The correct diagnosis is often detected and criterion-supported, while the remaining failure is comparative primary selection. Future systems must either supply better comparative structure or acquire the missing evidence that current transcripts omit.
