@@ -1,0 +1,11 @@
+% Optimized replacement for the Chinese abstract in school/main.tex.
+% Intended to replace the block beginning at \chapter*{中文摘要} and ending before \noindent\textbf{關鍵詞：}.
+% Style target: top-conference narrative in Traditional Chinese: problem -> decomposition -> evaluation -> bottleneck -> bounded contribution.
+
+\chapter*{中文摘要}
+\addcontentsline{toc}{chapter}{中文摘要}
+單次精神科晤談逐字稿中的鑑別診斷，必須在高度重疊的症狀表現、不完整的病程資訊，以及未被詢問而非被否定的排除條件之間做出比較判斷。本研究提出 HiED，一套面向中文精神科鑑別診斷的混合式、證據導向多代理系統，並將大型語言模型診斷評估中常被混合處理的三個功能明確拆開：候選診斷偵測、ICD-10 逐準則驗證，以及主診斷選擇。HiED 結合本地 Qwen3-32B-AWQ 診斷代理人、類別平衡 FAISS/BGE-M3 相似案例檢索、準則檢查代理人與確定性門檻邏輯，輸出主診斷、可選共病、排序後鑑別診斷，以及符合／不符合／證據不足的逐準則稽核軌跡。
+
+在預先登錄的 LingxiDiag-16K 內部保留測試集（$N=1000$）上，HiED--DA 達到 0.518 Top-1 與 0.802 Top-3；檢索使直接單代理基線由 0.466 提升至 0.508（McNemar $p=4.0\times10^{-4}$）。主要發現並非準則驗證能解決診斷，而是準則驗證揭露了主診斷選擇瓶頸：邏輯層在非 Others 病例中保留正確父類別的比例為 93.7\%，但每案中位數同時確認十四個啟用疾病項目中的六個。邏輯重選、成對比較、辯論、確定性融合、選擇器微調與 self-consistency 皆未帶來穩定且可因果歸因的 Direct-Answer 改善。外部 MDD-5k 評估呈現相同型態，範圍內 Top-1 為 0.612，F32/F41 二元正確率為 0.922。這些結果將 HiED 定位為一套用於定位失敗來源的可稽核研究架構，而非已完成臨床驗證的自主診斷系統；後續工作應優先建立逐字稿條件下的人類參照天花板、結構化主診斷選擇機制，以及主動證據獲取策略。
+
+\noindent\textbf{關鍵詞：}大型語言模型、多代理系統、精神科鑑別診斷、臨床決策支援、ICD-10、可稽核人工智慧
