@@ -1,0 +1,120 @@
+\chapter{In-Domain Results}
+\label{ch:results}
+
+\section{Overview}
+
+The in-domain results show that HiED's measured strength and weakness occur at different stages. Retrieval improves direct classification and the structured pipeline provides a ranked differential and audit trace, but the largest gap is between coverage and commitment: the correct diagnosis is often available to the system before the final primary is chosen. This chapter therefore reads each result by the stage it moves---candidate detection, criterion verification, primary selection, set calibration, or robustness.
+
+\section{Architecture Ladder}
+
+\begin{table}[htbp]
+\centering
+\caption{Internal test split: 12-class architecture ladder ($N=1000$). Single-label baselines emit no ranked list, so Top-3 is undefined.}
+\label{tab:ladder-rewrite}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lccccc}
+\toprule
+System & Top-1 & Top-3 & Exact Match & Macro-F1 & Weighted-F1\\
+\midrule
+Single & 0.466 & --- & 0.017 & 0.183 & 0.426\\
+Single+RAG & 0.508 & --- & 0.011 & 0.192 & 0.433\\
+HiED--NtS & 0.490 & 0.802 & 0.437 & 0.181 & 0.408\\
+HiED--DA & \textbf{0.518} & \textbf{0.802} & 0.409 & 0.178 & 0.434\\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\Cref{tab:ladder-rewrite} reports the frozen architecture ladder. Retrieval accounts for most of the realized Top-1 improvement over the bare single-agent baseline. Single+RAG improves Top-1 from 0.466 to 0.508 (McNemar $p=4.0\times10^{-4}$), and HiED--DA improves over Single to 0.518 ($p=1.6\times10^{-5}$). The additional margin from Single+RAG to HiED--DA is small and not a robust accuracy claim.
+
+The ladder therefore supports a specific interpretation. Retrieval improves candidate support. HiED's added value is not a large additional Top-1 jump beyond retrieval; it is the ranked differential, criterion audit, and ability to localize errors. This distinction prevents the architecture from being oversold as a pure accuracy improvement while preserving its scientific role as an instrument for decomposed evaluation.
+
+\section{Candidate Coverage and Recoverable Opportunity}
+
+\ThesisFigure{fig_b_selection_bottleneck.pdf}{Internal test split detection--selection decomposition.}{fig:bottleneck-thesis-rewrite}
+
+HiED--DA reaches 0.802 Top-3 while its Top-1 is 0.518. The resulting 28.4-point gap is the threshold-free evidence for the selection bottleneck. The correct parent diagnosis is often present in the ranked output even when it is not selected as primary.
+
+The close-cluster oracle sharpens this interpretation. At the reported threshold, the gold parent lies within the close cluster in 856 of 1000 cases, and 349 cases are recoverable misclassifications: the committed primary is wrong, but the gold parent is reachable within a nearby candidate cluster. This is not a deployed method because it uses gold labels. Its value is to size the opportunity available to a better selector operating on the existing candidate pool.
+
+The coverage result rules out a simple generation-only explanation for many errors. The system often has already generated the correct parent. The residual problem is deciding that it should be first.
+
+\section{Criterion Verification}
+
+The logic-confirmed set contains the gold parent in 93.7\% of non-Others cases, but it confirms a median of six of fourteen active disorder entries per case. Criterion states are distributed across \texttt{met}, \texttt{not\_met}, and \texttt{insufficient\_evidence}, with insufficient evidence forming a large share of all decisions. The checker bank is therefore high recall but low selectivity.
+
+\ThesisFigure{fig_c_criterion_states.pdf}{Distribution of per-criterion checker states on the internal test split.}{fig:criterion-states-thesis-rewrite}
+
+This result explains why verification does not automatically solve primary selection. Retaining the gold diagnosis is useful, but retaining many competitors leaves the final comparison unresolved. Verification establishes compatibility with the transcript; primacy requires choosing among compatible diagnoses.
+
+Nominate-then-Select makes this causal. NtS re-derives the primary from the confirmed set using the same upstream diagnostician outputs and checker traces as DA. It lowers Top-1 to 0.490 but raises Exact Match from 0.409 to 0.437 ($p=0.008$) by emitting fewer labels. Verification therefore improves diagnostic-set control while degrading primary commitment. This is a trade-off, not a selection improvement.
+
+\section{Checker Factorial and Threshold Sweeps}
+
+A $2\times3$ checker factorial varying checker granularity and verification scope remains approximately flat around the development operating point. Threshold sweeps also fail to produce a stable Top-1 gain. If the bottleneck were caused primarily by checker strictness, criterion granularity, or a global confirmation threshold, these manipulations should move the primary. Their flatness indicates that the limitation lies downstream of verification.
+
+This result is important because it prevents a tempting but incorrect interpretation. The checker bank is imperfect, but simply tuning how many criteria must be met does not supply the missing comparative ordering. The problem is not only whether each diagnosis is compatible; it is which compatible diagnosis should be primary.
+
+\section{Selection-Repair Battery}
+
+\ThesisFigure{fig_methods.pdf}{The tested repair families do not provide a stable or causally attributable gain over Direct-Answer.}{fig:repairs-thesis-rewrite}
+
+\begin{table}[htbp]
+\centering
+\caption{Internal test split selection-repair probes. Deltas are in percentage points.}
+\label{tab:repair-battery-rewrite}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lcccl}
+\toprule
+Intervention & Top-1 & $\Delta$ & Causal/statistical note & Outcome\\
+\midrule
+DA reference & 0.518 & --- & --- & selected\\
+Pairwise comparison & 0.524 & +0.6 pp & independent run & raw\\
+Controlled replay & --- & 0.0 pp & 0 committed changes & not causal\\
+Forced override & 0.443 & -7.5 pp & $p<10^{-9}$ & harmful\\
+Debate & 0.485 & -3.3 pp & no stable gain & negative\\
+Frozen E3 fusion & 0.514 & -0.4 pp & net flip $-4$ cases & negative\\
+SC $K=5$ & 0.514 & -0.4 pp & no paired gain & negative\\
+CISC $K=5$ & 0.517 & -0.1 pp & $p=1.0$ & negative\\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\Cref{tab:repair-battery-rewrite} summarizes the repair probes. Pairwise reasoning appears locally useful in an independent run, but controlled replay over identical upstream outputs changes no committed primary. Forced override significantly harms performance. Debate lowers Top-1. The 293-rule deterministic fusion sweep finds no non-identical development rule that beats DA, and the frozen E3 rule loses four net correct cases on the internal test split. Self-consistency and confidence-weighted self-consistency do not improve selection.
+
+The repairs fail for different reasons, but their implications converge. Pairwise comparison does not provide a safe global override. Debate does not add useful comparative evidence on average. Fusion does not uncover a missing deterministic rule. Self-consistency does not reveal a hidden majority consensus. The result is not that these method families can never help; it is that these reasonable implementations do not close this transcript-only selection gap.
+
+\section{Backbone Size Robustness}
+
+\begin{table}[htbp]
+\centering
+\caption{Qwen3 size scaling on the internal test split.}
+\label{tab:size-ladder-rewrite}
+\begin{tabular}{lccc}
+\toprule
+Backbone & Single & HiED & Difference\\
+\midrule
+4B & 0.143 & 0.538 & +0.395\\
+8B & 0.175 & 0.520 & +0.345\\
+14B & 0.391 & 0.497 & +0.106\\
+32B & 0.465 & 0.518 & +0.053\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The single-agent range is large across model sizes, while HiED's structured pipeline narrows the spread substantially. This supports robustness across the tested size family: the architecture absorbs part of the bare model's size sensitivity. However, the structured configuration does not improve monotonically with scale, and the largest backbone does not escape the selection bottleneck. The result therefore supports architectural stabilization, not capacity irrelevance.
+
+\ThesisFigure{fig_a_size_robustness.pdf}{Backbone-size robustness on the internal test split.}{fig:size-robustness-thesis-rewrite}
+
+\section{Retrieval Modes and Confusion Structure}
+
+Dense, sparse, hybrid, and ColBERT definition-similarity fusion do not pass the improvement gate. The largest first-listed-gold confusion is F41 to F32, followed by F39 to F32 and Others to F32. Errors concentrate around depression, anxiety, and mood boundaries.
+
+\ThesisFigure{fig_d_confusion_heatmap.pdf}{Internal test split first-listed-gold-parent confusion structure.}{fig:confusion-thesis-rewrite}
+
+This concentration is clinically coherent. Depression, anxiety, and mood presentations share sleep disturbance, fatigue, impaired concentration, somatic distress, and functional impairment. The features that distinguish them often require temporal course, onset ordering, exclusion evidence, or longitudinal observation. A single transcript may not contain those discriminators. The confusion structure therefore aligns with the selection-bottleneck interpretation: the hard cases are those where multiple candidates are plausible and the evidence needed for primacy is missing or subtle.
+
+\section{Summary}
+
+The internal results localize the dominant measured failure to primary selection. Retrieval improves the direct baseline, Top-3 coverage exceeds Top-1 commitment, verification retains the gold parent but also retains many alternatives, and repair probes do not provide a stable causal gain. The next chapter tests whether the same decomposition survives external synthetic distribution shift and scope expansion.
