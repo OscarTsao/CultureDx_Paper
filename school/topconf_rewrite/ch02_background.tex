@@ -1,0 +1,63 @@
+\chapter{Clinical and Technical Background}
+\label{ch:background}
+
+\section{Psychiatric Differential Diagnosis}
+
+The architecture in this thesis follows from the structure of psychiatric diagnosis. Diagnostic manuals specify symptoms, duration, impairment, course, and exclusion requirements, but clinical transcripts rarely present those requirements as complete checklists. A patient may report sleep disturbance, worry, fatigue, avoidance, somatic discomfort, and functional impairment without establishing onset, persistence, recurrence, medication effects, substance use, or whether another disorder better explains the presentation. A computational system must therefore preserve distinctions that ordinary classification tends to collapse.
+
+The first distinction is between evidence of absence and absence of evidence. If a transcript does not mention substance use or duration, that omission does not prove the criterion is false. Treating every unmentioned feature as negative over-excludes; treating every omission as compatible over-retains. The second distinction is between diagnostic compatibility and diagnostic primacy. Several disorders can be compatible with the same transcript, but only one can be committed as the primary diagnosis in the single-label view used for Top-1 scoring. The third distinction is between comorbidity and redundant description. A transcript that supports both depression and anxiety may reflect independent comorbidity, or it may reflect one syndrome described through overlapping symptoms.
+
+These distinctions make psychiatric differential diagnosis a structured comparison under uncertainty. The correct diagnosis may not be absent from the model's output; it may be present but ranked below a close competitor. The thesis therefore treats candidate detection, criterion verification, and primary selection as separable functions rather than as a single classification event.
+
+\section{ICD-10 Criteria and Operationalization}
+
+The International Classification of Diseases provides a standardized vocabulary for diagnostic categories~\citep{who2019icd10}. Computational use requires operational decisions: which criteria are required, which are optional, how symptom counts are computed, how duration requirements are represented, and how exclusions are handled when evidence is missing. These decisions transform narrative diagnostic criteria into checkable structures.
+
+Operationalization improves reproducibility but narrows clinical judgment. A deterministic rule can state whether a set of criterion states satisfies a threshold, but it cannot recover context that the transcript never supplied. It also cannot determine whether two compatible disorders should be treated as primary-plus-comorbid or as competing explanations for the same syndrome. In HiED, the ICD-10 logic is therefore used as an audit scaffold rather than as a replacement for expert diagnosis. It records what the transcript appears to support, contradict, or leave unresolved.
+
+The three-state criterion representation is essential. A binary \texttt{met}/\texttt{not\_met} scheme would force missing evidence into a confident category. HiED instead uses \texttt{met}, \texttt{not\_met}, and \texttt{insufficient\_evidence}. This makes uncertainty visible and allows the experiments to measure whether verification fails because it rejects the gold diagnosis or because it retains too many plausible alternatives.
+
+\section{Large Language Models in Clinical Reasoning}
+
+LLMs can integrate long textual contexts, follow structured instructions, summarize symptom evidence, and generate candidate diagnoses. Mental-health applications have evaluated LLMs on examinations, vignettes, consultation settings, screening tasks, and dialogue generation~\citep{li2024taiwan,raballo2025,sarma2025}. These capabilities make LLMs attractive for transcript-based differential diagnosis, but they do not remove the need for stage-wise evaluation.
+
+The central risk is that fluency can mimic reasoning. A model-generated rationale may be coherent without being faithful to the hidden process that produced the answer. For this reason, HiED does not claim that a generated explanation is an interpretation of the model. The audit trace is external to the final selector: criterion states, evidence spans, and deterministic logic outputs can be inspected independently of the LLM's internal reasoning. This is a weaker claim than interpretability, but it is more defensible for clinical decision support.
+
+The thesis therefore distinguishes three objects: the model's committed output, the model's free-text rationale, and the externally structured audit trace. Only the third is designed to be reproducible given the same criterion states and logic. The experiments ask whether this audit layer improves selection, clarifies failure, or both.
+
+\section{Retrieval-Augmented Generation}
+
+Retrieval-augmented generation supplements an LLM prompt with relevant examples or knowledge~\citep{lewis2020rag}. In psychiatric dialogue, retrieval can remind the model of less salient disorders, provide lexical anchors, or expose similar presentations. It can therefore improve candidate detection. However, retrieval can also amplify corpus-specific wording and does not by itself solve the problem of selecting among supported diagnoses.
+
+HiED separates two retrieval roles. Case retrieval is part of the frozen pipeline and uses class-balanced similar cases to support candidate breadth. Definition-similarity and case-similarity reranking are evaluated separately as selection repairs. This distinction prevents a retrieval gain in candidate support from being mistaken for evidence that retrieval solves primary selection.
+
+The results later show why this separation matters. Retrieval improves the direct baseline, but the residual Top-3/Top-1 gap remains. A correct diagnosis can be retrieved, generated, and retained, yet still not be selected as primary. Retrieval is therefore evaluated as a coverage mechanism, not as a complete answer to comparative selection.
+
+\section{Multi-Agent Systems}
+
+Multi-agent systems decompose a task into specialized roles. In medical reasoning, agents have been used for collaboration, debate, inquiry, specialist consultation, and adaptive decision-making~\citep{tang2024medagents,kim2024mdagents,wu2026wisemind}. These systems can improve some tasks, but additional agents do not automatically make a decision more correct or more interpretable. Agents using related models may share errors, and multi-round interaction can make attribution harder.
+
+HiED uses specialization rather than unrestricted conversation. The diagnostician ranks candidates and commits a primary; criterion checkers evaluate candidate-specific evidence; deterministic logic summarizes criterion states; repair probes test whether alternative finalization policies improve the commitment. The modularity is experimental: it allows one stage to be held fixed while another is varied. This is what makes the Direct-Answer versus Nominate-then-Select comparison and controlled pairwise replay interpretable.
+
+The thesis therefore treats multi-agent structure as a means of causal attribution, not as an assumption that more agents are better. Debate and pairwise reasoning are tested as repair probes, and their failures are evidence about when additional reasoning does or does not help.
+
+\section{Interpretability, Explainability, and Auditability}
+
+Interpretability and explainability are often used broadly, but this thesis uses \emph{auditability} narrowly. An audit trace is a structured record that can be inspected, reproduced, and challenged. It does not prove that the trace caused the final LLM decision, and it does not prove that every criterion judgment is clinically correct. It provides a review object whose relationship to the transcript can be examined.
+
+This distinction prevents two overclaims. First, attaching a deterministic component to an opaque selector does not make the entire system interpretable. Second, reproducibility of a trace does not imply correctness. A criterion checker can consistently misread evidence. The audit layer is therefore a precondition for systematic review, not a substitute for validation.
+
+In the HiED setting, auditability has three practical functions. It separates evidence review from final commitment, it allows errors to be attributed to candidate detection, verification, or selection, and it enables future clinician-facing interfaces to show why a diagnosis was retained or rejected. The experiments use this property to convert aggregate error into stage-wise explanation.
+
+\section{Selection Bottleneck}
+
+For transcript $x$, let $C_k(x)$ denote the top-$k$ candidate diagnoses, $V^{+}(x)$ the set of diagnoses retained by verification, $\hat{y}(x)$ the committed primary prediction, and $y$ the gold parent diagnosis. Define
+\begin{align}
+D_k(x) &= \mathbb{1}[y \in C_k(x)],\\
+R(x) &= \mathbb{1}[y \in V^{+}(x)],\\
+S(x) &= \mathbb{1}[\hat{y}(x)=y].
+\end{align}
+
+Averaged over cases, $D_k$ measures candidate coverage, $R$ measures verification retention, and $S$ measures committed Top-1 selection. A selection bottleneck exists when $D_k$ or $R$ substantially exceeds $S$. High Top-3 coverage is not clinical correctness; it means the correct answer is often present in the system's output. Low Top-1 is not necessarily failure to generate the correct diagnosis; it may be failure to rank it first.
+
+This formalization is the hinge of the thesis. It turns the central question from ``How accurate is the system?'' into ``At which stage does the correct diagnosis disappear?'' The next chapters use this question to structure the literature review, evaluation protocol, architecture, experiments, and discussion.
