@@ -1,0 +1,58 @@
+\chapter{Conclusions and Future Work}
+\label{ch:conclusion}
+
+\section{Summary}
+
+This thesis introduced HiED to study a specific failure mode in transcript-only psychiatric LLM diagnosis. By separating candidate detection, criterion verification, and committed primary selection, the system shows that the correct diagnosis can be present and criterion-supported while still not being selected as the primary.
+
+HiED combines a local LLM diagnostician, class-balanced retrieval, ICD-10 criterion checkers, and deterministic threshold logic. It emits a committed primary, optional comorbidity, ranked differential, criterion states, evidence, logic results, and decision trace. The architecture is therefore both a decision-support prototype and an experimental instrument for localizing failure.
+
+The main empirical result is a stage-wise mismatch. Candidate coverage and verification retention substantially exceed primary-selection accuracy. Retrieval improves the direct baseline, but the residual Top-3/Top-1 gap remains. Verification retains the gold parent at high rates, but it also retains many competitors. A broad repair battery does not yield a stable causal gain over Direct-Answer. External synthetic evaluation preserves the same pattern under distribution shift.
+
+\section{Answers to Research Questions}
+
+\begin{description}[style=nextline,leftmargin=3cm,labelwidth=2.5cm]
+\item[RQ1] HiED can produce a committed primary, optional comorbidity, ranked differential, and inspectable criterion-level audit trace. The trace is an output-side audit, not proof of faithful model reasoning.
+
+\item[RQ2] Candidate coverage and verification retention substantially exceed realized primary accuracy. This establishes the selection bottleneck: the correct diagnosis can be present and criterion-supported but not selected.
+
+\item[RQ3] No tested repair provides a stable, causally attributable improvement over Direct-Answer on the internal test split. Logic re-selection, pairwise comparison, debate, deterministic fusion, learned selection, and self-consistency each fail to close the gap under the tested conditions.
+
+\item[RQ4] The pattern persists across model sizes, external synthetic distribution shift, scope analysis, and multiple repair families. The external evidence supports useful transfer for some distinctions but does not eliminate the primary-selection bottleneck.
+
+\item[RQ5] The evidence supports an auditable research architecture and a failure-localization claim. It does not establish autonomous clinical diagnosis, clinician-level performance, or real-patient Taiwanese validation.
+\end{description}
+
+\section{Future Priorities}
+
+The next research step is not simply a larger model or another round of debate. The thesis motivates three specific directions.
+
+\subsection{Transcript-Only Human Ceiling}
+
+A blinded transcript-only human reference is the highest-priority evaluation. It is needed to separate method limitations from modality limitations. If psychiatrists reading the same transcript cannot reliably choose the benchmark primary, the ceiling may reflect missing evidence or label ambiguity. If psychiatrists can resolve cases that HiED misses, the bottleneck is more likely methodological.
+
+This study should use matched inputs, blinded review, and explicit disagreement analysis. Treating-clinician comparison remains useful but answers a different question because treating clinicians observe more information than the transcript alone.
+
+\subsection{Structured Comparative Selection}
+
+Future selectors should operate over structured relations among symptoms, criteria, exclusions, temporal facts, and disorders. Scalar met-ratio thresholds are high recall but low selectivity. A graph or structured reranker could represent which evidence distinguishes one supported disorder from another rather than only whether each disorder is compatible with the transcript.
+
+Such work requires fresh pre-registration and an untouched confirmatory split. The current thesis motivates structured selection but does not demonstrate it. Future systems should be evaluated by whether they convert existing Top-3 coverage into higher committed Top-1 without harming rare-class behavior or set calibration.
+
+\subsection{Evidence Acquisition}
+
+Several observed errors trace to missing duration, exclusion, course, medication, or substance-use information. When the transcript lacks the discriminating fact, a better selector may not be enough. An inquiry-capable system should ask the next clinically discriminative question instead of forcing a primary commitment from incomplete evidence.
+
+Evidence acquisition is complementary to selection. Structured selection improves how the system decides when evidence is fixed; inquiry improves what evidence is available. The decomposition in this thesis helps decide when each response is appropriate.
+
+\subsection{Audit Reliability and Abstention}
+
+The audit trace must itself be validated. Future work should compare checker states with clinician-rated criterion judgments, evaluate evidence-span correctness, and calibrate the relationship among confidence, insufficient-evidence burden, ambiguity, and error risk. A clinical abstention policy should distinguish low confidence, missing evidence, out-of-scope diagnosis, and runtime failure.
+
+\subsection{Clinical Workflow and Governance}
+
+A prospective clinical study should evaluate not only agreement with clinicians but also how clinicians use the audit. Important outcomes include review time, comprehension, disagreement resolution, detection of incorrect evidence, automation bias, and whether the system changes follow-up questioning. Privacy, logging, monitoring, fairness, and revalidation requirements must be evaluated as part of the workflow rather than assumed from benchmark performance.
+
+\section{Final Conclusion}
+
+HiED's contribution is an auditable architecture and a reproducible demonstration that psychiatric LLM diagnosis can fail after the correct diagnosis has already been detected and criterion-supported. Under the tested transcript-only setting, the dominant measured bottleneck is comparative primary selection. The work therefore identifies what future systems must improve and what future evaluations must measure, while stopping short of claiming clinically validated autonomous diagnosis.
