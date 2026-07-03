@@ -589,7 +589,7 @@ The main ladder includes Single, Single+RAG, HiED--NtS, and HiED--DA. Pairwise a
 
 The primary evidence for a selection bottleneck is the gap between Top-3 candidate coverage and Top-1 committed accuracy. This gap requires no threshold and no oracle: it is computed directly from the ranked output the system already emits. When Top-3 is much higher than Top-1, the system often has the correct parent diagnosis in view but fails to commit it.
 
-A close-cluster oracle is reported only as a secondary upper-bound analysis. It estimates how often the gold parent lies among score-adjacent candidates that a better selector might plausibly recover. Because it presupposes access to the gold label, it is not a deployable method. Its role is to size the opportunity available to improved selection, not to claim that the current system recovers that opportunity.
+A close-cluster recoverability analysis is reported only as a secondary upper-bound analysis. It counts wrong Direct-Answer commitments for which the gold parent lies among score-adjacent candidates that a better selector might plausibly recover. Because it presupposes access to the gold label, it is not a deployable method. Its role is to size the opportunity available to improved selection, not to claim that the current system recovers that opportunity.
 
 \section{Verification Experiments}
 
@@ -603,7 +603,7 @@ Together, these experiments distinguish three possibilities: verification may re
 
 The repair battery targets specific mechanisms.
 
-\paragraph{Pairwise reasoning.} Pairwise comparison activates only when the top candidates are both sufficiently supported and close: an adjacent close-cluster is assembled from ranked neighbors with met ratio at least $0.5$ and adjacent met-ratio distance less than $0.10$. It asks whether a local differential comparison can resolve ambiguous primacy. The independent run tests raw performance; controlled replay tests causal effect under fixed upstream outputs; forced override tests whether applying the comparison globally is safe.
+\paragraph{Pairwise reasoning.} Pairwise comparison uses adjacent ranked candidates that are sufficiently supported and close under the pre-specified met-ratio gate: each candidate must have met ratio at least $0.5$, and the adjacent met-ratio distance must be less than $0.10$. The close-cluster scan is applied over the ranked list rather than only around the committed primary. It asks whether a local differential comparison can resolve ambiguous primacy. The independent run tests raw performance; controlled replay tests causal effect under fixed upstream outputs; forced override tests whether applying the comparison globally is safe.
 
 \paragraph{Debate.} Debate uses a bounded multi-round protocol in which advocates argue for leading candidates and a judge resolves the exchange~\citep{du2024debate}. It tests whether additional adversarial reasoning supplies comparative information missing from the direct output.
 
@@ -670,13 +670,13 @@ The ladder therefore supports a specific interpretation. Retrieval improves cand
 
 \section{Candidate Coverage and Recoverable Opportunity}
 
-\ThesisFigure{fig_b_selection_bottleneck.pdf}{Internal test split detection--selection decomposition.}{fig:bottleneck-thesis-rewrite}
+\ThesisFigure{fig_b_selection_bottleneck.pdf}{Internal test split detection--selection decomposition: committed Top-1, ranked Top-3 coverage, and recoverable close-cluster misclassifications.}{fig:bottleneck-thesis-rewrite}
 
 HiED--DA reaches 0.802 Top-3 while its Top-1 is 0.518. The resulting 28.4-point gap is the threshold-free evidence for the selection bottleneck. The correct parent diagnosis is often present in the ranked output even when it is not selected as primary.
 
-The close-cluster oracle sharpens this interpretation. At the reported threshold, the gold parent lies within the close cluster in 856 of 1000 cases (85.6\% close-cluster gold coverage), and 349 cases are recoverable misclassifications (a $+34.9$ percentage-point upper-bound lift): the committed primary is wrong, but the gold parent is reachable within a nearby candidate cluster. This is not a deployed method because it uses gold labels. Its value is to size the opportunity available to a better selector operating on the existing candidate pool.
+A close-cluster recoverability analysis sharpens this interpretation. Under the registered met-ratio gate, 349 of 1000 cases are recoverable misclassifications: the committed Direct-Answer primary is wrong, but the gold parent is reachable within a nearby supported candidate cluster. This corresponds to a $+34.9$ percentage-point upper-bound lift over the deployed Direct-Answer output. The analysis is not a deployed method because it uses gold labels; its purpose is to size the selection opportunity available within the existing candidate pool.
 
-The coverage result rules out a simple generation-only explanation for many errors. The system often has already generated the correct parent. The residual problem is deciding that it should be first.
+The Top-3 gap and recoverability result rule out a simple generation-only explanation for many errors. The system often has already generated the correct parent. The residual problem is deciding that it should be first.
 
 \section{Criterion Verification}
 
@@ -1356,7 +1356,7 @@ The test-time aggregation intervention samples the diagnostician $K\in\{3,5\}$ t
 
 \section{Pairwise Differential}
 
-The pairwise differential intervention activates only when the top candidates are both sufficiently supported and close: an adjacent close-cluster is assembled from ranked neighbors with met ratio at least $0.5$ and adjacent met-ratio distance less than $0.10$, the recorded checker outputs are reconstructed from the decision trace, and a differential-comparison agent re-decides the primary among the clustered alternatives. It was evaluated three ways---an independent run, a controlled replay over identical upstream outputs, and a forced override---plus a committed-policy variant in which the re-decided top candidate overrides the diagnostician's primary. A second phase measured conditional recovery on close-cluster subsets. The controlled replay changed no committed primary under the reference policy, so local subset accuracy did not translate into a full-evaluation gain, and the forced override was harmful.
+The pairwise differential intervention activates on adjacent ranked candidates that are both sufficiently supported and close: a close cluster is assembled from ranked neighbors with met ratio at least $0.5$ and adjacent met-ratio distance less than $0.10$, the recorded checker outputs are reconstructed from the decision trace, and a differential-comparison agent re-decides the primary among the clustered alternatives. The scan is applied over the ranked list rather than only around the committed primary. It was evaluated three ways---an independent run, a controlled replay over identical upstream outputs, and a forced override---plus a committed-policy variant in which the re-decided top candidate overrides the diagnostician's primary. A second phase measured conditional recovery on close-cluster subsets. The controlled replay changed no committed primary under the reference policy, so local subset accuracy did not translate into a full-evaluation gain, and the forced override was harmful.
 
 \section{Debate}
 
