@@ -43,7 +43,7 @@
 \newcommand{\debatemdddelta}{$-0.1924$}
 \newcommand{\debatemddp}{$7.0\times10^{-28}$}
 
-% Guard 1: set \showcommentstrue before building the final defense PDF; comment TEXT is never deleted, only its visibility toggled.
+% Guard 1: set \showcommentstrue for mentor-review builds; switch to \showcommentsfalse only for clean defense exports.
 \newif\ifshowcomments \showcommentstrue
 \newcommand{\ct}[1]{\ifshowcomments\textcolor{red}{{[CT: #1]}}\fi}
 \newcommand{\wl}[1]{\ifshowcomments\textcolor{blue}{{[WL: #1]}}\fi}
@@ -217,7 +217,7 @@ This contribution is methodological as much as architectural. It provides a reus
 
 \subsection{A Failure-Mode-Driven Repair Battery}
 
-The experiments test whether the selection bottleneck can be closed by plausible repairs: retrieval, logic re-selection, pairwise differential reasoning, debate, deterministic fusion, learned selectors, explicit evidence extraction, self-consistency, and confidence-weighted self-consistency. Each repair corresponds to a specific alternative explanation for the gap. If a missing threshold, a simple fusion rule, an extra reasoning round, or unstable sampling were sufficient, the corresponding probe should improve committed Top-1 under the frozen protocol.
+The experiments test whether the selection bottleneck can be closed by plausible repairs: retrieval, logic re-selection, pairwise differential reasoning, debate, deterministic fusion, learned selectors, explicit evidence extraction, self-consistency, and confidence-weighted self-consistency. Each repair corresponds to a specific alternative explanation for the gap. If a missing selection rule, a simple fusion rule, an extra reasoning round, or unstable sampling were sufficient, the corresponding probe should improve committed Top-1 under the frozen protocol.
 
 The negative results are therefore informative rather than incidental. They narrow the explanation space and motivate future work on structured comparative selection, transcript-matched human ceilings, and evidence acquisition rather than another ungrounded escalation of agent interaction.
 
