@@ -1,0 +1,101 @@
+\chapter{Data and Evaluation Protocol}
+\label{ch:data}
+
+\section{Evaluation Contract}
+
+The selection-bottleneck claim is meaningful only if every reported number refers to a fixed label space, split, metric, and system policy. This chapter therefore defines the evaluation contract before any results are interpreted. It specifies the diagnostic output, projects raw labels into a common parent taxonomy, separates development from the pre-registered internal test split, and records the statistical and run-health checks that make paired comparisons interpretable.
+
+The protocol is designed around one principle: candidate coverage, criterion verification, and primary selection must be measured on the same cases. Otherwise a Top-3 result, a verification-retention result, and a Top-1 result could not be compared as stages of the same decision. The chapter therefore treats lineage, split role, scoring convention, and system policy as first-class parts of the result rather than as implementation details.
+
+\section{Task Definition}
+
+For each transcript, the system emits one committed primary parent diagnosis, an optional comorbid parent diagnosis, a ranked candidate list, criterion states with evidence, deterministic logic results, and a decision trace. The benchmark taxonomy contains twelve scored parent classes:
+\[
+\mathcal{C}=\{\mathrm{F20},\mathrm{F31},\mathrm{F32},\mathrm{F39},\mathrm{F41},
+\mathrm{F42},\mathrm{F43},\mathrm{F45},\mathrm{F51},\mathrm{F98},
+\mathrm{Z71},\mathrm{Others}\}.
+\]
+Raw ICD-10 subcodes are projected deterministically to this parent space before scoring. Codes whose parents are outside the active target set are folded to \emph{Others} unless an external scope-expanded configuration explicitly activates them.
+
+The selected benchmark profile activates fourteen disorder entries, including subtype-level entries for F41 and F43, while scoring after parent projection into the twelve-class parent space. Thus, ``fourteen disorders'' refers to active diagnostic entries, whereas ``twelve classes'' refers to the scored label space. This distinction prevents a granularity decision from being confused with diagnostic discrimination.
+
+\section{LingxiDiag-16K}
+
+LingxiDiag-16K contains 16,000 synthetic psychiatric dialogues~\citep{xu2026lingxidiagbench}. This thesis assigns the corpus three roles:
+
+\begin{table}[htbp]
+\centering
+\caption{LingxiDiag data roles.}
+\label{tab:data-roles-rewrite}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrl}
+\toprule
+Role & $N$ & Use & Interpretation\\
+\midrule
+Train-derived development pool & 14,000 lines / 13,997 unique IDs & retrieval support and development analyses & not headline evaluation\\
+Development & 1,000 & configuration and probe design & not a test set\\
+Internal test split & 1,000 & frozen headline evaluation & pre-registered and retrieval-excluded\\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+Because the official LingxiDiagBench test split was unavailable at freeze, a 1,000-case train-carved internal test split was pre-registered, excluded from retrieval, and reserved for headline evaluation. This internal split is not the same as the public validation split and not the unavailable official test split. Its credibility rests on pre-registration, exclusion from retrieval indexes, and one-shot scoring under frozen rules.
+
+The public validation split supports development and sensitivity analysis. The train-derived pool supports retrieval and indexing but is not scored as a headline test set. The internal test split is scored after rules freeze. This division is necessary because the thesis makes paired claims about system variants; any leakage between retrieval, configuration, and headline scoring would directly undermine the selection-bottleneck evidence.
+
+\section{MDD-5k External Synthetic Evaluation}
+
+MDD-5k provides a different synthetic distribution and broader disorder set~\citep{yin2024mdd5k}. It is used as an external synthetic distribution-shift corpus, not as real clinical validation. The coverage-aware evaluation contains 925 cases: 878 map to the selected active scope and 47 are outside it. Results are reported for the full corpus, the in-scope subset, the out-of-scope subset, and an F32/F41 binary view.
+
+This separation is required for honest interpretation. A case whose gold diagnosis lies outside the active profile cannot be recovered by any selector under that profile. Counting such a case as an ordinary within-scope error would conflate a scope limitation with a selection failure. The in-scope view measures transfer within the active diagnostic range; the out-of-scope view measures configuration coverage; the binary F32/F41 view measures coarse depression--anxiety discrimination.
+
+\section{Label Projection and Gold Conventions}
+
+Multiple gold parents are retained for official multilabel metrics. For case $x$, let $G(x)\subseteq\mathcal{C}$ denote the deduplicated gold parent set. The committed primary prediction is projected to $p_1(x)$, and the canonical ranked list is formed by placing the committed primary first and then appending deduplicated ranked candidates.
+
+The thesis reports three gold conventions when appropriate. Any-gold Top-1 credits a prediction if the committed parent appears anywhere in the gold set. First-listed analyses use the first listed gold parent as a single-label convention. Exact Match requires the predicted parent set to equal the gold set. These conventions answer different questions: whether the committed diagnosis is acceptable under a multilabel gold set, whether the model matches a designated primary, and whether the full predicted set is calibrated. They are never substituted for one another without labeling.
+
+\section{Metrics}
+
+Top-1 measures commitment. It is correct when the committed primary parent appears in the gold parent set:
+\[
+\mathrm{Top\text{-}1}=\frac{1}{N}\sum_x \mathbf{1}[p_1(x)\in G(x)].
+\]
+Top-3 measures recoverable coverage. Let $R_3(x)$ be the deduplicated top-three parent list with the committed primary first. Then
+\[
+\mathrm{Top\text{-}3}=\frac{1}{N}\sum_x \mathbf{1}[R_3(x)\cap G(x)\neq\varnothing].
+\]
+Exact Match measures set calibration:
+\[
+\mathrm{Exact}=\frac{1}{N}\sum_x \mathbf{1}[M(x)=G(x)],
+\]
+where $M(x)$ is the deduplicated multilabel prediction set.
+
+Macro-F1 and weighted-F1 are computed over the twelve-class multilabel indicators. Macro-F1 weights classes equally and is sensitive to rare-class failure. Weighted-F1 weights by gold support and is more influenced by frequent labels. Reporting both prevents an apparently moderate aggregate result from hiding poor rare-class recall.
+
+The selection-bottleneck analysis interprets these metrics jointly. High Top-3 does not mean the system is clinically correct; it means the correct diagnosis is often present in the output. Low Top-1 does not necessarily mean the system failed to consider the correct diagnosis; it may indicate failure to select it as primary. Exact Match can improve while Top-1 declines if a policy emits better-sized diagnostic sets but chooses the wrong primary.
+
+\section{Statistics}
+
+Paired binary outcomes use exact McNemar tests. This is appropriate because compared systems are evaluated on the same cases, and significance depends on discordant case-level outcomes rather than only on marginal rates. Bootstrap intervals are used where available. Two-proportion $z$ tests appear only in labeled exploratory stratifications. Families of related comparisons are interpreted with multiplicity in mind.
+
+A non-significant result is not evidence of equivalence. It means the experiment did not reject a difference under the given sample, effect size, and test. This matters for the repair battery: a non-significant improvement does not prove a method is neutral, but a convergent pattern of no stable gain across mechanistically different probes constrains simple explanations for the bottleneck.
+
+\section{Run Health and Validity Checks}
+
+Every run is checked for expected case count, schema validity, abstention and parse-recovery events, frozen ordering, configuration identity, and candidate integrity. These checks prevent malformed outputs, silent dropped cases, or reorderings from contaminating paired comparisons. A system that fails to produce valid outputs on difficult cases could appear more accurate than it is if run health were ignored.
+
+The 4B HiED run required elevated parse recovery, and the 4B single run produced abstentions, but all reported size-ladder runs produced 1,000 valid outputs and passed health gates. These events are reported because they are part of system behavior. Structured-output fragility is not the same as diagnostic judgment, but it affects deployability and the interpretation of small-backbone results.
+
+\section{Anti-Leakage and Split Discipline}
+
+The internal test split is excluded from retrieval indexes. Development and internal-test fingerprints are stored separately. Sweeps occur on development unless a rule is frozen before internal-test use. External results are never used for tuning. Quantitative claims are linked to frozen artifacts, expected case counts, and metric definitions.
+
+This discipline is what turns the repair battery into evidence rather than trial and error. If a fusion rule or threshold were selected after seeing internal-test outcomes, its performance would not test a general mechanism. By freezing rules before headline scoring and labeling post-freeze probes explicitly, the thesis preserves the internal test split as confirmatory evidence for the main claims.
+
+\section{Reproducibility}
+
+The selected system uses Qwen3-32B-AWQ served through vLLM with greedy decoding, an 8192-token context, maximum output length 1536, disabled thinking mode, and bounded retries. Reproducibility includes semantic lineage: split, policy, metric definition, and artifact identity. The same numerical accuracy can mean different things if computed on a different split, under a different finalization policy, or with a different gold convention.
+
+The evaluation protocol therefore treats a result as a tuple rather than as a standalone number. A valid claim must specify what data were scored, how labels were projected, which system policy emitted the output, which metric was computed, and which statistical test was applied. This contract supports the chapter-level claim that later results localize failure rather than merely report performance.
