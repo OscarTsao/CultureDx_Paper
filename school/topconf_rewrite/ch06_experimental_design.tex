@@ -1,0 +1,87 @@
+\chapter{Experimental Design}
+\label{ch:experimental}
+
+\section{Design Logic}
+
+The experiments convert the selection-bottleneck hypothesis into a controlled test battery. Each variant is included because it corresponds to a specific alternative explanation: perhaps the system lacks retrieval, perhaps verification should re-select the primary, perhaps local comparison is needed, perhaps debate or sampling reveals hidden consensus, or perhaps a simple deterministic fusion rule is missing. A negative result is interpretable only when the intervention is tied to the mechanism it tests.
+
+The design therefore separates the proposed architecture from the repair probes. Single and Single+RAG establish direct baselines. HiED--DA and HiED--NtS test the structured architecture and finalization policy. Pairwise comparison, debate, fusion, fine-tuning, evidence extraction, and self-consistency are not treated as moving definitions of HiED; they are controlled probes of possible failure causes.
+
+\section{Architecture Ladder}
+
+\Cref{tab:failure-ladder-rewrite} summarizes the experimental ladder. The key design choice is that each row answers a different question rather than merely adding components.
+
+\begin{table}[htbp]
+\centering
+\caption{Failure-mode-driven experimental ladder.}
+\label{tab:failure-ladder-rewrite}
+\begin{tabularx}{\textwidth}{p{2.7cm}X X}
+\toprule
+Variant & Question & Evidence supplied\\
+\midrule
+Single & What can a direct LLM classify? & raw baseline\\
+Single+RAG & Does retrieval help candidate support? & retrieval contribution\\
+HiED--DA & Does structure add differential and auditability? & selected architecture\\
+HiED--NtS & Can verified criteria choose the primary? & finalization test\\
+Pairwise & Can local comparison repair close alternatives? & local reranking probe\\
+Debate & Does additional multi-agent reasoning help? & reasoning-round probe\\
+Fusion & Is a simple deterministic rule missing? & post-hoc signal probe\\
+Fine-tuning & Can a learned selector close the gap? & supervised selection probe\\
+Self-consistency & Is commitment unstable across samples? & aggregation probe\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The main ladder includes Single, Single+RAG, HiED--NtS, and HiED--DA. Pairwise and debate are reported as repair probes because folding them into the headline architecture would make the selected system a moving target. This separation allows the thesis to say what the architecture does and separately whether candidate repairs improve it.
+
+\section{Detection--Selection Decomposition}
+
+The primary evidence for a selection bottleneck is the gap between Top-3 candidate coverage and Top-1 committed accuracy. This gap requires no threshold and no oracle: it is computed directly from the ranked output the system already emits. When Top-3 is much higher than Top-1, the system often has the correct parent diagnosis in view but fails to commit it.
+
+A close-cluster oracle is reported only as a secondary upper-bound analysis. It estimates how often the gold parent lies among score-adjacent candidates that a better selector might plausibly recover. Because it presupposes access to the gold label, it is not a deployable method. Its role is to size the opportunity available to improved selection, not to claim that the current system recovers that opportunity.
+
+\section{Verification Experiments}
+
+Verification experiments ask whether criterion checking improves primary selection or instead functions mainly as an audit and set-calibration mechanism. The Direct-Answer versus Nominate-then-Select contrast is central because it holds upstream candidates and criterion traces fixed while changing only the finalization rule. If verification can choose the primary, NtS should improve Top-1 over DA.
+
+The checker factorial varies checker granularity and verification scope. Threshold sweeps vary how strict the logic engine is when confirming a disorder. Disagreement stratification separates cases where the diagnostician and logic-confirmed set agree from cases where they diverge. Exact Match versus Top-1 analyses test whether a policy improves diagnostic-set calibration at the cost of primary commitment.
+
+Together, these experiments distinguish three possibilities: verification may reject the gold diagnosis, retain it but also retain too many alternatives, or sharpen the primary. The results later show the second pattern dominates.
+
+\section{Selection Repairs}
+
+The repair battery targets specific mechanisms.
+
+\paragraph{Pairwise reasoning.} Pairwise comparison activates when the top candidates are both sufficiently supported and close under a pre-specified score rule. It asks whether a local differential comparison can resolve ambiguous primacy. The independent run tests raw performance; controlled replay tests causal effect under fixed upstream outputs; forced override tests whether applying the comparison globally is safe.
+
+\paragraph{Debate.} Debate uses a bounded multi-round protocol in which advocates argue for leading candidates and a judge resolves the exchange. It tests whether additional adversarial reasoning supplies comparative information missing from the direct output.
+
+\paragraph{Deterministic fusion.} Fusion enumerates post-hoc rules over ranking, criterion met ratios, and threshold satisfaction. It tests whether a simple deterministic combination of already-recorded signals is sufficient.
+
+\paragraph{Fine-tuning and lexical reranking.} Learned selectors test whether ranking features contain a supervised signal that can be recovered by a fitted model. These probes also test transfer: a selector that fits one corpus but fails on another is not a robust solution.
+
+\paragraph{Self-consistency and CISC.} Self-consistency samples the diagnostician multiple times and aggregates the committed primary by majority vote. Confidence-informed self-consistency weights votes by reported confidence. These probes test whether the direct commitment is unstable and whether a hidden sample majority exists.
+
+\paragraph{Evidence extraction and residual loops.} Explicit evidence extraction and residual-evidence loops test whether supplying a second pass with structured evidence or unresolved criteria improves selection. These probes are bounded because they still operate on the same transcript evidence.
+
+\section{Robustness Axes}
+
+Robustness is evaluated across backbone size, retrieval modes, in-domain and external corpora, confusion boundaries, logic-agreement strata, and ontology scope. Each axis stresses a different explanation for the bottleneck. If scale alone solves the problem, larger backbones should escape it. If embedding representation is the problem, retrieval-mode changes should improve selection. If the finding is corpus-specific, it should not persist on MDD-5k. If scope is the issue, mechanical expansion should recover newly representable labels.
+
+The thesis uses robustness to test the stability of the interpretation, not to claim that all perturbations are inconsequential. A result can be robust in the sense that the bottleneck persists while still varying in magnitude across settings.
+
+\section{Freeze Discipline}
+
+The internal test split and headline metrics are frozen before evaluation. Sweeps use development lineage. Any rule that faces the internal test split is committed before scoring. Post-freeze probes are labeled as such. External results are not used for tuning.
+
+This freeze discipline is what makes the negative results scientifically useful. Without it, a failed repair could be dismissed as an arbitrary attempt, and a successful repair could reflect test-set tuning. With it, each probe tests a defined mechanism under known conditions. The battery therefore narrows the solution space even when individual interventions fail.
+
+\section{Interpreting Negative Results}
+
+The repair battery does not merely record failed attempts. It rules out several simple explanations for the selection gap under the tested conditions. If a global threshold, a simple fusion rule, a second reasoning round, a pairwise override, or a sampling majority were sufficient, at least one controlled probe should produce a stable causal gain in committed Top-1.
+
+This conclusion is bounded. The thesis does not prove that entire method families can never help. It shows that reasonable implementations of these mechanisms did not close this particular transcript-only gap under the frozen protocol. That bounded negative evidence is the reason the thesis motivates structured comparative selection and evidence acquisition rather than another unqualified multi-agent escalation.
+
+\section{Summary}
+
+The experimental design turns a broad diagnostic-system evaluation into a sequence of causal questions. Each result will be interpreted by which stage it moves: candidate detection, criterion verification, primary selection, set calibration, transfer, or auditability. The next chapter applies this design to the in-domain internal test split.
