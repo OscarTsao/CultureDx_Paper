@@ -1,0 +1,62 @@
+\chapter{Clinical Deployment, Governance, and Human--AI Collaboration}
+\label{ch:deployment}
+
+\section{Intended Use}
+
+The evaluation supports HiED as clinician-facing decision support, not as an autonomous diagnostic system. The system is best understood as a tool for organizing a differential, exposing criterion evidence, flagging missing information, and supporting clinician review. This intended use follows from the empirical results: HiED is stronger at candidate generation and audit presentation than at unaided primary selection.
+
+Human oversight is therefore not a generic disclaimer. It is required by the measured selection bottleneck. When the correct diagnosis can be present and criterion-supported but still not selected as primary, the system should not be allowed to make independent diagnostic commitments. Its appropriate role is to structure review, not replace it.
+
+\section{Clinical Workflow}
+
+A conservative workflow begins with an approved transcript from a clinical encounter. HiED normalizes the transcript, generates a ranked differential, evaluates criteria for candidate disorders, applies deterministic logic, and displays the committed primary alongside the audit trace. The clinician then accepts, modifies, rejects, or escalates the output.
+
+The workflow should preserve disagreement. If a clinician disagrees with the committed primary but finds the differential useful, that disagreement should be recorded at the finalization level. If the clinician agrees with the primary but rejects a criterion quote, that disagreement should be recorded at the evidence level. If the case is out of scope or dominated by insufficient evidence, the system should flag that condition rather than force a confident recommendation.
+
+This workflow uses the architecture's decomposition as an interface principle. Detection, verification, and selection are shown separately because clinicians may trust or challenge each layer differently.
+
+\section{Uncertainty and Abstention}
+
+Uncertainty should remain multi-dimensional. Low model confidence, high insufficient-evidence burden, high candidate ambiguity, out-of-scope status, and runtime failure have different meanings. Collapsing them into a single confidence score would discard exactly the information the audit layer was designed to expose.
+
+A future abstention policy should map these conditions to actions. A low-confidence but in-scope case may require clinician review. A case with high insufficient evidence may require follow-up questioning. An out-of-scope case should be redirected rather than classified. A runtime failure should trigger a reliability event, not a clinical interpretation. The current thesis identifies these categories but does not calibrate action thresholds for clinical use.
+
+\section{Privacy and Local Inference}
+
+Psychiatric transcripts are highly sensitive. They may contain family history, trauma, substance use, employment concerns, interpersonal conflict, and other private information. Deployment should minimize data movement, use approved infrastructure, encrypt storage and transport, restrict logs, and define retention policies.
+
+Local inference reduces exposure to external services, which is why the system is designed around local serving. However, locality is not sufficient for compliance or safety. Access control, audit logging, retention limits, incident response, and institutional governance remain necessary. The computational feasibility demonstrated in the thesis is an infrastructure property, not a full privacy or regulatory solution.
+
+\section{Audit Logging}
+
+Audit logs should support review without retaining unnecessary raw sensitive text. At minimum, logs should record model and configuration version, transcript identifier, active ontology profile, retrieved support identifiers, ranked candidates, committed primary, optional comorbidity, criterion states, cited evidence references, logic results, clinician action, and runtime status.
+
+The log should make later review possible: whether the same configuration would reproduce the same output, whether the clinician changed the recommendation, whether a criterion state was disputed, and whether an incident involved a runtime failure or a diagnostic disagreement. These records are necessary for monitoring and governance, but they must be balanced against privacy risk.
+
+\section{Human Factors}
+
+An audit trace can help review, but it can also overload users. Too much criterion detail may produce alert fatigue. Too polished an explanation may produce automation bias. A clinician-facing interface must therefore be evaluated not only for diagnostic accuracy but also for comprehension, review time, disagreement handling, and the user's ability to detect incorrect evidence.
+
+The interface should make uncertainty visible without making it unusable. A ranked differential, concise criterion summary, and expandable evidence trace may be preferable to a single long rationale. The system should show missing evidence as missing rather than silently converting it into a low confidence number.
+
+\section{Fairness and Cultural Adaptation}
+
+The current benchmarks do not establish fairness across Taiwanese populations. Symptom expression, somatization, language choice, age, socioeconomic context, institutional practice, and comorbidity patterns may affect both model behavior and clinical interpretation. The thesis's Taiwanese context is therefore a deployment objective, not an achieved validation result.
+
+Future evaluation should use representative local data and stratified analyses. It should test whether errors concentrate by language register, age group, presentation style, diagnosis, institution, or other clinically relevant subgroups. Fairness cannot be inferred from synthetic Mandarin corpora alone.
+
+\section{Clinical Validation}
+
+The planned clinical arm compares the frozen model with treating-clinician diagnoses, but such comparison must be interpreted carefully. Treating clinicians observe more than the transcript: nonverbal behavior, medical history, follow-up questions, collateral information, chart context, and institutional workflow. Disagreement with a treating clinician therefore counts as non-agreement but cannot be assigned solely to model error.
+
+A blinded transcript-only expert ceiling is the complementary measurement. It holds the input fixed across human and system and asks what a qualified reader can infer from the same transcript evidence. This ceiling is necessary for interpreting the method-versus-modality question: whether the remaining gap reflects model limitations or missing information in the transcript itself.
+
+\section{Monitoring and Regulation}
+
+A deployed clinical instrument would require drift monitoring, periodic error review, version control, rollback, maintained scope lists, incident reporting, and revalidation after changes. Any change in model version, prompt, ontology, retrieval index, or finalization policy could alter behavior and would need controlled evaluation.
+
+Regulatory classification, demonstrated safety, and demonstrated effectiveness are outside this thesis. The benchmark experiments are an early step toward understanding system behavior, not a substitute for clinical validation. The deployment chapter therefore defines the obligations that would follow from intended use rather than claiming those obligations have been met.
+
+\section{Summary}
+
+HiED's measured behavior supports a clinician-facing role: organize a differential, expose evidence, and flag missing information. It does not support autonomous diagnosis. The same decomposition that makes the system scientifically informative also defines the deployment boundary. Human oversight, privacy governance, audit logging, fairness evaluation, transcript-only human ceilings, and prospective validation are required before any clinical deployment claim could be made.
