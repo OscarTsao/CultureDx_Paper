@@ -1,0 +1,122 @@
+\chapter{External Synthetic Evaluation and Configuration-Level Scope Transfer}
+\label{ch:external}
+
+\section{Overview}
+
+The external evaluation asks whether the in-domain failure decomposition is corpus-specific or structurally persistent. MDD-5k provides a different synthetic distribution and a broader label space, so it is useful for distribution-shift evidence but not for clinical validation. This chapter therefore separates in-scope transfer, out-of-scope coverage, mechanical ontology expansion, lexical transfer, and external repair behavior.
+
+The title deliberately uses \emph{external synthetic evaluation} rather than unqualified validation. The corpus is external to LingxiDiag and tests distribution shift, but it remains synthetic and does not establish real-patient Taiwanese clinical effectiveness. This boundary is important because the system's intended use is clinical decision support, where validation requires prospective human and patient evidence beyond benchmark transfer.
+
+\section{MDD-5k Evaluation}
+
+\begin{table}[htbp]
+\centering
+\caption{Internal reference and external synthetic evaluation summary.}
+\label{tab:external-summary-rewrite}
+\begin{tabular}{lrrrr}
+\toprule
+Set & $N$ & Top-1 & Majority & Macro-F1\\
+\midrule
+Lingxi internal test split & 1000 & 0.518 & --- & 0.178\\
+MDD full & 925 & 0.5805 & 0.4432 & 0.2287\\
+MDD in-scope & 878 & 0.6116 & 0.4670 & 0.2649\\
+MDD F32/F41 & 490 & 0.9224 & 0.7837 & 0.9055\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\Cref{tab:external-summary-rewrite} places the external views against the internal reference. The MDD-5k external run does not use a same-corpus case-index retriever, so it should be interpreted as ontology/checker-supported transcript transfer rather than evidence that case retrieval transfers across corpora. Within the selected scope, Top-1 reaches 0.6116. On the F32/F41 binary subset, accuracy reaches 0.9224, indicating that coarse depression--anxiety discrimination transfers strongly across this synthetic distribution shift.
+
+The same table also shows the remaining limitation. Multi-way primary selection remains harder than binary F32/F41 discrimination, and the external performance is shaped by class distribution and scope. The result is therefore neither a simple success nor a failure. It shows useful synthetic transfer for some distinctions while preserving the broader conclusion that fine-grained primary selection remains difficult.
+
+\section{Coverage and Out-of-Scope Cases}
+
+Forty-seven MDD cases fall outside the selected fourteen-disorder active scope. These are coverage limitations rather than recoverable selection errors. Under the selected profile, the system cannot emit the gold parent for these cases regardless of how the selector is changed.
+
+This distinction matters because external evaluation can otherwise mix two different failures. A within-scope error means the system could have emitted the gold diagnosis but did not. An out-of-scope case means the diagnosis was not available in the active output space. The coverage-aware reporting separates configuration limits from selection limits so that the in-scope Top-1 result measures behavior within the system's declared scope.
+
+\section{Mechanical Scope Expansion}
+
+The active profile can be expanded to thirty parent codes across thirty-nine ontology entries without retraining. This confirms the architectural claim that representable scope is configured through the ontology and active profile rather than by changing model weights.
+
+However, mechanical expansion does not produce behavioral adaptation. In the expanded external setting, newly representable cases are not recovered as primaries. This result separates two claims that are often conflated: a system can represent a diagnosis, but that does not mean it can select it correctly. The engineering precondition for broader scope is satisfied; the behavioral evidence for broader recovery is not.
+
+This finding reinforces the thesis's main decomposition. Adding labels to the output space affects representability, but selection still determines whether those labels are committed. A broader ontology without a better selector can enlarge the candidate space while leaving the primary-selection bottleneck intact.
+
+\section{Lexical Transfer}
+
+\begin{table}[htbp]
+\centering
+\caption{Lexical-selector transfer. A TF--IDF selector fits each corpus in domain but does not transfer across corpora.}
+\label{tab:lexical-transfer-rewrite}
+\begin{tabular}{llcl}
+\toprule
+Training corpus & Evaluation corpus & Top-1 & Interpretation\\
+\midrule
+LingxiDiag & LingxiDiag & 0.610 & in-domain lexical fit\\
+LingxiDiag & MDD-5k & 0.049 & transfer collapse\\
+MDD-5k & MDD-5k & 0.692 & corpus-specific fit recovers\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\Cref{tab:lexical-transfer-rewrite} shows that lexical selection can fit a corpus but fail across corpora. A Lingxi-trained TF--IDF selector performs well in domain but collapses on MDD. Training the same model family on MDD restores within-corpus performance. The failure is therefore not inability to fit; it is lack of transfer.
+
+This result cautions against interpreting strong in-domain reranking as diagnostic signal. A selector may learn corpus-specific phrasing, label priors, or generation artifacts rather than robust clinical distinctions. The ontology-driven pipeline is more portable in configuration, but portability does not eliminate the selection bottleneck.
+
+\section{External Repair Battery}
+
+\begin{table}[htbp]
+\centering
+\caption{Selection-repair battery on the external corpus ($N=925$), scored against a matched Direct-Answer baseline.}
+\label{tab:mdd-repair-rewrite}
+\begin{tabular}{lccc}
+\toprule
+Method & Top-1 & $\Delta$ vs DA & McNemar $p$\\
+\midrule
+Direct-Answer (matched baseline) & 0.5708 & --- & ---\\
+Nominate-then-Select (NtS) & 0.4065 & $-0.1643$ & $1.7\times10^{-25}$\\
+Pairwise differential & 0.5708 & $0.0000$ & $1.00$\\
+Debate & \debatemddtopone & \debatemdddelta & \debatemddp\\
+Self-Consistency ($K=3$) & 0.5784 & $+0.0076$ & $0.44$\\
+Self-Consistency ($K=5$) & 0.5816 & $+0.0108$ & $0.23$\\
+CISC ($K=3$) & 0.5784 & $+0.0076$ & $0.44$\\
+CISC ($K=5$) & 0.5816 & $+0.0108$ & $0.23$\\
+Definition-fusion (E3) & 0.4714 & $-0.0995$ & $2.3\times10^{-14}$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\Cref{tab:mdd-repair-rewrite} reproduces the internal pattern on the external distribution. NtS significantly degrades Top-1, showing again that verification-derived finalization does not solve primary selection. Pairwise differential reasoning leaves the committed primary unchanged. Self-consistency and CISC show small nominal increases that are not statistically significant. Definition-fusion transfers as a significant loss.
+
+Debate is especially informative. Under the original token budget, the external prompts exceed the context window; under an enlarged context budget sufficient for all cases, debate still performs substantially worse than the matched Direct-Answer baseline. The failure is therefore not merely a context-window artifact. Additional adversarial reasoning harms comparative selection in this setting rather than improving it.
+
+The external battery strengthens the structural interpretation. Methods that operate through verification, additional reasoning, deterministic fusion, or sampling aggregation do not supply a stable transferable selector. The bottleneck persists under distribution shift.
+
+\section{Case-Similarity Reranking}
+
+A second external retrieval repair reranks candidates by neighbor agreement from similar training cases. Dense, sparse, ColBERT, and hybrid modes are selected on the in-domain development split and then frozen before application to the in-scope MDD subset. This design tests whether a retrieval signal chosen without external-label access transfers to a new corpus.
+
+\begin{table}[htbp]
+\centering
+\caption{Case-similarity reranking on the in-scope external set ($N=878$). McNemar $p$ is against the in-scope Direct-Answer baseline.}
+\label{tab:case-knn-rewrite}
+\begin{tabular}{lcccc}
+\toprule
+Mode & Dev Top-1 & External Top-1 & $\Delta$ vs DA & McNemar $p$\\
+\midrule
+Dense & 0.5410 & 0.5057 & $-0.1059$ & $7.4\times10^{-8}$\\
+Sparse & 0.5279 & 0.5535 & $-0.0581$ & $3.9\times10^{-4}$\\
+ColBERT & 0.5298 & 0.5091 & $-0.1025$ & $2.1\times10^{-7}$\\
+Hybrid & 0.5410 & 0.5182 & $-0.0934$ & $1.4\times10^{-6}$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Every mode degrades external selection significantly. This mirrors the lexical-transfer result: similarity signals selected in one corpus can encode corpus-specific regularities that do not transfer. Case-similarity reranking is therefore not a solution to the selection bottleneck under distribution shift.
+
+\section{Interpretation}
+
+The external evidence supports four conclusions. First, useful synthetic transfer exists: the system performs above a majority baseline and transfers coarse F32/F41 discrimination. Second, scope accounting is essential because out-of-scope cases are not recoverable selector errors. Third, ontology expansion provides representability but not behavioral adaptation. Fourth, selection repairs that fail in domain also fail, remain inert, or degrade externally.
+
+The external chapter therefore strengthens the bounded claim of the thesis. HiED is not clinically validated by MDD-5k, but the selection-bottleneck pattern is not merely an artifact of the in-domain split. The next chapter translates this aggregate pattern into concrete error archetypes.
