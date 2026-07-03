@@ -1,0 +1,72 @@
+\chapter{Introduction}
+\label{ch:introduction}
+
+\section{Clinical Motivation}
+
+Psychiatric diagnosis from a single consultation transcript is a comparative decision under incomplete evidence. Patients may describe insomnia, fatigue, concentration difficulty, somatic distress, avoidance, irritability, low motivation, and impaired functioning in ways that are compatible with several common mental disorders. The distinctions that separate depressive, anxiety, stress-related, obsessive-compulsive, somatic, and sleep disorders often depend on duration, onset, course, exclusionary medical or substance causes, and longitudinal functional change. These discriminating facts are not always elicited in one visit. A system that names a plausible disorder has therefore not necessarily solved the diagnostic task.
+
+This distinction is central to the thesis. In clinical practice, the question is rarely whether one disorder is plausible in isolation. The practical question is which disorder best explains the presentation, which alternatives remain plausible, whether a second disorder is independently supported, and what information is still missing. A transcript-only model must therefore reason under two simultaneous constraints: several diagnoses can be supported by the same evidence, and absence of a statement cannot be treated as evidence that a criterion is false. A useful system must preserve that uncertainty instead of collapsing it into a single opaque label.
+
+Large language models provide a natural interface for this setting because they can read free-form dialogue, summarize symptom evidence, propose differentials, and emit structured outputs. Fluency, however, does not guarantee reliable discrimination. An LLM can produce a clinically plausible explanation while committing the wrong primary diagnosis. It can also generate a rationale that is persuasive without being faithful to the actual decision process. For clinical decision support, the final label is therefore not enough; the relation among transcript evidence, candidate diagnoses, diagnostic criteria, and the committed output must be inspectable.
+
+The Taiwanese outpatient setting motivates the intended deployment context of this work. Common mental disorders may present through somatic complaints rather than explicit mood language~\citep{ryder2008somatic}; consultations may be brief; and patients may move between Mandarin, Taiwanese registers, and institution-specific clinical phrasing. The experiments in this thesis are not real-patient Taiwanese validation, but the design choices follow from that target setting: local inference, Traditional-Chinese-facing prompts, criterion-level evidence display, and a clinician-facing audit trace. The evaluation deliberately adopts a transcript-only regime to test how far a system can go when it receives only what a single session contains.
+
+\section{Problem Statement}
+
+This thesis studies where transcript-only psychiatric LLM diagnosis fails after the task is decomposed. Instead of treating diagnosis as flat text classification, it separates three functions that are often conflated:
+
+\begin{enumerate}[label=\arabic*.]
+\item \textbf{Candidate detection}: generating a ranked set that contains plausible diagnoses;
+\item \textbf{Criterion verification}: evaluating transcript evidence against disorder-specific ICD-10 criteria;
+\item \textbf{Primary selection}: committing the single diagnosis that best explains the case.
+\end{enumerate}
+
+The central claim is that these functions can diverge. A system may include the gold diagnosis in its ranked differential, and a criterion checker may retain that diagnosis as supported, while the final committed primary remains wrong. This configuration defines the \emph{selection bottleneck}: the correct answer is already within reach, but the system does not choose it.
+
+The decomposition changes how performance should be interpreted. A single Top-1 accuracy cannot distinguish a model that never considered the correct diagnosis from a model that considered and verified it but ranked a close alternative first. These two failures require different remedies. The first suggests better candidate generation or retrieval; the second suggests better comparative selection or better evidence acquisition. By measuring candidate coverage, criterion retention, and committed selection on the same cases, this thesis turns an opaque accuracy score into a stage-wise diagnostic of system behavior.
+
+\section{Research Questions}
+
+The thesis is organized around five research questions:
+
+\begin{description}[style=nextline,leftmargin=3cm,labelwidth=2.5cm]
+\item[RQ1] Can a hybrid LLM--rule architecture produce a ranked psychiatric differential, a committed primary diagnosis, optional comorbidity, and a criterion-level audit trace?
+\item[RQ2] How large is the gap among candidate coverage, criterion verification, and realized primary-selection accuracy?
+\item[RQ3] Can logic re-selection, pairwise comparison, debate, deterministic fusion, learned reranking, calibration, or test-time aggregation close that selection gap?
+\item[RQ4] Does the same pattern persist across model size, external synthetic distribution shift, label-space expansion, and major confusion boundaries?
+\item[RQ5] What do benchmark and audit results establish, and what remains unresolved without real-patient data or a transcript-only human reference?
+\end{description}
+
+These questions frame HiED not only as a diagnostic system but also as an experimental instrument. Its purpose is to reveal which stage contributes which kind of evidence, and which stage remains limiting under a frozen evaluation protocol.
+
+\section{Contributions}
+
+This thesis makes three main contributions.
+
+\subsection{An Auditable Hybrid Architecture}
+
+HiED combines a local LLM diagnostician, class-balanced case retrieval, disorder-specific ICD-10 criterion checkers, and deterministic threshold logic. The diagnostician emits a ranked differential, committed primary, optional comorbidity, confidence, and rationale. The checker bank evaluates criteria using three states---\texttt{met}, \texttt{not\_met}, and \texttt{insufficient\_evidence}---and the logic engine summarizes which diagnoses are criterion-compatible. The output includes both the committed diagnosis and the audit trace.
+
+The architecture deliberately separates the final selector from the audit subsystem. Under the selected Direct-Answer policy, the committed primary is the diagnostician's output; the criterion trace is an output-side audit, not proof of the model's internal reasoning. This distinction prevents an overclaim: HiED makes evidence reviewable, but it does not make the opaque LLM selector inherently interpretable.
+
+\subsection{A Detection--Verification--Selection Decomposition}
+
+The thesis defines a stage-wise evaluation that measures whether the correct parent diagnosis appears in the candidate list, survives criterion verification, and is finally selected as primary. This decomposition exposes a failure mode hidden by ordinary Top-1 reporting: high candidate coverage and high verification retention can coexist with much lower primary-selection accuracy. The resulting gap is the empirical target of the experiments.
+
+This contribution is methodological as much as architectural. It provides a reusable way to ask whether a psychiatric LLM system fails because it lacks the right candidate, because it rejects that candidate during verification, or because it cannot rank supported alternatives. These are different scientific claims, and the thesis keeps them separate.
+
+\subsection{A Failure-Mode-Driven Repair Battery}
+
+The experiments test whether the selection bottleneck can be closed by plausible repairs: retrieval, logic re-selection, pairwise differential reasoning, debate, deterministic fusion, learned selectors, explicit evidence extraction, self-consistency, and confidence-weighted self-consistency. Each repair corresponds to a specific alternative explanation for the gap. If a missing threshold, a simple fusion rule, an extra reasoning round, or unstable sampling were sufficient, the corresponding probe should improve committed Top-1 under the frozen protocol.
+
+The negative results are therefore informative rather than incidental. They narrow the explanation space and motivate future work on structured comparative selection, transcript-matched human ceilings, and evidence acquisition rather than another ungrounded escalation of agent interaction.
+
+\section{Scope and Claim Boundary}
+
+The reported corpora are synthetic. LingxiDiag-16K provides the in-domain development and internal test setting, and MDD-5k provides an external synthetic distribution-shift setting. The results do not establish autonomous clinical diagnosis, clinician-level performance, or completed validation in Taiwanese patients. The Taiwanese context describes the intended deployment environment and motivates design requirements, not an achieved clinical validation result.
+
+The ontology can be expanded by configuration, but representability is not behavioral adaptation. A diagnosis made available in the active profile is not necessarily recovered as the committed primary. The thesis therefore separates mechanical scope expansion from empirical retargeting. This boundary is important because the system's strongest evidence concerns auditability and failure localization, not proof that it can safely diagnose all disorders in a clinical setting.
+
+\section{Thesis Organization}
+
+Chapter~\ref{ch:background} defines the clinical and technical concepts behind the decomposition. Chapter~\ref{ch:related} positions HiED relative to psychiatric LLMs, multi-agent reasoning, interpretability, synthetic dialogue resources, and structured diagnosis. Chapter~\ref{ch:data} fixes the evaluation contract: datasets, label projection, metrics, statistics, health gates, and split discipline. Chapter~\ref{ch:architecture} describes HiED as an architecture designed to make detection, verification, and selection separately observable. Chapter~\ref{ch:experimental} turns the selection-bottleneck hypothesis into a failure-mode-driven experimental battery. Chapter~\ref{ch:results} reports in-domain evidence, and Chapter~\ref{ch:external} tests whether the pattern persists under external synthetic shift and scope expansion. Chapter~\ref{ch:error} translates aggregate results into error archetypes. Chapter~\ref{ch:discussion} interprets the findings, Chapter~\ref{ch:limitations} defines the evidentiary boundary, Chapter~\ref{ch:deployment} discusses clinician-facing use and governance, and Chapter~\ref{ch:conclusion} concludes with the future work the bottleneck motivates.
