@@ -1,0 +1,58 @@
+\chapter{Related Work}
+\label{ch:related}
+
+\section{Overview}
+
+Prior work has shown that LLMs can answer psychiatric diagnostic questions, simulate clinical dialogue, support criterion-grounded reasoning, and coordinate multiple agents. The gap addressed here is narrower: existing systems rarely separate whether the correct diagnosis was generated, whether it survived criterion verification, and whether it was finally selected as the primary. HiED targets this missing measurement.
+
+This chapter is organized by mechanism rather than by chronology. Chinese psychiatric dialogue resources define the data setting; psychiatric LLM systems define the clinical task family; medical multi-agent systems define the collaboration design space; interpretability and diagnostic-chain methods define the explanation problem; synthetic data and structured-diagnosis work define the limits and future directions. Across these lines, the thesis asks a single question: where does a system fail when candidate generation, criterion verification, and primary selection are measured separately?
+
+\section{Chinese Psychiatric Dialogue Resources}
+
+LingxiDiagBench provides a Chinese psychiatric consultation and diagnosis benchmark with synthetic, EMR-aligned dialogues and multiple task granularities~\citep{xu2026lingxidiagbench}. This thesis adopts its paper-parent taxonomy for the in-domain setting but evaluates a diagnostic architecture rather than proposing a new benchmark. A limited public-validation positioning analysis is reported only as contextual evidence; it is not the headline result because protocol and split differences make leaderboard-style claims fragile.
+
+MDD-5k provides a broader synthetic disorder distribution and different dialogue style through a neuro-symbolic multi-agent synthesis pipeline~\citep{yin2024mdd5k}. It is used as an external synthetic distribution-shift corpus. D4 focuses on depression-oriented dialogue~\citep{yao2022d4}, and CPsyCoun emphasizes psychological counseling reconstruction rather than multi-disorder primary diagnosis~\citep{zhang2024cpsycoun}. These differences make cross-paper accuracy comparisons unreliable. The thesis therefore uses each corpus for a specific evaluation role rather than treating them as interchangeable leaderboards.
+
+This dataset positioning matters for the central claim. Candidate coverage, verification retention, and primary selection must be measured on the same cases under a fixed label projection. Otherwise a difference in reported accuracy could reflect class mix, task granularity, gold-label convention, or split construction rather than a true difference in diagnostic behavior.
+
+\section{Psychiatric LLM Diagnosis}
+
+Psychiatric LLM studies have evaluated general models on licensing examinations, differential-diagnosis vignettes, clinical reasoning tasks, and comparisons with psychiatrists~\citep{li2024taiwan,raballo2025,sarma2025}. These studies establish that LLMs can produce clinically plausible answers, but they also show that task setting and reference standards strongly affect interpretation. A model that performs well on an exam or vignette is not thereby validated for transcript-only outpatient decision support.
+
+Recent knowledge-guided psychiatric systems integrate diagnostic criteria, inquiry, or progressive reasoning. MIND connects inquiry and diagnosis with criteria-grounded supports~\citep{li2026mind}; WiseMind/ProAI uses knowledge-guided multi-agent reasoning for psychiatric diagnosis~\citep{wu2026wisemind}; MentalSeek-Dx emphasizes progressive hypothetico-deductive reasoning for real-world psychiatric diagnosis~\citep{sun2026mentalseek}. These systems often gain power by asking follow-up questions or actively acquiring missing information. HiED deliberately holds the transcript fixed. This removes a powerful degree of freedom but isolates the question of what can be recovered from a completed session.
+
+Other psychiatric multi-agent pipelines operationalize structured interviews or clinical scales. Systems such as MAGI, MoodAngels, and DSM5AgentFlow use agent roles to navigate interviews, evaluate symptoms, or provide stepwise explanations~\citep{bi2025magi,xiao2025moodangels,ozgun2025dsm5agentflow}. HiED shares the criterion-grounded and multi-agent motivation but differs in the measurement target: it asks whether detection, verification, and selection diverge once acquisition is held fixed.
+
+\section{Medical Multi-Agent Reasoning}
+
+General medical multi-agent systems use multiple LLM roles to debate, consult, or adaptively collaborate~\citep{tang2024medagents,kim2024mdagents}. These systems demonstrate that structured collaboration can improve some medical reasoning tasks, but they do not imply that more agents improve every decision. When agents share a base model, their errors may be correlated; when they exchange free-form arguments, it can be unclear which component caused a final change.
+
+HiED uses multi-agent decomposition for attribution. The diagnostician, checkers, logic engine, and repair probes have separate roles and stable interfaces. Direct-Answer and Nominate-then-Select share upstream candidates and checker traces, so their difference isolates finalization. Pairwise and debate are evaluated as repair probes rather than built into the selected headline system. This allows the thesis to report whether additional comparison or adversarial reasoning changes the primary rather than simply reporting that a larger pipeline behaves differently.
+
+The negative results later in the thesis should be read against this background. They do not show that multi-agent reasoning is useless in general. They show that uniformly applied debate and pairwise override do not close the transcript-only selection gap under the tested protocols. That finding motivates more selective routing of hard cases rather than unconditional escalation.
+
+\section{Interpretability and Diagnostic Chains}
+
+Diagnostic-chain methods aim to make clinical reasoning more transparent. Chain-of-Diagnosis produces stepwise diagnostic chains and confidence distributions~\citep{chen2025cod}; interpretable depression-assessment systems decompose symptoms or factors in clinically meaningful ways~\citep{lee2026interpretable,lyu2026depllm}. These approaches improve transparency, but many still depend on model-generated reasoning.
+
+HiED takes a different route. Its audit structure lives outside the answer-producing network: disorder-specific checkers assign criterion states, and deterministic logic summarizes those states. The resulting trace is not a faithful account of the LLM's hidden reasoning, but it is inspectable and reproducible as an output-side artifact. This distinction is especially important in clinical settings, where a persuasive rationale can be harmful if it hides unsupported assumptions.
+
+Logic-based diagnosis provides the closest conceptual analogue. Constraint-logic approaches translate diagnostic manuals into explicit rules that can be inspected and edited~\citep{kim2025clp}. HiED shares the commitment to explicit criterion structures but applies them within a hybrid LLM pipeline over Chinese-language transcripts and uses the logic layer primarily for audit and failure decomposition rather than as the sole final selector.
+
+\section{Synthetic Data and Clinical Dialogue Generation}
+
+Synthetic dialogue resources make controlled evaluation possible when real clinical data are scarce or sensitive. LLM role-play and reconstruction frameworks can generate large datasets for development and benchmarking~\citep{wu2024callm}. However, synthetic data may encode generator priors, simplify comorbidity, omit nonverbal context, and fail to capture local clinical variation. These limitations qualify every quantitative result in the thesis.
+
+The thesis uses synthetic corpora for method development and controlled ablation because they allow fixed splits, repeated paired comparisons, and explicit label projection. It does not treat synthetic performance as clinical validation. The planned real-patient arm and a transcript-only human reference are future requirements, not achieved results. This separation allows the method contribution to be evaluated without overstating clinical readiness.
+
+\section{Knowledge Graphs and Structured Diagnosis}
+
+Structured diagnosis methods use knowledge graphs, heterogeneous relations, or information-guided questioning to model dependencies among symptoms, criteria, disorders, and missing information. MedKGI combines knowledge structure with information-guided inquiry~\citep{wang2025medkgi}; DKEC uses heterogeneous graphs and label-wise attention to support diagnosis, especially for rare labels and smaller models~\citep{ge2024dkec}. These methods are relevant because the dominant residual error in HiED is comparative selection among already-supported candidates.
+
+A graph over symptoms, criteria, temporal relations, exclusions, and disorders is a natural future response to the selection bottleneck. It could represent relationships that scalar met-ratio thresholds cannot capture. The thesis does not implement that selector, and it treats graph-based selection as motivated future work rather than as a demonstrated solution. The present contribution is to show why such structure is needed.
+
+\section{Research Gap}
+
+The literature establishes that LLMs can diagnose, consult, explain, integrate criteria, generate dialogue, and coordinate agents. What remains under-specified is the stage-wise relationship among candidate coverage, criterion verification, and primary selection on the same cases. Prior work often reports final accuracy or qualitative explanations; this thesis asks whether the correct diagnosis was present, whether it survived verification, and whether it was selected.
+
+HiED fills this gap through a reproducible decomposition and a failure-mode-driven repair battery. The decomposition localizes where competence exists and where it breaks. The repair battery tests alternative explanations for the break. Together, they convert a diagnostic system evaluation into a controlled account of failure.
