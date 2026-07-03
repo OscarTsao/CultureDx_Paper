@@ -1,0 +1,91 @@
+\chapter{HiED System Architecture}
+\label{ch:architecture}
+
+\section{Design Principle}
+
+HiED is designed to expose the structure of diagnostic failure. Its components are not added on the assumption that more modules improve accuracy; they are separated so that candidate generation, criterion verification, deterministic aggregation, and final selection can be varied or inspected independently. This makes the architecture both a decision-support prototype and an experimental instrument for causal attribution.
+
+The design follows three principles. First, the system must emit a committed primary diagnosis because benchmark evaluation and clinical workflow both require a clear recommendation. Second, it must also emit a ranked differential and criterion-level evidence because a primary label without inspectable support is not adequate for clinical review. Third, it must distinguish the decision from the audit. The audit trace is evidence attached to the output, not a claim about the LLM's hidden reasoning.
+
+\section{Pipeline Overview}
+
+\ThesisFigure{fig_pipeline.pdf}{HiED pipeline. The diagnostician generates a ranked differential and committed primary. Candidate-specific checkers evaluate criteria, deterministic logic summarizes support, and the output includes both the decision and audit trace.}{fig:pipeline-thesis-rewrite}
+
+Given a transcript $x$, HiED executes the following steps:
+
+\begin{enumerate}[label=\arabic*.]
+\item Normalize the transcript while preserving speaker turns.
+\item Retrieve class-balanced supporting cases with FAISS/BGE-M3.
+\item Prompt the diagnostician to emit a ranked differential, committed primary, optional comorbidity, confidence, and rationale.
+\item Run disorder-specific ICD-10 criterion checkers over candidate diagnoses.
+\item Convert checker outputs into \texttt{met}, \texttt{not\_met}, and \texttt{insufficient\_evidence} states.
+\item Apply deterministic threshold logic to produce a logic-confirmed set.
+\item Emit the primary diagnosis, ranked differential, optional comorbidity, criterion trace, logic results, and decision trace.
+\end{enumerate}
+
+This pipeline separates evidence acquisition from evidence review. Retrieval supplies candidate-supporting context before diagnosis. Criterion checkers review the generated candidates after diagnosis. The final selected architecture uses Direct-Answer, so the diagnostician's primary remains the committed output while the checker and logic layers provide auditability.
+
+\section{Class-Balanced Retrieval}
+
+The retrieval component is designed to support candidate breadth without letting frequent disorders dominate the prompt. The query transcript is embedded with BGE-M3 and searched against a FAISS index of training cases. Instead of returning the globally nearest cases, the retriever returns the top case per candidate disorder class. This class-balanced design keeps rare disorders visible and prevents common depression-like presentations from crowding out alternatives.
+
+Retrieval plays a defined role in the architecture. It can improve the diagnostician's candidate set by supplying examples and lexical anchors, but it is not treated as a selector. Later experiments evaluate definition-similarity and case-similarity reranking separately as repair probes. This separation allows the thesis to claim retrieval improves coverage without claiming that retrieval solves primary selection.
+
+\section{Diagnostic Agent}
+
+The diagnostic agent is a local Qwen3-32B-AWQ model served with vLLM under the canonical configuration. It reads the transcript and retrieved context, then emits a structured object with the following fields:
+
+\begin{itemize}
+\item a ranked differential diagnosis list;
+\item a committed primary parent diagnosis;
+\item an optional comorbid parent diagnosis;
+\item a confidence score;
+\item a brief rationale;
+\item optional uncertainty or abstention flags.
+\end{itemize}
+
+The committed primary is constrained to the ranked differential. This constraint lets Top-1 and Top-3 be interpreted together: the primary is the first commitment, while the ranked list records the nearby alternatives the model considered. A wrong Top-1 with a correct Top-3 is therefore not a total generation failure; it is a ranking failure among generated candidates.
+
+\section{Criterion Checkers}
+
+For each candidate disorder, criterion-checking agents evaluate transcript evidence against the operationalized ICD-10 criteria. Each criterion receives one of three states: \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_evidence}. The checker may also provide an evidence quote, confidence value, and short justification.
+
+The three-state design is the clinical core of the audit. A missing duration statement, unasked substance history, or absent exclusion clause should not automatically become a negative criterion. Recording insufficient evidence preserves the uncertainty that a single transcript creates. It also allows the results to measure whether the checker bank is high recall, high selectivity, or neither.
+
+Checker outputs are not clinician-level gold. They are structured model outputs subject to error. Their value is that they can be inspected and replayed through deterministic logic. A reviewer can challenge whether a cited span supports a criterion without accepting or rejecting the entire final diagnosis.
+
+\section{Deterministic Logic Engine}
+
+The logic engine applies count-based disorder-specific rules to criterion states and records which diagnoses are logic-confirmed. Determinism ensures that the same checker trace always yields the same logic result. This makes the audit reproducible and allows controlled comparisons of finalization policies.
+
+The logic engine is intentionally limited. It summarizes compatibility with diagnostic criteria; it does not by itself solve primacy. Several disorders can satisfy threshold logic in the same transcript, particularly when symptoms overlap and exclusions remain unobserved. The results later show that the logic-confirmed set often retains the gold parent but also retains many alternatives. This is exactly why verification and selection must be measured separately.
+
+\section{Finalization Policies}
+
+HiED evaluates multiple ways to produce the final primary diagnosis. Direct-Answer preserves the diagnostician's committed primary and is the selected reference policy. Nominate-then-Select re-derives the primary from logic-confirmed candidates. Pairwise comparison and debate are evaluated as repair probes that attempt to resolve close alternatives.
+
+Direct-Answer and Nominate-then-Select share upstream outputs. The diagnostician candidates, criterion states, and logic results are identical; only the finalization rule changes. This shared-upstream design isolates the causal effect of finalization. If Nominate-then-Select improves or degrades Top-1, that difference cannot be attributed to candidate generation or checker variation.
+
+Pairwise reasoning is evaluated in three modes: an independent run, a controlled replay over identical upstream outputs, and a forced override. The independent run tests local usefulness on activated cases. Controlled replay tests whether the stage actually changes committed primaries when everything upstream is fixed. Forced override tests global safety. This separation prevents a locally plausible comparison from being mistaken for a safe system-wide selector.
+
+\section{Output and Audit Trace}
+
+The complete output contains the committed primary, optional comorbidity, ranked differential, criterion states, cited evidence, logic-confirmed codes, and decision trace. These objects support different forms of review. A clinician or researcher may accept the differential but reject the primary, accept the primary but question a criterion quote, or accept the evidence but disagree with the finalization policy.
+
+This decomposition is the practical meaning of auditability in HiED. The system does not ask the user to trust a single opaque recommendation. It exposes where the recommendation came from, which alternatives were considered, which criteria were supported, which criteria were contradicted, and which remained unobserved. The audit does not make the decision correct, but it makes disagreement localizable.
+
+\section{Ontology-Driven Scope}
+
+The ontology contains a broader set of ICD-10 parent codes and entries than the selected benchmark profile activates. Expanding the active profile is a configuration change rather than weight retraining. This is an engineering property: the system can represent additional disorders when the ontology and prompt configuration include them.
+
+The thesis does not treat mechanical representability as behavioral adaptation. A newly activated disorder may be available in the output space yet never selected as primary. External scope-expansion experiments later demonstrate this distinction. The claim is therefore precise: HiED can be reconfigured to audit a broader ontology, but successful recovery of newly representable diagnoses requires empirical validation and likely selector adaptation.
+
+\section{Computational Configuration}
+
+The canonical experiments run on one NVIDIA RTX 5090 using Qwen3-32B-AWQ served through vLLM. Greedy decoding is used for the selected reference. The context length, maximum output length, thinking-mode setting, retry policy, and run-health gates are fixed in the evaluation protocol.
+
+Local inference is relevant because psychiatric transcripts are sensitive and because the intended setting emphasizes data minimization. However, running locally is an infrastructure property, not clinical validation. It reduces exposure to external services but does not establish diagnostic safety, fairness, regulatory compliance, or user trust. Those questions are addressed as future deployment requirements rather than as achieved results.
+
+\section{Summary}
+
+HiED separates the diagnostic pipeline into stages that can be measured and challenged: retrieval-supported candidate generation, criterion verification, deterministic compatibility logic, and committed primary selection. This architecture makes the later experiments possible. Because the stages are distinct, the thesis can ask whether failures arise from missing candidates, failed verification, or wrong comparative commitment.
