@@ -1,0 +1,64 @@
+\chapter{Limitations and Threats to Validity}
+\label{ch:limitations}
+
+\section{Overview}
+
+The limitations define the evidentiary boundary of the thesis. The experiments support a claim about decomposed failure localization on synthetic transcript corpora; they do not establish Taiwanese clinical effectiveness, clinician-level performance, or autonomous diagnostic safety. Stating these boundaries is necessary because the system's domain is clinical and the temptation to overread benchmark performance is high.
+
+The chapter therefore treats limitations as part of the argument rather than as an afterthought. Each limitation specifies what the evidence can and cannot support. The central contribution remains valid within these boundaries: HiED provides an auditable decomposition showing that detection, verification, and selection can diverge. The boundaries prevent that contribution from being misread as clinical validation.
+
+\section{Data Limitations}
+
+Both LingxiDiag-16K and MDD-5k are synthetic corpora. Synthetic dialogues are useful for controlled development and ablation, but they may encode generator priors, simplify comorbidity, omit nonverbal signals, and fail to reproduce the longitudinal and institutional context of real consultations. Every quantitative result in the thesis is therefore a result on synthetic transcript data, not a direct estimate of real-world clinical performance.
+
+Public release of the corpora before the experiments means pretraining exposure cannot be excluded. If the underlying model has seen related examples during pretraining, apparent performance could be inflated. The thesis mitigates this by focusing on within-system decomposition, paired comparisons, and external synthetic shift rather than claiming absolute clinical accuracy. It cannot fully eliminate the possibility of pretraining overlap.
+
+The official LingxiDiagBench test split was unavailable at freeze, so the headline in-domain results use a pre-registered internal carve. The split is excluded from retrieval and selection procedures, but it remains an internal split rather than a community-standard public test set. This qualifies leaderboard-style comparison and is why public-validation positioning is not treated as the thesis headline.
+
+\section{Construct Limitations}
+
+The metrics measure specific constructs. Top-1 measures whether the committed primary parent appears in the gold set. Top-3 measures whether a gold parent appears in the ranked shortlist. Exact Match measures set equality. None of these metrics alone equals clinical correctness.
+
+Top-3 is especially easy to misread. It is a coverage measure, not a safe-deployment measure. A correct diagnosis in the top three may help a clinician review the differential, but it does not mean the system selected the correct primary. Conversely, a low Top-1 does not prove that candidate generation failed. The thesis uses the gap between the two as evidence of recoverable opportunity, not as evidence that the deployed output is correct.
+
+Gold labels themselves may reflect uncertainty. Multilabel cases can be scored under any-gold, first-listed, or exact-set conventions, and each convention answers a different question. The thesis labels these views explicitly, but no convention removes the clinical ambiguity inherent in psychiatric diagnosis.
+
+\section{Model and Method Limitations}
+
+The selected system uses a quantized Qwen3-32B-AWQ model under one serving stack, decoding configuration, prompt family, and hardware regime. Behavior under other models, model versions, serving frameworks, or prompting strategies is not fully characterized. Size-ladder results test some robustness, but they do not prove that capacity or model family is irrelevant.
+
+Checker states are not clinician-validated criterion gold. They are model-generated audit outputs. A reproducible checker trace can still be clinically wrong if the checker misreads a symptom, misses a negation, or over-infers from weak evidence. Deterministic logic faithfully summarizes checker states but also inherits checker errors. The auditability claim is therefore about inspectability and reproducibility, not criterion-level truth.
+
+Several repair probes originated as bounded research implementations rather than production components. Their negative results are useful because they test specified mechanisms under a frozen protocol, but they should not be read as exhaustive rejection of entire method families. A different pairwise policy, debate protocol, selector architecture, or evidence representation might behave differently and would require fresh evaluation.
+
+\section{Statistical Limitations}
+
+Several analyses are exploratory or post-freeze. Multiple related comparisons increase false-positive risk if individual $p$ values are read in isolation. Non-significance is not equivalence. Rare-class estimates and small strata can have high variance. These limitations are why the thesis emphasizes convergent patterns across probes rather than isolated marginal differences.
+
+The negative repair results should therefore be interpreted as bounded eliminations. They rule out specific simple explanations under the tested conditions; they do not prove that no future method can improve selection. The strongest evidence comes from convergence: verification, threshold sweeps, fusion, debate, pairwise override, and sampling aggregation all fail to provide stable causal gains.
+
+\section{Scope Limitations}
+
+Out-of-scope labels cannot be recovered by selection. If the active profile excludes a diagnosis, no finalization rule can emit it. This is why external evaluation reports coverage-aware views. Within-scope errors and out-of-scope coverage failures require different remedies.
+
+Mechanical ontology expansion does not adapt the diagnostician. Adding codes to the active profile makes them representable, but the selector must still choose them. The external expansion result shows that representation alone does not produce recovery. Broader scope therefore requires behavioral validation and likely selection adaptation.
+
+The transcript-only design omits nonverbal behavior, medical history, medication records, structured rating scales, collateral reports, and longitudinal course. Many psychiatric distinctions depend precisely on these missing sources. The thesis studies the transcript-only regime because it is experimentally controlled and clinically relevant, but that regime is also a hard boundary on what any method can infer.
+
+\section{External and Clinical Validity}
+
+MDD-5k is external to LingxiDiag but remains synthetic and depression-skewed. It provides distribution-shift evidence, not real-patient validation. Strong performance on an external synthetic subset does not establish Taiwanese clinical effectiveness.
+
+No real-patient results are included. The planned Chang Gung arm is prospective and outside the current evidence base. The thesis therefore does not support autonomous diagnosis, clinical deployment, or regulatory claims. It supports a research architecture and a stage-wise characterization of failure that can inform future validation.
+
+\section{Reproducibility Limitations}
+
+Reproduction depends on model availability, software versions, hardware, data access, and preserved artifacts. Even when numerical outputs are reproduced, semantic lineage remains necessary: split, policy, prompt family, label projection, and metric definition must match. A number reproduced under a different convention is not the same result.
+
+The thesis mitigates this through run-health gates, split discipline, artifact lineage, and explicit labeling of canonical paths versus probes. These safeguards improve credibility but do not remove the practical dependence on a specific computational stack.
+
+\section{Mitigations and Remaining Boundary}
+
+The main mitigations are pre-registration of the internal split, retrieval exclusion, paired tests, full metric reporting, external synthetic evaluation, health gates, negative-result disclosure, controlled replay, and explicit claim boundaries. These practices make the failure-localization claim credible within the data setting.
+
+They do not turn benchmark evidence into clinical validation. The final boundary is therefore clear: HiED demonstrates an auditable decomposition and a persistent selection bottleneck on synthetic transcript corpora. It remains future work to establish clinician-level performance, real-patient effectiveness, calibrated abstention, fairness, and safety under clinical workflow.
