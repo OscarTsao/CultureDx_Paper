@@ -1,0 +1,88 @@
+\chapter{Error Archetypes and Worked Analyses}
+\label{ch:error}
+
+Aggregate metrics identify where the system fails, but error archetypes show how the failure becomes visible in individual cases. The examples in this chapter are constructed from observed patterns and are not patient records. Each archetype maps an error to a stage of the decomposition: scope, candidate detection, criterion retention, confirmed-set size, missing evidence, finalization policy, or cross-corpus stability.
+
+\section{Archetype Summary}
+
+\begin{table}[htbp]
+\centering
+\caption{Error archetypes and the stage of the decomposition they expose.}
+\label{tab:error-archetypes-rewrite}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{p{3.0cm}p{3.0cm}p{4.2cm}p{4.8cm}}
+\toprule
+Archetype & Stage exposed & Quantitative evidence it explains & Main implication\\
+\midrule
+Depression--anxiety boundary & Selection & F41/F32 and mood-boundary confusions & Need comparative evidence about duration, onset, and primacy\\
+Missing exclusion information & Evidence / verification & High insufficient-evidence burden & Need evidence acquisition, not stricter thresholds alone\\
+Correct candidate, wrong commitment & Selection & Top-3 and logic retention exceed Top-1 & Candidate generation is not the limiting stage\\
+Conservative set control & Metric trade-off & NtS raises Exact Match but lowers Top-1 & Primary and set metrics must be interpreted separately\\
+Out-of-scope diagnosis & Scope & External out-of-scope cases and failed expanded-scope recovery & Representable does not mean recoverable\\
+Rare-class failure & Distribution & Low macro-F1 despite moderate weighted metrics & Aggregate accuracy can hide rare-label weakness\\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\section{Depression--Anxiety Boundary}
+
+A typical boundary case contains insomnia, fatigue, worry, somatic tension, low motivation, and impaired functioning. F32 and F41 can both be plausible, both may appear in the ranked list, and both may satisfy enough criteria to remain logic-confirmed. The final error is not failure to notice anxiety or depression; it is failure to decide which syndrome is primary under incomplete temporal and exclusion evidence.
+
+This archetype is the qualitative face of the largest confusion structure. Depression and anxiety share many surface symptoms, and the differentiators often depend on onset, persistence, worry generalization, mood primacy, and whether symptoms are better explained by another disorder. When the transcript does not establish those facts, a selector may commit the wrong primary even though candidate detection and verification are working as designed.
+
+The implication is that better symptom extraction alone is unlikely to solve the boundary. The missing object is comparative structure: evidence that ranks supported disorders against one another rather than evaluating each disorder against the transcript in isolation.
+
+\section{Missing Exclusion Information}
+
+Some transcripts contain symptoms compatible with obsessive-compulsive, somatic, sleep, or stress-related disorders while omitting substance use, medical causes, medication effects, prior episodes, or longitudinal course. A strict verifier that treats missing exclusions as failures will over-exclude. A permissive verifier that treats them as compatible will retain too many alternatives. Neither setting creates information that was never elicited.
+
+This archetype explains why checker thresholds are not enough. The checker bank can record insufficient evidence, and deterministic logic can summarize compatibility, but the transcript may not contain the fact needed to resolve the diagnosis. When the limiting factor is missing evidence, the natural remedy is not a different global threshold; it is evidence acquisition through follow-up questioning or richer clinical data.
+
+\section{Correct Candidate, Wrong Commitment}
+
+The canonical selection-bottleneck case occurs when the gold parent appears in Top-3 and survives verification, but another candidate is committed as primary. In such a case, the system has not failed to generate the correct diagnosis. It has failed to rank it first.
+
+This archetype directly connects to the Top-3/Top-1 gap and the high gold-in-confirmed rate. It also explains why pairwise reasoning can look promising locally but fail globally. A local comparison among two close candidates may resolve some cases, but applying the same override everywhere can harm cases where the diagnostician's original commitment was already correct or where the pairwise prompt receives insufficient evidence.
+
+The implication is that future selectors should be conditional. Heavy comparative reasoning should be routed to cases where coverage is high, confidence is low, and the competing candidates are close, rather than applied uniformly.
+
+\section{Conservative Set Control}
+
+Nominate-then-Select emits fewer labels and improves Exact Match while lowering Top-1. This is not merely a failure; it is a different operating point. NtS makes the diagnostic set more conservative but does not choose the primary better.
+
+This archetype shows why Top-1 and Exact Match must be interpreted together. A system can improve set calibration while harming the committed primary. Conversely, a system can choose the primary more often while emitting too many comorbid or secondary labels. In clinical decision support, both properties matter, but they are not the same property.
+
+The implication is that finalization policy should be selected according to intended use. If the goal is a conservative list for clinician review, NtS-like behavior may be useful. If the goal is benchmark primary accuracy, it is not an improvement.
+
+\section{Out-of-Scope Diagnosis}
+
+When the gold code lies outside the active profile, the system cannot emit it. This is a scope failure, not a selection error. External evaluation must therefore separate out-of-scope cases from within-scope cases.
+
+Mechanical ontology expansion makes additional codes representable, but the expanded-scope experiment shows that representability does not imply recovery. The selector must still choose those labels as primary, and the existing diagnostician may not be behaviorally adapted to the enlarged space.
+
+This archetype prevents two opposite misreadings. The selected-scope system should not be punished as though it could emit labels outside its profile. But an expanded ontology should not be celebrated as adaptation unless newly representable diagnoses are actually recovered.
+
+\section{Rare-Class Failure}
+
+Overall accuracy can remain moderate while rare-class recall is poor. Weighted-F1 is dominated by frequent labels, whereas macro-F1 keeps rare labels visible. This is why the thesis reports both metrics and does not rely on a single aggregate score.
+
+Rare-class failure is especially important in psychiatric decision support because infrequent diagnoses may be exactly where assistance is most needed. A system that performs well on common depression-like presentations but fails rare categories can appear adequate in aggregate while providing limited clinical value.
+
+The current evidence does not show that larger models, retrieval, or graph-based selectors necessarily solve this problem. It shows that rare-class behavior must be measured explicitly and that future structured selectors should be evaluated under macro-averaged and class-specific views.
+
+\section{Audit Checklist}
+
+For each error, the audit trace should be reviewed in a fixed order:
+
+\begin{enumerate}[label=\arabic*.]
+\item Is the gold diagnosis inside the active scope?
+\item Does the gold parent appear in the candidate list?
+\item Does the gold parent survive criterion verification?
+\item How many competing diagnoses are also confirmed?
+\item Which temporal, course, exclusion, or substance-use facts are missing?
+\item Which finalization policy produced the committed primary?
+\item Does the same pattern appear under external distribution shift?
+\end{enumerate}
+
+This checklist turns the audit trace into a research instrument. It localizes each failure rather than attributing all errors to the system as a whole. The chapter's archetypes show that many errors are not generation failures; they are compatibility, scope, or comparative-selection failures that require different remedies.
