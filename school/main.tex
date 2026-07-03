@@ -594,7 +594,7 @@ A close-cluster oracle is reported only as a secondary upper-bound analysis. It 
 
 Verification experiments ask whether criterion checking improves primary selection or instead functions mainly as an audit and set-calibration mechanism. The Direct-Answer versus Nominate-then-Select contrast is central because it holds upstream candidates and criterion traces fixed while changing only the finalization rule. If verification can choose the primary, NtS should improve Top-1 over DA.
 
-The checker factorial varies checker granularity and verification scope. Threshold sweeps vary how strict the logic engine is when confirming a disorder. Disagreement stratification separates cases where the diagnostician and logic-confirmed set agree from cases where they diverge. Exact Match versus Top-1 analyses test whether a policy improves diagnostic-set calibration at the cost of primary commitment.
+The checker factorial varies checker granularity and verification scope. Disagreement stratification separates cases where the diagnostician and logic-confirmed set agree from cases where they diverge. Exact Match versus Top-1 analyses test whether a policy improves diagnostic-set calibration at the cost of primary commitment.
 
 Together, these experiments distinguish three possibilities: verification may reject the gold diagnosis, retain it but also retain too many alternatives, or sharpen the primary. The results later show the second pattern dominates.
 
@@ -628,7 +628,7 @@ This freeze discipline is what makes the negative results scientifically useful.
 
 \section{Interpreting Negative Results}
 
-The repair battery does not merely record failed attempts. It rules out several simple explanations for the selection gap under the tested conditions. If a global threshold, a simple fusion rule, a second reasoning round, a pairwise override, or a sampling majority were sufficient, at least one controlled probe should produce a stable causal gain in committed Top-1.
+The repair battery does not merely record failed attempts. It rules out several simple explanations for the selection gap under the tested conditions. If a simple fusion rule, a second reasoning round, a pairwise override, or a sampling majority were sufficient, at least one controlled probe should produce a stable causal gain in committed Top-1.
 
 This conclusion is bounded. The thesis does not prove that entire method families can never help. It shows that reasonable implementations of these mechanisms did not close this particular transcript-only gap under the frozen protocol. That bounded negative evidence is the reason the thesis motivates structured comparative selection and evidence acquisition rather than another unqualified multi-agent escalation.
 
@@ -1016,7 +1016,7 @@ A complementary case-level autopsy asks a narrower question: in the specific cas
 
 The repair battery constrains the solution space. Pairwise comparison does not provide a safe global override. Debate does not add useful comparative evidence on average and can degrade external performance. Deterministic fusion does not uncover a missing rule over existing signals. Self-consistency does not reveal a hidden majority consensus. Confidence-weighted aggregation does not correct the commitment.
 
-These failures are mechanistically diverse, which makes their convergence informative. If the bottleneck were caused by a missing threshold, a simple post-hoc signal, unstable sampling, or lack of generic reasoning rounds, at least one repair should produce a stable causal gain under the frozen protocol. The absence of such a gain supports the interpretation that the residual problem is comparative selection under incomplete evidence.
+These failures are mechanistically diverse, which makes their convergence informative. If the bottleneck were correctable by a simple post-hoc signal, a local pairwise override, unstable sampling, or additional reasoning rounds, at least one of the evaluated repairs should produce a stable causal gain under the frozen protocol. The absence of such a gain across mechanistically distinct probes supports the interpretation that the residual problem is comparative selection under incomplete evidence.
 
 This conclusion is bounded. The thesis does not show that logic, pairwise reasoning, debate, fusion, or learned reranking can never help. It shows that the tested implementations do not close this gap. The result motivates more structured selectors and more selective routing of difficult cases rather than unconditional escalation.
 
@@ -1089,7 +1089,7 @@ Several repair probes originated as bounded research implementations rather than
 
 Several analyses are exploratory or post-freeze. Multiple related comparisons increase false-positive risk if individual $p$ values are read in isolation. Non-significance is not equivalence. Rare-class estimates and small strata can have high variance. These limitations are why the thesis emphasizes convergent patterns across probes rather than isolated marginal differences.
 
-The negative repair results should therefore be interpreted as bounded eliminations. They rule out specific simple explanations under the tested conditions; they do not prove that no future method can improve selection. The strongest evidence comes from convergence: verification, threshold sweeps, fusion, debate, pairwise override, and sampling aggregation all fail to provide stable causal gains.
+The negative repair results should therefore be interpreted as bounded eliminations. They rule out specific simple explanations under the tested conditions; they do not prove that no future method can improve selection. The strongest evidence comes from convergence: verification, fusion, debate, pairwise override, and sampling aggregation all fail to provide stable causal gains.
 
 \section{Scope Limitations}
 
