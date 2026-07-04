@@ -865,6 +865,8 @@ Definition-fusion (E3) & 0.4714 & $-0.0995$ & $2.3\times10^{-14}$\\
 \end{tabular}
 \end{table}
 
+The repair-battery Direct-Answer baseline (0.5708) is drawn from a dedicated matched-batch run in which Direct-Answer and every tested repair method share an identical case selection and ordering, differing only in the finalization or intervention policy applied; this shared-upstream design is what permits the paired McNemar tests reported in this table. It is therefore distinct from the canonical external-summary run (0.5805) reported in \Cref{tab:external-summary-rewrite}, which separately scores the deployed system for corpus-level positioning. Both runs evaluate the same 925-case MDD-5k corpus; the difference reflects separate matched-batch versus canonical-positioning runs rather than a scoring inconsistency.
+
 \Cref{tab:mdd-repair-rewrite} reproduces the internal pattern on the external distribution. NtS significantly degrades Top-1, showing again that verification-derived finalization does not solve primary selection. Pairwise differential reasoning leaves the committed primary unchanged. Self-consistency and CISC show small nominal increases that are not statistically significant. Definition-fusion transfers as a significant loss.
 
 Debate is especially informative. Under the original token budget, the external prompts exceed the context window; under an enlarged context budget sufficient for all cases, debate still performs substantially worse than the matched Direct-Answer baseline. The failure is therefore not merely a context-window artifact. Additional adversarial reasoning harms comparative selection in this setting rather than improving it.
