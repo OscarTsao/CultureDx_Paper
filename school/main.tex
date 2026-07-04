@@ -378,7 +378,7 @@ The selected benchmark profile activates fourteen disorder entries, including su
 
 \section{LingxiDiag-16K}
 
-LingxiDiagBench nominally contains 16,000 synthetic psychiatric dialogues~\citep{xu2026lingxidiagbench}; because the official 1,000-case test split was unavailable at freeze (\S 4.4), the accessible corpus for this project comprises 15,000 case IDs. This thesis assigns that accessible pool two on-disk roles, with the development role further subdivided for probe design (\Cref{tab:data-roles-rewrite}):
+LingxiDiagBench nominally contains 16,000 synthetic psychiatric dialogues~\citep{xu2026lingxidiagbench}; because the official 1,000-case test split was unavailable at freeze, the accessible corpus for this project comprises 15,000 case IDs. This thesis assigns that accessible pool two on-disk roles, with the development role further subdivided for probe design (\Cref{tab:data-roles-rewrite}):
 
 \begin{table}[htbp]
 \centering
@@ -435,7 +435,7 @@ The selection-bottleneck analysis interprets these metrics jointly. High Top-3 d
 
 \section{Statistics}
 
-Paired binary outcomes use exact McNemar tests. This is appropriate because compared systems are evaluated on the same cases, and significance depends on discordant case-level outcomes rather than only on marginal rates. Bootstrap intervals are used where available. Two-proportion $z$ tests appear only in labeled exploratory stratifications. Families of related comparisons are interpreted with multiplicity in mind.
+Paired binary outcomes use exact McNemar tests. This is appropriate because compared systems are evaluated on the same cases, and significance depends on discordant case-level outcomes rather than only on marginal rates. All reported $p$-values in the main text are exact McNemar paired tests unless a table notes otherwise. Families of related comparisons are interpreted with multiplicity in mind.
 
 A non-significant result is not evidence of equivalence. It means the experiment did not reject a difference under the given sample, effect size, and test. This matters for the repair battery: a non-significant improvement does not prove a method is neutral, but a convergent pattern of no stable gain across mechanistically different probes constrains simple explanations for the bottleneck.
 
@@ -692,7 +692,7 @@ Nominate-then-Select makes this causal. NtS re-derives the primary from the conf
 
 \begin{table}[htbp]
 \centering
-\caption{Checker granularity $\times$ verification scope factorial on the internal validation order ($N=1000$ for cells 1--5; cell 6 is the registered $N=200$ flat-all slice).}
+\caption{Checker granularity $\times$ verification scope factorial on the public-validation-aligned validation order ($N=1000$ for cells 1--5; cell 6 is the registered $N=200$ flat-all slice).}
 \label{tab:checker-factorial}
 \begin{tabular}{llrccc}
 \toprule
@@ -708,7 +708,7 @@ Cell & Condition & $N$ & Top-1 & Top-3 & Macro-F1\\
 \end{tabular}
 \end{table}
 
-\Cref{tab:checker-factorial} reports the $2\times3$ checker-granularity by verification-scope factorial. Cells 1--5 (matched $N=1000$, identical case order) are not merely close: Top-1, Top-3, and macro-F1 are identical to three decimal places regardless of checker granularity or verification scope. Cell 6 (a smaller registered $N=200$ slice) differs only by sampling variation consistent with its size. This is not an approximate flatness; it is the expected consequence of the architecture under Direct-Answer finalization. The diagnostician's committed primary is generated before the checker or logic layer runs, and Direct-Answer emits that primary unchanged; checker granularity and verification scope govern what the audit layer records, not what the diagnostician commits. Varying them therefore cannot move Top-1 under this finalization policy by construction, independent of any empirical result.
+\Cref{tab:checker-factorial} reports the $2\times3$ checker-granularity by verification-scope factorial. Cells 1--5 (matched $N=1000$, identical case order) are not merely close: Top-1, Top-3, and macro-F1 are identical to three decimal places regardless of checker granularity or verification scope. Cell 6 (a smaller registered $N=200$ slice) differs only by sampling variation consistent with its size. This is not an approximate flatness; it is the expected consequence of the architecture under Direct-Answer finalization. The diagnostician's committed primary is generated before the checker or logic layer runs, and Direct-Answer emits that primary unchanged; checker granularity and verification scope govern what the audit layer records, not what the diagnostician commits. Varying them therefore cannot move Top-1 under this finalization policy by construction, independent of any empirical result. Cells 1--5 use the same 1,000-case validation order as the public-validation positioning audit reported in \Cref{tab:lingxi-public-validation-positioning}; this validation set is disjoint from the frozen internal test split used for the headline architecture ladder.
 
 This result is important because it prevents a tempting but incorrect interpretation. The checker bank is imperfect, but simply tuning how many criteria must be met does not supply the missing comparative ordering, and it could not, since verification sits downstream of the committed decision under Direct-Answer. The problem is not only whether each diagnosis is compatible; it is which compatible diagnosis should be primary.
 
@@ -766,7 +766,7 @@ Backbone & Single & HiED & Difference\\
 
 \section{Retrieval Modes and Confusion Structure}
 
-Dense, sparse, hybrid, and ColBERT definition-similarity fusion do not pass the improvement gate. The largest first-listed-gold confusion is F41 to F32, followed by F39 to F32 and Others to F32. Errors concentrate around depression, anxiety, and mood boundaries.
+Dense, sparse, hybrid, and ColBERT definition-similarity fusion do not improve Top-1 over the Direct-Answer baseline. The largest first-listed-gold confusion is F41 to F32, followed by F39 to F32 and Others to F32. Errors concentrate around depression, anxiety, and mood boundaries.
 
 \ThesisFigure{fig_d_confusion_heatmap.pdf}{Internal test split first-listed-gold-parent confusion structure.}{fig:confusion-thesis-rewrite}
 
@@ -902,7 +902,7 @@ The external chapter therefore strengthens the bounded claim of the thesis. HiED
 \chapter{Error Archetypes and Worked Analyses}
 \label{ch:error}
 
-Aggregate metrics identify where the system fails, but error archetypes show how the failure becomes visible in individual cases. The examples in this chapter are constructed from observed patterns and are not patient records. Each archetype maps an error to a stage of the decomposition: scope, candidate detection, criterion retention, confirmed-set size, missing evidence, finalization policy, or cross-corpus stability.
+Aggregate metrics identify where the system fails, but error archetypes show how the failure becomes visible in individual cases. The examples in this chapter are constructed from observed patterns and are not patient records. Each archetype maps an error to a stage of the decomposition: scope, candidate detection, criterion retention, confirmed-set size, missing evidence, finalization policy, or cross-corpus stability. Appendix~\ref{app:worked} walks a single constructed case through this decomposition in full audit-trace detail, instantiating the depression--anxiety boundary archetype below as a concrete object.
 
 \section{Archetype Summary}
 
@@ -1013,7 +1013,7 @@ The distinction is especially important in psychiatric transcripts. Several diso
 
 NtS demonstrates this point causally. Re-selecting from the verified set improves diagnostic-set control but lowers Top-1. Verification therefore contributes auditability and set calibration, not primary selection. This does not make verification useless; it defines what verification is good for.
 
-A complementary case-level autopsy asks a narrower question: in the specific cases where the logic engine excludes the gold parent from the confirmed set, what does the gold disorder's own checker record show? On the internal test split, restricting to cases with a gold-code checker entry, insufficient evidence accounts for approximately 46--50\% of the gold disorder's own criterion states, compared with roughly 28--30\% not-met and 23--24\% met; the exact share depends on how multi-label gold cases are counted, and this range reflects that sensitivity rather than a single precisely reproduced figure. On the external MDD-5k corpus, the same autopsy is better determined and converges tightly across independent computations at approximately 62\% insufficient evidence, 22\% met, and 15\% not-met. In both corpora, not-met is the smaller share: when verification wrongly excludes the correct diagnosis, the checker is rarely contradicting it outright. More often, the transcript simply does not contain the fact the checker needed to confirm it. This is consistent with the missing-exclusion-information archetype (Chapter~\ref{ch:error}) and sharpens its implication: the remedy for these specific failures is unlikely to be a stricter or looser confirmation threshold, since the limiting factor is absent evidence rather than contradicted evidence. It points instead toward evidence acquisition--asking the transcript for the missing fact--as a more direct response than re-tuning the verification gate.
+A complementary case-level autopsy asks a narrower question: in the specific cases where the logic engine excludes the gold parent from the confirmed set, what does the gold disorder's own checker record show? On the internal test split, restricting to cases with a gold-code checker entry, insufficient evidence accounts for approximately 46--50\% of the gold disorder's own criterion states, compared with roughly 28--30\% not-met and 23--24\% met; the exact share depends on how multi-label gold cases are counted, and this range reflects that sensitivity rather than a single precisely reproduced figure. On the external MDD-5k corpus, the same autopsy is better determined and converges tightly across independent computations at approximately 62\% insufficient evidence, 22\% met, and 15\% not-met. In both corpora, not-met is smaller than insufficient evidence: when verification wrongly excludes the correct diagnosis, the checker is rarely contradicting it outright. More often, the transcript simply does not contain the fact the checker needed to confirm it. This is consistent with the missing-exclusion-information archetype (Chapter~\ref{ch:error}) and sharpens its implication: the remedy for these specific failures is unlikely to be a stricter or looser confirmation threshold, since the limiting factor is absent evidence rather than contradicted evidence. It points instead toward evidence acquisition--asking the transcript for the missing fact--as a more direct response than re-tuning the verification gate.
 
 \section{Why Simple Repairs Fail}
 
@@ -1175,7 +1175,7 @@ The planned clinical arm compares HiED's committed primary with the attending ps
 
 Disagreement cases are adjudicated by the clinical PI into three buckets, designed to mirror this thesis's own decomposition rather than treat every disagreement as a system failure: the transcript did not carry sufficient signal for the principal to be derivable (a modality limit, not counted against the system); the transcript did carry sufficient signal and the system missed it (a system-attributed miss); or the disagreement reflects a scope or code-mapping mismatch, such as a principal diagnosis outside the deployed active profile (a deployment-scope limit, not counted against the system). Only the middle category is reported as system-attributable error, so the clinical result cannot be inflated by cases the system was never positioned to resolve. This adjudication is a direct clinical analogue of the detection--verification--selection decomposition used throughout the benchmark chapters: it separates whether the correct information was available, whether the system used it, and whether the case was in scope.
 
-A secondary usability endpoint has the clinical PI rate a random sample of audit reports for faithfulness, clarity, and utility on a descriptive Likert scale, following DECIDE-AI reporting guidance for early-stage clinical AI evaluation. This targets the deployment claim made in this chapter directly: that auditability supports clinician review, not that it proves diagnostic correctness.
+A secondary usability endpoint has the clinical PI rate a random sample of audit reports for faithfulness, clarity, and utility on a descriptive Likert scale, following structured reporting practices for early-stage clinical AI evaluation. This targets the deployment claim made in this chapter directly: that auditability supports clinician review, not that it proves diagnostic correctness.
 
 A blinded transcript-only expert ceiling remains the complementary measurement described elsewhere in this thesis. It holds the input fixed across human and system and asks what a qualified reader can infer from the same transcript evidence, which the treating-clinician comparison cannot isolate because treating clinicians observe more than the transcript. This ceiling is necessary for interpreting the method-versus-modality question: whether the remaining gap reflects model limitations or missing information in the transcript itself.
 
@@ -1218,7 +1218,7 @@ The main empirical result is a stage-wise mismatch. Candidate coverage and verif
 
 \section{Future Priorities}
 
-The next research step is not simply a larger model or another round of debate. The thesis motivates three specific directions.
+The next research step is not simply a larger model or another round of debate. The thesis motivates five specific priorities.
 
 \subsection{Transcript-Only Human Ceiling}
 
@@ -1428,7 +1428,7 @@ Duration of at least six months & insufficient-evidence & 0.35\\
 
 \section{Verdict, Ranking, and Committed Output}
 
-Both candidates clear their confirmation gate: the depressive candidate meets six of nine criteria and the anxiety candidate meets six of eight, and the deterministic logic confirms both. The confirmed set is then ordered by the ratio of met to required criteria, with confidence as a tie-break. The depressive candidate is placed primary as the highest-confidence confirmed disorder above the abstain threshold, and the anxiety candidate meets the comorbidity gate and is placed as a secondary diagnosis.
+Both candidates satisfy the same core-total confirmation rule in the ontology: at least two core criteria and at least four total criteria are met. The committed output in this worked trace is therefore not produced by sorting the confirmed set by met-ratio or by confidence. Instead, finalization follows the diagnostician's recorded ranking among confirmed candidates: because the depressive candidate appears before the anxiety candidate in the diagnostician's ranked differential and both are logic-confirmed, the depressive candidate remains the committed primary, and the anxiety candidate meets the comorbidity gate and is placed as a secondary diagnosis. The confidence values are reported as part of the audit trace, but they are not the tie-breaker that determines this commitment.
 
 The recorded output therefore contains the committed primary (F32), the secondary diagnosis (F41), the ranked confirmed set, the full per-criterion states and grounding spans above, the logic-confirmed codes, and the decision trace that names the rule producing each placement. A reviewer can check each layer independently: whether each grounding span actually supports its criterion, whether the criterion states are clinically plausible, and whether the placement rule was applied correctly.
 
@@ -1539,7 +1539,7 @@ HiED--DA & 0.511 & 0.518 & $+0.007$ & $0.43$ \\
 \end{adjustbox}
 \end{table}
 
-The inventory is deliberately complete rather than selective: it lists probes that produced null or negative results alongside those that informed the main claims, and it separates evidence that rests on the one-shot internal test split from internal probes and from the external distribution-shift corpus. The two excluded rows are recorded only to document the inclusion decision; neither contributes to any quantitative claim in this thesis.
+The inventory is deliberately complete rather than selective: it lists probes that produced null or negative results alongside those that informed the main claims, and it separates evidence that rests on the one-shot internal test split from internal probes and from the external distribution-shift corpus. The excluded row is recorded only to document the inclusion decision; it does not contribute to any quantitative claim in this thesis.
 
 
 \chapter{Reproducibility and Deposit Checklist}
