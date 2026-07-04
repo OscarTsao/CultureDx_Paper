@@ -25,6 +25,10 @@
 \emergencystretch=3em
 \usepackage{fancyhdr,titlesec,tocloft}
 \usepackage[hidelinks]{hyperref}
+\hypersetup{
+  pdftitle={HiED: A Hybrid, Evidence-grounded Multi-Agent System for Differential Diagnosis of Common Mental Disorders in the Taiwanese Context},
+  pdfauthor={Yu-Ning Tsao / 曹喻寧}
+}
 \usepackage[nameinlink,noabbrev]{cleveref}
 \onehalfspacing
 \setlength{\parskip}{0.35em}
@@ -768,7 +772,7 @@ Backbone & Single & HiED & Difference\\
 
 Dense, sparse, hybrid, and ColBERT definition-similarity fusion do not improve Top-1 over the Direct-Answer baseline. The largest first-listed-gold confusion is F41 to F32, followed by F39 to F32 and Others to F32. Errors concentrate around depression, anxiety, and mood boundaries.
 
-\ThesisFigure{fig_d_confusion_heatmap.pdf}{Internal test split first-listed-gold-parent confusion structure.}{fig:confusion-thesis-rewrite}
+\ThesisFigure{fig_d_confusion_heatmap.pdf}{Internal test split first-listed-gold-parent confusion structure. The inset reports the external MDD-5k F32/F41 binary Top-1 (0.922; \Cref{tab:external-summary-rewrite}) as a cross-corpus contrast, not as part of the internal confusion counts.}{fig:confusion-thesis-rewrite}
 
 This concentration is clinically coherent. Depression, anxiety, and mood presentations share sleep disturbance, fatigue, impaired concentration, somatic distress, and functional impairment. The features that distinguish them often require temporal course, onset ordering, exclusion evidence, or longitudinal observation. A single transcript may not contain those discriminators. The confusion structure therefore aligns with the selection-bottleneck interpretation: the hard cases are those where multiple candidates are plausible and the evidence needed for primacy is missing or subtle.
 
@@ -1480,9 +1484,9 @@ Disorder-definition retrieval modes & Does a different similarity mode help? & i
 Confusion-pair analysis & Where do the dominant misrankings concentrate? & internal test split, complete & Error analysis\\
 Criterion-state anatomy & How are criterion states distributed? & internal probe, complete & Appendix\\
 \midrule
-\multicolumn{4}{@{}l}{\textit{External validation}}\\
+\multicolumn{4}{@{}l}{\textit{External synthetic evaluation}}\\
 \midrule
-External-corpus evaluation & Does performance transfer to a different distribution? & external, complete & External validation\\
+External-corpus evaluation & Does performance transfer to a different distribution? & external, complete & External synthetic evaluation\\
 External repair battery & Does any repair transfer to the external corpus? & external, complete & External repair table\\
 Case-similarity reranking & Does case-neighbor reranking transfer? & external, complete & Retrieval control\\
 Lexical cross-corpus transfer & Does a lexical selector transfer across corpora? & in-domain and external & Lexical transfer\\
