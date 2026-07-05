@@ -329,6 +329,8 @@ Other psychiatric multi-agent pipelines operationalize structured interviews or 
 
 General medical multi-agent systems use multiple LLM roles to debate, consult, or adaptively collaborate~\citep{tang2024medagents,kim2024mdagents}. These systems demonstrate that structured collaboration can improve some medical reasoning tasks, but they do not imply that more agents improve every decision. When agents share a base model, their errors may be correlated; when they exchange free-form arguments, it can be unclear which component caused a final change.
 
+The most capable diagnostic-reasoning systems set an informative reference point. AMIE, a large language model optimized for diagnostic reasoning, generated differential lists that improved clinicians' diagnostic accuracy on complex real-world cases~\citep{mcduff2025amie}. AMIE differs from the present work in setting and goal: it targets open-ended differential quality on English internal-medicine cases and is evaluated by expert raters, whereas this thesis holds a Chinese psychiatric transcript fixed and asks where a decomposed pipeline diverges across detection, verification, and committed selection. The two are also complementary on interpretability. AMIE's own evaluation notes that for complex cases it can draw conclusions from isolated symptoms rather than viewing the case holistically, and its reasoning is not auditable at the level of individual criteria---the gap this thesis addresses with an explicit ICD-10 criterion trace.
+
 HiED uses multi-agent decomposition for attribution. The diagnostician, checkers, logic engine, and repair probes have separate roles and stable interfaces. Direct-Answer and Nominate-then-Select share upstream candidates and checker traces, so their difference isolates finalization. Pairwise and debate are evaluated as repair probes rather than built into the selected headline system. This allows the thesis to report whether additional comparison or adversarial reasoning changes the primary rather than simply reporting that a larger pipeline behaves differently.
 
 The negative results later in the thesis should be read against this background. They do not show that multi-agent reasoning is useless in general. They show that uniformly applied debate and pairwise override do not close the transcript-only selection gap under the tested protocols. That finding motivates more selective routing of hard cases rather than unconditional escalation.
@@ -382,7 +384,7 @@ The selected benchmark profile activates fourteen disorder entries, including su
 
 \section{LingxiDiag-16K}
 
-LingxiDiagBench nominally contains 16,000 synthetic psychiatric dialogues~\citep{xu2026lingxidiagbench}; because the official 1,000-case test split was unavailable at freeze, the accessible corpus for this project comprises 15,000 case IDs. This thesis assigns that accessible pool two on-disk roles, with the development role further subdivided for probe design (\Cref{tab:data-roles-rewrite}):
+LingxiDiagBench nominally contains 16,000 synthetic psychiatric dialogues~\citep{xu2026lingxidiagbench}; because the official 1,000-case test split was unavailable at freeze, the accessible corpus for this project comprises 15,000 case IDs. This thesis assigns that accessible pool three disjoint on-disk roles (\Cref{tab:data-roles-rewrite}):
 
 \begin{table}[htbp]
 \centering
@@ -393,9 +395,9 @@ LingxiDiagBench nominally contains 16,000 synthetic psychiatric dialogues~\citep
 \toprule
 Role & $N$ & Use & Interpretation\\
 \midrule
-Train-derived development pool & 13,000 lines / 12,997 unique IDs & retrieval support and development analyses & not headline evaluation\\
-Public validation split & 1,000 (drawn from the pool above) & configuration and probe design & not a test set\\
-Internal test split & 1,000 & frozen headline evaluation & pre-registered and retrieval-excluded\\
+Train-derived development pool & 13,000 cases / 12,997 unique IDs & retrieval support and development analyses & remainder of the 14,000-line train file after the internal-test carve; not headline evaluation\\
+Public validation split & 1,000 & configuration, sensitivity analysis, and public positioning (\Cref{tab:lingxi-public-validation-positioning}) & official validation file; not a test set\\
+Internal test split & 1,000 & frozen headline evaluation & pre-registered, train-carved, and retrieval-excluded\\
 \bottomrule
 \end{tabular}
 \end{adjustbox}
@@ -1032,6 +1034,8 @@ This conclusion is bounded. The thesis does not show that logic, pairwise reason
 \section{Method Limitation versus Modality Limitation}
 
 Some failures are method-limited: the transcript contains subtle comparative evidence, but the current selector does not use it. Other failures are modality-limited: the transcript simply lacks the facts needed to distinguish primary from secondary diagnoses. Benchmark performance alone cannot separate these possibilities.
+
+The structural shape of this result is not unique to psychiatry. In rare-disease gene prioritization, a very different clinical domain, prompt-only LLM ranking reaches only low recall at the top rank, while a knowledge-driven high-recall pipeline retains the causal gene at much higher rates; the effective gain comes from adding a language-aware reranking layer on top of that high-recall stage rather than from the LLM ranking alone~\citep{lee2025lamarrvel}. The same division appears here: detection and verification retain the correct parent at high rates, but committed selection is the limiting step. That two independent clinical domains locate the bottleneck at ranking rather than retrieval suggests the selection bottleneck is a structural property of LLM-based diagnostic pipelines, not an artifact of the psychiatric setting.
 
 Psychiatric reference judgments are themselves imperfect: DSM-5 field-trial reliability varies across diagnostic categories~\citep{regier2013dsm5}. A transcript-only human ceiling is therefore a central future measurement. If blinded clinicians reading the same transcripts also struggle to identify the benchmark primary, the ceiling may reflect the modality. If clinicians can reliably resolve cases that HiED misses, the bottleneck is more likely methodological. This distinction is necessary before interpreting the remaining gap as a model failure, a data limitation, or an inherent ambiguity of the diagnostic labels.
 
