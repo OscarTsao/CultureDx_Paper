@@ -165,43 +165,40 @@ TF--IDF & Term frequency--inverse document frequency\\
 \chapter{Introduction}
 \label{ch:introduction}
 
-\section{Clinical Motivation}
+\section{Background}
 
-Psychiatric diagnosis from a single consultation transcript is a comparative decision \ct{decision-making} under incomplete evidence. Patients may describe insomnia, fatigue, concentration difficulty, somatic distress, avoidance, irritability, low motivation, and impaired functioning in ways that are compatible with several common mental disorders. The distinctions that separate depressive, anxiety, stress-related, obsessive-compulsive, somatic, and sleep disorders often depend on duration, onset, course, exclusionary medical or substance causes, and longitudinal functional change. These discriminating facts are not always elicited in one visit. A system that names a plausible disorder has therefore not necessarily solved the diagnostic task.
+Psychiatric diagnosis from a single consultation transcript is a comparative decision \ct{decision-making} under incomplete evidence. Patients may describe insomnia, fatigue, concentration difficulty, somatic distress, avoidance, irritability, low motivation, and impaired functioning in ways that are compatible with several common mental disorders. The distinctions that separate depressive, anxiety, stress-related, obsessive-compulsive, somatic, and sleep disorders often depend on duration, onset, course, exclusionary medical or substance causes, and longitudinal functional change. These discriminating facts are not always elicited in one visit. Diagnostic manuals specify symptoms, duration, impairment, course, and exclusion requirements, but clinical transcripts rarely present those requirements as complete checklists.
 
-This distinction is central to the thesis. In clinical practice, the question is rarely whether one disorder is plausible in isolation. The practical question is which disorder best explains the presentation, which alternatives remain plausible, whether a second disorder is independently supported, and what information is still missing. A transcript-only model must therefore reason under two simultaneous constraints: several diagnoses can be supported by the same evidence, and absence of a statement cannot be treated as evidence that a criterion is false. A useful system must preserve that uncertainty instead of collapsing it into a single opaque label.
+Large language models provide a natural interface for this setting because they can read free-form dialogue, summarize symptom evidence, propose differentials, and emit structured outputs. Mental-health applications have already evaluated LLMs on examinations, vignettes, consultation settings, screening tasks, and dialogue generation. Fluency, however, does not guarantee reliable discrimination: a model-generated rationale may be coherent without being faithful to the process that produced the answer, and a system that names a plausible disorder has therefore not necessarily solved the diagnostic task.
 
-Large language models provide a natural interface for this setting because they can read free-form dialogue, summarize symptom evidence, propose differentials, and emit structured outputs. Fluency, however, does not guarantee reliable discrimination. An LLM can produce a clinically plausible explanation while committing the wrong primary diagnosis. It can also generate a rationale that is persuasive without being faithful to the actual decision process. For clinical decision support, the final label is therefore not enough; the relation among transcript evidence, candidate diagnoses, diagnostic criteria, and the committed output must be inspectable.
+The Taiwanese outpatient setting motivates the intended deployment context. Common mental disorders may present through somatic complaints rather than explicit mood language~\citep{ryder2008somatic}; consultations may be brief; and patients may move between Mandarin, Taiwanese registers, and institution-specific clinical phrasing. This context calls for a diagnostic aid that operates locally, faces Traditional Chinese input, and exposes its evidence rather than returning an opaque label.
 
-The Taiwanese outpatient setting motivates the intended deployment context of this work. Common mental disorders may present through somatic complaints rather than explicit mood language~\citep{ryder2008somatic}; consultations may be brief; and patients may move between Mandarin, Taiwanese registers, and institution-specific clinical phrasing. The experiments in this thesis are not real-patient Taiwanese validation, but the design choices follow from that target setting: local inference, Traditional-Chinese-facing prompts, criterion-level evidence display, and a clinician-facing audit trace. The evaluation deliberately adopts a transcript-only regime to test how far a system can go when it receives only what a single session contains.
+\section{Problem Definition}
+\label{sec:problem-definition}
 
-\section{Problem Statement}
+Psychiatric differential diagnosis from a transcript is a structured comparison under uncertainty, not flat text classification. Three distinctions make this precise.
 
-This thesis studies where transcript-only psychiatric LLM diagnosis fails after the task is decomposed. Instead of treating diagnosis as flat text classification, it separates three functions that are often conflated:
+The first distinction is between evidence of absence and absence of evidence. If a transcript does not mention substance use or duration, that omission does not prove the criterion is false. Treating every unmentioned feature as negative over-excludes; treating every omission as compatible over-retains. The second distinction is between diagnostic compatibility and diagnostic primacy. Several disorders can be compatible with the same transcript, but only one can be committed as the primary diagnosis in the single-label view used for Top-1 scoring. The third distinction is between comorbidity and redundant description. A transcript that supports both depression and anxiety may reflect independent comorbidity, or it may reflect one syndrome described through overlapping symptoms.
 
-\begin{enumerate}[label=\arabic*.]
-\item \textbf{Candidate detection}: generating a ranked set that contains plausible diagnoses;
-\item \textbf{Criterion verification}: evaluating transcript evidence against disorder-specific ICD-10 criteria;
-\item \textbf{Primary selection}: committing the single diagnosis that best explains the case.
-\end{enumerate}
+These distinctions can be stated formally. For transcript $x$, let $C_k(x)$ denote the top-$k$ candidate diagnoses a system produces, $V^{+}(x)$ the set of diagnoses that survive criterion verification, $\hat{y}(x)$ the committed primary prediction, and $y$ the gold parent diagnosis. Define
+\begin{align}
+D_k(x) &= \mathbb{1}[y \in C_k(x)],\\
+R(x) &= \mathbb{1}[y \in V^{+}(x)],\\
+S(x) &= \mathbb{1}[\hat{y}(x)=y].
+\end{align}
+Averaged over cases, $D_k$ measures candidate coverage, $R$ measures verification retention, and $S$ measures committed Top-1 selection. A \emph{selection bottleneck} exists when $D_k$ or $R$ substantially exceeds $S$: the correct diagnosis is generated and survives criterion checking, yet is not the one finally committed. High Top-3 coverage is not clinical correctness; it means the correct answer is often present in a system's output. Low Top-1 is not necessarily a failure to generate the correct diagnosis; it may be a failure to rank it first.
 
-The central claim is that these functions can diverge. A system may include the gold diagnosis in its ranked differential, and a criterion checker may retain that diagnosis as supported, while the final committed primary remains wrong. This configuration defines the \emph{selection bottleneck}: the correct answer is already within reach, but the system does not choose it.
+This formalization changes how performance should be interpreted. A single Top-1 accuracy cannot distinguish a system that never considered the correct diagnosis from one that considered and verified it but ranked a close alternative first. These are different failures with different remedies: the first calls for better candidate generation or retrieval, the second for better comparative selection or better evidence acquisition. The relevant question is therefore not simply ``how accurate is a system?'' but ``at which stage, if any, does the correct diagnosis disappear?''
 
-The decomposition changes how performance should be interpreted. A single Top-1 accuracy cannot distinguish a model that never considered the correct diagnosis from a model that considered and verified it but ranked a close alternative first. These two failures require different remedies. The first suggests better candidate generation or retrieval; the second suggests better comparative selection or better evidence acquisition. By measuring candidate coverage, criterion retention, and committed selection on the same cases, this thesis turns an opaque accuracy score into a stage-wise diagnostic of system behavior.
+\section{Motivation and Goals}
 
-\section{Research Questions}
-\ct{not often done this way.}
-The thesis is organized around five research questions:
+Answering that question requires an approach that keeps candidate generation, criterion verification, and primary selection observable as separate quantities on the same cases, rather than collapsed into one classification event. It also requires that the evidence behind a commitment be reviewable: for clinical decision support, the final label is not enough on its own, since the relation among transcript evidence, candidate diagnoses, diagnostic criteria, and the committed output must be inspectable rather than taken on faith. Building and evaluating such an approach for Chinese psychiatric differential diagnosis is therefore the objective, with the aim of locating, rather than assuming away, the stage at which current systems actually fail.
 
-\begin{description}[style=nextline,leftmargin=3cm,labelwidth=2.5cm]
-\item[RQ1] Can a hybrid LLM--rule architecture produce a ranked psychiatric differential, a committed primary diagnosis, optional comorbidity, and a criterion-level audit trace?
-\item[RQ2] How large is the gap among candidate coverage, criterion verification, and realized primary-selection accuracy?
-\item[RQ3] Can logic re-selection, pairwise comparison, debate, deterministic fusion, learned reranking, calibration, or test-time aggregation close that selection gap?
-\item[RQ4] Does the same pattern persist across model size, external synthetic distribution shift, label-space expansion, and major confusion boundaries?
-\item[RQ5] What do benchmark and audit results establish, and what remains unresolved without real-patient data or a transcript-only human reference?
-\end{description}
+\section{System Summary}
 
-These questions frame HiED not only as a diagnostic system but also as an experimental instrument. Its purpose is to reveal which stage contributes which kind of evidence, and which stage remains limiting under a frozen evaluation protocol.
+This thesis introduces HiED, a hybrid evidence-grounded multi-agent system that separates candidate detection, ICD-10 criterion verification, and committed primary selection into observable stages. HiED combines a local LLM diagnostician, class-balanced case retrieval, disorder-specific criterion checkers, and deterministic threshold logic to emit a ranked differential, a committed primary diagnosis, optional comorbidity, and a criterion-level audit trace with three states: \texttt{met}, \texttt{not\_met}, and \texttt{insufficient\_evidence}. The architecture and its components are described in full in Chapter~\ref{ch:architecture}; this summary is given here only so that the research questions and contributions below can refer to it by name.
+
+Chapter~\ref{ch:related} reviews prior systems against this problem definition and, on that basis, develops the specific research questions this thesis addresses.
 
 \section{Contributions}
 
@@ -233,86 +230,22 @@ The ontology can be expanded by configuration, but representability is not behav
 
 \section{Thesis Organization}
 
-Chapter~\ref{ch:background} defines the clinical and technical concepts behind the decomposition. Chapter~\ref{ch:related} positions HiED relative to psychiatric LLMs, multi-agent reasoning, interpretability, synthetic dialogue resources, and structured diagnosis. Chapter~\ref{ch:data} fixes the evaluation contract: datasets, label projection, metrics, statistics, health gates, and split discipline. Chapter~\ref{ch:architecture} describes HiED as an architecture designed to make detection, verification, and selection separately observable. Chapter~\ref{ch:experimental} turns the selection-bottleneck hypothesis into a failure-mode-driven experimental battery. Chapter~\ref{ch:results} reports in-domain evidence, and Chapter~\ref{ch:external} tests whether the pattern persists under external synthetic shift and scope expansion. Chapter~\ref{ch:error} translates aggregate results into error archetypes. Chapter~\ref{ch:discussion} interprets the findings, Chapter~\ref{ch:limitations} defines the evidentiary boundary, Chapter~\ref{ch:deployment} discusses clinician-facing use and governance, and Chapter~\ref{ch:conclusion} concludes with the future work the bottleneck motivates.
-
-\chapter{Clinical and Technical Background}
-\label{ch:background}
-
-\section{Psychiatric Differential Diagnosis}
-
-The architecture in this thesis follows from the structure of psychiatric diagnosis. Diagnostic manuals specify symptoms, duration, impairment, course, and exclusion requirements, but clinical transcripts rarely present those requirements as complete checklists. A patient may report sleep disturbance, worry, fatigue, avoidance, somatic discomfort, and functional impairment without establishing onset, persistence, recurrence, medication effects, substance use, or whether another disorder better explains the presentation. A computational system must therefore preserve distinctions that ordinary classification tends to collapse.
-
-The first distinction is between evidence of absence and absence of evidence. If a transcript does not mention substance use or duration, that omission does not prove the criterion is false. Treating every unmentioned feature as negative over-excludes; treating every omission as compatible over-retains. The second distinction is between diagnostic compatibility and diagnostic primacy. Several disorders can be compatible with the same transcript, but only one can be committed as the primary diagnosis in the single-label view used for Top-1 scoring. The third distinction is between comorbidity and redundant description. A transcript that supports both depression and anxiety may reflect independent comorbidity, or it may reflect one syndrome described through overlapping symptoms.
-
-These distinctions make psychiatric differential diagnosis a structured comparison under uncertainty. The correct diagnosis may not be absent from the model's output; it may be present but ranked below a close competitor. The thesis therefore treats candidate detection, criterion verification, and primary selection as separable functions rather than as a single classification event.
-
-\section{ICD-10 Criteria and Operationalization}
-
-The International Classification of Diseases provides a standardized vocabulary for diagnostic categories~\citep{who2019icd10}. Computational use requires operational decisions: which criteria are required, which are optional, how symptom counts are computed, how duration requirements are represented, and how exclusions are handled when evidence is missing. These decisions transform narrative diagnostic criteria into checkable structures.
-
-Operationalization improves reproducibility but narrows clinical judgment. A deterministic rule can state whether a set of criterion states satisfies a threshold, but it cannot recover context that the transcript never supplied. It also cannot determine whether two compatible disorders should be treated as primary-plus-comorbid or as competing explanations for the same syndrome. In HiED, the ICD-10 logic is therefore used as an audit scaffold rather than as a replacement for expert diagnosis. It records what the transcript appears to support, contradict, or leave unresolved.
-
-The three-state criterion representation is essential. A binary \texttt{met}/\texttt{not\_met} scheme would force missing evidence into a confident category. HiED instead uses \texttt{met}, \texttt{not\_met}, and \texttt{insufficient\_evidence}. This makes uncertainty visible and allows the experiments to measure whether verification fails because it rejects the gold diagnosis or because it retains too many plausible alternatives.
-
-\section{Large Language Models in Clinical Reasoning}
-
-LLMs can integrate long textual contexts, follow structured instructions, summarize symptom evidence, and generate candidate diagnoses. Mental-health applications have evaluated LLMs on examinations, vignettes, consultation settings, screening tasks, and dialogue generation~\citep{li2024taiwan,raballo2025,sarma2025}. These capabilities make LLMs attractive for transcript-based differential diagnosis, but they do not remove the need for stage-wise evaluation.
-
-The central risk is that fluency can mimic reasoning. A model-generated rationale may be coherent without being faithful to the hidden process that produced the answer~\citep{turpin2023unfaithful}. For this reason, HiED does not claim that a generated explanation is an interpretation of the model. The audit trace is external to the final selector: criterion states, evidence spans, and deterministic logic outputs can be inspected independently of the LLM's internal reasoning. This is a weaker claim than interpretability, but it is more defensible for clinical decision support.
-
-The thesis therefore distinguishes three objects: the model's committed output, the model's free-text rationale, and the externally structured audit trace. Only the third is designed to be reproducible given the same criterion states and logic. The experiments ask whether this audit layer improves selection, clarifies failure, or both.
-
-\section{Retrieval-Augmented Generation}
-
-Retrieval-augmented generation supplements an LLM prompt with relevant examples or knowledge~\citep{lewis2020rag}. In psychiatric dialogue, retrieval can remind the model of less salient disorders, provide lexical anchors, or expose similar presentations. It can therefore improve candidate detection. However, retrieval can also amplify corpus-specific wording and does not by itself solve the problem of selecting among supported diagnoses.
-
-HiED separates two retrieval roles. Case retrieval is part of the frozen pipeline and uses class-balanced similar cases to support candidate breadth. Definition-similarity and case-similarity reranking are evaluated separately as selection repairs. This distinction prevents a retrieval gain in candidate support from being mistaken for evidence that retrieval solves primary selection.
-
-The results later show why this separation matters. Retrieval improves the direct baseline, but the residual Top-3/Top-1 gap remains. A correct diagnosis can be retrieved, generated, and retained, yet still not be selected as primary. Retrieval is therefore evaluated as a coverage mechanism, not as a complete answer to comparative selection.
-
-\section{Multi-Agent Systems}
-
-Multi-agent systems decompose a task into specialized roles. In medical reasoning, agents have been used for collaboration, debate, inquiry, specialist consultation, and adaptive decision-making~\citep{tang2024medagents,kim2024mdagents,wu2026wisemind}. These systems can improve some tasks, but additional agents do not automatically make a decision more correct or more interpretable. Agents using related models may share errors, and multi-round interaction can make attribution harder.
-
-HiED uses specialization rather than unrestricted conversation. The diagnostician ranks candidates and commits a primary; criterion checkers evaluate candidate-specific evidence; deterministic logic summarizes criterion states; repair probes test whether alternative finalization policies improve the commitment. The modularity is experimental: it allows one stage to be held fixed while another is varied. This is what makes the Direct-Answer versus Nominate-then-Select comparison and controlled pairwise replay interpretable.
-
-The thesis therefore treats multi-agent structure as a means of causal attribution, not as an assumption that more agents are better. Debate and pairwise reasoning are tested as repair probes, and their failures are evidence about when additional reasoning does or does not help.
-
-\section{Interpretability, Explainability, and Auditability}
-
-Interpretability and explainability are often used broadly, but this thesis uses \emph{auditability} narrowly. An audit trace is a structured record that can be inspected, reproduced, and challenged. It does not prove that the trace caused the final LLM decision, and it does not prove that every criterion judgment is clinically correct. It provides a review object whose relationship to the transcript can be examined.
-
-This distinction prevents two overclaims. First, attaching a deterministic component to an opaque selector does not make the entire system interpretable. Second, reproducibility of a trace does not imply correctness. A criterion checker can consistently misread evidence. The audit layer is therefore a precondition for systematic review, not a substitute for validation.
-
-In the HiED setting, auditability has three practical functions. It separates evidence review from final commitment, it allows errors to be attributed to candidate detection, verification, or selection, and it enables future clinician-facing interfaces to show why a diagnosis was retained or rejected. The experiments use this property to convert aggregate error into stage-wise explanation.
-
-\section{Selection Bottleneck}
-
-For transcript $x$, let $C_k(x)$ denote the top-$k$ candidate diagnoses, $V^{+}(x)$ the set of diagnoses retained by verification, $\hat{y}(x)$ the committed primary prediction, and $y$ the gold parent diagnosis. Define
-\begin{align}
-D_k(x) &= \mathbb{1}[y \in C_k(x)],\\
-R(x) &= \mathbb{1}[y \in V^{+}(x)],\\
-S(x) &= \mathbb{1}[\hat{y}(x)=y].
-\end{align}
-
-Averaged over cases, $D_k$ measures candidate coverage, $R$ measures verification retention, and $S$ measures committed Top-1 selection. A selection bottleneck exists when $D_k$ or $R$ substantially exceeds $S$. High Top-3 coverage is not clinical correctness; it means the correct answer is often present in the system's output. Low Top-1 is not necessarily failure to generate the correct diagnosis; it may be failure to rank it first.
-
-This formalization is the hinge of the thesis. It turns the central question from ``How accurate is the system?'' into ``At which stage does the correct diagnosis disappear?'' The next chapters use this question to structure the literature review, evaluation protocol, architecture, experiments, and discussion.
+Chapter~\ref{ch:related} reviews prior work on Chinese psychiatric dialogue resources, psychiatric LLM diagnosis, medical multi-agent reasoning, interpretability, synthetic data, and structured diagnosis, and closes by stating the specific gap and the research questions this thesis addresses. Chapter~\ref{ch:architecture} describes HiED as an architecture designed to make detection, verification, and selection separately observable. Chapter~\ref{ch:data} fixes the evaluation contract used to test it: datasets, label projection, metrics, statistics, health gates, and split discipline. Chapter~\ref{ch:experimental} turns the selection-bottleneck hypothesis into a failure-mode-driven experimental battery. Chapter~\ref{ch:results} reports in-domain evidence, and Chapter~\ref{ch:external} tests whether the pattern persists under external synthetic shift and scope expansion. Chapter~\ref{ch:error} translates aggregate results into error archetypes. Chapter~\ref{ch:discussion} interprets the findings, Chapter~\ref{ch:limitations} defines the evidentiary boundary, Chapter~\ref{ch:deployment} discusses clinician-facing use and governance, and Chapter~\ref{ch:conclusion} concludes with the future work the bottleneck motivates.
 
 \chapter{Related Work}
 \label{ch:related}
 
 \section{Overview}
 
-Prior work has shown that LLMs can answer psychiatric diagnostic questions, simulate clinical dialogue, support criterion-grounded reasoning, and coordinate multiple agents. The gap addressed here is narrower: existing systems rarely separate whether the correct diagnosis was generated, whether it survived criterion verification, and whether it was finally selected as the primary. HiED targets this missing measurement.
+Prior work has shown that LLMs can answer psychiatric diagnostic questions, simulate clinical dialogue, support criterion-grounded reasoning, and coordinate multiple agents. The gap addressed here is narrower: existing systems rarely separate whether the correct diagnosis was generated, whether it survived criterion verification, and whether it was finally selected as the primary, in the sense made precise in Section~\ref{sec:problem-definition}.
 
-This chapter is organized by mechanism rather than by chronology. Chinese psychiatric dialogue resources define the data setting; psychiatric LLM systems define the clinical task family; medical multi-agent systems define the collaboration design space; interpretability and diagnostic-chain methods define the explanation problem; synthetic data and structured-diagnosis work define the limits and future directions. Across these lines, the thesis asks a single question: where does a system fail when candidate generation, criterion verification, and primary selection are measured separately?
+This chapter is organized by mechanism rather than by chronology, and each section is read against that same problem definition. Chinese psychiatric dialogue resources define the data setting; psychiatric LLM systems define the clinical task family; medical multi-agent systems define the collaboration design space; interpretability and diagnostic-chain methods define the explanation problem; synthetic data and structured-diagnosis work define the limits and future directions. Across these lines, a single question recurs: where does a system fail when candidate generation, criterion verification, and primary selection are measured separately? The chapter closes by stating this gap explicitly and posing the research questions it motivates.
 
 \section{Chinese Psychiatric Dialogue Resources}
 
-LingxiDiagBench provides a Chinese psychiatric consultation and diagnosis benchmark with synthetic, EMR-aligned dialogues and multiple task granularities~\citep{xu2026lingxidiagbench}. Its reported evaluation shows a coarse-to-fine difficulty gradient: the evaluated LLMs reached 92.3\% on binary depression--anxiety classification but only 28.5\% on the full 12-way differential diagnosis, with dynamic consultation often underperforming static evaluation. This thesis adopts its paper-parent taxonomy for the in-domain setting but evaluates a diagnostic architecture rather than proposing a new benchmark. A limited public-validation positioning analysis is reported only as contextual evidence; it is not the headline result because protocol and split differences make leaderboard-style claims fragile.
+LingxiDiagBench provides a Chinese psychiatric consultation and diagnosis benchmark with synthetic, EMR-aligned dialogues and multiple task granularities~\citep{xu2026lingxidiagbench}. Its reported evaluation shows a coarse-to-fine difficulty gradient: the evaluated LLMs reached 92.3\% on binary depression--anxiety classification but only 28.5\% on the full 12-way differential diagnosis, with dynamic consultation often underperforming static evaluation. Its paper-parent taxonomy provides the in-domain label space adopted throughout, with the goal of evaluating a diagnostic architecture rather than proposing a new benchmark. A limited public-validation positioning analysis is reported only as contextual evidence; it is not the headline result because protocol and split differences make leaderboard-style claims fragile.
 
-MDD-5k provides a broader synthetic disorder distribution and different dialogue style through a neuro-symbolic multi-agent synthesis pipeline~\citep{yin2024mdd5k}. It is used as an external synthetic distribution-shift corpus. D4 focuses on depression-oriented dialogue~\citep{yao2022d4}, and CPsyCoun emphasizes psychological counseling reconstruction rather than multi-disorder primary diagnosis~\citep{zhang2024cpsycoun}. These differences make cross-paper accuracy comparisons unreliable. The thesis therefore uses each corpus for a specific evaluation role rather than treating them as interchangeable leaderboards.
+MDD-5k provides a broader synthetic disorder distribution and different dialogue style through a neuro-symbolic multi-agent synthesis pipeline~\citep{yin2024mdd5k}. It is used as an external synthetic distribution-shift corpus. D4 focuses on depression-oriented dialogue~\citep{yao2022d4}, and CPsyCoun emphasizes psychological counseling reconstruction rather than multi-disorder primary diagnosis~\citep{zhang2024cpsycoun}. These differences make cross-paper accuracy comparisons unreliable, which is why each corpus is assigned a specific evaluation role below rather than treated as an interchangeable leaderboard.
 
 This dataset positioning matters for the central claim. Candidate coverage, verification retention, and primary selection must be measured on the same cases under a fixed label projection. Otherwise a difference in reported accuracy could reflect class mix, task granularity, gold-label convention, or split construction rather than a true difference in diagnostic behavior.
 
@@ -320,45 +253,150 @@ This dataset positioning matters for the central claim. Candidate coverage, veri
 
 Psychiatric LLM studies have evaluated general models on licensing examinations, differential-diagnosis vignettes, clinical reasoning tasks, and comparisons with psychiatrists~\citep{li2024taiwan,raballo2025,sarma2025}. These studies establish that LLMs can produce clinically plausible answers, but they also show that task setting and reference standards strongly affect interpretation. A model that performs well on an exam or vignette is not thereby validated for transcript-only outpatient decision support.
 
-Recent knowledge-guided psychiatric systems integrate diagnostic criteria, inquiry, or progressive reasoning. MIND connects inquiry and diagnosis with criteria-grounded supports~\citep{li2026mind}; WiseMind/ProAI uses knowledge-guided multi-agent reasoning for psychiatric diagnosis~\citep{wu2026wisemind}; MentalSeek-Dx emphasizes progressive hypothetico-deductive reasoning for real-world psychiatric diagnosis~\citep{sun2026mentalseek}. These systems often gain power by asking follow-up questions or actively acquiring missing information. HiED deliberately holds the transcript fixed. This removes a powerful degree of freedom but isolates the question of what can be recovered from a completed session.
+Recent knowledge-guided psychiatric systems integrate diagnostic criteria, inquiry, or progressive reasoning. MIND connects inquiry and diagnosis with criteria-grounded supports~\citep{li2026mind}; WiseMind/ProAI uses knowledge-guided multi-agent reasoning for psychiatric diagnosis~\citep{wu2026wisemind}; MentalSeek-Dx emphasizes progressive hypothetico-deductive reasoning for real-world psychiatric diagnosis~\citep{sun2026mentalseek}. These systems often gain power by asking follow-up questions or actively acquiring missing information, which trades a fixed-transcript evaluation for a harder-to-control acquisition policy. Holding the transcript fixed instead removes that degree of freedom but isolates a narrower, complementary question: what can be recovered from a single completed session alone.
 
-Other psychiatric multi-agent pipelines operationalize structured interviews or clinical scales. Systems such as MAGI, MoodAngels, and DSM5AgentFlow use agent roles to navigate interviews, evaluate symptoms, or provide stepwise explanations~\citep{bi2025magi,xiao2025moodangels,ozgun2025dsm5agentflow}. HiED shares the criterion-grounded and multi-agent motivation but differs in the measurement target: it asks whether detection, verification, and selection diverge once acquisition is held fixed.
+Other psychiatric multi-agent pipelines operationalize structured interviews or clinical scales. Systems such as MAGI, MoodAngels, and DSM5AgentFlow use agent roles to navigate interviews, evaluate symptoms, or provide stepwise explanations~\citep{bi2025magi,xiao2025moodangels,ozgun2025dsm5agentflow}. These systems share a criterion-grounded, multi-agent motivation with the problem definition above, but none of them measures whether detection, verification, and selection diverge once acquisition is held fixed; that measurement gap, rather than any single design choice, is what the research questions below target.
 
 \section{Medical Multi-Agent Reasoning}
 
 General medical multi-agent systems use multiple LLM roles to debate, consult, or adaptively collaborate~\citep{tang2024medagents,kim2024mdagents}. These systems demonstrate that structured collaboration can improve some medical reasoning tasks, but they do not imply that more agents improve every decision. When agents share a base model, their errors may be correlated; when they exchange free-form arguments, it can be unclear which component caused a final change.
 
-The most capable diagnostic-reasoning systems set an informative reference point. AMIE, a large language model optimized for diagnostic reasoning, generated differential lists that improved clinicians' diagnostic accuracy on complex real-world cases~\citep{mcduff2025amie}. A companion study extends AMIE to the consultation itself, where its diagnostic dialogue with validated patient-actors was rated favorably against primary-care physicians in a randomized, double-blind crossover design~\citep{tu2025conversational}. AMIE differs from the present work in setting and goal: it targets open-ended differential quality on English internal-medicine cases and is evaluated by expert raters, whereas this thesis holds a Chinese psychiatric transcript fixed and asks where a decomposed pipeline diverges across detection, verification, and committed selection. The two are also complementary on interpretability. AMIE's own evaluation notes that for complex cases it can draw conclusions from isolated symptoms rather than viewing the case holistically, and its reasoning is not auditable at the level of individual criteria---the gap this thesis addresses with an explicit ICD-10 criterion trace.
+The most capable diagnostic-reasoning systems set an informative reference point. AMIE, a large language model optimized for diagnostic reasoning, generated differential lists that improved clinicians' diagnostic accuracy on complex real-world cases~\citep{mcduff2025amie}. A companion study extends AMIE to the consultation itself, where its diagnostic dialogue with validated patient-actors was rated favorably against primary-care physicians in a randomized, double-blind crossover design~\citep{tu2025conversational}. AMIE differs in setting and goal from the problem defined above: it targets open-ended differential quality on English internal-medicine cases and is evaluated by expert raters, whereas the problem definition above holds a Chinese psychiatric transcript fixed and asks where a decomposed pipeline diverges across detection, verification, and committed selection. The two are also complementary on interpretability. AMIE's own evaluation notes that for complex cases it can draw conclusions from isolated symptoms rather than viewing the case holistically, and its reasoning is not auditable at the level of individual criteria---a gap addressed below through an explicit ICD-10 criterion trace.
 
-HiED uses multi-agent decomposition for attribution. The diagnostician, checkers, logic engine, and repair probes have separate roles and stable interfaces. Direct-Answer and Nominate-then-Select share upstream candidates and checker traces, so their difference isolates finalization. Pairwise and debate are evaluated as repair probes rather than built into the selected headline system. This allows the thesis to report whether additional comparison or adversarial reasoning changes the primary rather than simply reporting that a larger pipeline behaves differently.
-
-The negative results later in the thesis should be read against this background. They do not show that multi-agent reasoning is useless in general. They show that uniformly applied debate and pairwise override do not close the transcript-only selection gap under the tested protocols. That finding motivates more selective routing of hard cases rather than unconditional escalation.
+More generally, multi-agent decomposition is useful for causal attribution only when stages have separate roles and stable interfaces, so that one stage can be held fixed while another is varied. Little of the surveyed work isolates finalization this way: most report a pipeline's aggregate accuracy rather than asking whether additional comparison or adversarial reasoning changes a specific commitment. This should not be read as showing that multi-agent reasoning is useless in general; it shows that whether uniformly applied debate or pairwise override can close a transcript-only selection gap is, at present, untested rather than resolved.
 
 \section{Interpretability and Diagnostic Chains}
 
-Diagnostic-chain methods aim to make clinical reasoning more transparent. Chain-of-Diagnosis produces stepwise diagnostic chains and confidence distributions~\citep{chen2025cod}; interpretable depression-assessment systems decompose symptoms or factors in clinically meaningful ways~\citep{lee2026interpretable,lyu2026depllm}. These approaches improve transparency, but many still depend on model-generated reasoning.
+The central risk motivating this line of work is that fluency can mimic reasoning: a model-generated rationale may be coherent without being faithful to the hidden process that produced the answer~\citep{turpin2023unfaithful}. Diagnostic-chain methods respond to this risk by making clinical reasoning more transparent. Chain-of-Diagnosis produces stepwise diagnostic chains and confidence distributions~\citep{chen2025cod}; interpretable depression-assessment systems decompose symptoms or factors in clinically meaningful ways~\citep{lee2026interpretable,lyu2026depllm}. These approaches improve transparency, but many still depend on model-generated reasoning, which does not by itself resolve the faithfulness risk above: a stepwise chain can still be a fluent post-hoc account rather than a faithful one.
 
-HiED takes a different route. Its audit structure lives outside the answer-producing network: disorder-specific checkers assign criterion states, and deterministic logic summarizes those states. The resulting trace is not a faithful account of the LLM's hidden reasoning, but it is inspectable and reproducible as an output-side artifact. This distinction is especially important in clinical settings, where a persuasive rationale can be harmful if it hides unsupported assumptions.
+This motivates a narrower and more defensible target than interpretability or explainability in the broad sense: \emph{auditability}. An audit trace is a structured record that can be inspected, reproduced, and challenged. It does not prove that the trace caused a model's final decision, and it does not prove that every criterion judgment is clinically correct; it provides a review object whose relationship to the transcript can be examined independently of the model's internal reasoning. This is a weaker claim than interpretability, but it is more defensible for clinical decision support, and it avoids two overclaims that the surveyed methods are prone to: that attaching a deterministic component to an opaque selector makes the entire system interpretable, and that reproducibility of a trace implies correctness.
 
-Logic-based diagnosis provides the closest conceptual analogue. Constraint-logic approaches translate diagnostic manuals into explicit rules that can be inspected and edited~\citep{kim2025clp}. HiED shares the commitment to explicit criterion structures but applies them within a hybrid LLM pipeline over Chinese-language transcripts and uses the logic layer primarily for audit and failure decomposition rather than as the sole final selector.
+Logic-based diagnosis provides the closest conceptual analogue to an audit-oriented approach. Constraint-logic approaches translate diagnostic manuals into explicit rules that can be inspected and edited~\citep{kim2025clp}. Such approaches share a commitment to explicit criterion structures, but existing instances either operate outside a hybrid LLM pipeline or use the logic layer as the sole final selector rather than as an audit and failure-decomposition layer alongside a learned selector---a combination the literature has not evaluated for Chinese-language psychiatric transcripts.
 
 \section{Synthetic Data and Clinical Dialogue Generation}
 
-Synthetic dialogue resources make controlled evaluation possible when real clinical data are scarce or sensitive. LLM role-play and reconstruction frameworks can generate large datasets for development and benchmarking~\citep{wu2024callm}. However, synthetic data may encode generator priors, simplify comorbidity, omit nonverbal context, and fail to capture local clinical variation. These limitations qualify every quantitative result in the thesis.
+Synthetic dialogue resources make controlled evaluation possible when real clinical data are scarce or sensitive. LLM role-play and reconstruction frameworks can generate large datasets for development and benchmarking~\citep{wu2024callm}. However, synthetic data may encode generator priors, simplify comorbidity, omit nonverbal context, and fail to capture local clinical variation. These limitations qualify every quantitative result reported later.
 
-The thesis uses synthetic corpora for method development and controlled ablation because they allow fixed splits, repeated paired comparisons, and explicit label projection. It does not treat synthetic performance as clinical validation. The planned real-patient arm and a transcript-only human reference are future requirements, not achieved results. This separation allows the method contribution to be evaluated without overstating clinical readiness.
+Synthetic corpora are used below for method development and controlled ablation because they allow fixed splits, repeated paired comparisons, and explicit label projection, not as a substitute for clinical validation. The planned real-patient arm and a transcript-only human reference are future requirements, not achieved results, which keeps the method contribution separable from any claim about clinical readiness.
 
 \section{Knowledge Graphs and Structured Diagnosis}
 
-Structured diagnosis methods use knowledge graphs, heterogeneous relations, or information-guided questioning to model dependencies among symptoms, criteria, disorders, and missing information. MedKGI combines knowledge structure with information-guided inquiry~\citep{wang2025medkgi}; DKEC uses heterogeneous graphs and label-wise attention to support diagnosis, especially for rare labels and smaller models~\citep{ge2024dkec}. These methods are relevant because the dominant residual error in HiED is comparative selection among already-supported candidates.
+Structured diagnosis methods use knowledge graphs, heterogeneous relations, or information-guided questioning to model dependencies among symptoms, criteria, disorders, and missing information. MedKGI combines knowledge structure with information-guided inquiry~\citep{wang2025medkgi}; DKEC uses heterogeneous graphs and label-wise attention to support diagnosis, especially for rare labels and smaller models~\citep{ge2024dkec}. These methods are relevant precisely because, per the $D_k$/$R$/$S$ decomposition above, the residual difficulty in this setting is expected to be comparative selection among already-supported candidates rather than candidate generation itself.
 
-A graph over symptoms, criteria, temporal relations, exclusions, and disorders is a natural future response to the selection bottleneck. It could represent relationships that scalar met-ratio thresholds cannot capture. The thesis does not implement that selector, and it treats graph-based selection as motivated future work rather than as a demonstrated solution. The present contribution is to show why such structure is needed.
+A graph over symptoms, criteria, temporal relations, exclusions, and disorders is a natural future response to the selection bottleneck. It could represent relationships that scalar met-ratio thresholds cannot capture. No such selector is implemented here; graph-based selection remains motivated future work rather than a demonstrated solution, and showing why that structure is needed is the present contribution.
 
 \section{Research Gap}
 
-The literature establishes that LLMs can diagnose, consult, explain, integrate criteria, generate dialogue, and coordinate agents. What remains under-specified is the stage-wise relationship among candidate coverage, criterion verification, and primary selection on the same cases. Prior work often reports final accuracy or qualitative explanations; this thesis asks whether the correct diagnosis was present, whether it survived verification, and whether it was selected.
+The literature establishes that LLMs can diagnose, consult, explain, integrate criteria, generate dialogue, and coordinate agents. What remains under-specified, across every line surveyed above, is the stage-wise relationship among candidate coverage, criterion verification, and primary selection on the same cases, in the sense of $D_k$, $R$, and $S$ defined in Section~\ref{sec:problem-definition}. Prior work often reports final accuracy or qualitative explanations rather than asking, on the same cases, whether the correct diagnosis was present, whether it survived verification, and whether it was selected.
 
-HiED fills this gap through a reproducible decomposition and a failure-mode-driven repair battery. The decomposition localizes where competence exists and where it breaks. The repair battery tests alternative explanations for the break. Together, they convert a diagnostic system evaluation into a controlled account of failure. A benchmark-positioning appendix further compares HiED--DA with the public LingxiDiagBench static-evaluation Table~4 on the same public validation cases, where HiED--DA exceeds the strongest reported Top-1 frontier-LLM and classical baselines; this comparison is explicitly limited to 12-class Top-1 and is not used as the thesis headline (\cref{tab:lingxi-public-validation-positioning}).
+\ct{not often done this way.}
+This gap motivates the research questions this thesis addresses, pursued through the architecture introduced in Chapter~\ref{ch:architecture} and evaluated in the chapters that follow:
+
+\begin{description}[style=nextline,leftmargin=3cm,labelwidth=2.5cm]
+\item[RQ1] Can a hybrid LLM--rule architecture produce a ranked psychiatric differential, a committed primary diagnosis, optional comorbidity, and a criterion-level audit trace?
+\item[RQ2] How large is the gap among candidate coverage, criterion verification, and realized primary-selection accuracy?
+\item[RQ3] Can logic re-selection, pairwise comparison, debate, deterministic fusion, learned reranking, calibration, or test-time aggregation close that selection gap?
+\item[RQ4] Does the same pattern persist across model size, external synthetic distribution shift, label-space expansion, and major confusion boundaries?
+\item[RQ5] What do benchmark and audit results establish, and what remains unresolved without real-patient data or a transcript-only human reference?
+\end{description}
+
+These questions frame HiED not only as a diagnostic system but also as an experimental instrument: its purpose is to reveal which stage contributes which kind of evidence, and which stage remains limiting under a frozen evaluation protocol. A benchmark-positioning appendix compares HiED--DA with the public LingxiDiagBench static-evaluation Table~4 on the same public validation cases, where HiED--DA exceeds the strongest reported Top-1 frontier-LLM and classical baselines; this comparison is explicitly limited to 12-class Top-1 and is not used as the thesis headline (\cref{tab:lingxi-public-validation-positioning}).
+
+\chapter{HiED System Architecture}
+\label{ch:architecture}
+
+\section{Design Principle}
+
+HiED is designed to expose the structure of diagnostic failure. Its components are not added on the assumption that more modules improve accuracy; they are separated so that candidate generation, criterion verification, deterministic aggregation, and final selection can be varied or inspected independently. This makes the architecture both a decision-support prototype and an experimental instrument for causal attribution.
+
+The design follows three principles. First, the system must emit a committed primary diagnosis because benchmark evaluation and clinical workflow both require a clear recommendation. Second, it must also emit a ranked differential and criterion-level evidence because a primary label without inspectable support is not adequate for clinical review. Third, it must distinguish the decision from the audit. The audit trace is evidence attached to the output, not a claim about the LLM's hidden reasoning.
+
+\section{Pipeline Overview}
+
+\ThesisFigure{fig_pipeline.pdf}{HiED pipeline. The diagnostician generates a ranked differential and committed primary. Candidate-specific checkers evaluate criteria, deterministic logic summarizes support, and the output includes both the decision and audit trace.}{fig:pipeline-thesis-rewrite}
+
+Given a transcript $x$, HiED executes the following steps:
+
+\begin{enumerate}[label=\arabic*.]
+\item Normalize the transcript while preserving speaker turns.
+\item Retrieve class-balanced supporting cases with FAISS/BGE-M3.
+\item Prompt the diagnostician to emit a ranked differential, committed primary, optional comorbidity, confidence, and rationale.
+\item Run disorder-specific ICD-10 criterion checkers over candidate diagnoses.
+\item Convert checker outputs into \texttt{met}, \texttt{not\_met}, and \texttt{insufficient\_evidence} states.
+\item Apply deterministic threshold logic to produce a logic-confirmed set.
+\item Emit the primary diagnosis, ranked differential, optional comorbidity, criterion trace, logic results, and decision trace.
+\end{enumerate}
+
+This pipeline separates evidence acquisition from evidence review. Retrieval supplies candidate-supporting context before diagnosis. Criterion checkers review the generated candidates after diagnosis. The final selected architecture uses Direct-Answer, so the diagnostician's primary remains the committed output while the checker and logic layers provide auditability.
+
+\section{Class-Balanced Retrieval}
+
+Retrieval-augmented generation supplements an LLM prompt with relevant examples or knowledge~\citep{lewis2020rag}. In psychiatric dialogue, retrieval can remind a model of less salient disorders, provide lexical anchors, or expose similar presentations, and can therefore improve candidate detection; it can also amplify corpus-specific wording and does not by itself resolve primary selection among already-supported candidates. Two retrieval roles are kept separate for this reason: case retrieval, described below, is part of the frozen pipeline and supports candidate breadth, while definition-similarity and case-similarity reranking are evaluated later as selection repairs rather than as part of the frozen pipeline. This separation prevents a retrieval gain in candidate support from being mistaken for evidence that retrieval solves primary selection.
+
+The retrieval component is designed to support candidate breadth without letting frequent disorders dominate the prompt. The query transcript is embedded with BGE-M3~\citep{chen2024bgem3} and searched against a FAISS index of training cases. Instead of returning the globally nearest cases, the retriever returns the top case per candidate disorder class. This class-balanced design keeps rare disorders visible and prevents common depression-like presentations from crowding out alternatives.
+
+Retrieval plays a defined role in the architecture. It can improve the diagnostician's candidate set by supplying examples and lexical anchors, but it is not treated as a selector. Later experiments evaluate definition-similarity and case-similarity reranking separately as repair probes. This separation allows the thesis to claim retrieval improves coverage without claiming that retrieval solves primary selection.
+
+\section{Diagnostic Agent}
+
+The diagnostic agent is a local Qwen3-32B-AWQ model served with vLLM under the canonical configuration. It reads the transcript and retrieved context, then emits a structured object with the following fields:
+
+\begin{itemize}
+\item a ranked differential diagnosis list;
+\item a committed primary parent diagnosis;
+\item an optional comorbid parent diagnosis;
+\item a confidence score;
+\item a brief rationale;
+\item optional uncertainty or abstention flags.
+\end{itemize}
+
+The committed primary is constrained to the ranked differential. This constraint lets Top-1 and Top-3 be interpreted together: the primary is the first commitment, while the ranked list records the nearby alternatives the model considered. A wrong Top-1 with a correct Top-3 is therefore not a total generation failure; it is a ranking failure among generated candidates.
+
+\section{Criterion Checkers}
+
+The International Classification of Diseases provides a standardized vocabulary for diagnostic categories~\citep{who2019icd10}, but computational use requires operational decisions: which criteria are required, which are optional, how symptom counts are computed, how duration requirements are represented, and how exclusions are handled when evidence is missing. These decisions transform narrative diagnostic criteria into the checkable structures used below. Operationalization improves reproducibility but narrows clinical judgment: a deterministic rule can state whether a set of criterion states satisfies a threshold, but it cannot recover context the transcript never supplied, nor determine whether two compatible disorders should be treated as primary-plus-comorbid or as competing explanations for the same syndrome. The ICD-10 logic is therefore used here as an audit scaffold rather than as a replacement for expert diagnosis: it records what the transcript appears to support, contradict, or leave unresolved.
+
+For each candidate disorder, criterion-checking agents evaluate transcript evidence against the operationalized ICD-10 criteria. Each criterion receives one of three states: \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_evidence}. The checker may also provide an evidence quote, confidence value, and short justification.
+
+The three-state design is the clinical core of the audit. A missing duration statement, unasked substance history, or absent exclusion clause should not automatically become a negative criterion. Recording insufficient evidence preserves the uncertainty that a single transcript creates. It also allows the results to measure whether the checker bank is high recall, high selectivity, or neither.
+
+Checker outputs are not clinician-level gold. They are structured model outputs subject to error. Their value is that they can be inspected and replayed through deterministic logic. A reviewer can challenge whether a cited span supports a criterion without accepting or rejecting the entire final diagnosis.
+
+\section{Deterministic Logic Engine}
+
+The logic engine applies count-based disorder-specific rules to criterion states and records which diagnoses are logic-confirmed. Determinism ensures that the same checker trace always yields the same logic result. This makes the audit reproducible and allows controlled comparisons of finalization policies.
+
+The logic engine is intentionally limited. It summarizes compatibility with diagnostic criteria; it does not by itself solve primacy. Several disorders can satisfy threshold logic in the same transcript, particularly when symptoms overlap and exclusions remain unobserved. The results later show that the logic-confirmed set often retains the gold parent but also retains many alternatives. This is exactly why verification and selection must be measured separately.
+
+\section{Finalization Policies}
+
+HiED evaluates multiple ways to produce the final primary diagnosis. Direct-Answer preserves the diagnostician's committed primary and is the selected reference policy. Nominate-then-Select re-derives the primary from logic-confirmed candidates. Pairwise comparison and debate are evaluated as repair probes that attempt to resolve close alternatives.
+
+Direct-Answer and Nominate-then-Select share upstream outputs. The diagnostician candidates, criterion states, and logic results are identical; only the finalization rule changes. This shared-upstream design isolates the causal effect of finalization. If Nominate-then-Select improves or degrades Top-1, that difference cannot be attributed to candidate generation or checker variation.
+
+Pairwise reasoning is evaluated in three modes: an independent run, a controlled replay over identical upstream outputs, and a forced override. The independent run tests local usefulness on activated cases. Controlled replay tests whether the stage actually changes committed primaries when everything upstream is fixed. Forced override tests global safety. This separation prevents a locally plausible comparison from being mistaken for a safe system-wide selector.
+
+\section{Output and Audit Trace}
+
+The complete output contains the committed primary, optional comorbidity, ranked differential, criterion states, cited evidence, logic-confirmed codes, and decision trace. These objects support different forms of review. A clinician or researcher may accept the differential but reject the primary, accept the primary but question a criterion quote, or accept the evidence but disagree with the finalization policy.
+
+This decomposition is the practical meaning of auditability in HiED. The system does not ask the user to trust a single opaque recommendation. It exposes where the recommendation came from, which alternatives were considered, which criteria were supported, which criteria were contradicted, and which remained unobserved. Concretely, this separates evidence review from final commitment and allows an error to be attributed to candidate detection, criterion verification, or primary selection rather than reported only as a wrong label---the same three-way attribution the $D_k$/$R$/$S$ decomposition of Section~\ref{sec:problem-definition} measures in aggregate. The audit does not make the decision correct, but it makes disagreement localizable, and it is a precondition for the kind of systematic review a future clinician-facing interface would need, not a substitute for validation.
+
+\section{Ontology-Driven Scope}
+
+The ontology contains a broader set of ICD-10 parent codes and entries than the selected benchmark profile activates. Expanding the active profile is a configuration change rather than weight retraining. This is an engineering property: the system can represent additional disorders when the ontology and prompt configuration include them.
+
+The thesis does not treat mechanical representability as behavioral adaptation. A newly activated disorder may be available in the output space yet never selected as primary. External scope-expansion experiments later demonstrate this distinction. The claim is therefore precise: HiED can be reconfigured to audit a broader ontology, but successful recovery of newly representable diagnoses requires empirical validation and likely selector adaptation.
+
+\section{Computational Configuration}
+
+The canonical experiments run on one NVIDIA RTX 5090 using Qwen3-32B-AWQ served through vLLM. Greedy decoding is used for the selected reference. The context length, maximum output length, thinking-mode setting, retry policy, and run-health gates are fixed in the evaluation protocol.
+
+Local inference is relevant because psychiatric transcripts are sensitive and because the intended setting emphasizes data minimization. However, running locally is an infrastructure property, not clinical validation. It reduces exposure to external services but does not establish diagnostic safety, fairness, regulatory compliance, or user trust. Those questions are addressed as future deployment requirements rather than as achieved results.
+
+\section{Summary}
+
+HiED separates the diagnostic pipeline into stages that can be measured and challenged: retrieval-supported candidate generation, criterion verification, deterministic compatibility logic, and committed primary selection. This architecture makes the later experiments possible. Because the stages are distinct, the thesis can ask whether failures arise from missing candidates, failed verification, or wrong comparative commitment.
 
 \chapter{Data and Evaluation Protocol}
 \label{ch:data}
@@ -413,6 +451,7 @@ MDD-5k provides a different synthetic distribution and broader disorder set~\cit
 This separation is required for honest interpretation. A case whose gold diagnosis lies outside the active profile cannot be recovered by any selector under that profile. Counting such a case as an ordinary within-scope error would conflate a scope limitation with a selection failure. The in-scope view measures transfer within the active diagnostic range; the out-of-scope view measures configuration coverage; the binary F32/F41 view measures coarse depression--anxiety discrimination.
 
 \section{Label Projection and Gold Conventions}
+\label{sec:gold-conventions}
 
 Multiple gold parents are retained for official multilabel metrics. For case $x$, let $G(x)\subseteq\mathcal{C}$ denote the deduplicated gold parent set. The committed primary prediction is projected to $p_1(x)$, and the canonical ranked list is formed by placing the committed primary first and then appending deduplicated ranked candidates.
 
@@ -461,98 +500,6 @@ This discipline is what turns the repair battery into evidence rather than trial
 The selected system uses Qwen3-32B-AWQ served through vLLM with greedy decoding, an 8192-token context, maximum output length 1536, disabled thinking mode, and bounded retries. Reproducibility includes semantic lineage: split, policy, metric definition, and artifact identity. The same numerical accuracy can mean different things if computed on a different split, under a different finalization policy, or with a different gold convention.
 
 The evaluation protocol therefore treats a result as a tuple rather than as a standalone number. A valid claim must specify what data were scored, how labels were projected, which system policy emitted the output, which metric was computed, and which statistical test was applied. This contract supports the chapter-level claim that later results localize failure rather than merely report performance.
-
-\chapter{HiED System Architecture}
-\label{ch:architecture}
-
-\section{Design Principle}
-
-HiED is designed to expose the structure of diagnostic failure. Its components are not added on the assumption that more modules improve accuracy; they are separated so that candidate generation, criterion verification, deterministic aggregation, and final selection can be varied or inspected independently. This makes the architecture both a decision-support prototype and an experimental instrument for causal attribution.
-
-The design follows three principles. First, the system must emit a committed primary diagnosis because benchmark evaluation and clinical workflow both require a clear recommendation. Second, it must also emit a ranked differential and criterion-level evidence because a primary label without inspectable support is not adequate for clinical review. Third, it must distinguish the decision from the audit. The audit trace is evidence attached to the output, not a claim about the LLM's hidden reasoning.
-
-\section{Pipeline Overview}
-
-\ThesisFigure{fig_pipeline.pdf}{HiED pipeline. The diagnostician generates a ranked differential and committed primary. Candidate-specific checkers evaluate criteria, deterministic logic summarizes support, and the output includes both the decision and audit trace.}{fig:pipeline-thesis-rewrite}
-
-Given a transcript $x$, HiED executes the following steps:
-
-\begin{enumerate}[label=\arabic*.]
-\item Normalize the transcript while preserving speaker turns.
-\item Retrieve class-balanced supporting cases with FAISS/BGE-M3.
-\item Prompt the diagnostician to emit a ranked differential, committed primary, optional comorbidity, confidence, and rationale.
-\item Run disorder-specific ICD-10 criterion checkers over candidate diagnoses.
-\item Convert checker outputs into \texttt{met}, \texttt{not\_met}, and \texttt{insufficient\_evidence} states.
-\item Apply deterministic threshold logic to produce a logic-confirmed set.
-\item Emit the primary diagnosis, ranked differential, optional comorbidity, criterion trace, logic results, and decision trace.
-\end{enumerate}
-
-This pipeline separates evidence acquisition from evidence review. Retrieval supplies candidate-supporting context before diagnosis. Criterion checkers review the generated candidates after diagnosis. The final selected architecture uses Direct-Answer, so the diagnostician's primary remains the committed output while the checker and logic layers provide auditability.
-
-\section{Class-Balanced Retrieval}
-
-The retrieval component is designed to support candidate breadth without letting frequent disorders dominate the prompt. The query transcript is embedded with BGE-M3~\citep{chen2024bgem3} and searched against a FAISS index of training cases. Instead of returning the globally nearest cases, the retriever returns the top case per candidate disorder class. This class-balanced design keeps rare disorders visible and prevents common depression-like presentations from crowding out alternatives.
-
-Retrieval plays a defined role in the architecture. It can improve the diagnostician's candidate set by supplying examples and lexical anchors, but it is not treated as a selector. Later experiments evaluate definition-similarity and case-similarity reranking separately as repair probes. This separation allows the thesis to claim retrieval improves coverage without claiming that retrieval solves primary selection.
-
-\section{Diagnostic Agent}
-
-The diagnostic agent is a local Qwen3-32B-AWQ model served with vLLM under the canonical configuration. It reads the transcript and retrieved context, then emits a structured object with the following fields:
-
-\begin{itemize}
-\item a ranked differential diagnosis list;
-\item a committed primary parent diagnosis;
-\item an optional comorbid parent diagnosis;
-\item a confidence score;
-\item a brief rationale;
-\item optional uncertainty or abstention flags.
-\end{itemize}
-
-The committed primary is constrained to the ranked differential. This constraint lets Top-1 and Top-3 be interpreted together: the primary is the first commitment, while the ranked list records the nearby alternatives the model considered. A wrong Top-1 with a correct Top-3 is therefore not a total generation failure; it is a ranking failure among generated candidates.
-
-\section{Criterion Checkers}
-
-For each candidate disorder, criterion-checking agents evaluate transcript evidence against the operationalized ICD-10 criteria. Each criterion receives one of three states: \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_evidence}. The checker may also provide an evidence quote, confidence value, and short justification.
-
-The three-state design is the clinical core of the audit. A missing duration statement, unasked substance history, or absent exclusion clause should not automatically become a negative criterion. Recording insufficient evidence preserves the uncertainty that a single transcript creates. It also allows the results to measure whether the checker bank is high recall, high selectivity, or neither.
-
-Checker outputs are not clinician-level gold. They are structured model outputs subject to error. Their value is that they can be inspected and replayed through deterministic logic. A reviewer can challenge whether a cited span supports a criterion without accepting or rejecting the entire final diagnosis.
-
-\section{Deterministic Logic Engine}
-
-The logic engine applies count-based disorder-specific rules to criterion states and records which diagnoses are logic-confirmed. Determinism ensures that the same checker trace always yields the same logic result. This makes the audit reproducible and allows controlled comparisons of finalization policies.
-
-The logic engine is intentionally limited. It summarizes compatibility with diagnostic criteria; it does not by itself solve primacy. Several disorders can satisfy threshold logic in the same transcript, particularly when symptoms overlap and exclusions remain unobserved. The results later show that the logic-confirmed set often retains the gold parent but also retains many alternatives. This is exactly why verification and selection must be measured separately.
-
-\section{Finalization Policies}
-
-HiED evaluates multiple ways to produce the final primary diagnosis. Direct-Answer preserves the diagnostician's committed primary and is the selected reference policy. Nominate-then-Select re-derives the primary from logic-confirmed candidates. Pairwise comparison and debate are evaluated as repair probes that attempt to resolve close alternatives.
-
-Direct-Answer and Nominate-then-Select share upstream outputs. The diagnostician candidates, criterion states, and logic results are identical; only the finalization rule changes. This shared-upstream design isolates the causal effect of finalization. If Nominate-then-Select improves or degrades Top-1, that difference cannot be attributed to candidate generation or checker variation.
-
-Pairwise reasoning is evaluated in three modes: an independent run, a controlled replay over identical upstream outputs, and a forced override. The independent run tests local usefulness on activated cases. Controlled replay tests whether the stage actually changes committed primaries when everything upstream is fixed. Forced override tests global safety. This separation prevents a locally plausible comparison from being mistaken for a safe system-wide selector.
-
-\section{Output and Audit Trace}
-
-The complete output contains the committed primary, optional comorbidity, ranked differential, criterion states, cited evidence, logic-confirmed codes, and decision trace. These objects support different forms of review. A clinician or researcher may accept the differential but reject the primary, accept the primary but question a criterion quote, or accept the evidence but disagree with the finalization policy.
-
-This decomposition is the practical meaning of auditability in HiED. The system does not ask the user to trust a single opaque recommendation. It exposes where the recommendation came from, which alternatives were considered, which criteria were supported, which criteria were contradicted, and which remained unobserved. The audit does not make the decision correct, but it makes disagreement localizable.
-
-\section{Ontology-Driven Scope}
-
-The ontology contains a broader set of ICD-10 parent codes and entries than the selected benchmark profile activates. Expanding the active profile is a configuration change rather than weight retraining. This is an engineering property: the system can represent additional disorders when the ontology and prompt configuration include them.
-
-The thesis does not treat mechanical representability as behavioral adaptation. A newly activated disorder may be available in the output space yet never selected as primary. External scope-expansion experiments later demonstrate this distinction. The claim is therefore precise: HiED can be reconfigured to audit a broader ontology, but successful recovery of newly representable diagnoses requires empirical validation and likely selector adaptation.
-
-\section{Computational Configuration}
-
-The canonical experiments run on one NVIDIA RTX 5090 using Qwen3-32B-AWQ served through vLLM. Greedy decoding is used for the selected reference. The context length, maximum output length, thinking-mode setting, retry policy, and run-health gates are fixed in the evaluation protocol.
-
-Local inference is relevant because psychiatric transcripts are sensitive and because the intended setting emphasizes data minimization. However, running locally is an infrastructure property, not clinical validation. It reduces exposure to external services but does not establish diagnostic safety, fairness, regulatory compliance, or user trust. Those questions are addressed as future deployment requirements rather than as achieved results.
-
-\section{Summary}
-
-HiED separates the diagnostic pipeline into stages that can be measured and challenged: retrieval-supported candidate generation, criterion verification, deterministic compatibility logic, and committed primary selection. This architecture makes the later experiments possible. Because the stages are distinct, the thesis can ask whether failures arise from missing candidates, failed verification, or wrong comparative commitment.
 
 \chapter{Experimental Design}
 \label{ch:experimental}
@@ -627,6 +574,7 @@ Robustness is evaluated across backbone size, retrieval modes, in-domain and ext
 The thesis uses robustness to test the stability of the interpretation, not to claim that all perturbations are inconsequential. A result can be robust in the sense that the bottleneck persists while still varying in magnitude across settings.
 
 \section{Freeze Discipline}
+\label{sec:freeze-discipline}
 
 The internal test split and headline metrics are frozen before evaluation. Sweeps use development lineage. Any rule that faces the internal test split is committed before scoring. Post-freeze probes are labeled as such. External results are not used for tuning.
 
@@ -685,7 +633,7 @@ The Top-3 gap and recoverability result rule out a simple generation-only explan
 
 \section{Criterion Verification}
 
-The logic-confirmed set contains the gold parent in 93.7\% of non-Others cases, but it confirms a median of six of fourteen active disorder entries per case. Criterion states are distributed 48.3\% \texttt{met}, 23.5\% \texttt{not\_met}, and 28.3\% \texttt{insufficient\_evidence}: \texttt{met} is the largest single state, but \texttt{not\_met} and \texttt{insufficient\_evidence} together still account for over half of all criterion decisions. The checker bank is therefore high recall but low selectivity. In the notation of \S 2.7, this chapter's internal test split gives $\bar D_3=0.802$, $\bar R=0.937$, and $\bar S=0.518$: both candidate detection and verification retention substantially exceed committed selection, the operational form of the selection bottleneck introduced there.
+The logic-confirmed set contains the gold parent in 93.7\% of non-Others cases, but it confirms a median of six of fourteen active disorder entries per case. Criterion states are distributed 48.3\% \texttt{met}, 23.5\% \texttt{not\_met}, and 28.3\% \texttt{insufficient\_evidence}: \texttt{met} is the largest single state, but \texttt{not\_met} and \texttt{insufficient\_evidence} together still account for over half of all criterion decisions. The checker bank is therefore high recall but low selectivity. In the notation of \Cref{sec:problem-definition}, this chapter's internal test split gives $\bar D_3=0.802$, $\bar R=0.937$, and $\bar S=0.518$: both candidate detection and verification retention substantially exceed committed selection, the operational form of the selection bottleneck introduced there.
 
 \ThesisFigure{fig_c_criterion_states.pdf}{Distribution of per-criterion checker states on the internal test split.}{fig:criterion-states-thesis-rewrite}
 
@@ -1268,7 +1216,7 @@ HiED's contribution is an auditable architecture and a reproducible demonstratio
 \toprule
 Metric & Definition\\
 \midrule
-Top-1 (any-gold convention) & The committed primary prediction is contained in the gold parent set; this is the any-gold convention defined in \S 4.5, not the first-listed single-label convention.\\
+Top-1 (any-gold convention) & The committed primary prediction is contained in the gold parent set; this is the any-gold convention defined in \Cref{sec:gold-conventions}, not the first-listed single-label convention.\\
 Top-3 & At least one gold parent appears among the first three predictions.\\
 Exact Match (exact-set accuracy) & Predicted parent set exactly equals the gold set.\\
 Macro-F1 & Multilabel F1 averaged equally across 12 classes.\\
@@ -1375,7 +1323,7 @@ The debate intervention stages a bounded two-advocate, multi-round adversarial p
 
 \section{Deterministic Fusion}
 
-The deterministic-fusion intervention enumerates post-hoc rules that combine already-recorded signals---ranked position, per-criterion met ratios, and threshold satisfaction---into an alternative finalization rule, on the reasoning that a simple combination of existing signals might recover primacy information that no single signal expresses alone. The sweep is conducted over 293 candidate rule definitions on the development split; each rule is scored against the development-lineage Top-1 before any rule is frozen, and the sweep finds no non-identical rule that beats Direct-Answer on development. E3 denotes the specific rule frozen from that development sweep for confirmatory evaluation under the freeze discipline of \S 6.7: it is not the best-performing development rule (none beat DA), but the rule selected by the pre-registered selection criterion prior to internal-test scoring. On the internal test split, E3 loses four net correct cases relative to Direct-Answer; on the external corpus it transfers as a significant loss. The consistent negative result across both corpora indicates the missing information is not recoverable by re-combining signals the system already records.
+The deterministic-fusion intervention enumerates post-hoc rules that combine already-recorded signals---ranked position, per-criterion met ratios, and threshold satisfaction---into an alternative finalization rule, on the reasoning that a simple combination of existing signals might recover primacy information that no single signal expresses alone. The sweep is conducted over 293 candidate rule definitions on the development split; each rule is scored against the development-lineage Top-1 before any rule is frozen, and the sweep finds no non-identical rule that beats Direct-Answer on development. E3 denotes the specific rule frozen from that development sweep for confirmatory evaluation under the freeze discipline of \Cref{sec:freeze-discipline}: it is not the best-performing development rule (none beat DA), but the rule selected by the pre-registered selection criterion prior to internal-test scoring. On the internal test split, E3 loses four net correct cases relative to Direct-Answer; on the external corpus it transfers as a significant loss. The consistent negative result across both corpora indicates the missing information is not recoverable by re-combining signals the system already records.
 
 \section{Residual-Evidence Loop}
 
