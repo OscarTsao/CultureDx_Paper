@@ -94,14 +94,24 @@ Common Mental Disorders in the Taiwanese Context\par}
 \pagenumbering{roman}
 \chapter*{中文摘要}
 \addcontentsline{toc}{chapter}{中文摘要}
-大型語言模型逐漸被評估為精神科診斷輔助工具，但僅看最終診斷標籤的準確率，無法判斷錯誤究竟來自未能偵測候選、未能驗證準則，或未能正確選出主診斷。單次精神科晤談逐字稿中的鑑別診斷，不只是從文字中預測疾病標籤；正確診斷可能已合理且受到準則支持，卻仍未被系統選為主診斷。本研究提出 HiED，一套面向中文精神科鑑別診斷的混合式、證據導向多代理系統，並將大型語言模型診斷評估中常被混合處理的三個功能明確拆開：候選診斷偵測、ICD-10 逐準則驗證，以及主診斷選擇。HiED 結合本地 Qwen3-32B-AWQ 診斷代理人、類別平衡相似案例檢索、準則檢查代理人與確定性門檻邏輯，輸出主診斷、可選共病、排序後鑑別診斷，以及符合／不符合／證據不足的逐準則稽核軌跡。
+單次精神科晤談逐字稿中的鑑別診斷，是一種在證據不完整下進行的比較式決策：多個疾病可能都與同一份逐字稿相容，但只有一個能被判定為主診斷，而區分病程、發病時序、排除病因等關鍵鑑別資訊，未必會在單次晤談中被完整引出。大型語言模型能流暢地閱讀這類逐字稿，但流暢不保證正確的鑑別能力：模型可能生成一個合理且受準則支持的疾病，卻仍未能將其選為主診斷。生成候選、依準則驗證，與判定主診斷之間的這個區分，通常被單一準確率數字所掩蓋，無法看出系統究竟在哪個階段失敗。
 
-在預先登錄的 LingxiDiag-16K 內部保留測試集（$N=1000$）上，HiED--DA 達到 0.518 Top-1 與 0.802 Top-3；檢索使直接單代理基線由 0.466 提升至 0.508（McNemar $p=4.0\times10^{-4}$）。準則驗證並未解決主診斷選擇瓶頸，而是加以揭露：邏輯層在非 Others 病例中保留正確父類別的比例為 93.7\%，但每案中位數同時確認十四個啟用疾病項目中的六個。邏輯重選、成對比較、辯論、確定性融合、選擇器微調與 self-consistency 皆未帶來穩定且可因果歸因的 Direct-Answer 改善。外部 MDD-5k 評估呈現相同型態，範圍內 Top-1 為 0.612，F32/F41 二元正確率為 0.922；修復策略（成對比較、辯論、確定性融合、self-consistency 與 CISC）於外部語料同樣未能穩定改善，部分方法甚至顯著劣化，顯示這些修復方法的失效並非語料特定的表面現象。這些結果將 HiED 定位為一套用於定位失敗來源的可稽核研究架構，而非已完成臨床驗證的自主診斷系統；後續工作應優先建立逐字稿條件下的人類參照天花板、結構化主診斷選擇機制，以及主動證據獲取策略。
+本研究證明這個選擇瓶頸——候選涵蓋率與準則驗證保留率明顯高於主診斷選擇準確率——是當前大型語言模型精神科診斷中一個可測量、且大致尚未解決的現象。我們透過 HiED 進行研究：一套面向中文精神科鑑別診斷的混合式、證據導向多代理架構，將候選診斷偵測、ICD-10 逐準則驗證，以及主診斷選擇保持為可分別觀察的階段，而非合併為單一分類事件，並在每次預測時同步輸出逐準則稽核軌跡。
+
+在預先登錄、凍結的 LingxiDiag-16K 內部測試集（$N=1000$）上，HiED 達到 0.518 Top-1 準確率，儘管 Top-3 涵蓋率高達 0.802：正確診斷在絕大多數案例中被生成且通過準則驗證，卻不是最終被選定的那一個。涵蓋邏輯重選、成對與辯論式推理、確定性規則融合、學習式重排序、self-consistency 在內的七種事後修復方法，皆未能以穩定、可因果歸因的方式縮小這個落差，且此型態在外部合成語料（MDD-5k）於分布偏移下依然重現，顯示這是真實的瓶頸，而非資料集特有的表面現象。
+
+這套架構因此貢獻的是一套能將診斷失敗定位到特定階段的可稽核研究工具，而非已完成臨床驗證的自主診斷系統。這些結果指向未來工作應優先建立逐字稿條件下的人類參照天花板、結構化的比較式選擇機制，以及主動證據獲取策略。
 
 \noindent\textbf{關鍵詞：}大型語言模型、多代理系統、精神科鑑別診斷、臨床決策支援、ICD-10、可稽核人工智慧
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
-Large language models are increasingly evaluated as psychiatric diagnostic aids, but final-label accuracy alone cannot reveal whether an error arises from missed candidate detection, failed criterion verification, or incorrect primary selection. Psychiatric differential diagnosis from a single consultation transcript is not merely label prediction: the correct disorder may be plausible and criterion-supported, yet still not be the disorder a system commits as primary. We introduce HiED, a hybrid evidence-grounded multi-agent system for Chinese psychiatric differential diagnosis that separates three functions usually conflated in LLM evaluation: candidate detection, ICD-10 criterion verification, and committed primary selection. HiED combines a local Qwen3-32B-AWQ diagnostician, class-balanced case retrieval, criterion-checking agents, and deterministic threshold logic to emit a primary diagnosis, optional comorbidity, ranked differential, and auditable met/not-met/insufficient-evidence trace. On a pre-registered LingxiDiag-16K internal test split ($N=1000$), HiED--DA achieves 0.518 Top-1 and 0.802 Top-3 accuracy; retrieval improves a direct single-agent baseline from 0.466 to 0.508 (McNemar $p=4.0\times10^{-4}$). Verification exposes, rather than solves, the dominant bottleneck: the logic layer retains the gold parent in 93.7\% of non-Others cases while confirming a median of six of fourteen active disorders. Logic re-selection, pairwise comparison, debate, deterministic fusion, selector fine-tuning, and self-consistency provide no stable causal gain over Direct-Answer. External MDD-5k evaluation preserves the pattern, with 0.612 in-scope Top-1 and 0.922 F32/F41 binary accuracy; the repair methods (pairwise comparison, debate, deterministic fusion, self-consistency, and CISC) likewise fail to improve stably on the external corpus, with some transferring as significant losses, indicating that their failure is not a corpus-specific artifact. HiED therefore contributes an auditable architecture for localizing diagnostic failure, not clinically validated autonomous diagnosis; future work should prioritize a transcript-only human reference ceiling, a structured primary-selection mechanism, and proactive evidence-acquisition strategies.
+Psychiatric differential diagnosis from a single consultation transcript is comparative decision-making under incomplete evidence: several disorders can be compatible with the same transcript, but only one can be committed as primary, and the discriminating facts---duration, onset, course, exclusionary causes---are not always elicited in one visit. Large language models can read such transcripts fluently, but fluency does not guarantee reliable discrimination: a model may generate a plausible, criterion-supported disorder and still fail to select it as the primary diagnosis. This distinction between generating a candidate, verifying it against diagnostic criteria, and committing it as primary is usually collapsed into a single accuracy score, which cannot reveal at which of these stages, if any, a system actually fails.
+
+We show that this selection bottleneck---candidate coverage and criterion verification substantially exceeding committed primary accuracy---is a measurable and largely unresolved property of current LLM-based psychiatric diagnosis. We study it using HiED, a hybrid evidence-grounded multi-agent architecture for Chinese psychiatric differential diagnosis that keeps candidate detection, ICD-10 criterion verification, and primary selection separately observable rather than collapsed into one classification event, and that emits a criterion-level audit trace alongside every prediction.
+
+On a pre-registered, frozen internal test split (LingxiDiag-16K, $N=1000$), HiED reaches 0.518 Top-1 accuracy despite 0.802 Top-3 coverage: the correct disorder is generated and criterion-verified in the large majority of cases, yet is not the one finally selected. A battery of seven post-hoc repairs---spanning logic re-selection, pairwise and debate-based reasoning, deterministic rule fusion, learned reranking, and self-consistency---fails to close this gap in a stable, causally attributable way, and the pattern replicates on an external synthetic corpus (MDD-5k) under distribution shift, indicating a genuine bottleneck rather than a dataset artifact.
+
+The architecture therefore contributes an auditable instrument for localizing diagnostic failure to a specific stage, not a clinically validated autonomous diagnostic system. The results motivate future work on a transcript-only human reference ceiling, structured comparative selection, and proactive evidence acquisition.
 
 \noindent\textbf{Keywords:} Large language models, multi-agent systems, psychiatric differential diagnosis, clinical decision support, ICD-10, auditable AI
 
@@ -167,7 +177,7 @@ TF--IDF & Term frequency--inverse document frequency\\
 
 \section{Background}
 
-Psychiatric diagnosis from a single consultation transcript is a comparative decision \ct{decision-making} under incomplete evidence. Patients may describe insomnia, fatigue, concentration difficulty, somatic distress, avoidance, irritability, low motivation, and impaired functioning in ways that are compatible with several common mental disorders. The distinctions that separate depressive, anxiety, stress-related, obsessive-compulsive, somatic, and sleep disorders often depend on duration, onset, course, exclusionary medical or substance causes, and longitudinal functional change. These discriminating facts are not always elicited in one visit. Diagnostic manuals specify symptoms, duration, impairment, course, and exclusion requirements, but clinical transcripts rarely present those requirements as complete checklists.
+Psychiatric diagnosis from a single consultation transcript is comparative decision-making under incomplete evidence. Patients may describe insomnia, fatigue, concentration difficulty, somatic distress, avoidance, irritability, low motivation, and impaired functioning in ways that are compatible with several common mental disorders. The distinctions that separate depressive, anxiety, stress-related, obsessive-compulsive, somatic, and sleep disorders often depend on duration, onset, course, exclusionary medical or substance causes, and longitudinal functional change. These discriminating facts are not always elicited in one visit. Diagnostic manuals specify symptoms, duration, impairment, course, and exclusion requirements, but clinical transcripts rarely present those requirements as complete checklists.
 
 Large language models provide a natural interface for this setting because they can read free-form dialogue, summarize symptom evidence, propose differentials, and emit structured outputs. Mental-health applications have already evaluated LLMs on examinations, vignettes, consultation settings, screening tasks, and dialogue generation. Fluency, however, does not guarantee reliable discrimination: a model-generated rationale may be coherent without being faithful to the process that produced the answer, and a system that names a plausible disorder has therefore not necessarily solved the diagnostic task.
 
@@ -196,7 +206,7 @@ Answering that question requires an approach that keeps candidate generation, cr
 
 \section{System Summary}
 
-This thesis introduces HiED, a hybrid evidence-grounded multi-agent system that separates candidate detection, ICD-10 criterion verification, and committed primary selection into observable stages. HiED combines a local LLM diagnostician, class-balanced case retrieval, disorder-specific criterion checkers, and deterministic threshold logic to emit a ranked differential, a committed primary diagnosis, optional comorbidity, and a criterion-level audit trace with three states: \texttt{met}, \texttt{not\_met}, and \texttt{insufficient\_evidence}. The architecture and its components are described in full in Chapter~\ref{ch:architecture}; this summary is given here only so that the research questions and contributions below can refer to it by name.
+This thesis introduces HiED, a hybrid evidence-grounded multi-agent system that separates candidate detection, ICD-10 criterion verification, and committed primary selection into observable stages. HiED combines a local LLM diagnostician, class-balanced case retrieval, disorder-specific criterion checkers, and deterministic threshold logic to emit a ranked differential, a committed primary diagnosis, optional comorbidity, and a criterion-level audit trace with three states: met, not-met, and insufficient-evidence. The architecture and its components are described in full in Chapter~\ref{ch:architecture}; this summary is given here only so that the research questions and contributions below can refer to it by name.
 
 Chapter~\ref{ch:related} reviews prior systems against this problem definition and, on that basis, develops the specific research questions this thesis addresses.
 
@@ -240,14 +250,6 @@ Chapter~\ref{ch:related} reviews prior work on Chinese psychiatric dialogue reso
 Prior work has shown that LLMs can answer psychiatric diagnostic questions, simulate clinical dialogue, support criterion-grounded reasoning, and coordinate multiple agents. The gap addressed here is narrower: existing systems rarely separate whether the correct diagnosis was generated, whether it survived criterion verification, and whether it was finally selected as the primary, in the sense made precise in Section~\ref{sec:problem-definition}.
 
 This chapter is organized by mechanism rather than by chronology, and each section is read against that same problem definition. Chinese psychiatric dialogue resources define the data setting; psychiatric LLM systems define the clinical task family; medical multi-agent systems define the collaboration design space; interpretability and diagnostic-chain methods define the explanation problem; synthetic data and structured-diagnosis work define the limits and future directions. Across these lines, a single question recurs: where does a system fail when candidate generation, criterion verification, and primary selection are measured separately? The chapter closes by stating this gap explicitly and posing the research questions it motivates.
-
-\section{Chinese Psychiatric Dialogue Resources}
-
-LingxiDiagBench provides a Chinese psychiatric consultation and diagnosis benchmark with synthetic, EMR-aligned dialogues and multiple task granularities~\citep{xu2026lingxidiagbench}. Its reported evaluation shows a coarse-to-fine difficulty gradient: the evaluated LLMs reached 92.3\% on binary depression--anxiety classification but only 28.5\% on the full 12-way differential diagnosis, with dynamic consultation often underperforming static evaluation. Its paper-parent taxonomy provides the in-domain label space adopted throughout, with the goal of evaluating a diagnostic architecture rather than proposing a new benchmark. A limited public-validation positioning analysis is reported only as contextual evidence; it is not the headline result because protocol and split differences make leaderboard-style claims fragile.
-
-MDD-5k provides a broader synthetic disorder distribution and different dialogue style through a neuro-symbolic multi-agent synthesis pipeline~\citep{yin2024mdd5k}. It is used as an external synthetic distribution-shift corpus. D4 focuses on depression-oriented dialogue~\citep{yao2022d4}, and CPsyCoun emphasizes psychological counseling reconstruction rather than multi-disorder primary diagnosis~\citep{zhang2024cpsycoun}. These differences make cross-paper accuracy comparisons unreliable, which is why each corpus is assigned a specific evaluation role below rather than treated as an interchangeable leaderboard.
-
-This dataset positioning matters for the central claim. Candidate coverage, verification retention, and primary selection must be measured on the same cases under a fixed label projection. Otherwise a difference in reported accuracy could reflect class mix, task granularity, gold-label convention, or split construction rather than a true difference in diagnostic behavior.
 
 \section{Psychiatric LLM Diagnosis}
 
@@ -389,12 +391,6 @@ The ontology contains a broader set of ICD-10 parent codes and entries than the 
 
 The thesis does not treat mechanical representability as behavioral adaptation. A newly activated disorder may be available in the output space yet never selected as primary. External scope-expansion experiments later demonstrate this distinction. The claim is therefore precise: HiED can be reconfigured to audit a broader ontology, but successful recovery of newly representable diagnoses requires empirical validation and likely selector adaptation.
 
-\section{Computational Configuration}
-
-The canonical experiments run on one NVIDIA RTX 5090 using Qwen3-32B-AWQ served through vLLM. Greedy decoding is used for the selected reference. The context length, maximum output length, thinking-mode setting, retry policy, and run-health gates are fixed in the evaluation protocol.
-
-Local inference is relevant because psychiatric transcripts are sensitive and because the intended setting emphasizes data minimization. However, running locally is an infrastructure property, not clinical validation. It reduces exposure to external services but does not establish diagnostic safety, fairness, regulatory compliance, or user trust. Those questions are addressed as future deployment requirements rather than as achieved results.
-
 \section{Summary}
 
 HiED separates the diagnostic pipeline into stages that can be measured and challenged: retrieval-supported candidate generation, criterion verification, deterministic compatibility logic, and committed primary selection. This architecture makes the later experiments possible. Because the stages are distinct, the thesis can ask whether failures arise from missing candidates, failed verification, or wrong comparative commitment.
@@ -419,6 +415,14 @@ For each transcript, the system emits one committed primary parent diagnosis, an
 Raw ICD-10 subcodes are projected deterministically to this parent space before scoring. Codes whose parents are outside the active target set are folded to \emph{Others} unless an external scope-expanded configuration explicitly activates them.
 
 The selected benchmark profile activates fourteen disorder entries, including subtype-level entries for F41 and F43, while scoring after parent projection into the twelve-class parent space. Thus, ``fourteen disorders'' refers to active diagnostic entries, whereas ``twelve classes'' refers to the scored label space. This distinction prevents a granularity decision from being confused with diagnostic discrimination.
+
+\section{Chinese Psychiatric Dialogue Resources}
+
+LingxiDiagBench provides a Chinese psychiatric consultation and diagnosis benchmark with synthetic, EMR-aligned dialogues and multiple task granularities~\citep{xu2026lingxidiagbench}. Its reported evaluation shows a coarse-to-fine difficulty gradient: the evaluated LLMs reached 92.3\% on binary depression--anxiety classification but only 28.5\% on the full 12-way differential diagnosis, with dynamic consultation often underperforming static evaluation. Its paper-parent taxonomy provides the in-domain label space adopted throughout, with the goal of evaluating a diagnostic architecture rather than proposing a new benchmark. A limited public-validation positioning analysis is reported only as contextual evidence; it is not the headline result because protocol and split differences make leaderboard-style claims fragile.
+
+MDD-5k provides a broader synthetic disorder distribution and different dialogue style through a neuro-symbolic multi-agent synthesis pipeline~\citep{yin2024mdd5k}. It is used as an external synthetic distribution-shift corpus. D4 focuses on depression-oriented dialogue~\citep{yao2022d4}, and CPsyCoun emphasizes psychological counseling reconstruction rather than multi-disorder primary diagnosis~\citep{zhang2024cpsycoun}; neither targets multi-disorder primary diagnosis, so neither is adopted here. These differences make cross-paper accuracy comparisons unreliable, which is why LingxiDiag-16K and MDD-5k are each assigned the specific evaluation roles detailed in the two sections immediately following, rather than treated as interchangeable leaderboards.
+
+This dataset positioning matters for the central claim. Candidate coverage, verification retention, and primary selection must be measured on the same cases under a fixed label projection. Otherwise a difference in reported accuracy could reflect class mix, task granularity, gold-label convention, or split construction rather than a true difference in diagnostic behavior.
 
 \section{LingxiDiag-16K}
 
@@ -498,7 +502,7 @@ This discipline is what turns the repair battery into evidence rather than trial
 
 \section{Reproducibility}
 
-The selected system uses Qwen3-32B-AWQ served through vLLM with greedy decoding, an 8192-token context, maximum output length 1536, disabled thinking mode, and bounded retries. Reproducibility includes semantic lineage: split, policy, metric definition, and artifact identity. The same numerical accuracy can mean different things if computed on a different split, under a different finalization policy, or with a different gold convention.
+The selected system runs on one NVIDIA RTX 5090 and uses Qwen3-32B-AWQ served through vLLM with greedy decoding, an 8192-token context, maximum output length 1536, disabled thinking mode, and bounded retries. Reproducibility includes semantic lineage: split, policy, metric definition, and artifact identity. The same numerical accuracy can mean different things if computed on a different split, under a different finalization policy, or with a different gold convention.
 
 The evaluation protocol therefore treats a result as a tuple rather than as a standalone number. A valid claim must specify what data were scored, how labels were projected, which system policy emitted the output, which metric was computed, and which statistical test was applied. This contract supports the chapter-level claim that later results localize failure rather than merely report performance.
 
@@ -684,7 +688,7 @@ Pairwise comparison & 0.524 & +0.6 pp & independent run & raw\\
 Controlled replay & --- & 0.0 pp & 0 committed changes & not causal\\
 Forced override & 0.443 & -7.5 pp & $p<10^{-9}$ & harmful\\
 Debate & 0.485 & -3.3 pp & no stable gain & negative\\
-Frozen E3 fusion & 0.514 & -0.4 pp & net flip $-4$ cases & negative\\
+Deterministic fusion & 0.514 & -0.4 pp & net flip $-4$ cases & negative\\
 SC $K=5$ & 0.514 & -0.4 pp & no paired gain & negative\\
 CISC $K=5$ & 0.517 & -0.1 pp & $p=1.0$ & negative\\
 \bottomrule
@@ -692,7 +696,7 @@ CISC $K=5$ & 0.517 & -0.1 pp & $p=1.0$ & negative\\
 \end{adjustbox}
 \end{table}
 
-\Cref{tab:repair-battery-rewrite} summarizes the repair probes. Pairwise reasoning appears locally useful in an independent run, but controlled replay over identical upstream outputs changes no committed primary. Forced override significantly harms performance. Debate lowers Top-1. The 293-rule deterministic fusion sweep finds no non-identical development rule that beats DA, and the frozen E3 rule loses four net correct cases on the internal test split. Self-consistency and confidence-weighted self-consistency do not improve selection.
+\Cref{tab:repair-battery-rewrite} summarizes the repair probes. Pairwise reasoning appears locally useful in an independent run, but controlled replay over identical upstream outputs changes no committed primary. Forced override significantly harms performance. Debate lowers Top-1. The 293-rule deterministic fusion sweep finds no non-identical development rule that beats DA, and the frozen override rule loses four net correct cases on the internal test split. Self-consistency and confidence-weighted self-consistency do not improve selection.
 
 The repairs fail for different reasons, but their implications converge. Pairwise comparison does not provide a safe global override. Debate does not add useful comparative evidence on average. Fusion does not uncover a missing deterministic rule. Self-consistency does not reveal a hidden majority consensus. The result is not that these method families can never help; it is that these reasonable implementations do not close this transcript-only selection gap.
 
@@ -814,14 +818,14 @@ Self-Consistency ($K=3$) & 0.5784 & $+0.0076$ & $0.44$\\
 Self-Consistency ($K=5$) & 0.5816 & $+0.0108$ & $0.23$\\
 CISC ($K=3$) & 0.5784 & $+0.0076$ & $0.44$\\
 CISC ($K=5$) & 0.5816 & $+0.0108$ & $0.23$\\
-Definition-fusion (E3) & 0.4714 & $-0.0995$ & $2.3\times10^{-14}$\\
+Deterministic fusion & 0.4714 & $-0.0995$ & $2.3\times10^{-14}$\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 The repair-battery Direct-Answer baseline (0.5708) is drawn from a dedicated matched-batch run in which Direct-Answer and every tested repair method share an identical case selection and ordering, differing only in the finalization or intervention policy applied; this shared-upstream design is what permits the paired McNemar tests reported in this table. It is therefore distinct from the canonical external-summary run (0.5805) reported in \Cref{tab:external-summary-rewrite}, which separately scores the deployed system for corpus-level positioning. Both runs evaluate the same 925-case MDD-5k corpus; the difference reflects separate matched-batch versus canonical-positioning runs rather than a scoring inconsistency.
 
-\Cref{tab:mdd-repair-rewrite} reproduces the internal pattern on the external distribution. NtS significantly degrades Top-1, showing again that verification-derived finalization does not solve primary selection. Pairwise differential reasoning leaves the committed primary unchanged. Self-consistency and CISC show small nominal increases that are not statistically significant. Definition-fusion transfers as a significant loss.
+\Cref{tab:mdd-repair-rewrite} reproduces the internal pattern on the external distribution. NtS significantly degrades Top-1, showing again that verification-derived finalization does not solve primary selection. Pairwise differential reasoning leaves the committed primary unchanged. Self-consistency and CISC show small nominal increases that are not statistically significant. The frozen override rule transfers as a significant loss.
 
 Debate is especially informative. Under the original token budget, the external prompts exceed the context window; under an enlarged context budget sufficient for all cases, debate still performs substantially worse than the matched Direct-Answer baseline. The failure is therefore not merely a context-window artifact. Additional adversarial reasoning harms comparative selection in this setting rather than improving it.
 
@@ -1324,7 +1328,7 @@ The debate intervention stages a bounded two-advocate, multi-round adversarial p
 
 \section{Deterministic Fusion}
 
-The deterministic-fusion intervention enumerates post-hoc rules that combine already-recorded signals---ranked position, per-criterion met ratios, and threshold satisfaction---into an alternative finalization rule, on the reasoning that a simple combination of existing signals might recover primacy information that no single signal expresses alone. The sweep is conducted over 293 candidate rule definitions on the development split; each rule is scored against the development-lineage Top-1 before any rule is frozen, and the sweep finds no non-identical rule that beats Direct-Answer on development. E3 denotes the specific rule frozen from that development sweep for confirmatory evaluation under the freeze discipline of \Cref{sec:freeze-discipline}: it is not the best-performing development rule (none beat DA), but the rule selected by the pre-registered selection criterion prior to internal-test scoring. On the internal test split, E3 loses four net correct cases relative to Direct-Answer; on the external corpus it transfers as a significant loss. The consistent negative result across both corpora indicates the missing information is not recoverable by re-combining signals the system already records.
+The deterministic-fusion intervention enumerates post-hoc rules that combine already-recorded signals---ranked position, per-criterion met ratios, and threshold satisfaction---into an alternative finalization rule, on the reasoning that a simple combination of existing signals might recover primacy information that no single signal expresses alone. The sweep spans five rule families over a shared parameter grid (seven met-ratio thresholds, a 21-point weighting coefficient, four confirmation-boost and margin values, and top-2/3/5 candidate windows): ten single-signal ranking or threshold rules, fifty-five rank-based rescue-and-veto rules, one hundred eighty-nine weighted-fusion rules combining rank and met-ratio scores, twenty-four confirmed-candidate-set rules, and fifteen conditional override-DA-unless rules, for 293 candidate rule definitions on the development split in total. Each rule is scored against the development-lineage Top-1 before any rule is frozen under the freeze discipline of \Cref{sec:freeze-discipline}, and the sweep finds no non-identical rule that beats Direct-Answer on development. This frozen rule---called the frozen override rule in the main text, and labeled E3 in the implementation and below---is not the best-performing development rule (none beat DA), but the rule selected by the pre-registered selection criterion prior to internal-test scoring. On the internal test split, E3 loses four net correct cases relative to Direct-Answer; on the external corpus it transfers as a significant loss. The consistent negative result across both corpora indicates the missing information is not recoverable by re-combining signals the system already records, whether the combination rule is a weighted fusion, a rank-based veto, or a conditional override.
 
 \section{Residual-Evidence Loop}
 
@@ -1420,7 +1424,7 @@ Single, retrieval, structured, and direct variants & Do retrieval or structured 
 Detection--selection decomposition & How much error is detection versus ranking? & internal test split, complete & Main results, figure\\
 Pairwise differential with controlled replay & Does local pairwise comparison causally change the primary? & internal test split replay & Repair table\\
 Forced-override probe & Does overriding toward a confirmed rival help? & internal test split, complete & Repair table\\
-Definition-fusion rule search & Is a simple post-hoc fusion rule missing? & dev sweep, frozen internal test split & Repair table\\
+Deterministic-fusion rule search & Is a simple post-hoc fusion rule missing? & dev sweep, frozen internal test split & Repair table\\
 Self-consistency and confidence-weighted variant & Is the primary commitment sampling-unstable? & internal test split, complete & Repair table\\
 \midrule
 \multicolumn{4}{@{}l}{\textit{Robustness}}\\
