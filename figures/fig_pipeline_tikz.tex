@@ -13,6 +13,15 @@
 \definecolor{procFill}{HTML}{F1EFE8}
 \definecolor{procDraw}{HTML}{888780}
 \definecolor{procText}{HTML}{2C2C2A}
+\definecolor{agentFill}{HTML}{FDF0D5}
+\definecolor{agentDraw}{HTML}{C9820C}
+\definecolor{agentText}{HTML}{8A5A00}
+\definecolor{ragFill}{HTML}{FBE4E4}
+\definecolor{ragDraw}{HTML}{B23A48}
+\definecolor{ragText}{HTML}{7A1F2B}
+\definecolor{logicFill}{HTML}{F0E6F6}
+\definecolor{logicDraw}{HTML}{7B4FA0}
+\definecolor{logicText}{HTML}{4A2E63}
 \definecolor{decFill}{HTML}{E1F5EE}
 \definecolor{decDraw}{HTML}{0F6E56}
 \definecolor{decText}{HTML}{085041}
@@ -26,6 +35,9 @@
   box/.style={rectangle, rounded corners=3pt, draw, line width=0.5pt,
               align=center, inner sep=4pt, minimum height=11mm, minimum width=18mm},
   proc/.style={box, fill=procFill, draw=procDraw, text=procText},
+  agent/.style={box, fill=agentFill, draw=agentDraw, text=agentText},
+  ragbox/.style={box, fill=ragFill, draw=ragDraw, text=ragText},
+  logic/.style={box, fill=logicFill, draw=logicDraw, text=logicText},
   dec/.style={box,  fill=decFill,  draw=decDraw,  text=decText},
   aud/.style={box,  fill=audFill,  draw=audDraw,  text=audText},
   arr/.style={-{Stealth[length=4pt,width=4pt]}, line width=0.5pt, draw=procDraw},
@@ -33,14 +45,14 @@
 ]
 
 % ---- Row 1: selection path ----
-\node[proc] (tx)  at (0,0)     {Transcript};
-\node[proc] (rag) at (3.3,0)   {Retrieval (RAG)\\[-1pt]{\scriptsize 1 case / disorder}};
-\node[proc] (dx)  at (6.6,0)   {Diagnostician\\[-1pt]{\scriptsize 5 candidates}};
+\node[proc]   (tx)  at (0,0)     {Transcript};
+\node[ragbox] (rag) at (3.3,0)   {Retrieval (RAG)\\[-1pt]{\scriptsize 1 case / disorder}};
+\node[agent] (dx)  at (6.6,0)   {Diagnostician\\[-1pt]{\scriptsize 5 candidates}};
 \node[dec]  (pri) at (11.4,0)  {Committed primary\\[-1pt]{\scriptsize + comorbid}};
 
 % ---- Row 2: audit branch ----
-\node[proc] (chk)   at (3.3,-2.4)  {Criterion checkers\\[-1pt]{\scriptsize Per-disorder ICD-10}};
-\node[proc] (logic) at (6.6,-2.4)  {Logic engine\\[-1pt]{\scriptsize Count thresholds}};
+\node[agent] (chk)   at (3.3,-2.4)  {Criterion checkers\\[-1pt]{\scriptsize Per-disorder ICD-10}};
+\node[logic] (logic) at (6.6,-2.4)  {Logic engine\\[-1pt]{\scriptsize Count thresholds}};
 \node[aud]  (audit) at (11.4,-2.4) {Audit record\\[-1pt]{\scriptsize criteria \& why}};
 
 % ---- Selection-path arrows ----
