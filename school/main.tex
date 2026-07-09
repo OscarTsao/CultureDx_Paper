@@ -317,7 +317,25 @@ Given the prompt assembled above, HiED processes each case through the following
 \item Emit the primary diagnosis, ranked differential, optional comorbidity, criterion trace, logic results, and decision trace.
 \end{enumerate}
 
-This pipeline separates evidence acquisition from evidence review. Retrieval supplies candidate-supporting context before diagnosis. Criterion checkers review the generated candidates after diagnosis. The final selected architecture uses Direct-Answer, so the diagnostician's primary remains the committed output while the checker and logic layers provide auditability: the criterion trace and decision trace are evidence attached to the output for review, not a claim about the LLM's hidden reasoning.
+\begin{table}[t]
+\centering
+\caption{Output provenance in the HiED pipeline.}
+\label{tab:output-provenance}
+\begin{tabularx}{\textwidth}{@{}p{0.27\textwidth}p{0.28\textwidth}X@{}}
+\toprule
+Output object & Immediate source & Role in evaluation or audit\\
+\midrule
+Ranked differential & Diagnostician & Candidate list used for Top-$k$ coverage and downstream checking.\\
+Committed primary & Diagnostician under the Direct-Answer policy & Final Top-1 prediction in the selected reference architecture.\\
+Optional comorbidity & Diagnostician output, later compared with set-level evaluation & Secondary label used for diagnostic-set evaluation, including Exact Match.\\
+Criterion states and evidence quotes & Disorder-specific criterion checkers & Audit trace for whether each candidate's criteria are \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_evidence}.\\
+Logic-confirmed set & Deterministic threshold logic applied to checker states & Criterion-compatible set used for audit and verification-retention analysis, not the default primary selector.\\
+Decision trace & Assembly of diagnostician output, checker trace, and logic result & Record that links the committed output to candidates, criteria, and deterministic compatibility results.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+This provenance map separates evidence acquisition from evidence review. Retrieval supplies candidate-supporting context before diagnosis; the diagnostician produces the ranked differential, committed primary, and optional comorbidity; criterion checkers review the generated candidates after diagnosis; and deterministic logic summarizes criterion compatibility. The selected architecture uses Direct-Answer, so the diagnostician's primary remains the committed output while the checker and logic layers provide auditability. The criterion trace and decision trace are therefore evidence attached to the output for review, not proof of the LLM's hidden reasoning.
 
 \section{Class-Balanced Retrieval}
 \label{sec:retrieval}
@@ -361,7 +379,7 @@ The logic engine is intentionally limited. It summarizes compatibility with diag
 
 \section{Finalization Policies}
 
-HiED evaluates multiple ways to produce the final primary diagnosis. Direct-Answer preserves the diagnostician's committed primary and is the selected reference policy. Nominate-then-Select re-derives the primary from logic-confirmed candidates. Pairwise comparison and debate are evaluated as repair probes that attempt to resolve close alternatives.
+HiED evaluates multiple ways to produce the final primary diagnosis. Direct-Answer preserves the diagnostician's committed primary and comorbidity call, and is the selected reference policy. Nominate-then-Select (NtS) instead selects the diagnostician's highest-ranked candidate that is logic-confirmed; if none of the diagnostician's top-ranked candidates is confirmed, it falls back to the confirmed candidate with the highest met ratio, and if no candidate is confirmed at all, it falls back to the diagnostician's original top-ranked candidate rather than abstaining. NtS does not emit a secondary diagnosis. Pairwise comparison and debate are evaluated as repair probes that attempt to resolve close alternatives.
 
 Direct-Answer and Nominate-then-Select share upstream outputs. The diagnostician candidates, criterion states, and logic results are identical; only the finalization rule changes. This shared-upstream design isolates the causal effect of finalization. If Nominate-then-Select improves or degrades Top-1, that difference cannot be attributed to candidate generation or checker variation.
 
@@ -411,7 +429,7 @@ Internal test split & 1,000 & frozen headline evaluation & pre-registered, train
 
 Because the official test split was unavailable, a 1,000-case train-carved internal test split was pre-registered, excluded from retrieval, and reserved for headline evaluation; this is distinct from both the public validation split and the unavailable official test split. The public validation split supports development and sensitivity analysis; the train-derived pool supports retrieval and indexing but is not scored as a headline test set; the internal test split is scored only after rules freeze. This division is necessary because the thesis makes paired claims about system variants, and any leakage between retrieval, configuration, and headline scoring would directly undermine the selection-bottleneck evidence. A limited public-validation positioning analysis is reported only as contextual evidence; it is not the headline result because protocol and split differences make leaderboard-style claims fragile.
 
-MDD-5k provides a broader synthetic disorder distribution and different dialogue style through a neuro-symbolic multi-agent synthesis pipeline~\citep{yin2024mdd5k}, used here as an external synthetic distribution-shift corpus rather than real clinical validation. Its coverage-aware evaluation contains 925 cases: 878 map to the selected active scope and 47 fall outside it. Results are reported for the full corpus, the in-scope subset, the out-of-scope subset, and an F32/F41 binary view, since a case whose gold diagnosis lies outside the active profile cannot be recovered by any selector under that profile, and counting it as an ordinary within-scope error would conflate a scope limitation with a selection failure.
+MDD-5k provides a broader synthetic disorder distribution and different dialogue style through a neuro-symbolic multi-agent synthesis pipeline~\citep{yin2024mdd5k}, and is used here as an external synthetic distribution-shift corpus rather than real clinical validation. Relative to the in-domain LingxiDiag split, the external evaluation subset is depression-skewed, with depressive and anxiety presentations forming a prominent part of the checker-covered cases; this motivates reporting both multi-way external performance and an F32/F41 binary view in Chapter~\ref{ch:external}. Its coverage-aware evaluation contains 925 checker-covered cases: 878 map to the selected active scope and 47 fall outside it. Results are reported for the checker-covered corpus, the in-scope subset, the out-of-scope subset, and the F32/F41 binary view, since a case whose gold diagnosis lies outside the active profile cannot be recovered by any selector under that profile, and counting it as an ordinary within-scope error would conflate a scope limitation with a selection failure.
 
 Both corpora are synthetic. Synthetic dialogue resources make controlled evaluation possible when real clinical data are scarce or sensitive; LLM role-play and reconstruction frameworks can generate large datasets for development and benchmarking~\citep{wu2024callm}. However, synthetic data may encode generator priors, simplify comorbidity, omit nonverbal context, and fail to capture local clinical variation, which qualifies every quantitative result reported later. The corpora are used for method development and controlled ablation because they allow fixed splits, repeated paired comparisons, and explicit label projection, not as a substitute for clinical validation; the planned real-patient arm and a transcript-only human reference are future requirements, not achieved results, which keeps the method contribution separable from any claim about clinical readiness.
 
@@ -512,7 +530,7 @@ The repair battery targets specific mechanisms.
 
 \paragraph{Debate.} Debate uses a bounded multi-round protocol in which advocates argue for leading candidates and a judge resolves the exchange~\citep{du2024debate}. It tests whether additional adversarial reasoning supplies comparative information missing from the direct output.
 
-\paragraph{Deterministic fusion.} Fusion enumerates 293 candidate post-hoc rules across five families---single-signal thresholds, rank-based rescue-and-veto, weighted rank/met-ratio combinations, confirmed-candidate-set rules, and conditional overrides---over already-recorded ranking, criterion met-ratio, and threshold signals. It tests whether a simple deterministic combination of these signals is sufficient; full rule definitions appear in Appendix~\ref{app:interventions}.
+\paragraph{Deterministic fusion.} Deterministic fusion tests whether the selection bottleneck can be repaired by a fixed rule over signals the system already records, rather than by adding new evidence, retraining the diagnostician, or introducing another reasoning agent. The candidate rules combine the diagnostician's rank order, criterion met ratios, and deterministic threshold-satisfaction indicators. Rules are selected only on the development split and then frozen before test evaluation. The reported fusion result therefore corresponds to the development-selected deterministic finalization rule (labeled E3), while the broader 293-rule sweep is reported in Appendix~\ref{app:interventions}. The selected rule preserves the diagnostician's committed primary unless that primary is not logic-confirmed and a logic-confirmed alternative exceeds it by a pre-specified margin, in which case the confirmed alternative becomes the committed primary. This probe asks whether a simple rule-based recombination of existing ranking and verification signals is sufficient to improve committed primary selection.
 
 \paragraph{Fine-tuning and lexical reranking.} Three learned selectors---a gradient-boosted pairwise ranker (LightGBM), a BGE-M3 dense definition-similarity reranker, and a TF--IDF with logistic-regression selector---test whether ranking features contain a supervised signal that can be recovered by a fitted model. These probes also test transfer: a selector that fits one corpus but fails on another is not a robust solution; full feature definitions appear in Appendix~\ref{app:interventions}.
 
@@ -719,7 +737,7 @@ MDD-5k & MDD-5k & 185 & 0.692 & corpus-specific fit recovers\\
 \end{tabular}
 \end{table}
 
-\Cref{tab:lexical-transfer-rewrite} shows that lexical selection can fit a corpus but fail across corpora. A Lingxi-trained TF--IDF selector performs well in domain but collapses on MDD. Training the same model family on MDD restores within-corpus performance. The failure is therefore not inability to fit; it is lack of transfer.
+\Cref{tab:lexical-transfer-rewrite} shows that lexical selection can fit a corpus but fail across corpora. A Lingxi-trained TF--IDF selector performs well in domain but collapses on MDD. Training the same model family on MDD restores within-corpus performance. The failure is therefore not inability to fit; it is lack of transfer. This lexical-transfer probe is evaluated only on the MDD-5k cases whose gold label falls within the shared label set used by this probe, so its sample size differs from the broader external summaries in \Cref{tab:external-summary-rewrite} and should not be read as a subset of them.
 
 This result cautions against interpreting strong in-domain reranking as diagnostic signal. A selector may learn corpus-specific phrasing, label priors, or generation artifacts rather than robust clinical distinctions. The ontology-driven pipeline is more portable in configuration, but portability does not eliminate the selection bottleneck.
 
@@ -754,9 +772,9 @@ Debate is especially informative. Under the original token budget, the external 
 
 The external battery strengthens the structural interpretation. Methods that operate through verification, additional reasoning, deterministic fusion, or sampling aggregation do not supply a stable transferable selector. The bottleneck persists under distribution shift.
 
-\section{Case-Similarity Reranking}
+\section{Selector-Side Case-Neighbor Reranking}
 
-This section evaluates a post-hoc case-neighbor reranking probe, not an ablation of the canonical class-balanced case retriever used to construct the diagnostician prompt. The probe asks whether similarity to training cases can serve as a transferable primary-selection signal under external synthetic distribution shift. Dense, sparse, ColBERT, and hybrid similarity modes are selected on the in-domain development split and then frozen before application to the in-scope MDD subset, without using external labels for tuning.
+This section evaluates a selector-side case-neighbor reranking probe, not an ablation of the canonical class-balanced case retriever used to construct the diagnostician prompt. The probe asks whether similarity to training cases can serve as a transferable primary-selection signal under external synthetic distribution shift. Dense, sparse, ColBERT, and hybrid similarity modes are selected on the in-domain development split and then frozen before application to the in-scope MDD subset, without using external labels for tuning.
 
 \begin{table}[htbp]
 \centering
@@ -1121,8 +1139,8 @@ The checker output is an audit state, not clinician-validated criterion gold. A 
 
 Two finalization policies operate over identical upstream traces:
 \begin{itemize}
-\item Direct-Answer (DA) preserves the diagnostician's committed primary as the final label; and
-\item Nominate-then-Select (NtS) sets aside the committed primary and re-derives a primary from the logic-confirmed candidate set.
+\item Direct-Answer (DA) preserves the diagnostician's committed primary and comorbidity call as the final label; and
+\item Nominate-then-Select (NtS) sets aside the diagnostician's emitted primary and comorbidity call and applies a deterministic finalization rule to the same upstream ranked differential, checker states, and logic-confirmed set used by DA. It first scans the diagnostician's top-ranked candidates in order and selects the highest-ranked candidate that is logic-confirmed. If none of those top-ranked candidates is confirmed but the logic-confirmed set is non-empty, it instead selects from the full confirmed set the candidate with the highest met ratio. If the logic-confirmed set is empty, it falls back to the diagnostician's original top-ranked candidate rather than abstaining. NtS never emits a secondary diagnosis.
 \end{itemize}
 Because DA and NtS are applied to the same diagnostician candidates and the same criterion and logic traces, any difference between them is attributable to the finalization step alone rather than to upstream variation. This shared-upstream construction is what allows the main text to isolate selection as the locus of the bottleneck.
 
@@ -1338,7 +1356,18 @@ shows only a small, non-significant marginal gain when retrieval is
 added back (0.511 to 0.518, $p=0.43$). The probe supports the main
 interpretation: retrieval helps direct candidate support, but the
 structured HiED ceiling is dominated by primary selection rather than
-by absence of retrieved examples. This probe is therefore used only to
+by absence of retrieved examples. This finding does not weaken the
+headline retrieval contribution reported in the architecture ladder
+(\Cref{tab:ladder-rewrite}): the Single-to-Single+RAG gain is
+unaffected by this probe and remains the thesis's primary evidence
+that case retrieval supports candidate coverage. What this probe adds
+is a narrower, later-stage observation: once the checker and logic
+layers already support candidate quality, retrieval's additional
+marginal contribution to HiED--DA's Top-1 shrinks and is no longer
+statistically significant. The two findings answer different
+questions---whether retrieval helps a bare model, and whether
+retrieval still moves the needle once the full pipeline is already in
+place---and are not in tension. This probe is therefore used only to
 interpret retrieval sensitivity; it does not replace the frozen
 architecture ladder, where the Single, Single+RAG, and HiED--DA rows
 remain the thesis headline comparisons.
