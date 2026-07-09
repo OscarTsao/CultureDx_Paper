@@ -305,7 +305,7 @@ Each diagnostician invocation is built from four parts: brief task instructions 
 
 \section{Model Overview}
 
-\ThesisFigure{fig_pipeline.pdf}{HiED pipeline. Amber blocks are LLM-based agents, the rose block is the retrieval component, purple blocks are deterministic code-based logic, and the output pair (green/blue) separates the committed decision from the audit trace. The diagnostician generates a ranked differential and committed primary; candidate-specific checkers evaluate criteria; deterministic logic summarizes support; the output includes both the decision and audit trace.}{fig:pipeline-thesis-rewrite}
+\ThesisFigure{fig_pipeline.pdf}{HiED pipeline. Amber blocks are LLM-based agents, the rose block is the retrieval component, the purple block is deterministic code-based logic, and the output pair (green/blue) separates the committed decision from the audit trace. The diagnostician generates a ranked differential and committed primary; candidate-specific checkers evaluate criteria; deterministic logic summarizes support; the output includes both the decision and audit trace.}{fig:pipeline-thesis-rewrite}
 
 Given the prompt assembled above, HiED processes each case through the following steps:
 
@@ -324,13 +324,13 @@ This pipeline separates evidence acquisition from evidence review. Retrieval sup
 
 Retrieval-augmented generation supplements an LLM prompt with relevant examples or knowledge~\citep{lewis2020rag}. In psychiatric dialogue, retrieval can remind a model of less salient disorders, provide lexical anchors, or expose similar presentations, and can therefore improve candidate detection; it can also amplify corpus-specific wording and does not by itself resolve primary selection among already-supported candidates.
 
-The retrieval component is designed to support candidate breadth without letting frequent disorders dominate the prompt: the query transcript is embedded with BGE-M3~\citep{chen2024bgem3} and searched against a FAISS index of training cases, and instead of returning the globally nearest cases, the retriever returns the top case per candidate disorder class. This class-balanced design keeps rare disorders visible and prevents common depression-like presentations from crowding out alternatives.
+The retrieval component is designed to support candidate breadth without letting frequent disorders dominate the prompt. Each query transcript is first encoded by BGE-M3, a multilingual text-embedding model used here to convert transcripts into dense retrieval vectors~\citep{chen2024bgem3}. These vectors are searched with FAISS, a local vector-similarity indexing library rather than a separate model or managed database~\citep{douze2024faiss}. Instead of returning the globally nearest cases, the retriever returns the top case per candidate disorder class. This class-balanced design keeps rare disorders visible and prevents common depression-like presentations from crowding out alternatives.
 
 Retrieval therefore plays a defined and bounded role in the architecture: it can improve the diagnostician's candidate set by supplying examples and lexical anchors, but it is not treated as a selector. This is what allows the thesis to claim that retrieval improves coverage without claiming that retrieval solves primary selection.
 
 \section{Diagnostic Agent}
 
-The diagnostic agent is a local Qwen3-32B-AWQ model---a 32-billion-parameter model compressed via activation-aware weight quantization (AWQ) to run efficiently on local hardware---served with vLLM under the canonical configuration. It reads the transcript and retrieved context, then emits a structured object with the following fields:
+The diagnostic agent is a local Qwen3-32B-AWQ model---a 32-billion-parameter model compressed via activation-aware weight quantization (AWQ) to run efficiently on local hardware---served with vLLM, an LLM inference engine used here to run the model locally, under the canonical configuration. It reads the transcript and retrieved context, then emits a structured object with the following fields:
 
 \begin{itemize}
 \item a ranked differential diagnosis list;
@@ -390,7 +390,7 @@ HiED separates the diagnostic pipeline into stages that can be measured and chal
 
 Two synthetic Chinese psychiatric dialogue corpora are used, each assigned a distinct evaluation role: LingxiDiagBench for in-domain development and the frozen internal test split, and MDD-5k as an external synthetic distribution-shift corpus.
 
-LingxiDiagBench provides synthetic, EMR-aligned Chinese psychiatric consultation dialogues with multiple task granularities~\citep{xu2026lingxidiagbench}. Its reported evaluation shows a coarse-to-fine difficulty gradient: the evaluated LLMs reached 92.3\% on binary depression--anxiety classification but only 28.5\% on the full 12-way differential diagnosis, with dynamic consultation often underperforming static evaluation. It nominally contains 16,000 dialogues; because the official 1,000-case test split was unavailable at freeze, the accessible corpus comprises 15,000 case IDs, assigned three disjoint on-disk roles (\Cref{tab:data-roles-rewrite}):
+LingxiDiagBench provides synthetic, EMR-aligned Chinese psychiatric consultation dialogues with multiple task granularities~\citep{xu2026lingxidiagbench}. Its reported evaluation shows a coarse-to-fine difficulty gradient: the evaluated LLMs reached 92.3\% on binary depression--anxiety classification but only 28.5\% on the full 12-way differential diagnosis, where ``12-way'' means choosing among twelve scored parent diagnosis classes after parent-level label projection, as defined in \Cref{sec:gold-conventions}. Dynamic consultation often underperformed static evaluation. It nominally contains 16,000 dialogues; because the official 1,000-case test split was unavailable at freeze, the accessible corpus comprises 15,000 case IDs, assigned three disjoint on-disk roles (\Cref{tab:data-roles-rewrite}):
 
 \begin{table}[htbp]
 \centering
@@ -454,7 +454,7 @@ Paired binary outcomes use exact McNemar tests, appropriate because compared sys
 
 Every run is checked for expected case count, schema validity, abstention and parse-recovery events, frozen ordering, configuration identity, and candidate integrity; these checks prevent malformed outputs, silent dropped cases, or reorderings from contaminating paired comparisons. A system that fails to produce valid outputs on difficult cases could appear more accurate than it is if run health were ignored.
 
-Reproducibility across the data protocol rests on the same computational and semantic lineage that later experimental results depend on. The selected system runs on one NVIDIA RTX 5090 and uses Qwen3-32B-AWQ served through vLLM with greedy decoding, an 8192-token context (a token is roughly a word or sub-word unit, so this bounds the combined length of the input transcript, retrieved context, and any multi-turn exchange the model can process at once), maximum output length 1536, disabled thinking mode, and bounded retries. Reproducibility further requires matching split, policy, metric definition, and artifact identity: the same numerical accuracy can mean different things if computed on a different split, under a different finalization policy, or with a different gold convention. The evaluation protocol therefore treats a result as a tuple rather than as a standalone number---what data were scored, how labels were projected, which system policy emitted the output, which metric was computed, and which statistical test was applied.
+Reproducibility across the data protocol rests on the same computational and semantic lineage that later experimental results depend on. The selected system runs on one NVIDIA RTX 5090 and uses Qwen3-32B-AWQ served through vLLM, a high-throughput LLM inference engine, with greedy decoding, an 8192-token context (a token is roughly a word or sub-word unit, so this bounds the combined length of the input transcript, retrieved context, and any multi-turn exchange the model can process at once), maximum output length 1536, disabled thinking mode, and bounded retries. Reproducibility further requires matching split, policy, metric definition, and artifact identity: the same numerical accuracy can mean different things if computed on a different split, under a different finalization policy, or with a different gold convention. The evaluation protocol therefore treats a result as a tuple rather than as a standalone number---what data were scored, how labels were projected, which system policy emitted the output, which metric was computed, and which statistical test was applied.
 
 \section{Summary}
 
@@ -508,19 +508,19 @@ Verification experiments ask whether criterion checking improves primary selecti
 
 The repair battery targets specific mechanisms.
 
-\paragraph{Pairwise reasoning.} Pairwise comparison uses adjacent ranked candidates that are sufficiently supported and close under the pre-specified met-ratio gate: each candidate must have met ratio at least $0.5$, and the adjacent met-ratio distance must be less than $0.10$. The close-cluster scan is applied over the ranked list rather than only around the committed primary. It asks whether a local differential comparison can resolve ambiguous primacy. The independent run tests raw performance; controlled replay re-runs the comparison over the Direct-Answer (DA) reference policy's fixed upstream outputs to test causal effect without changing candidate generation or verification; forced override tests whether applying the comparison globally is safe.
+\paragraph{Pairwise reasoning.} Pairwise comparison uses adjacent ranked candidates that are sufficiently supported and close under the pre-specified met-ratio gate: each candidate must have met ratio at least $0.5$, and the adjacent met-ratio distance must be less than $0.10$. The close-cluster scan is applied over the ranked list rather than only around the committed primary. In controlled replay, the eligible close clusters are derived from the Direct-Answer (DA) reference output: DA provides the ranked candidates, candidate adjacency, and criterion-derived met ratios, while candidate generation and criterion verification are not rerun. Only the pairwise comparison and finalization step is applied on top of these fixed DA outputs. The independent run tests raw pairwise performance; controlled replay tests whether pairwise comparison causally changes committed primaries when upstream evidence is held fixed; forced override tests whether applying the comparison globally is safe.
 
 \paragraph{Debate.} Debate uses a bounded multi-round protocol in which advocates argue for leading candidates and a judge resolves the exchange~\citep{du2024debate}. It tests whether additional adversarial reasoning supplies comparative information missing from the direct output.
 
-\paragraph{Deterministic fusion.} Fusion enumerates post-hoc rules over ranking, criterion met ratios, and threshold satisfaction. It tests whether a simple deterministic combination of already-recorded signals is sufficient.
+\paragraph{Deterministic fusion.} Fusion enumerates 293 candidate post-hoc rules across five families---single-signal thresholds, rank-based rescue-and-veto, weighted rank/met-ratio combinations, confirmed-candidate-set rules, and conditional overrides---over already-recorded ranking, criterion met-ratio, and threshold signals. It tests whether a simple deterministic combination of these signals is sufficient; full rule definitions appear in Appendix~\ref{app:interventions}.
 
-\paragraph{Fine-tuning and lexical reranking.} Learned selectors test whether ranking features contain a supervised signal that can be recovered by a fitted model. These probes also test transfer: a selector that fits one corpus but fails on another is not a robust solution.
+\paragraph{Fine-tuning and lexical reranking.} Three learned selectors---a gradient-boosted pairwise ranker (LightGBM), a BGE-M3 dense definition-similarity reranker, and a TF--IDF with logistic-regression selector---test whether ranking features contain a supervised signal that can be recovered by a fitted model. These probes also test transfer: a selector that fits one corpus but fails on another is not a robust solution; full feature definitions appear in Appendix~\ref{app:interventions}.
 
 \paragraph{Self-consistency and CISC.} Self-consistency samples the diagnostician multiple times and aggregates the committed primary by majority vote. Confidence-informed self-consistency weights votes by reported confidence. These probes test whether the direct commitment is unstable and whether a hidden sample majority exists.
 
 Two further probes---evidence extraction and a residual-evidence loop---were explored but produced no comparable headline number; they are reported in Appendix~\ref{app:interventions} as bounded feasibility findings rather than in this main battery.
 
-Robustness is evaluated across retrieval modes, in-domain and external corpora, confusion boundaries, logic-agreement strata, and ontology scope, each stressing a different explanation for the bottleneck. If embedding representation is the problem, retrieval-mode changes should improve selection. If the finding is corpus-specific, it should not persist on MDD-5k. If scope is the issue, mechanical expansion should recover newly representable labels. The thesis uses robustness to test the stability of the interpretation, not to claim that all perturbations are inconsequential. A result can be robust in the sense that the bottleneck persists while still varying in magnitude across settings.
+Robustness is evaluated across definition-similarity signals, in-domain and external corpora, confusion boundaries, logic-agreement strata, and ontology scope, each stressing a different explanation for the bottleneck. If embedding representation is the problem, a different similarity signal should improve selection. If the finding is corpus-specific, it should not persist on MDD-5k. If scope is the issue, mechanical expansion should recover newly representable labels. The thesis uses robustness to test the stability of the interpretation, not to claim that all perturbations are inconsequential. A result can be robust in the sense that the bottleneck persists while still varying in magnitude across settings.
 
 \paragraph{Backbone size.} If scale alone solves the selection bottleneck, larger backbones should escape it. The size ladder spans 4B, 8B, 14B, and 32B parameters under the same architecture and protocol. The 4B HiED run required elevated parse recovery, and the 4B single run produced abstentions, but all reported size-ladder runs produced 1,000 valid outputs and passed health gates; these events are part of system behavior worth reporting, since structured-output fragility is not the same as diagnostic judgment, though it affects deployability and the interpretation of small-backbone results.
 
@@ -565,6 +565,8 @@ HiED--DA & \textbf{0.518} & \textbf{0.802} & 0.409 & 0.178 & 0.434\\
 
 The ladder therefore supports a specific interpretation. Retrieval improves candidate support. HiED's added value is not a large additional Top-1 jump beyond retrieval; it is the ranked differential, criterion audit, and ability to localize errors. This distinction prevents the architecture from being oversold as a pure accuracy improvement while preserving its scientific role as an instrument for decomposed evaluation.
 
+The Exact Match column shows a further pattern that Top-1 alone does not capture. Both HiED variants score an order of magnitude above the single-label baselines (0.409--0.437 versus 0.011--0.017). This gap is structural rather than a calibration improvement: Single and Single+RAG emit only a committed primary with no mechanism to emit comorbidity, so they cannot match a multi-label gold set regardless of how accurate that primary is. Within HiED, the two finalization policies move in opposite directions relative to Top-1---HiED--DA reaches the higher Top-1 (0.518) but the lower Exact Match (0.409), while HiED--NtS trades Top-1 (0.490) for the higher Exact Match (0.437)---the same primary-selection-versus-set-calibration trade-off examined in \Cref{sec:criterion-verification}, not a case where one policy dominates the other on every metric.
+
 A benchmark-positioning analysis on the public LingxiDiagBench validation cases shows the same pattern: HiED--DA exceeds the strongest reported Top-1 frontier-LLM and classical baselines (\cref{tab:lingxi-public-validation-positioning}), though this comparison is contextual evidence rather than the thesis headline, which rests on the frozen internal test split above.
 
 \section{Candidate Coverage and Recoverable Opportunity}
@@ -578,6 +580,7 @@ A close-cluster recoverability analysis sharpens this interpretation. Under the 
 The Top-3 gap and recoverability result rule out a simple generation-only explanation for many errors. The system often has already generated the correct parent. The residual problem is deciding that it should be first.
 
 \section{Criterion Verification}
+\label{sec:criterion-verification}
 
 The logic-confirmed set contains the gold parent in 93.7\% of non-Others cases, but it confirms a median of six of fourteen active disorder entries per case. Criterion states are distributed 48.3\% \texttt{met}, 23.5\% \texttt{not\_met}, and 28.3\% \texttt{insufficient\_evidence}: \texttt{met} is the largest single state, but \texttt{not\_met} and \texttt{insufficient\_evidence} together still account for over half of all criterion decisions. The checker bank is therefore high recall but low selectivity. In the notation of \Cref{sec:problem-definition}, this chapter's internal test split gives $\bar D_3=0.802$, $\bar R=0.937$, and $\bar S=0.518$: both candidate detection and verification retention substantially exceed committed selection, the operational form of the selection bottleneck introduced there.
 
@@ -641,13 +644,15 @@ Backbone & Single & HiED & Difference\\
 
 \ThesisFigure{fig_a_size_robustness.pdf}{Backbone-size robustness on the internal test split: the structured pipeline narrows the single-model Top-1 range of 0.322 to 0.041 across Qwen3 sizes.}{fig:size-robustness-thesis-rewrite}
 
-\section{Retrieval Modes and Confusion Structure}
+\section{Confusion Structure}
 
-Dense, sparse, hybrid, and ColBERT definition-similarity fusion do not improve Top-1 over the Direct-Answer baseline. The largest first-listed-gold confusion is F41 to F32, followed by F39 to F32 and Others to F32. Errors concentrate around depression, anxiety, and mood boundaries.
+The largest first-listed-gold confusion is F41 to F32, followed by F39 to F32 and Others to F32. Errors concentrate around depression, anxiety, and mood boundaries.
 
-\ThesisFigure{fig_d_confusion_heatmap.pdf}{Internal test split first-listed-gold-parent confusion structure. The inset reports the external MDD-5k F32/F41 binary Top-1 (0.922; \Cref{tab:external-summary-rewrite}) as a cross-corpus contrast, not as part of the internal confusion counts.}{fig:confusion-thesis-rewrite}
+\ThesisFigure{fig_d_confusion_heatmap.pdf}{Internal test split first-listed-gold-parent confusion structure. Counts are restricted to the internal test split.}{fig:confusion-thesis-rewrite}
 
 This concentration is clinically coherent. Depression, anxiety, and mood presentations share sleep disturbance, fatigue, impaired concentration, somatic distress, and functional impairment. The features that distinguish them often require temporal course, onset ordering, exclusion evidence, or longitudinal observation. A single transcript may not contain those discriminators. The confusion structure therefore aligns with the selection-bottleneck interpretation: the hard cases are those where multiple candidates are plausible and the evidence needed for primacy is missing or subtle.
+
+Additional definition-similarity fusion probes using dense, sparse, hybrid, and ColBERT similarity signals are reported in Appendix~\ref{app:interventions}. These probes are treated as post-hoc selector probes rather than as ablations of the canonical class-balanced case retriever.
 
 \section{Summary}
 
@@ -680,7 +685,7 @@ MDD F32/F41 & 490 & 0.9224 & 0.7837 & 0.9055\\
 \end{tabular}
 \end{table}
 
-\Cref{tab:external-summary-rewrite} places the external views against the internal reference. The MDD-5k external run does not use a same-corpus case-index retriever, so it should be interpreted as ontology/checker-supported transcript transfer rather than evidence that case retrieval transfers across corpora. Within the selected scope, Top-1 reaches 0.6116. On the F32/F41 binary subset, accuracy reaches 0.9224, indicating that coarse depression--anxiety discrimination transfers strongly across this synthetic distribution shift.
+\Cref{tab:external-summary-rewrite} places the external views against the internal reference. The MDD-5k external run does not use a same-corpus case-index retriever, so it should be interpreted as ontology/checker-supported transcript transfer rather than evidence that case retrieval transfers across corpora. Within the selected scope, Top-1 reaches 0.6116. On the F32/F41 binary subset, accuracy reaches 0.9224, indicating that coarse depression--anxiety discrimination transfers strongly across this synthetic distribution shift. This offers a cross-corpus contrast to the internal F41-to-F32 confusion identified in \Cref{fig:confusion-thesis-rewrite}: the distinction that is hardest to resolve within the internal test split's twelve-class space is comparatively easy when isolated as a binary task on an external corpus, which is consistent with the selection-bottleneck interpretation that the difficulty lies in choosing among plausible candidates rather than in recognizing coarse category membership.
 
 The same table also shows the remaining limitation. Multi-way primary selection remains harder than binary F32/F41 discrimination, and the external performance is shaped by class distribution and scope. The result is therefore neither a simple success nor a failure. It shows useful synthetic transfer for some distinctions while preserving the broader conclusion that fine-grained primary selection remains difficult.
 
@@ -750,7 +755,7 @@ The external battery strengthens the structural interpretation. Methods that ope
 
 \section{Case-Similarity Reranking}
 
-A second external retrieval repair reranks candidates by neighbor agreement from similar training cases. Dense, sparse, ColBERT, and hybrid modes are selected on the in-domain development split and then frozen before application to the in-scope MDD subset. This design tests whether a retrieval signal chosen without external-label access transfers to a new corpus.
+This section evaluates a post-hoc case-neighbor reranking probe, not an ablation of the canonical class-balanced case retriever used to construct the diagnostician prompt. The probe asks whether similarity to training cases can serve as a transferable primary-selection signal under external synthetic distribution shift. Dense, sparse, ColBERT, and hybrid similarity modes are selected on the in-domain development split and then frozen before application to the in-scope MDD subset, without using external labels for tuning.
 
 \begin{table}[htbp]
 \centering
@@ -768,7 +773,7 @@ Hybrid & 0.5410 & 0.5182 & $-0.0934$ & $1.4\times10^{-6}$\\
 \end{tabular}
 \end{table}
 
-Every mode degrades external selection significantly. This mirrors the lexical-transfer result: similarity signals selected in one corpus can encode corpus-specific regularities that do not transfer. Case-similarity reranking is therefore not a solution to the selection bottleneck under distribution shift.
+All case-similarity reranking modes degrade external Top-1 relative to the matched Direct-Answer baseline. This mirrors the lexical-transfer result: similarity signals selected in one corpus can encode corpus-specific regularities that do not transfer. This does not show that retrieval is useless for candidate support; rather, it shows that case-neighbor similarity is not a reliable post-hoc primary-selection signal under this external synthetic shift. The result reinforces the distinction between retrieval as prompt support for candidate coverage and retrieval-like similarity as a selector-side repair.
 
 \section{Interpretation}
 
@@ -1157,6 +1162,10 @@ The calibration intervention fits post-hoc Platt scaling (a one-dimensional logi
 
 Three learned selectors were evaluated. The principal one is a gradient-boosted pairwise ranker~\citep{burges2010ranknet} (LightGBM)~\citep{ke2017lightgbm} trained out-of-fold under five-fold cross-validation with deliberately conservative capacity ($50$ trees, maximum depth $3$). Its inputs combine pointwise features in four families---checker (criteria-met count, required count, average checker confidence), evidence (number of spans, average span confidence), somatization (number of somatic mappings, somatic criteria met), and cross-disorder (confidence margin, rank position, number of confirmed disorders)---with pairwise shared-criteria features (such as a shared-criteria count and a criteria-overlap ratio) and one-hot disorder-identity features. A BGE-M3 dense definition-similarity reranker and a TF--IDF with logistic-regression selector were also tested. All three improved development-lineage accuracy but failed to transfer across corpora, indicating that the fitted gains reflect corpus-specific regularities rather than transferable diagnostic signal.
 
+\section{Definition-Similarity Fusion Probes}
+
+These probes test whether disorder-definition similarity can serve as a post-hoc selector signal. They are not ablations of the canonical class-balanced case retriever used in HiED's diagnostician prompt (\Cref{sec:retrieval}), which retrieves training-case examples rather than matching against criterion-definition text. Dense, sparse, hybrid, and ColBERT similarity modes are applied as selector-side fusion signals over already produced candidate diagnoses. The purpose is to test whether a different similarity representation can repair primary selection, not whether the pipeline retrieval component should use a different case-retrieval mode. None of the four modes improves Top-1 over the Direct-Answer baseline.
+
 \section{Selector Fine-Tuning}
 
 The selector fine-tuning probes extract ranking features and fine-tune a checker, then measure cross-corpus generalization on the four-cell train/test matrix spanning the two corpora (LingxiDiag$\rightarrow$LingxiDiag, LingxiDiag$\rightarrow$MDD, MDD$\rightarrow$LingxiDiag, MDD$\rightarrow$MDD). A fitted selector improved in-corpus point accuracy in the matching cells but did not transfer to the off-diagonal cells, reinforcing that the bottleneck is not closed by training a stronger selector on a single corpus.
@@ -1167,7 +1176,7 @@ The test-time aggregation intervention samples the diagnostician $K\in\{3,5\}$ t
 
 \section{Pairwise Differential}
 
-The pairwise differential intervention activates on adjacent ranked candidates that are both sufficiently supported and close: a close cluster is assembled from ranked neighbors with met ratio at least $0.5$ and adjacent met-ratio distance less than $0.10$, the recorded checker outputs are reconstructed from the decision trace, and a differential-comparison agent re-decides the primary among the clustered alternatives. The scan is applied over the ranked list rather than only around the committed primary. It was evaluated three ways---an independent run, a controlled replay over the Direct-Answer (DA) reference policy's identical upstream outputs, and a forced override---plus a committed-policy variant in which the re-decided top candidate overrides the diagnostician's primary. A second phase measured conditional recovery on close-cluster subsets. The controlled replay changed no committed primary under the DA reference policy, so local subset accuracy did not translate into a full-evaluation gain, and the forced override was harmful.
+The pairwise differential intervention activates on adjacent ranked candidates that are both sufficiently supported and close: a close cluster is assembled from ranked neighbors with met ratio at least $0.5$ and adjacent met-ratio distance less than $0.10$, the recorded checker outputs are reconstructed from the decision trace, and a differential-comparison agent re-decides the primary among the clustered alternatives. The scan is applied over the ranked list rather than only around the committed primary. It was evaluated three ways---an independent run, a controlled replay over the Direct-Answer (DA) reference policy's identical upstream outputs, and a forced override---plus a committed-policy variant in which the re-decided top candidate overrides the diagnostician's primary. For the controlled replay, close clusters are constructed from the DA reference artifacts rather than from a newly generated pairwise run: the DA ranked list determines adjacent candidates, and the DA checker trace determines each candidate's met ratio, so the differential-comparison agent is applied only as a replayed finalization step. This design isolates the effect of pairwise selection from changes in candidate generation or criterion verification. A second phase measured conditional recovery on close-cluster subsets. The controlled replay changed no committed primary under the DA reference policy, so local subset accuracy did not translate into a full-evaluation gain, and the forced override was harmful.
 
 \section{Debate}
 
@@ -1280,7 +1289,7 @@ Model-size ladder & Is the bottleneck a capacity problem? & internal test split,
 Cross-family backbone probes & Does the observed selection bottleneck depend on one backbone family? & exploratory run; not tabulated because backbone family, quantization, language capability, and context handling were not controlled & Inventory only\\
 Prompt--retrieval interaction probe & Does true case retrieval help equally across prompt families? & post-freeze internal-test probe, complete & Appendix\\
 Checker granularity and scope factorial & Does checker configuration alter Top-1? & internal, complete & Appendix\\
-Disorder-definition retrieval modes & Does a different similarity mode help? & internal probe, complete & Robustness\\
+Disorder-definition similarity probes & Does definition similarity help post-hoc selection? & internal probe, complete & Appendix\\
 \midrule
 \multicolumn{4}{@{}l}{\textit{Error analysis}}\\
 \midrule
@@ -1291,7 +1300,7 @@ Criterion-state anatomy & How are criterion states distributed? & internal probe
 \midrule
 External-corpus evaluation & Does performance transfer to a different distribution? & external, complete & External synthetic evaluation\\
 External repair battery & Does any repair transfer to the external corpus? & external, complete & External repair table\\
-Case-similarity reranking & Does case-neighbor reranking transfer? & external, complete & Retrieval control\\
+Case-neighbor reranking & Does case-neighbor agreement transfer as a selector signal? & external, complete & Retrieval control\\
 Lexical cross-corpus transfer & Does a lexical selector transfer across corpora? & in-domain and external & Lexical transfer\\
 Calibration and selective prediction & Is confidence usable for selective prediction? & internal test split, complete & Appendix\\
 Evidence-reasoning intervention & Does structured evidence extraction improve selection? & internal probe, complete; no stable gain & Appendix\\
