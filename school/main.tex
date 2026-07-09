@@ -157,7 +157,7 @@ MAS & Multi-agent system\\
 NtS & Nominate-then-Select\\
 DTV & Diagnose-then-Verify\\
 OOT & Out of target scope\\
-BGE-M3 & Multilingual dense text-embedding model (BAAI General Embedding, M3)\\
+BGE-M3 & Multilingual embedding/retrieval model (BAAI General Embedding, M3)\\
 FAISS & Facebook AI Similarity Search (vector-index library)\\
 RAG & Retrieval-augmented generation\\
 TF--IDF & Term frequency--inverse document frequency\\
@@ -181,14 +181,14 @@ Psychiatric diagnosis based on an initial psychiatric consultation transcript is
 
 Large language models offer a natural interface for this setting because they can process free-form clinical dialogue, summarize symptom evidence, generate differential diagnoses, and produce structured outputs. Prior work in mental-health applications has evaluated LLMs on examinations, clinical vignettes, consultation scenarios, screening tasks, and dialogue generation. However, existing evaluations reveal a consistent limitation: while performance is often strong for coarse-grained classification, it declines substantially when the task requires fine-grained, disorder-level differential diagnosis. Moreover, fluent explanations do not necessarily imply reliable diagnostic discrimination. A model-generated rationale may appear coherent without faithfully reflecting the reasoning process that led to the answer. Therefore, a system that identifies a plausible disorder has not necessarily solved the diagnostic task.
 
-The Taiwanese outpatient first-visit setting further motivates the intended deployment context. Common mental disorders may present through somatic complaints rather than explicit mood-related language~\citep{ryder2008somatic}; consultations may be brief; and patients may shift among Mandarin, Taiwanese registers, and institution-specific clinical phrasing. This context calls for a diagnostic aid that can operate locally, handle Traditional Chinese input, and expose the evidence supporting its predictions rather than returning an opaque diagnostic label.
+The Taiwanese outpatient first-visit setting further motivates the intended deployment context. Common mental disorders may present through somatic complaints rather than explicit mood-related language~\citep{ryder2008somatic}; consultations may be brief; and patients may shift among Mandarin, Taiwanese registers, and institution-specific clinical phrasing. This context calls for a diagnostic aid that can operate locally, handle Traditional Chinese input, and expose the evidence supporting its predictions rather than returning an opaque diagnostic label. It also makes the coarse-to-fine diagnostic gap practically important: when evidence is incomplete and locally phrased, the central question is not only whether a system can name plausible disorders, but whether it can preserve and prioritize the correct diagnosis through the differential process.
 
 \section{Problem Definition and Motivation}
 \label{sec:problem-definition}
 
-This coarse-versus-fine performance gap is the technical problem this thesis addresses. We decompose the diagnostic process into three stages at which an error can occur: candidate detection, criterion verification, and primary selection. We define a \emph{selection bottleneck} as the case in which the correct diagnosis is generated as a candidate and survives criterion verification, yet is not the one finally committed as primary---a failure not in generating or verifying the diagnosis, but in choosing it.
+This thesis addresses that problem by treating the coarse-to-fine performance gap as a process-level failure to be localized, rather than as a single endpoint classification error. We decompose the diagnostic process into three stages at which an error can occur: candidate detection, criterion verification, and primary selection. We define a \emph{selection bottleneck} as the case in which the correct diagnosis is generated as a candidate and survives criterion verification, yet is not the one finally committed as primary---a failure not in generating or verifying the diagnosis, but in choosing it.
 
-This decomposition is necessary because psychiatric differential diagnosis from a transcript is a structured comparison under uncertainty, not flat text classification. Three distinctions make this precise. The first distinction is between evidence of absence and absence of evidence. If a transcript does not mention substance use or duration, that omission does not prove the criterion is false. Treating every unmentioned feature as negative over-excludes; treating every omission as compatible over-retains. The second distinction is between diagnostic compatibility and diagnostic primacy. Several disorders can be compatible with the same transcript, but only one can be committed as the primary diagnosis in the single-label view used for Top-1 scoring. The third distinction is between comorbidity and redundant description. A transcript that supports both depression and anxiety may reflect independent comorbidity, or it may reflect one syndrome described through overlapping symptoms.
+This decomposition is necessary because psychiatric differential diagnosis from an initial consultation transcript is a structured comparison under uncertainty, not flat text classification. Three distinctions make this precise. The first distinction is between evidence of absence and absence of evidence. If a transcript does not mention substance use or duration, that omission does not prove the criterion is false. Treating every unmentioned feature as negative over-excludes; treating every omission as compatible over-retains. The second distinction is between diagnostic compatibility and diagnostic primacy. Several disorders can be compatible with the same transcript, but only one can be committed as the primary diagnosis in the single-label view used for Top-1 scoring. The third distinction is between comorbidity and redundant description. A transcript that supports both depression and anxiety may reflect independent comorbidity, or it may reflect one syndrome described through overlapping symptoms.
 
 These distinctions, and the bottleneck defined above, can be stated formally. For transcript $x$, let $C_k(x)$ denote the top-$k$ candidate diagnoses a system produces, $V^{+}(x)$ the set of diagnoses that survive criterion verification, $\hat{y}(x)$ the committed primary prediction, and $y$ the gold parent diagnosis. Define
 \begin{align}
@@ -202,7 +202,7 @@ The third distinction above---between comorbidity and redundant description---co
 
 This formalization changes how performance should be interpreted. A single Top-1 accuracy cannot distinguish a system that never considered the correct diagnosis from one that considered and verified it but ranked a close alternative first. These are different failures with different remedies: the first calls for better candidate generation or retrieval, the second for better comparative selection or better evidence acquisition. The relevant question is therefore not simply ``how accurate is a system?'' but ``at which stage, if any, does the correct diagnosis disappear?''
 
-Answering that question requires an approach that keeps candidate generation, criterion verification, and primary selection observable as separate quantities on the same cases, rather than collapsed into one classification event. It also requires that the evidence behind a commitment be reviewable: for clinical decision support, the final label is not enough on its own, since the relation among transcript evidence, candidate diagnoses, diagnostic criteria, and the committed output must be inspectable rather than taken on faith. Building and evaluating such an approach for Chinese psychiatric differential diagnosis is therefore the objective, with the aim of locating, rather than assuming away, the stage at which current systems actually fail.
+Answering that question requires an approach that keeps candidate generation, criterion verification, and primary selection observable as separate quantities on the same cases, rather than collapsed into one classification event. It also requires that the evidence behind a commitment be reviewable: for clinical decision support, the final label is not enough on its own, since the relationship among transcript evidence, candidate diagnoses, diagnostic criteria, and the committed output must be inspectable rather than taken on faith. Building and evaluating such an approach for Chinese psychiatric differential diagnosis is therefore the objective, with the aim of locating, rather than assuming away, the stage at which current systems actually fail.
 
 \section{System Summary}
 
@@ -241,7 +241,7 @@ Chapter~\ref{ch:related} reviews prior work on Chinese psychiatric dialogue reso
 
 \section{Overview}
 
-Chapter~\ref{ch:introduction} separated candidate generation, criterion verification, and primary selection as the stages at which a diagnostic system can fail; this chapter surveys prior work against that same separation. Prior work has shown that LLMs can answer psychiatric diagnostic questions, simulate clinical dialogue, support criterion-grounded reasoning, and coordinate multiple agents, but existing systems rarely separate whether the correct diagnosis was generated, whether it survived criterion verification, and whether it was finally selected as the primary, in the sense made precise in Section~\ref{sec:problem-definition}.
+Chapter~\ref{ch:introduction} formulated psychiatric diagnosis from an initial consultation transcript as a stage-wise process in which a system can fail during candidate detection, criterion verification, or committed primary selection. This chapter reviews prior work against that decomposition. Prior work has shown that LLMs can answer psychiatric diagnostic questions, simulate clinical dialogue, support criterion-grounded reasoning, and coordinate multiple agents, but existing systems rarely make observable, on the same cases, whether the correct diagnosis was generated, whether it survived criterion verification, and whether it was finally selected as the primary, in the sense made precise in Section~\ref{sec:problem-definition}.
 
 This chapter is organized by mechanism rather than by chronology, and each section is read against that same problem definition. Psychiatric LLM systems define the clinical task family; medical multi-agent systems define the collaboration design space; interpretability and diagnostic-chain methods define the explanation problem; knowledge-graph and structured-diagnosis work define the future direction the selection bottleneck motivates. Across these lines, a single question recurs: where does a system fail when candidate generation, criterion verification, and primary selection are measured separately? The chapter closes by stating this gap explicitly and posing the research questions it motivates.
 
@@ -288,7 +288,7 @@ This gap motivates the research questions this thesis addresses, pursued through
 \item[RQ1] Can a hybrid LLM--rule architecture produce a ranked psychiatric differential, a committed primary diagnosis, optional comorbidity, and a criterion-level audit trace?
 \item[RQ2] How large is the gap among candidate coverage, criterion verification, and realized primary-selection accuracy?
 \item[RQ3] Can logic re-selection, pairwise comparison, debate, deterministic fusion, learned reranking, calibration, self-consistency, or confidence-weighted aggregation close that selection gap?
-\item[RQ4] Does the same pattern persist across model size, retrieval configuration, external synthetic distribution shift, label-space expansion, and major confusion boundaries?
+\item[RQ4] Does the same pattern persist across model size, retrieval sensitivity and selector-side similarity probes, external synthetic distribution shift, label-space expansion, and major confusion boundaries?
 \item[RQ5] What do benchmark and audit results establish, and what remains unresolved without real-patient data or a transcript-only human reference?
 \end{description}
 
@@ -326,11 +326,11 @@ Retrieval-augmented generation supplements an LLM prompt with relevant examples 
 
 The retrieval component is designed to support candidate breadth without letting frequent disorders dominate the prompt. Each query transcript is first encoded by BGE-M3, a multilingual text-embedding model used here to convert transcripts into dense retrieval vectors~\citep{chen2024bgem3}. These vectors are searched with FAISS, a local vector-similarity indexing library rather than a separate model or managed database~\citep{douze2024faiss}. Instead of returning the globally nearest cases, the retriever returns the top case per candidate disorder class. This class-balanced design keeps rare disorders visible and prevents common depression-like presentations from crowding out alternatives.
 
-Retrieval therefore plays a defined and bounded role in the architecture: it can improve the diagnostician's candidate set by supplying examples and lexical anchors, but it is not treated as a selector. This is what allows the thesis to claim that retrieval improves coverage without claiming that retrieval solves primary selection.
+Retrieval therefore plays a bounded role in the architecture. It can improve candidate coverage by supplying examples and lexical anchors to the diagnostician, but it is not treated as a selector. This distinction is important for the thesis claim: retrieval may help the system preserve the correct diagnosis among its candidates, but it does not by itself solve the problem of committing to the correct primary diagnosis.
 
 \section{Diagnostic Agent}
 
-The diagnostic agent is a local Qwen3-32B-AWQ model---a 32-billion-parameter model compressed via activation-aware weight quantization (AWQ) to run efficiently on local hardware---served with vLLM, an LLM inference engine used here to run the model locally, under the canonical configuration. It reads the transcript and retrieved context, then emits a structured object with the following fields:
+The diagnostic agent is a local Qwen3-32B-AWQ model---a 32-billion-parameter model compressed via activation-aware weight quantization (AWQ) to run efficiently on local hardware---served with vLLM, an LLM inference engine used here to run the model locally under the canonical configuration. It reads the transcript and retrieved context, then emits a structured object with the following fields:
 
 \begin{itemize}
 \item a ranked differential diagnosis list;
@@ -575,7 +575,7 @@ A benchmark-positioning analysis on the public LingxiDiagBench validation cases 
 
 HiED--DA reaches 0.802 Top-3 while its Top-1 is 0.518. The resulting 28.4-point gap is the threshold-free evidence for the selection bottleneck. The correct parent diagnosis is often present in the ranked output even when it is not selected as primary.
 
-A close-cluster recoverability analysis sharpens this interpretation. Under the registered met-ratio gate, 349 of 1000 cases are recoverable misclassifications: the committed Direct-Answer primary is wrong, but the gold parent is reachable within a nearby supported candidate cluster. This corresponds to a $+34.9$ percentage-point upper-bound lift over the deployed Direct-Answer output. The analysis is not a deployed method because it uses gold labels; its purpose is to size the selection opportunity available within the existing candidate pool.
+A close-cluster recoverability analysis sharpens this interpretation. Under the registered met-ratio gate, using the close-cluster scan over the ranked candidate list rather than only the Top-3 entries, 349 of 1000 cases are recoverable misclassifications: the committed Direct-Answer primary is wrong, but the gold parent is reachable within a nearby supported candidate cluster. This corresponds to a $+34.9$ percentage-point upper-bound lift over the deployed Direct-Answer output. The analysis is not a deployed method because it uses gold labels; its purpose is to size the selection opportunity available within the existing candidate pool.
 
 The Top-3 gap and recoverability result rule out a simple generation-only explanation for many errors. The system often has already generated the correct parent. The residual problem is deciding that it should be first.
 
@@ -607,7 +607,7 @@ Intervention & Top-1 & $\Delta$ & Causal/statistical note & Outcome\\
 \midrule
 DA reference & 0.518 & --- & --- & selected\\
 Pairwise comparison & 0.524 & +0.6 pp & independent run & raw\\
-Controlled replay & --- & 0.0 pp & 0 committed changes & not causal\\
+Controlled replay & 0.518 & 0.0 pp & 0 committed changes & not causal\\
 Forced override & 0.443 & -7.5 pp & $p<10^{-9}$ & harmful\\
 Debate & 0.485 & -3.3 pp & no stable gain & negative\\
 Deterministic fusion & 0.514 & -0.4 pp & net flip $-4$ cases & negative\\
@@ -671,21 +671,21 @@ The title deliberately uses \emph{external synthetic evaluation} rather than unq
 
 \begin{table}[htbp]
 \centering
-\caption{Internal reference and external synthetic evaluation summary.}
+\caption{Internal reference and external synthetic evaluation summary. The majority-class baseline is computed separately within each subset as the Top-1 accuracy obtained by always predicting that subset's most frequent gold parent diagnosis.}
 \label{tab:external-summary-rewrite}
 \begin{tabular}{lrrrr}
 \toprule
-Set & $N$ & Top-1 & Majority & Macro-F1\\
+Set & $N$ & Top-1 & Maj. baseline & Macro-F1\\
 \midrule
 Lingxi internal test split & 1000 & 0.518 & --- & 0.178\\
-MDD full & 925 & 0.5805 & 0.4432 & 0.2287\\
+MDD full (checker-covered) & 925 & 0.5805 & 0.4432 & 0.2287\\
 MDD in-scope & 878 & 0.6116 & 0.4670 & 0.2649\\
 MDD F32/F41 & 490 & 0.9224 & 0.7837 & 0.9055\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\Cref{tab:external-summary-rewrite} places the external views against the internal reference. The MDD-5k external run does not use a same-corpus case-index retriever, so it should be interpreted as ontology/checker-supported transcript transfer rather than evidence that case retrieval transfers across corpora. Within the selected scope, Top-1 reaches 0.6116. On the F32/F41 binary subset, accuracy reaches 0.9224, indicating that coarse depression--anxiety discrimination transfers strongly across this synthetic distribution shift. This offers a cross-corpus contrast to the internal F41-to-F32 confusion identified in \Cref{fig:confusion-thesis-rewrite}: the distinction that is hardest to resolve within the internal test split's twelve-class space is comparatively easy when isolated as a binary task on an external corpus, which is consistent with the selection-bottleneck interpretation that the difficulty lies in choosing among plausible candidates rather than in recognizing coarse category membership.
+\Cref{tab:external-summary-rewrite} places the external views against the internal reference. The \emph{MDD full} row denotes the checker-covered external subset rather than all 5,000 source cases. The MDD-5k external run does not use a same-corpus case-index retriever, so it should be interpreted as ontology/checker-supported transcript transfer rather than evidence that case retrieval transfers across corpora. Within the selected scope, Top-1 reaches 0.6116. On the F32/F41 binary subset, accuracy reaches 0.9224, indicating that coarse depression--anxiety discrimination transfers strongly across this synthetic distribution shift. This offers a cross-corpus contrast to the internal F41-to-F32 confusion identified in \Cref{fig:confusion-thesis-rewrite}: the distinction that is hardest to resolve within the internal test split's twelve-class space is comparatively easy when isolated as a binary task on an external corpus, which is consistent with the selection-bottleneck interpretation that the difficulty lies in choosing among plausible candidates rather than in recognizing coarse category membership.
 
 The same table also shows the remaining limitation. Multi-way primary selection remains harder than binary F32/F41 discrimination, and the external performance is shaped by class distribution and scope. The result is therefore neither a simple success nor a failure. It shows useful synthetic transfer for some distinctions while preserving the broader conclusion that fine-grained primary selection remains difficult.
 
@@ -707,13 +707,14 @@ This finding reinforces the thesis's main decomposition. Adding labels to the ou
 \centering
 \caption{Lexical-selector transfer. A TF--IDF selector fits each corpus in domain but does not transfer across corpora.}
 \label{tab:lexical-transfer-rewrite}
-\begin{tabular}{llcl}
+\begin{tabular}{llrcl}
 \toprule
-Training corpus & Evaluation corpus & Top-1 & Interpretation\\
+Training corpus & Evaluation corpus & $N$ & Top-1 & Interpretation\\
 \midrule
-LingxiDiag & LingxiDiag & 0.610 & in-domain lexical fit\\
-LingxiDiag & MDD-5k & 0.049 & transfer collapse\\
-MDD-5k & MDD-5k & 0.692 & corpus-specific fit recovers\\
+LingxiDiag & LingxiDiag & 1000 & 0.610 & in-domain lexical fit\\
+LingxiDiag & MDD-5k & 185 & 0.049 & transfer collapse\\
+MDD-5k & LingxiDiag & 1000 & 0.485 & reverse-transfer degradation\\
+MDD-5k & MDD-5k & 185 & 0.692 & corpus-specific fit recovers\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -745,7 +746,7 @@ Deterministic fusion & 0.4714 & $-0.0995$ & $2.3\times10^{-14}$\\
 \end{tabular}
 \end{table}
 
-The repair-battery Direct-Answer baseline (0.5708) is drawn from a dedicated matched-batch run in which Direct-Answer and every tested repair method share an identical case selection and ordering, differing only in the finalization or intervention policy applied; this shared-upstream design is what permits the paired McNemar tests reported in this table. It is therefore distinct from the canonical external-summary run (0.5805) reported in \Cref{tab:external-summary-rewrite}, which separately scores the deployed system for corpus-level positioning. Both runs evaluate the same 925-case MDD-5k corpus; the difference reflects separate matched-batch versus canonical-positioning runs rather than a scoring inconsistency.
+The repair-battery Direct-Answer baseline (0.5708) is drawn from a dedicated matched-batch run in which Direct-Answer and every tested repair method share an identical case selection and ordering, differing only in the finalization or intervention policy applied; this shared-upstream design is what permits the paired McNemar tests reported in this table. It is therefore distinct from the canonical external-summary run (0.5805) reported in \Cref{tab:external-summary-rewrite}, which separately scores the deployed system for corpus-level positioning. Both runs evaluate the same 925-case MDD-5k corpus; the difference reflects separate matched-batch versus canonical-positioning runs rather than a scoring inconsistency. Reported deltas are computed from full-precision run artifacts before rounding the displayed Top-1 values, so a delta may differ by a thousandth from what the rounded Top-1 figures alone would suggest.
 
 \Cref{tab:mdd-repair-rewrite} reproduces the internal pattern on the external distribution. NtS significantly degrades Top-1, showing again that verification-derived finalization does not solve primary selection. Pairwise differential reasoning leaves the committed primary unchanged. Self-consistency and CISC show small nominal increases that are not statistically significant. The frozen override rule transfers as a significant loss.
 
@@ -895,7 +896,7 @@ The distinction is especially important in psychiatric transcripts. Several diso
 
 NtS demonstrates this point causally. Re-selecting from the verified set improves diagnostic-set control but lowers Top-1. Verification therefore contributes auditability and set calibration, not primary selection. This does not make verification useless; it defines what verification is good for.
 
-A complementary case-level autopsy asks a narrower question: in the specific cases where the logic engine excludes the gold parent from the confirmed set, what does the gold disorder's own checker record show? On the internal test split, restricting to cases with a gold-code checker entry, insufficient evidence accounts for approximately 46--50\% of the gold disorder's own criterion states, compared with roughly 28--30\% not-met and 23--24\% met; the exact share depends on how multi-label gold cases are counted, and this range reflects that sensitivity rather than a single precisely reproduced figure. On the external MDD-5k corpus, the same autopsy is better determined and converges tightly across independent computations at approximately 62\% insufficient evidence, 22\% met, and 15\% not-met. In both corpora, not-met is smaller than insufficient evidence: when verification wrongly excludes the correct diagnosis, the checker is rarely contradicting it outright. More often, the transcript simply does not contain the fact the checker needed to confirm it. This is consistent with the missing-exclusion-information archetype (Chapter~\ref{ch:error}) and sharpens its implication: the remedy for these specific failures is unlikely to be a stricter or looser confirmation threshold, since the limiting factor is absent evidence rather than contradicted evidence. It points instead toward evidence acquisition--asking the transcript for the missing fact--as a more direct response than re-tuning the verification gate.
+A complementary case-level autopsy asks a narrower question: in the specific cases where the logic engine excludes the gold parent from the confirmed set, what does the gold disorder's own checker record show? On the internal test split, when the analysis is restricted to cases whose gold diagnosis has a corresponding checker-bank entry, insufficient evidence accounts for approximately 46--50\% of the gold disorder's own criterion states, compared with roughly 28--30\% not-met and 23--24\% met; the exact share depends on how multi-label gold cases are counted, and this range reflects that sensitivity rather than a single precisely reproduced figure. On the external MDD-5k corpus, the same autopsy is better determined and converges tightly across independent computations at approximately 62\% insufficient evidence, 22\% met, and 15\% not-met. In both corpora, not-met is smaller than insufficient evidence: when verification wrongly excludes the correct diagnosis, the checker is rarely contradicting it outright. More often, the transcript simply does not contain the fact the checker needed to confirm it. This is consistent with the missing-exclusion-information archetype (Chapter~\ref{ch:error}) and sharpens its implication: the remedy for these specific failures is unlikely to be a stricter or looser confirmation threshold, since the limiting factor is absent evidence rather than contradicted evidence. It points instead toward evidence acquisition--asking the transcript for the missing fact--as a more direct response than re-tuning the verification gate.
 
 \section{Why Simple Repairs Fail}
 
@@ -1013,7 +1014,7 @@ The main empirical result is a stage-wise mismatch. Candidate coverage and verif
 
 \item[RQ3] No tested repair provides a stable, causally attributable improvement over Direct-Answer on the internal test split. Logic re-selection, pairwise comparison, debate, deterministic fusion, learned reranking, calibration, self-consistency, and confidence-weighted aggregation each fail to close the gap under the tested conditions.
 
-\item[RQ4] The pattern persists across model sizes, retrieval configurations, external synthetic distribution shift, scope analysis, and multiple repair families. The external evidence supports useful transfer for some distinctions but does not eliminate the primary-selection bottleneck.
+\item[RQ4] The pattern persists across model sizes, retrieval sensitivity and selector-side similarity probes, external synthetic distribution shift, scope analysis, and multiple repair families. The external evidence supports useful transfer for some distinctions but does not eliminate the primary-selection bottleneck.
 
 \item[RQ5] The evidence supports an auditable research architecture and a failure-localization claim; Chapter~\ref{ch:limitations} details what this does and does not establish.
 \end{description}
@@ -1201,7 +1202,7 @@ A help-seeker describes roughly two weeks of persistent low mood with loss of in
 
 \section{Active Candidate Profile and Per-Criterion Evaluation}
 
-The active profile evaluates the candidate disorders against their operational criteria. For the two leading candidates, the per-criterion record assigns each criterion one of three states---met, not-met, or insufficient-evidence---with a grounding span and a confidence (\cref{tab:worked-f32,tab:worked-f41}).
+The active profile evaluates the candidate disorders against their operational criteria. For the two leading candidates, the per-criterion record assigns each criterion one of three states---\texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_evidence}---with a grounding span and a confidence (\cref{tab:worked-f32,tab:worked-f41}).
 
 \begin{table}[htbp]
 \centering
@@ -1211,15 +1212,15 @@ The active profile evaluates the candidate disorders against their operational c
 \toprule
 Criterion & Status & Confidence\\
 \midrule
-Depressed mood & met & 0.88\\
-Loss of interest or pleasure & met & 0.85\\
-Sleep disturbance & met & 0.82\\
-Fatigue or loss of energy & met & 0.80\\
-Diminished concentration & met & 0.78\\
-Feelings of worthlessness & met & 0.71\\
-Appetite or weight change & insufficient-evidence & 0.40\\
-Psychomotor change & insufficient-evidence & 0.38\\
-Suicidal ideation & not-met & 0.90\\
+Depressed mood & \texttt{met} & 0.88\\
+Loss of interest or pleasure & \texttt{met} & 0.85\\
+Sleep disturbance & \texttt{met} & 0.82\\
+Fatigue or loss of energy & \texttt{met} & 0.80\\
+Diminished concentration & \texttt{met} & 0.78\\
+Feelings of worthlessness & \texttt{met} & 0.71\\
+Appetite or weight change & \texttt{insufficient\_evidence} & 0.40\\
+Psychomotor change & \texttt{insufficient\_evidence} & 0.38\\
+Suicidal ideation & \texttt{not\_met} & 0.90\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1232,14 +1233,14 @@ Suicidal ideation & not-met & 0.90\\
 \toprule
 Criterion & Status & Confidence\\
 \midrule
-Excessive anxiety and worry & met & 0.84\\
-Difficulty controlling worry & met & 0.80\\
-Restlessness or feeling keyed up & met & 0.76\\
-Fatigue & met & 0.80\\
-Diminished concentration & met & 0.78\\
-Muscle tension & met & 0.73\\
-Irritability & insufficient-evidence & 0.42\\
-Duration of at least six months & insufficient-evidence & 0.35\\
+Excessive anxiety and worry & \texttt{met} & 0.84\\
+Difficulty controlling worry & \texttt{met} & 0.80\\
+Restlessness or feeling keyed up & \texttt{met} & 0.76\\
+Fatigue & \texttt{met} & 0.80\\
+Diminished concentration & \texttt{met} & 0.78\\
+Muscle tension & \texttt{met} & 0.73\\
+Irritability & \texttt{insufficient\_evidence} & 0.42\\
+Duration of at least six months & \texttt{insufficient\_evidence} & 0.35\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1250,7 +1251,7 @@ Both candidates satisfy the same core-total confirmation rule in the ontology: a
 
 The recorded output therefore contains the committed primary (F32), the secondary diagnosis (F41), the ranked confirmed set, the full per-criterion states and grounding spans above, the logic-confirmed codes, and the decision trace that names the rule producing each placement. A reviewer can check each layer independently: whether each grounding span actually supports its criterion, whether the criterion states are clinically plausible, and whether the placement rule was applied correctly.
 
-The example also exposes the selection bottleneck in its concrete form. Nothing in the detection or verification record is wrong: both disorders are genuinely supported, both are confirmed, and the cited evidence holds. What decides primacy is the comparison between two confirmed candidates, and the criterion that would settle it---whether the worry has persisted long enough, and with what onset relative to the mood disturbance, to make anxiety rather than depression primary---is recorded as insufficient-evidence because the account does not contain it. The commitment to depression as primary thus rests on information the transcript never establishes, which is exactly the configuration in which the aggregate error analysis shows the dominant confusions arise. The trace does not resolve the ambiguity, but it makes the basis of the commitment fully visible, which is the property the auditable design is intended to provide.
+The example also exposes the selection bottleneck in its concrete form. Nothing in the detection or verification record is wrong: both disorders are genuinely supported, both are confirmed, and the cited evidence holds. What decides primacy is the comparison between two confirmed candidates, and the criterion that would settle it---whether the worry has persisted long enough, and with what onset relative to the mood disturbance, to make anxiety rather than depression primary---is recorded as \texttt{insufficient\_evidence} because the account does not contain it. The commitment to depression as primary thus rests on information the transcript never establishes, which is exactly the configuration in which the aggregate error analysis shows the dominant confusions arise. The trace does not resolve the ambiguity, but it makes the basis of the commitment fully visible, which is the property the auditable design is intended to provide.
 
 
 \chapter{Experiment Inventory and Inclusion Decisions}
