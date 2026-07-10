@@ -430,6 +430,36 @@ MDD-5k provides a broader synthetic disorder distribution and different dialogue
 
 Both corpora are synthetic. Synthetic dialogue resources make controlled evaluation possible when real clinical data are scarce or sensitive; LLM role-play and reconstruction frameworks can generate large datasets for development and benchmarking~\citep{wu2024callm}. However, synthetic data may encode generator priors, simplify comorbidity, omit nonverbal context, and fail to capture local clinical variation, which qualifies every quantitative result reported later. The corpora are used for method development and controlled ablation because they allow fixed splits, repeated paired comparisons, and explicit label projection, not as a substitute for clinical validation; the planned real-patient arm and a transcript-only human reference are future requirements, not achieved results, which keeps the method contribution separable from any claim about clinical readiness.
 
+\Cref{tab:class-distribution} reports the gold parent-class support underlying every macro- and weighted-F1 figure in this thesis, across the internal test split and both MDD-5k views.
+
+\begin{table}[htbp]
+\centering
+\caption{Gold parent-class distribution across the internal test split and the external MDD-5k corpus. Internal counts are the frozen headline held-out set (fingerprint \texttt{317a7633a339ae9a}); MDD-5k in-scope/out-of-scope counts are the checker-covered corpus split by active-profile membership. The out-of-scope population is by construction entirely \emph{Others} after parent projection; its own fifteen raw parent codes (largest: F50=7, G47=5, F23/F30/F34/F93=4 each) are reported in \Cref{ch:external}.}
+\label{tab:class-distribution}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrr}
+\toprule
+Class & Internal test split ($N{=}1000$) & MDD-5k in-scope ($N{=}878$) & MDD-5k out-of-scope ($N{=}47$)\\
+\midrule
+F20 & 5 & 3 & 0\\
+F31 & 9 & 11 & 0\\
+F32 & 365 & 410 & 0\\
+F39 & 60 & 64 & 0\\
+F41 & 358 & 313 & 0\\
+F42 & 25 & 13 & 0\\
+F43 & 11 & 7 & 0\\
+F45 & 8 & 7 & 0\\
+F51 & 36 & 18 & 0\\
+F98 & 30 & 24 & 0\\
+Z71 & 8 & 8 & 0\\
+Others & 85 & 0 & 47\\
+\midrule
+Sum & 1000 & 878 & 47\\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
 \section{Label Projection and Metrics}
 \label{sec:gold-conventions}
 
@@ -439,7 +469,7 @@ For each transcript the system emits one committed primary parent diagnosis, an 
 \mathrm{F42},\mathrm{F43},\mathrm{F45},\mathrm{F51},\mathrm{F98},
 \mathrm{Z71},\mathrm{Others}\}.
 \]
-Raw ICD-10 subcodes are projected deterministically to this parent space before scoring. Codes whose parents are outside the active target set are folded to \emph{Others} unless an external scope-expanded configuration explicitly activates them. The selected benchmark profile activates fourteen disorder entries, including subtype-level entries for F41 and F43, while scoring after parent projection into the twelve-class parent space. Thus, ``fourteen disorders'' refers to active diagnostic entries, whereas ``twelve classes'' refers to the scored label space. This distinction prevents a granularity decision from being confused with diagnostic discrimination.
+Raw ICD-10 subcodes are projected deterministically to this parent space before scoring. Codes whose parents are outside the active target set are folded to \emph{Others} unless an external scope-expanded configuration explicitly activates them. The selected benchmark profile activates fourteen disorder entries, including subtype-level entries for F41 and F43, while scoring after parent projection into the twelve-class parent space. Thus, ``fourteen disorders'' refers to active diagnostic entries, whereas ``twelve classes'' refers to the scored label space. This distinction prevents a granularity decision from being confused with diagnostic discrimination. The full active profile, with per-entry criterion counts and confirmation rules, is listed in \Cref{app:active-profile}.
 
 Multiple gold parents are retained for official multilabel metrics. For case $x$, let $G(x)\subseteq\mathcal{C}$ denote the deduplicated gold parent set. The committed primary prediction is projected to $p_1(x)$, and the canonical ranked list is formed by placing the committed primary first and then appending deduplicated ranked candidates.
 
@@ -1503,6 +1533,43 @@ treats disposition/out-of-scope cases as unrecoverable and the main
 system reports a committed primary rather than a broad multilabel
 hit alone.
 
+\chapter{Active Diagnostic Profile and Operationalized ICD-10 Criteria}
+\label{app:active-profile}
+
+This appendix lists the fourteen active disorder entries of the selected benchmark profile (\texttt{lingxi\_14}), read directly from the frozen ontology configuration (\texttt{src/\allowbreak{}culturedx/\allowbreak{}ontology/\allowbreak{}data/\allowbreak{}icd10\_criteria.json}, \texttt{disorder\_sets.py}) used by the canonical runs. F41 and F43 each contribute multiple subtype-level entries that share a parent under scoring (\Cref{sec:gold-conventions}); every other parent maps one-to-one to a single active entry.
+
+\begingroup
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{p{2.3cm}p{1.2cm}p{3.1cm}p{1.4cm}p{6.2cm}}
+\caption{Active diagnostic profile: entry, ICD-10 parent, criterion count, and confirmation rule, as configured in the frozen ontology.}
+\label{tab:active-profile}\\
+\toprule
+Active entry & Parent & Name & \# criteria & Confirmation rule (as configured)\\
+\midrule
+\endfirsthead
+\toprule
+Active entry & Parent & Name & \# criteria & Confirmation rule (as configured)\\
+\midrule
+\endhead
+F20 & F20 & Schizophrenia & 8 & $\geq$1 first-rank symptom, or $\geq$2 other symptoms; duration $\geq$1 month\\
+F31 & F31 & Bipolar affective disorder & 8 & $\geq$2 episodes, at least one manic\\
+F32 & F32 & Depressive episode & 11 & $\geq$2 core symptoms and $\geq$4 total symptoms; duration $\geq$2 weeks\\
+F39 & F39 & Unspecified mood disorder & 6 & $\geq$3 total symptoms met\\
+F41.0 & F41 & Panic disorder & 5 & $\geq$3 attacks/month, $\geq$4 symptoms per attack\\
+F41.1 & F41 & Generalized anxiety disorder & 5 & $\geq$4 symptoms; duration $\geq$6 months\\
+F41.2 & F41 & Mixed anxiety and depressive disorder & 4 & $\geq$2 total symptoms; both anxious and depressive criteria required\\
+F42 & F42 & Obsessive-compulsive disorder & 4 & duration $\geq$2 weeks; distress or functional impairment required\\
+F43.1 & F43 & Post-traumatic stress disorder & 4 & trauma exposure required; onset within 6 months\\
+F43.2 & F43 & Adjustment disorders & 5 & onset within 1 month of stressor; duration $\leq$6 months\\
+F45 & F45 & Somatoform disorders & 5 & $\geq$2 somatic symptom groups; duration $\geq$2 years\\
+F51 & F51 & Nonorganic sleep disorders & 4 & $\geq$3 nights/week; duration $\geq$1 month\\
+F98 & F98 & Other behavioral and emotional disorders & 6 & $\geq$3 total symptoms met\\
+Z71 & Z71 & Counseling & 3 & $\geq$2 total symptoms; exclusion of a diagnosable disorder required\\
+\bottomrule
+\end{longtable}
+\endgroup
+
+The fourteen active entries collapse to eleven distinct ICD-10 parents under scoring (F41.0/F41.1/F41.2 share F41; F43.1/F43.2 share F43), which together with the \emph{Others} bucket form the twelve-class scored label space of \Cref{sec:gold-conventions}.
 
 \renewcommand{\bibname}{References} % IEEE 慣例與 CCU「參考文獻」對齊
 \clearpage\phantomsection
