@@ -96,22 +96,22 @@ Common Mental Disorders in the Taiwanese Context\par}
 \addcontentsline{toc}{chapter}{中文摘要}
 初診精神科晤談逐字稿中的鑑別診斷，本質上是一種在證據不完整條件下進行的比較式決策。多個疾病診斷可能同時與同一份逐字稿相容，但最終通常只能有一個被判定為主診斷。然而，用以區分病程、發病時序、排除病因與共病關係等關鍵鑑別資訊，未必會在單次初診晤談中被完整引出。大型語言模型雖然能流暢地閱讀並理解這類逐字稿，近期也已有大量研究嘗試將其應用於精神科診斷任務，但語言理解的流暢性並不等同於可靠的鑑別診斷能力。
 
-既有評測呈現出一致的落差：模型在粗粒度分類任務上往往表現良好，但一旦進入細粒度的疾病層級鑑別診斷，準確率便會大幅下降。這個落差促使我們提出一套可稽核的系統架構，用以明確定位錯誤發生於診斷流程中的哪一個階段。模型可能生成一個合理且受到診斷準則支持的候選疾病，卻仍未能將其正確選為主診斷。候選診斷生成、依準則驗證，以及主診斷選擇三者之間的差異，通常會被單一準確率指標所掩蓋，使研究者難以判斷系統究竟在哪個環節失敗。
+既有評測呈現出一致的落差：模型在粗粒度分類任務上往往表現良好，但一旦進入細粒度的疾病層級鑑別診斷，準確率便會大幅下降。這個落差促使本研究提出一套可稽核的系統架構，用以明確定位錯誤發生於診斷流程中的哪一個階段。模型可能生成一個合理且受到診斷準則支持的候選疾病，卻仍未能將其正確選為主診斷。候選診斷生成、依準則驗證，以及主診斷選擇三者之間的差異，通常會被單一準確率指標所掩蓋，使研究者難以判斷系統究竟在哪個環節失敗。
 
-為了解決這個問題，我們提出一套面向中文精神科初診對話逐字稿的鑑別診斷框架，將候選診斷偵測、ICD-10 逐準則驗證，以及主診斷選擇維持為可分別觀察的階段，而非將整個流程簡化為單一分類事件。同時，系統會在每次預測時輸出逐準則的稽核軌跡，使診斷推論過程能夠被檢視與分析。本研究中的系統並非宣稱已完成臨床驗證的自主診斷工具，而是定位為一個研究工具，用以分析在逐字稿條件下，精神科診斷流程究竟在哪一個階段發生失敗。
+為了解決這個問題，本研究提出 HiED——一套面向中文精神科初診對話逐字稿的鑑別診斷框架，將候選診斷偵測、ICD-10 逐準則驗證，以及主診斷選擇維持為可分別觀察的階段，而非將整個流程簡化為單一分類事件。同時，系統會在每次預測時輸出逐準則的稽核軌跡，使診斷推論過程能夠被檢視與分析。本研究中的系統並非宣稱已完成臨床驗證的自主診斷工具，而是定位為一個研究工具，用以分析在逐字稿條件下，精神科診斷流程究竟在哪一個階段發生失敗。
 
-因此，本論文的主要貢獻在於提出一套可重現的失敗定位框架，並提供證據指出，在僅使用初診逐字稿進行的精神科大型語言模型診斷任務中，主診斷選擇本身構成一個核心瓶頸。換言之，在本研究設定下，系統的主要限制不僅在於能否生成合理的候選診斷，而更在於能否在多個皆具一定準則支持的候選之間，進行有效比較並判定最適合作為主診斷者。
+因此，本論文的主要貢獻在於提出一套可重現的失敗定位框架，並提供證據指出，在僅使用初診逐字稿進行的精神科大型語言模型診斷任務中，主診斷選擇本身構成一個核心瓶頸。換言之，在本研究之合成逐字稿設定下，系統的主要限制不僅在於能否生成合理的候選診斷，而更在於能否在多個皆具一定準則支持的候選之間，進行有效比較並判定最適合作為主診斷者。最後需說明，本文題目所稱之臺灣脈絡，指涉系統之設計動機與預期部署場域（繁體中文互動、本地端推論、面向臨床人員之稽核），而非已完成之臺灣真實病人臨床驗證；本文所有量化結果均來自合成中文逐字稿語料，真實病人之臨床驗證為後續工作。
 
 \noindent\textbf{關鍵詞：}大型語言模型、多代理系統、精神科鑑別診斷、臨床決策支援、ICD-10、可稽核人工智慧
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
-Differential diagnosis from an initial-consultation psychiatric transcript is a comparative decision made under incomplete evidence. Multiple disorders may be compatible with the same transcript, yet only one can typically be judged the primary diagnosis. The key discriminating information used to distinguish illness course, onset timing, exclusionary causes, and comorbidity relationships may not be fully elicited within a single initial consultation. Large language models can read such transcripts fluently, and recent research has applied them to psychiatric diagnostic tasks, but fluency in language understanding does not equate to reliable differential diagnostic ability.
+Differential diagnosis from an initial-consultation psychiatric transcript is a comparative decision under incomplete evidence. Multiple disorders may be compatible with the same transcript, yet only one can typically be judged the primary diagnosis. Key discriminating information---illness course, onset timing, exclusionary causes, and comorbidity relationships---may not be fully elicited within a single initial consultation. Large language models can read such transcripts fluently, and recent research has applied them to psychiatric diagnostic tasks, but linguistic fluency does not equate to reliable differential diagnostic ability.
 
-Existing evaluations show a consistent gap: models tend to perform well on coarse-grained classification tasks, but accuracy drops sharply once the task requires fine-grained, disorder-level differential diagnosis. This gap motivates an auditable system architecture that can locate the stage at which a diagnostic error occurs. A model may generate a plausible disorder that is supported by diagnostic criteria, yet still fail to select it as the primary diagnosis. The distinction among candidate-diagnosis generation, criterion-based verification, and primary-diagnosis selection is usually obscured by a single accuracy metric.
+Existing evaluations show a consistent gap: models perform well on coarse-grained classification, but accuracy drops sharply on fine-grained, disorder-level differential diagnosis. This gap motivates an auditable system architecture that can locate the stage at which a diagnostic error occurs. A model may generate a plausible disorder supported by diagnostic criteria, yet fail to select it as the primary diagnosis. The distinction among candidate-diagnosis generation, criterion-based verification, and primary-diagnosis selection is usually obscured by a single accuracy metric.
 
-To address this problem, we propose a differential-diagnosis framework for Chinese psychiatric initial-consultation transcripts that keeps candidate-diagnosis detection, ICD-10 criterion-by-criterion verification, and primary-diagnosis selection as separately observable stages, rather than reducing the process to a single classification event. The system also outputs a criterion-level audit trace with every prediction, allowing the diagnostic inference process to be examined. It does not claim to be a clinically validated autonomous diagnostic tool; rather, it is positioned as a research instrument for analyzing where transcript-based psychiatric diagnosis fails.
+To address this problem, we propose HiED, a differential-diagnosis framework for Chinese psychiatric initial-consultation transcripts that keeps candidate-diagnosis detection, ICD-10 criterion-by-criterion verification, and primary-diagnosis selection as separately observable stages, rather than reducing the process to a single classification event. The system outputs a criterion-level audit trace with every prediction, allowing the diagnostic inference to be examined. It is not a clinically validated autonomous diagnostic tool, but a research instrument for analyzing where transcript-based psychiatric diagnosis fails.
 
-The main contribution of this thesis is therefore a reproducible failure-localization framework, together with evidence that primary-diagnosis selection constitutes a core bottleneck in psychiatric large-language-model diagnosis using only initial-consultation transcripts. Under this study's setting, the system's primary limitation lies not merely in whether it can generate plausible candidate diagnoses, but more critically in whether it can compare among multiple criterion-supported candidates and determine which is best suited as the primary diagnosis.
+The main contribution is therefore a reproducible failure-localization framework, with evidence that primary-diagnosis selection constitutes a core bottleneck in psychiatric large-language-model diagnosis using only initial-consultation transcripts. Under this study's synthetic transcript-only setting, the system's primary limitation lies not merely in whether it can generate plausible candidate diagnoses, but more critically in whether it can compare among multiple criterion-supported candidates and determine which is best suited as the primary diagnosis.
 
 \noindent\textbf{Keywords:} Large language models, multi-agent systems, psychiatric differential diagnosis, clinical decision support, ICD-10, auditable AI
 
@@ -150,13 +150,10 @@ encouragement.
 AI & Artificial intelligence\\
 CISC & Confidence-informed self-consistency\\
 DA & Direct-Answer\\
-DDx & Differential diagnosis\\
 ICD-10 & International Classification of Diseases, Tenth Revision\\
 LLM & Large language model\\
-MAS & Multi-agent system\\
 NtS & Nominate-then-Select\\
 DTV & Diagnose-then-Verify\\
-OOT & Out of target scope\\
 BGE-M3 & Multilingual embedding/retrieval model (BAAI General Embedding, M3)\\
 FAISS & Facebook AI Similarity Search (vector-index library)\\
 RAG & Retrieval-augmented generation\\
@@ -181,7 +178,7 @@ Psychiatric diagnosis based on an initial psychiatric consultation transcript is
 
 Large language models offer a natural interface for this setting because they can process free-form clinical dialogue, summarize symptom evidence, generate differential diagnoses, and produce structured outputs. Prior work in mental-health applications has evaluated LLMs on examinations, clinical vignettes, consultation scenarios, screening tasks, and dialogue generation. However, existing evaluations reveal a consistent limitation: while performance is often strong for coarse-grained classification, it declines substantially when the task requires fine-grained, disorder-level differential diagnosis. Moreover, fluent explanations do not necessarily imply reliable diagnostic discrimination. A model-generated rationale may appear coherent without faithfully reflecting the reasoning process that led to the answer. Therefore, a system that identifies a plausible disorder has not necessarily solved the diagnostic task.
 
-The Taiwanese outpatient first-visit setting further motivates the intended deployment context. Common mental disorders may present through somatic complaints rather than explicit mood-related language~\citep{ryder2008somatic}; consultations may be brief; and patients may shift among Mandarin, Taiwanese registers, and institution-specific clinical phrasing. This context calls for a diagnostic aid that can operate locally, handle Traditional Chinese input, and expose the evidence supporting its predictions rather than returning an opaque diagnostic label. It also makes the coarse-to-fine diagnostic gap practically important: when evidence is incomplete and locally phrased, the central question is not only whether a system can name plausible disorders, but whether it can preserve and prioritize the correct diagnosis through the differential process.
+The Taiwanese outpatient first-visit setting further motivates the intended deployment context. Common mental disorders may present through somatic complaints rather than explicit mood-related language~\citep{ryder2008somatic}; consultations may be brief; and patients may shift among Mandarin, Taiwanese registers, and institution-specific clinical phrasing. This context calls for a diagnostic aid that can operate locally, handle Traditional Chinese input, and expose the evidence supporting its predictions rather than returning an opaque diagnostic label. It also makes the coarse-to-fine diagnostic gap practically important: when evidence is incomplete and locally phrased, the central question is not only whether a system can name plausible disorders, but whether it can preserve and prioritize the correct diagnosis through the differential process. This context motivates the intended deployment setting; the empirical evaluation in this thesis, however, remains limited to synthetic Chinese transcript corpora rather than real Taiwanese patient data (\Cref{ch:limitations}).
 
 \section{Problem Definition and Motivation}
 \label{sec:problem-definition}
@@ -408,7 +405,7 @@ HiED separates the diagnostic pipeline into stages that can be measured and chal
 
 Two synthetic Chinese psychiatric dialogue corpora are used, each assigned a distinct evaluation role: LingxiDiagBench for in-domain development and the frozen internal test split, and MDD-5k as an external synthetic distribution-shift corpus.
 
-LingxiDiagBench provides synthetic, EMR-aligned Chinese psychiatric consultation dialogues with multiple task granularities~\citep{xu2026lingxidiagbench}. Its reported evaluation shows a coarse-to-fine difficulty gradient: the evaluated LLMs reached 92.3\% on binary depression--anxiety classification but only 28.5\% on the full 12-way differential diagnosis, where ``12-way'' means choosing among twelve scored parent diagnosis classes after parent-level label projection, as defined in \Cref{sec:gold-conventions}. Dynamic consultation often underperformed static evaluation. It nominally contains 16,000 dialogues; because the official 1,000-case test split was unavailable at freeze, the accessible corpus comprises 15,000 case IDs, assigned three disjoint on-disk roles (\Cref{tab:data-roles-rewrite}):
+LingxiDiagBench provides synthetic, EMR-aligned Chinese psychiatric consultation dialogues with multiple task granularities~\citep{xu2026lingxidiagbench}. Its reported evaluation shows a coarse-to-fine difficulty gradient: the evaluated LLMs reached 92.3\% on binary depression--anxiety classification but only 28.5\% on the full 12-way differential diagnosis, where ``12-way'' means choosing among twelve scored parent diagnosis classes after parent-level label projection, as defined in \Cref{sec:gold-conventions}. Dynamic consultation often underperformed static evaluation. It nominally contains 16,000 dialogues; because the official 1,000-case test split was unavailable at freeze, the accessible corpus comprises 15,000 cases, assigned three disjoint on-disk roles (\Cref{tab:data-roles-rewrite}):
 
 \begin{table}[htbp]
 \centering
@@ -450,17 +447,19 @@ The thesis reports three gold conventions when appropriate. Any-gold Top-1 credi
 
 Building on these conventions, Top-1 measures commitment. It is correct when the committed primary parent appears in the gold parent set:
 \[
-\mathrm{Top\text{-}1}=\frac{1}{N}\sum_x \mathbf{1}[p_1(x)\in G(x)].
+\mathrm{Top\text{-}1}=\frac{1}{N}\sum_x \mathbb{1}[p_1(x)\in G(x)].
 \]
 Top-3 measures recoverable coverage. Let $R_3(x)$ be the deduplicated top-three parent list with the committed primary first. Then
 \[
-\mathrm{Top\text{-}3}=\frac{1}{N}\sum_x \mathbf{1}[R_3(x)\cap G(x)\neq\varnothing].
+\mathrm{Top\text{-}3}=\frac{1}{N}\sum_x \mathbb{1}[R_3(x)\cap G(x)\neq\varnothing].
 \]
 Exact Match measures set calibration:
 \[
-\mathrm{Exact}=\frac{1}{N}\sum_x \mathbf{1}[M(x)=G(x)],
+\mathrm{Exact}=\frac{1}{N}\sum_x \mathbb{1}[M(x)=G(x)],
 \]
 where $M(x)$ is the deduplicated multilabel prediction set.
+
+These multilabel definitions generalize the single-parent formalization of Section~\ref{sec:problem-definition} rather than replacing it, under the any-gold convention introduced above. $D_k(x)=\mathbb{1}[y\in C_k(x)]$ generalizes to $\mathbb{1}[G(x)\cap C_k(x)\neq\varnothing]$, which the Top-3 definition above instantiates with $C_3(x)\approx R_3(x)$; $S(x)=\mathbb{1}[\hat y(x)=y]$ generalizes to $\mathbb{1}[p_1(x)\in G(x)]$, which is exactly the Top-1 definition above; and $R(x)=\mathbb{1}[y\in V^{+}(x)]$ generalizes to $\mathbb{1}[G(x)\cap V^{+}(x)\neq\varnothing]$, reported later as Gold-in-confirmed (Appendix~\ref{app:metrics}). Later chapters therefore write $\bar D_3$, $\bar R$, and $\bar S$ for the sample means of these multilabel-generalized quantities, identifying them respectively with Top-3, Gold-in-confirmed, and Top-1.
 
 Macro-F1 and weighted-F1 are computed over the twelve-class multilabel indicators. Macro-F1 weights classes equally and is sensitive to rare-class failure. Weighted-F1 weights by gold support and is more influenced by frequent labels. Reporting both prevents an apparently moderate aggregate result from hiding poor rare-class recall.
 
@@ -579,6 +578,22 @@ HiED--DA & \textbf{0.518} & \textbf{0.802} & 0.409 & 0.178 & 0.434\\
 \end{adjustbox}
 \end{table}
 
+\begin{table}[htbp]
+\centering
+\caption{95\% Wilson confidence intervals for the headline Top-1 and Top-3 point estimates in \Cref{tab:ladder-rewrite} ($N=1000$). HiED--NtS and HiED--DA share the same ranked candidate list under the frozen protocol (\Cref{sec:problem-definition}), so their Top-3 point estimate and interval coincide.}
+\label{tab:ladder-ci}
+\begin{tabular}{lcc}
+\toprule
+System & Top-1 (95\% CI) & Top-3 (95\% CI)\\
+\midrule
+Single & 0.466~[0.435, 0.497] & ---\\
+Single+RAG & 0.508~[0.477, 0.539] & ---\\
+HiED--NtS & 0.490~[0.459, 0.521] & 0.802~[0.776, 0.826]\\
+HiED--DA & 0.518~[0.487, 0.549] & 0.802~[0.776, 0.826]\\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \Cref{tab:ladder-rewrite} reports the frozen architecture ladder. Retrieval accounts for most of the realized Top-1 improvement over the bare single-agent baseline. Single+RAG improves Top-1 from 0.466 to 0.508 (McNemar $p=4.0\times10^{-4}$), and HiED--DA improves over Single to 0.518 ($p=1.6\times10^{-5}$). The additional margin from Single+RAG to HiED--DA is small and not a robust accuracy claim.
 
 The ladder therefore supports a specific interpretation. Retrieval improves candidate support. HiED's added value is not a large additional Top-1 jump beyond retrieval; it is the ranked differential, criterion audit, and ability to localize errors. This distinction prevents the architecture from being oversold as a pure accuracy improvement while preserving its scientific role as an instrument for decomposed evaluation.
@@ -591,16 +606,16 @@ A benchmark-positioning analysis on the public LingxiDiagBench validation cases 
 
 \ThesisFigure{fig_b_selection_bottleneck.pdf}{Internal test split detection--selection decomposition: committed Top-1, ranked Top-3 coverage, and recoverable close-cluster misclassifications.}{fig:bottleneck-thesis-rewrite}
 
-HiED--DA reaches 0.802 Top-3 while its Top-1 is 0.518. The resulting 28.4-point gap is the threshold-free evidence for the selection bottleneck. The correct parent diagnosis is often present in the ranked output even when it is not selected as primary.
+HiED--DA reaches 0.802 Top-3 while its Top-1 is 0.518. The resulting 28.4-point gap is the threshold-free evidence for the selection bottleneck. This gap measures recoverable opportunity under the benchmark label convention, not clinical recoverability without additional information. The correct parent diagnosis is often present in the ranked output even when it is not selected as primary.
 
-A close-cluster recoverability analysis sharpens this interpretation. This analysis is an oracle-style diagnostic of missed opportunity, not a deployable prediction rule: after the system has already produced its ranked candidates and criterion-derived support scores, the analysis asks whether a misclassified case would have been correct if the gold parent had been selected from a nearby cluster of similarly supported candidates. Under the registered met-ratio gate, using the close-cluster scan over the ranked candidate list rather than only the Top-3 entries, 349 of 1000 cases are recoverable misclassifications: the committed Direct-Answer primary is wrong, but the gold parent is reachable within a nearby supported candidate cluster. This corresponds to a $+34.9$ percentage-point upper-bound lift over the deployed Direct-Answer output. The analysis uses gold labels only to measure how often the correct answer was already available within the candidate pool; it is not a deployed method.
+A close-cluster recoverability analysis sharpens this interpretation. This analysis is an oracle-style diagnostic of missed opportunity, not a deployable prediction rule: after the system has already produced its ranked candidates and criterion-derived support scores, the analysis asks whether a misclassified case would have been correct if the gold parent had been selected from a nearby cluster of similarly supported candidates. Under the registered met-ratio gate, using the close-cluster scan over the ranked candidate list rather than only the Top-3 entries, 349 of 1000 cases are recoverable misclassifications: the committed Direct-Answer primary is wrong, but the gold parent is reachable within a nearby supported candidate cluster. This corresponds to a $+34.9$ percentage-point upper-bound lift over the deployed Direct-Answer output. Because the scan spans the full ranked candidate list rather than only the top three entries, this upper bound (0.518+0.349=0.867) can exceed the Top-3 coverage rate of 0.802 reported above; the two quantities are not directly comparable, since they are computed over different candidate windows and answer different questions. The analysis uses gold labels only to measure how often the correct answer was already available within the candidate pool; it is not a deployed method.
 
 The Top-3 gap and recoverability result rule out a simple generation-only explanation for many errors. The system often has already generated the correct parent. The residual problem is deciding that it should be first.
 
 \section{Criterion Verification}
 \label{sec:criterion-verification}
 
-The logic-confirmed set contains the gold parent in 93.7\% of non-Others cases, but it confirms a median of six of fourteen active disorder entries per case. Criterion states are distributed 48.3\% \texttt{met}, 23.5\% \texttt{not\_met}, and 28.3\% \texttt{insufficient\_evidence}: \texttt{met} is the largest single state, but \texttt{not\_met} and \texttt{insufficient\_evidence} together still account for over half of all criterion decisions. The checker bank is therefore high recall but low selectivity. In the notation of \Cref{sec:problem-definition}, this chapter's internal test split gives $\bar D_3=0.802$, $\bar R=0.937$, and $\bar S=0.518$: both candidate detection and verification retention substantially exceed committed selection, the operational form of the selection bottleneck introduced there.
+The logic-confirmed set contains the gold parent in 93.7\% of non-Others cases, but it confirms a median of six of fourteen active disorder entries per case. Criterion states are distributed 48.3\% \texttt{met}, 23.5\% \texttt{not\_met}, and 28.3\% \texttt{insufficient\_evidence}: \texttt{met} is the largest single state, but \texttt{not\_met} and \texttt{insufficient\_evidence} together still account for over half of all criterion decisions. The checker bank is therefore high recall but low selectivity. In the notation of \Cref{sec:problem-definition}, this chapter's internal test split gives $\bar D_3=0.802$, $\bar R=0.937$ (computed, as above, over the non-Others cases for which a checker entry exists), and $\bar S=0.518$: both candidate detection and verification retention substantially exceed committed selection, the operational form of the selection bottleneck introduced there.
 
 \ThesisFigure{fig_c_criterion_states.pdf}{Distribution of per-criterion checker states on the internal test split.}{fig:criterion-states-thesis-rewrite}
 
@@ -685,6 +700,26 @@ The external evaluation asks whether the in-domain failure decomposition is corp
 
 The title deliberately uses \emph{external synthetic evaluation} rather than unqualified validation. The corpus is external to LingxiDiag and tests distribution shift, but it remains synthetic and does not establish real-patient Taiwanese clinical effectiveness. This boundary is important because the system's intended use is clinical decision support, where validation requires prospective human and patient evidence beyond benchmark transfer.
 
+\begin{table}[htbp]
+\centering
+\caption{External (MDD-5k) subset construction. Every row below the source corpus is drawn from the checker-covered population (925); the lexical-transfer split is a separately constructed partition of that same population rather than a further subdivision of the in-scope/out-of-scope/F32-F41 rows.}
+\label{tab:mdd-subsets}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{p{3.6cm}rp{6.0cm}p{4.6cm}}
+\toprule
+Subset & $N$ & Derived from & Used for\\
+\midrule
+MDD-5k source corpus & 5{,}000 & --- & Not directly scored; checker coverage is applied on top of this pool\\
+Checker-covered (``MDD full'') & 925 & Source-corpus cases with a checker-bank entry & \Cref{tab:external-summary-rewrite} ``MDD full'' row; external repair battery (\Cref{tab:mdd-repair-rewrite})\\
+In-scope & 878 & Checker-covered cases (925) whose gold parent lies inside the active fourteen-disorder profile & \Cref{tab:external-summary-rewrite} ``MDD in-scope'' row; selector-side case-neighbor reranking (\Cref{tab:case-knn-rewrite})\\
+Out-of-scope & 47 & Checker-covered cases (925) whose gold parent lies outside the active profile ($925-878$) & Scope-coverage discussion (\Cref{ch:external})\\
+F32/F41 binary subset & 490 & Checker-covered cases (925) whose gold parent is F32 or F41 & \Cref{tab:external-summary-rewrite} ``MDD F32/F41'' row\\
+Lexical-transfer held-out split & 185 & 80/20 stratified random split (seed $42$) of the checker-covered cases (925) & \Cref{tab:lexical-transfer-rewrite} MDD-trained/evaluated cells\\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
 \section{MDD-5k Evaluation}
 
 \begin{table}[htbp]
@@ -695,7 +730,7 @@ The title deliberately uses \emph{external synthetic evaluation} rather than unq
 \toprule
 Set & $N$ & Top-1 & Maj. baseline & Macro-F1\\
 \midrule
-Lingxi internal test split & 1000 & 0.518 & --- & 0.178\\
+LingxiDiag internal test split & 1000 & 0.518 & --- & 0.178\\
 MDD full (checker-covered) & 925 & 0.5805 & 0.4432 & 0.2287\\
 MDD in-scope & 878 & 0.6116 & 0.4670 & 0.2649\\
 MDD F32/F41 & 490 & 0.9224 & 0.7837 & 0.9055\\
@@ -703,7 +738,23 @@ MDD F32/F41 & 490 & 0.9224 & 0.7837 & 0.9055\\
 \end{tabular}
 \end{table}
 
-\Cref{tab:external-summary-rewrite} places the external views against the internal reference. The \emph{MDD full} row denotes the checker-covered external subset rather than all 5,000 source cases. The MDD-5k external run does not use a same-corpus case-index retriever, so it should be interpreted as ontology/checker-supported transcript transfer rather than evidence that case retrieval transfers across corpora. Within the selected scope, Top-1 reaches 0.6116. On the F32/F41 binary subset, accuracy reaches 0.9224, indicating that coarse depression--anxiety discrimination transfers strongly across this synthetic distribution shift. This offers a cross-corpus contrast to the internal F41-to-F32 confusion identified in \Cref{fig:confusion-thesis-rewrite}: the distinction that is hardest to resolve within the internal test split's twelve-class space is comparatively easy when isolated as a binary task on an external corpus, which is consistent with the selection-bottleneck interpretation that the difficulty lies in choosing among plausible candidates rather than in recognizing coarse category membership.
+\begin{table}[htbp]
+\centering
+\caption{95\% Wilson confidence intervals for the Top-1 point estimates in \Cref{tab:external-summary-rewrite}.}
+\label{tab:external-summary-ci}
+\begin{tabular}{lrcc}
+\toprule
+Set & $N$ & Top-1 & 95\% CI\\
+\midrule
+LingxiDiag internal test split & 1000 & 0.518 & [0.4870, 0.5488]\\
+MDD full (checker-covered) & 925 & 0.5805 & [0.5485, 0.6119]\\
+MDD in-scope & 878 & 0.6116 & [0.5790, 0.6433]\\
+MDD F32/F41 & 490 & 0.9224 & [0.8953, 0.9430]\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\Cref{tab:external-summary-rewrite} places the external views against the internal reference. The internal test split's Maj.\ baseline cell is left blank rather than populated with a twelve-class majority-vote figure, because the architecture ladder's own Single baseline (0.466, \Cref{tab:ladder-rewrite}) already serves as that split's comparably-purposed naive reference point; duplicating a majority-class number here would add a second, differently defined baseline for the same split without changing the comparison. The \emph{MDD full} row denotes the checker-covered external subset rather than all 5,000 source cases. The MDD-5k external run does not use a same-corpus case-index retriever, so it should be interpreted as ontology/checker-supported transcript transfer rather than evidence that case retrieval transfers across corpora. Within the selected scope, Top-1 reaches 0.6116. On the F32/F41 binary subset, accuracy reaches 0.9224, indicating that coarse depression--anxiety discrimination transfers strongly across this synthetic distribution shift. This offers a cross-corpus contrast to the internal F41-to-F32 confusion identified in \Cref{fig:confusion-thesis-rewrite}: the distinction that is hardest to resolve within the internal test split's twelve-class space is comparatively easy when isolated as a binary task on an external corpus, which is consistent with the selection-bottleneck interpretation that the difficulty lies in choosing among plausible candidates rather than in recognizing coarse category membership.
 
 The same table also shows the remaining limitation. Multi-way primary selection remains harder than binary F32/F41 discrimination, and the external performance is shaped by class distribution and scope. The result is therefore neither a simple success nor a failure. It shows useful synthetic transfer for some distinctions while preserving the broader conclusion that fine-grained primary selection remains difficult.
 
@@ -737,7 +788,7 @@ MDD-5k & MDD-5k & 185 & 0.692 & corpus-specific fit recovers\\
 \end{tabular}
 \end{table}
 
-\Cref{tab:lexical-transfer-rewrite} shows that lexical selection can fit a corpus but fail across corpora. A Lingxi-trained TF--IDF selector performs well in domain but collapses on MDD. Training the same model family on MDD restores within-corpus performance. The failure is therefore not inability to fit; it is lack of transfer. Because MDD-5k has no canonical train/validation split, this lexical-transfer probe uses an 80/20 stratified random split (seed $42$) of the $925$ checker-covered MDD-5k cases to construct a held-out evaluation set, yielding the reported $N=185$; this split is independent of, and not a subset of, the broader external summaries in \Cref{tab:external-summary-rewrite}.
+\Cref{tab:lexical-transfer-rewrite} shows that lexical selection can fit a corpus but fail across corpora. A LingxiDiag-trained TF--IDF selector performs well in domain but collapses on MDD. Training the same model family on MDD restores within-corpus performance. The failure is therefore not inability to fit; it is lack of transfer. Because MDD-5k has no canonical train/validation split, this lexical-transfer probe uses an 80/20 stratified random split (seed $42$) of the $925$ checker-covered MDD-5k cases to construct a held-out evaluation set, yielding the reported $N=185$; this split is independent of, and not a subset of, the broader external summaries in \Cref{tab:external-summary-rewrite}.
 
 This result cautions against interpreting strong in-domain reranking as diagnostic signal. A selector may learn corpus-specific phrasing, label priors, or generation artifacts rather than robust clinical distinctions. The ontology-driven pipeline is more portable in configuration, but portability does not eliminate the selection bottleneck.
 
@@ -745,7 +796,7 @@ This result cautions against interpreting strong in-domain reranking as diagnost
 
 \begin{table}[htbp]
 \centering
-\caption{Selection-repair battery on the external corpus ($N=925$), scored against a matched Direct-Answer baseline.}
+\caption{Selection-repair battery on the external corpus ($N=925$), scored against a matched Direct-Answer baseline. This matched-batch Direct-Answer baseline (0.5708) is distinct from the canonical corpus-level positioning run (0.5805, \Cref{tab:external-summary-rewrite}); both score the same 925-case corpus under separate run constructions, not a scoring inconsistency.}
 \label{tab:mdd-repair-rewrite}
 \begin{tabular}{lccc}
 \toprule
@@ -1073,7 +1124,7 @@ Evidence acquisition is complementary to selection. Structured selection improve
 
 \subsection{Audit Reliability and Abstention}
 
-The audit trace must itself be validated. Future work should compare checker states with clinician-rated criterion judgments, evaluate evidence-span correctness, and calibrate the relationship among confidence, insufficient-evidence burden, ambiguity, and error risk. A clinical abstention policy should distinguish low confidence, missing evidence, out-of-scope diagnosis, and runtime failure.
+The audit trace must itself be validated. Future work should compare checker states with clinician-rated criterion judgments, evaluate evidence-span correctness, and calibrate the relationship among confidence, insufficient-evidence burden, ambiguity, and error risk. A concrete first step is a bounded reliability study: sample 50--100 criterion states stratified across disorders and evidence-state categories (\texttt{met}, \texttt{not\_met}, \texttt{insufficient\_evidence}), have a psychiatrist or trained rater independently judge whether each cited evidence span supports the assigned state, and report percent agreement or Cohen's $\kappa$ together with a breakdown of disagreement types (for example, span misidentification versus criterion misapplication). This study is deliberately small relative to the benchmark evaluation; its purpose is to establish whether the audit trace is reliable enough to support a clinician-facing review workflow, not to re-validate the diagnostic labels themselves. A clinical abstention policy should distinguish low confidence, missing evidence, out-of-scope diagnosis, and runtime failure.
 
 \subsection{Clinical Workflow and Governance}
 
