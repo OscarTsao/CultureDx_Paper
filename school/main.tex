@@ -409,8 +409,7 @@ LingxiDiagBench provides synthetic, EMR-aligned Chinese psychiatric consultation
 \centering
 \caption{LingxiDiag data roles.}
 \label{tab:data-roles-rewrite}
-\begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{lrrl}
+\begin{tabularx}{\textwidth}{@{}p{0.17\textwidth}rp{0.30\textwidth}X@{}}
 \toprule
 Role & $N$ & Use & Interpretation\\
 \midrule
@@ -418,8 +417,7 @@ Train-derived development pool & 13,000 & retrieval support and development anal
 Public validation split & 1000 & configuration, sensitivity analysis, and public positioning (\Cref{tab:lingxi-public-validation-positioning}) & official validation file; not a test set\\
 Internal test split & 1000 & frozen headline evaluation & pre-registered, train-carved, and retrieval-excluded\\
 \bottomrule
-\end{tabular}
-\end{adjustbox}
+\end{tabularx}
 \end{table}
 
 Because the official test split was unavailable, a 1000-case train-carved internal test split was pre-registered, excluded from retrieval, and reserved for headline evaluation; this is distinct from both the public validation split and the unavailable official test split. The public validation split supports development and sensitivity analysis; the train-derived pool supports retrieval and indexing but is not scored as a headline test set; the internal test split is scored only after rules freeze. This division is necessary because the thesis makes paired claims about system variants, and any leakage between retrieval, configuration, and headline scoring would directly undermine the selection-bottleneck evidence. A limited public-validation positioning analysis is reported only as contextual evidence; it is not the headline result because protocol and split differences make leaderboard-style claims fragile.
@@ -553,7 +551,7 @@ Verification experiments ask whether criterion checking improves primary selecti
 
 \section{Selection Repairs and Robustness Axes}
 
-This section separates three layers of evidence that are easy to conflate. The first layer is the frozen repair battery: interventions evaluated as candidate remedies for the primary-selection bottleneck under a fixed scoring protocol. The second layer consists of non-headline learned selectors and exploratory probes, which test whether a recoverable selection signal exists but are not part of the selected HiED architecture. The third layer consists of robustness axes, which test whether the bottleneck interpretation persists across definition-similarity signals, retrieval sensitivity, corpora, confusion boundaries, ontology scope, and backbone size. This separation matters because a failed repair, a non-transferable selector, and a robustness perturbation answer different questions. All three layers are read under a common freeze discipline, stated at the end of this section.
+This section separates three layers of evidence that are easy to conflate. The first layer is the frozen repair battery: interventions evaluated as candidate remedies for the primary-selection bottleneck under a fixed scoring protocol. The second layer consists of non-headline learned selectors and exploratory probes, which test whether a recoverable selection signal exists but are not part of the selected HiED architecture. The third layer consists of robustness axes, which test whether the bottleneck interpretation persists across definition-similarity signals, selector-side case-neighbor reranking, retrieval sensitivity, corpora, confusion boundaries, ontology scope, and backbone size. This separation matters because a failed repair, a non-transferable selector, and a robustness perturbation answer different questions. All three layers are read under a common freeze discipline, stated at the end of this section.
 
 \paragraph{Pairwise reasoning.} Pairwise comparison uses adjacent ranked candidates that are sufficiently supported and close under the pre-specified met-ratio gate: each candidate must have met ratio at least $0.5$, and the adjacent met-ratio distance must be less than $0.10$. The close-cluster scan is applied over the ranked list rather than only around the committed primary. In controlled replay, the eligible close clusters are derived from the Direct-Answer (DA) reference output: DA provides the ranked candidates, candidate adjacency, and criterion-derived met ratios, while candidate generation and criterion verification are not rerun. Only the pairwise comparison and finalization step is applied on top of these fixed DA outputs. The independent run tests raw pairwise performance; controlled replay tests whether pairwise comparison causally changes committed primaries when upstream evidence is held fixed; forced override tests whether applying the comparison globally is safe.
 
@@ -563,9 +561,9 @@ This section separates three layers of evidence that are easy to conflate. The f
 
 \paragraph{Self-consistency and CISC.} Self-consistency samples the diagnostician multiple times and aggregates the committed primary by majority vote. Confidence-informed self-consistency weights votes by reported confidence. These probes test whether the direct commitment is unstable and whether a hidden sample majority exists.
 
-\paragraph{Learned selector.} This probe is not part of the frozen repair battery, so it is not included in Table~\ref{tab:repair-battery-rewrite} or Table~\ref{tab:mdd-repair-rewrite}; its design is summarized here because RQ3 names it as a tested axis, and its verdict appears in \Cref{fig:repairs-thesis-rewrite}. It tests whether a lightweight external model, fitted or selected on development data without modifying the diagnostician or checker bank, can recover a transferable primary-selection signal across three signal families: lexical (a TF--IDF with logistic-regression selector), pipeline-derived (a gradient-boosted ranker, LightGBM), and dense-similarity (BGE-M3). Only the lexical family is quantified directly in the main text, in \Cref{tab:lexical-transfer-rewrite}, where the same model family is applied to raw transcript text; the remaining two families, together with three further exploratory probes (evidence extraction, a residual-evidence loop, and post-hoc confidence calibration) that produced no comparable headline number, are reported in full in Appendix~\ref{app:interventions}. Improvement confined to the development lineage would indicate corpus-specific fitting rather than a transferable selection rule.
+\paragraph{Learned selector.} This probe is not part of the frozen repair battery, so it is not included in Table~\ref{tab:repair-battery-rewrite} or Table~\ref{tab:mdd-repair-rewrite}; its design is summarized here because RQ3 names it as a tested axis, and its verdict appears in \Cref{fig:repairs-thesis-rewrite}. It tests whether a lightweight external model, fitted or selected on development data without modifying the diagnostician or checker bank, can recover a transferable primary-selection signal across three signal families: lexical (a TF--IDF with logistic-regression selector), pipeline-derived (a gradient-boosted ranker, LightGBM), and dense definition-similarity (BGE-M3). Only the lexical family is quantified directly in the main text, in \Cref{tab:lexical-transfer-rewrite}, where the same model family is applied to raw transcript text; the remaining two families, together with three further exploratory probes (evidence extraction, a residual-evidence loop, and post-hoc confidence calibration) that produced no comparable headline number, are reported in full in Appendix~\ref{app:interventions}. Improvement confined to the development lineage would indicate corpus-specific fitting rather than a transferable selection rule.
 
-\paragraph{Robustness axes.} Robustness is evaluated across definition-similarity signals, retrieval sensitivity, in-domain and external corpora, confusion boundaries, and ontology scope, each stressing a different explanation for the bottleneck. If embedding representation is the problem, a different similarity signal should improve selection. If the finding is corpus-specific, it should not persist on MDD-5k. If scope is the issue, mechanical expansion should recover newly representable labels. The thesis uses robustness to test the stability of the interpretation, not to claim that all perturbations are inconsequential. A result can be robust in the sense that the bottleneck persists while still varying in magnitude across settings.
+\paragraph{Robustness axes.} Robustness is evaluated across definition-similarity signals, selector-side case-neighbor reranking, retrieval sensitivity, in-domain and external corpora, confusion boundaries, and ontology scope, each stressing a different explanation for the bottleneck. If embedding representation is the problem, a different similarity signal should improve selection. If similarity to development cases carried the missing selection signal, case-neighbor reranking should transfer to the external corpus. If the finding is corpus-specific, it should not persist on MDD-5k. If scope is the issue, mechanical expansion should recover newly representable labels. The thesis uses robustness to test the stability of the interpretation, not to claim that all perturbations are inconsequential. A result can be robust in the sense that the bottleneck persists while still varying in magnitude across settings.
 
 \paragraph{Backbone size.} If scale alone solves the selection bottleneck, larger backbones should escape it. The size ladder spans 4B, 8B, 14B, and 32B parameters under the same architecture and protocol. The 4B HiED run required elevated parse recovery, and the 4B single run produced abstentions, but all reported size-ladder runs produced 1000 valid outputs and passed health gates; these events are part of system behavior worth reporting, since structured-output fragility is not the same as diagnostic judgment, though it affects deployability and the interpretation of small-backbone results.
 
@@ -687,7 +685,7 @@ The repairs fail for different reasons, but their implications converge. Pairwis
 
 \begin{table}[htbp]
 \centering
-\caption{Qwen3 size scaling on the internal test split.}
+\caption{Qwen3 size scaling on the internal test split. The 32B row's Single baseline (0.465) is a separate execution from the headline architecture-ladder Single baseline (0.466, \Cref{tab:ladder-rewrite}); both score the same held-out case set under separate run constructions, not a scoring inconsistency.}
 \label{tab:size-ladder-rewrite}
 \begin{tabular}{lccc}
 \toprule
@@ -740,9 +738,9 @@ Subset & $N$ & Derived from & Used for\\
 MDD-5k source corpus & 5000 & One-to-many synthesis: multiple dialogues per anonymized patient case ($1000$ cases)~\citep{yin2024mdd5k} & Not directly scored; evaluation is at the patient-case level\\
 Checker-covered (``MDD full'') & 925 & Patient cases whose gold parent maps to a full-checker-bank entry (thirty parents; \Cref{sec:scope-coverage}) & \Cref{tab:external-summary-rewrite} ``MDD full'' row; external repair battery (\Cref{tab:mdd-repair-rewrite})\\
 In-scope & 878 & Checker-covered cases (925) whose gold parent lies inside the active fourteen-disorder profile & \Cref{tab:external-summary-rewrite} ``MDD in-scope'' row; selector-side case-neighbor reranking (\Cref{tab:case-knn-rewrite})\\
-Out-of-scope & 47 & Checker-covered cases (925) whose gold parent lies outside the active profile ($925-878$) & Scope-coverage discussion (\Cref{ch:external})\\
+Out-of-scope & 47 & Checker-covered cases (925) whose gold parent lies outside the active profile ($925-878=47$) & Scope-coverage discussion (\Cref{ch:external})\\
 F32/F41 binary subset & 490 & Checker-covered cases (925) with a pure F32 or pure F41 gold label, excluding F41.2 and F32+F41 comorbid presentations (384 depression-coded, 106 anxiety-coded; stricter than gold parent $\in\{$F32, F41$\}$ alone, which would give 723) & \Cref{tab:external-summary-rewrite} ``MDD F32/F41'' row\\
-Lexical-transfer held-out split & 185 & 80/20 stratified random split (seed $42$) of the checker-covered cases (925) & \Cref{tab:lexical-transfer-rewrite} MDD-trained/evaluated cells\\
+Lexical-transfer held-out split & 185 & 80/20 stratified random split (seed 42) of the checker-covered cases (925) & \Cref{tab:lexical-transfer-rewrite} MDD-trained/evaluated cells\\
 \bottomrule
 \end{tabular}
 \end{adjustbox}
@@ -752,7 +750,7 @@ Lexical-transfer held-out split & 185 & 80/20 stratified random split (seed $42$
 
 \begin{table}[htbp]
 \centering
-\caption{Internal reference and external synthetic evaluation summary. The majority-class baseline is computed separately within each external (MDD-5k) subset as the Top-1 accuracy obtained by always predicting that subset's most frequent gold parent diagnosis.}
+\caption{Internal reference and external synthetic evaluation summary. The majority-class baseline is computed separately within each external (MDD-5k) subset as the Top-1 accuracy obtained by always predicting that subset's most frequent gold parent diagnosis. In every external subset that most frequent gold parent is F32 (depressive episode; \Cref{tab:class-distribution}), so each reported baseline is the any-gold Top-1 of constantly predicting F32, correct exactly on the cases whose gold parent set contains F32: $410/925$, $410/878$ (every F32-bearing case is in scope, so the in-scope baseline shares the same numerator over a smaller denominator), and $384/490$ on the depression-coded binary cases.}
 \label{tab:external-summary-rewrite}
 \begin{tabular}{lrrrr}
 \toprule
@@ -795,9 +793,9 @@ This distinction matters because external evaluation can otherwise mix two diffe
 
 The 47 out-of-scope cases are not concentrated in one alternative disorder; their raw (pre-projection) gold parent codes span fifteen distinct ICD-10 categories: F50 (7), G47 (5), F23, F30, F34, F93 (4 each), F28, F48, F90 (3 each), F22, F33, F38, F40 (2 each), and F01, F06 (1 each). No single excluded category would have closed a large fraction of the scope gap by itself.
 
-This same representability-versus-recovery distinction can be tested directly by deliberately expanding scope rather than merely accounting for it. The active profile can be expanded to thirty parent codes across thirty-nine ontology entries without retraining. This confirms the architectural claim that representable scope is configured through the ontology and active profile rather than by changing model weights.
+This same representability-versus-recovery distinction can be tested directly by deliberately expanding scope rather than merely accounting for it. The active profile can be expanded to thirty parent codes across thirty-nine ontology entries without retraining; the expanded set covers all fifteen raw parent categories listed above. This confirms the architectural claim that representable scope is configured through the ontology and active profile rather than by changing model weights.
 
-However, mechanical expansion does not produce behavioral adaptation. In the expanded external setting, newly representable cases are not recovered as primaries. This result separates two claims that are often conflated: a system can represent a diagnosis, but that does not mean it can select it correctly. The engineering precondition for broader scope is satisfied; the behavioral evidence for broader recovery is not.
+However, mechanical expansion does not produce behavioral adaptation. In the expanded external setting, newly representable cases are not recovered as primaries: across the 58 external cases whose raw gold parent lies in a newly activated code---a set that includes all 47 out-of-scope cases above---the retargeted run never commits the newly activated parent as primary (0/58), emits a newly activated code as primary exactly once anywhere in the run, and leaves paired in-scope controls statistically unchanged (13/20 versus 12/20; exact McNemar $p=1.0$). This result separates two claims that are often conflated: a system can represent a diagnosis, but that does not mean it can select it correctly. The engineering precondition for broader scope is satisfied; the behavioral evidence for broader recovery is not.
 
 This finding reinforces the thesis's main decomposition. Adding labels to the output space affects representability, but selection still determines whether those labels are committed. A broader ontology without a better selector can enlarge the candidate space while leaving the primary-selection bottleneck intact.
 
@@ -819,7 +817,7 @@ MDD-5k & MDD-5k & 185 & 0.692 & corpus-specific fit recovers\\
 \end{tabular}
 \end{table}
 
-\Cref{tab:lexical-transfer-rewrite} shows that lexical selection can fit a corpus but fail across corpora. A LingxiDiag-trained TF--IDF selector performs well in domain but collapses on MDD. Training the same model family on MDD restores within-corpus performance. The failure is therefore not inability to fit; it is lack of transfer. This probe applies the same TF--IDF with logistic-regression model family named among the learned selectors in \Cref{ch:experimental}, but directly to raw transcript text rather than to pipeline-derived features; it therefore serves as the quantified representative of the fitted-selector transfer failure that the learned-selector probes exhibited qualitatively. Because MDD-5k has no canonical train/validation split, this lexical-transfer probe uses an 80/20 stratified random split (seed $42$) of the $925$ checker-covered MDD-5k cases to construct a held-out evaluation set, yielding the reported $N=185$; this split is independent of, and not a subset of, the broader external summaries in \Cref{tab:external-summary-rewrite}.
+\Cref{tab:lexical-transfer-rewrite} shows that lexical selection can fit a corpus but fail across corpora. A LingxiDiag-trained TF--IDF selector performs well in domain but collapses on MDD. Training the same model family on MDD restores within-corpus performance. The failure is therefore not inability to fit; it is lack of transfer. This probe applies the same TF--IDF with logistic-regression model family named among the learned selectors in \Cref{ch:experimental}, but directly to raw transcript text rather than to pipeline-derived features; it therefore serves as the quantified representative of the fitted-selector transfer failure that the learned-selector probes exhibited qualitatively. Because MDD-5k has no canonical train/validation split, this lexical-transfer probe uses an 80/20 stratified random split (seed 42) of the $925$ checker-covered MDD-5k cases to construct a held-out evaluation set, yielding the reported $N=185$; this split is independent of, and not a subset of, the broader external summaries in \Cref{tab:external-summary-rewrite}.
 
 This result cautions against interpreting strong in-domain reranking as diagnostic signal. A selector may learn corpus-specific phrasing, label priors, or generation artifacts rather than robust clinical distinctions. The ontology-driven pipeline is more portable in configuration, but portability does not eliminate the selection bottleneck.
 
@@ -1114,7 +1112,7 @@ The main empirical result is a stage-wise mismatch. Candidate coverage and verif
 
 \item[RQ3] No tested repair provides a stable, causally attributable improvement over Direct-Answer on the internal test split. Logic re-selection, pairwise comparison, debate, deterministic fusion, learned selection, calibration, self-consistency, and confidence-weighted aggregation each fail to close the gap under the tested conditions.
 
-\item[RQ4] The pattern persists across model sizes, retrieval sensitivity and selector-side similarity probes, external synthetic distribution shift, scope analysis, and multiple repair families. The external evidence supports useful transfer for some distinctions but does not eliminate the primary-selection bottleneck.
+\item[RQ4] The pattern persists across model sizes, retrieval sensitivity and selector-side similarity probes, external synthetic distribution shift, scope analysis, and multiple repair families. The external evidence supports useful transfer for some distinctions---most concretely, the F32/F41 depression--anxiety confusion boundary transfers well as a binary discrimination (\Cref{ch:external})---but does not eliminate the primary-selection bottleneck.
 
 \item[RQ5] The evidence supports an auditable research architecture and a failure-localization claim; Chapter~\ref{ch:limitations} details what this does and does not establish.
 \end{description}
@@ -1403,6 +1401,7 @@ Criterion-state anatomy & How are criterion states distributed? & internal probe
 \multicolumn{4}{@{}l}{\textit{External synthetic evaluation}}\\
 \midrule
 External-corpus evaluation & Does performance transfer to a different distribution? & external, complete & External synthetic evaluation\\
+Mechanical scope expansion & Does expanding representable scope recover newly representable external cases? & external, complete; 58-case retarget stratum with paired in-scope and cross-corpus controls & External synthetic evaluation\\
 External repair battery & Does any repair transfer to the external corpus? & external, complete & External repair table\\
 Case-neighbor reranking & Does case-neighbor agreement transfer as a selector signal? & external, complete & Retrieval control\\
 Lexical cross-corpus transfer & Does a lexical selector transfer across corpora? & in-domain and external & Lexical transfer\\
@@ -1504,7 +1503,7 @@ This result is important because it prevents a tempting but incorrect interpreta
 \chapter{Reproducibility and Deposit Checklist}
 \label{app:repro}
 
-The project records data fingerprints, model/configuration identity, prompt hashes, predictions, metrics, run health, and claim-to-artifact mappings. Results are labeled as development, internal test, external, post-freeze, or planned clinical.
+The project records data fingerprints, model/configuration identity, prompt hashes, predictions, metrics, run health, and claim-to-artifact mappings. The active diagnostic profile and its per-entry criterion configuration, part of this configuration identity, are listed in \Cref{tab:active-profile}. Results are labeled as development, internal test, external, post-freeze, or planned clinical.
 
 \begin{table}[htbp]
 \centering
