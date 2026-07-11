@@ -107,9 +107,9 @@ Common Mental Disorders in the Taiwanese Context\par}
 \addcontentsline{toc}{chapter}{Abstract}
 Differential diagnosis from an initial-consultation psychiatric transcript is a comparative decision under incomplete evidence. Multiple disorders may be compatible with the same transcript, yet only one can typically be judged the primary diagnosis. Key discriminating information---illness course, onset timing, exclusionary causes, and comorbidity relationships---may not be fully elicited within a single initial consultation. Large language models can read such transcripts fluently, and recent research has applied them to psychiatric diagnostic tasks, but linguistic fluency does not equate to reliable differential diagnostic ability.
 
-Existing evaluations show a consistent gap: models perform well on coarse-grained classification, but accuracy drops sharply on fine-grained, disorder-level differential diagnosis. This gap motivates an auditable system architecture that can locate the stage at which a diagnostic error occurs. A model may generate a plausible disorder supported by diagnostic criteria, yet fail to select it as the primary diagnosis. The distinction among candidate-diagnosis generation, criterion-based verification, and primary-diagnosis selection is usually obscured by a single accuracy metric.
+Existing evaluations show a consistent gap: models perform well on coarse-grained classification, but accuracy drops sharply on fine-grained, disorder-level differential diagnosis. This gap motivates an auditable architecture that locates the stage at which a diagnostic error occurs. A model may generate a plausible disorder supported by diagnostic criteria, yet fail to select it as the primary diagnosis. The distinction among candidate-diagnosis generation, criterion-based verification, and primary-diagnosis selection is usually obscured by a single accuracy metric.
 
-To address this problem, we propose HiED, a differential-diagnosis framework for Chinese psychiatric initial-consultation transcripts that keeps candidate-diagnosis detection, ICD-10 criterion-by-criterion verification, and primary-diagnosis selection as separately observable stages, rather than reducing the process to a single classification event. The system outputs a criterion-level audit trace with every prediction, allowing the diagnostic inference to be examined. It is not a clinically validated autonomous diagnostic tool, but a research instrument for analyzing where transcript-based psychiatric diagnosis fails.
+To address this problem, we propose HiED, a differential-diagnosis framework for Chinese psychiatric initial-consultation transcripts that keeps candidate-diagnosis detection, ICD-10 criterion-by-criterion verification, and primary-diagnosis selection as separately observable stages, rather than a single classification event. The system outputs a criterion-level audit trace with every prediction, allowing the diagnostic inference to be examined. It is not a clinically validated autonomous diagnostic tool, but a research instrument for analyzing where transcript-based psychiatric diagnosis fails. Finally, the Taiwanese context in the title denotes the intended deployment setting; real-patient Taiwanese validation remains future work.
 
 The main contribution is therefore a reproducible failure-localization framework, with evidence that primary-diagnosis selection constitutes a core bottleneck in psychiatric large-language-model diagnosis using only initial-consultation transcripts. Under this study's synthetic transcript-only setting, the system's primary limitation lies not merely in whether it can generate plausible candidate diagnoses, but more critically in whether it can compare among multiple criterion-supported candidates and determine which is best suited as the primary diagnosis.
 
@@ -743,7 +743,7 @@ MDD-5k source corpus & 5{,}000 & --- & Not directly scored; checker coverage is 
 Checker-covered (``MDD full'') & 925 & Source-corpus cases with a checker-bank entry & \Cref{tab:external-summary-rewrite} ``MDD full'' row; external repair battery (\Cref{tab:mdd-repair-rewrite})\\
 In-scope & 878 & Checker-covered cases (925) whose gold parent lies inside the active fourteen-disorder profile & \Cref{tab:external-summary-rewrite} ``MDD in-scope'' row; selector-side case-neighbor reranking (\Cref{tab:case-knn-rewrite})\\
 Out-of-scope & 47 & Checker-covered cases (925) whose gold parent lies outside the active profile ($925-878$) & Scope-coverage discussion (\Cref{ch:external})\\
-F32/F41 binary subset & 490 & Checker-covered cases (925) whose gold parent is F32 or F41 & \Cref{tab:external-summary-rewrite} ``MDD F32/F41'' row\\
+F32/F41 binary subset & 490 & Checker-covered cases (925) with a pure F32 or pure F41 gold label, excluding F41.2 and F32+F41 comorbid presentations (384 depression-coded, 106 anxiety-coded; stricter than gold parent $\in\{$F32, F41$\}$ alone, which would give 723) & \Cref{tab:external-summary-rewrite} ``MDD F32/F41'' row\\
 Lexical-transfer held-out split & 185 & 80/20 stratified random split (seed $42$) of the checker-covered cases (925) & \Cref{tab:lexical-transfer-rewrite} MDD-trained/evaluated cells\\
 \bottomrule
 \end{tabular}
@@ -754,7 +754,7 @@ Lexical-transfer held-out split & 185 & 80/20 stratified random split (seed $42$
 
 \begin{table}[htbp]
 \centering
-\caption{Internal reference and external synthetic evaluation summary. The majority-class baseline is computed separately within each subset as the Top-1 accuracy obtained by always predicting that subset's most frequent gold parent diagnosis.}
+\caption{Internal reference and external synthetic evaluation summary. The majority-class baseline is computed separately within each external (MDD-5k) subset as the Top-1 accuracy obtained by always predicting that subset's most frequent gold parent diagnosis.}
 \label{tab:external-summary-rewrite}
 \begin{tabular}{lrrrr}
 \toprule
@@ -793,6 +793,8 @@ The same table also shows the remaining limitation. Multi-way primary selection 
 Forty-seven MDD cases fall outside the selected fourteen-disorder active scope. These are coverage limitations rather than recoverable selection errors. Under the selected profile, the system cannot emit the gold parent for these cases regardless of how the selector is changed.
 
 This distinction matters because external evaluation can otherwise mix two different failures. A within-scope error means the system could have emitted the gold diagnosis but did not. An out-of-scope case means the diagnosis was not available in the active output space. The coverage-aware reporting separates configuration limits from selection limits so that the in-scope Top-1 result measures behavior within the system's declared scope.
+
+The 47 out-of-scope cases are not concentrated in one alternative disorder; their raw (pre-projection) gold parent codes span fifteen distinct ICD-10 categories: F50 (7), G47 (5), F23, F30, F34, F93 (4 each), F28, F48, F90 (3 each), F22, F33, F38, F40 (2 each), and F01, F06 (1 each). No single excluded category would have closed a large fraction of the scope gap by itself.
 
 This same representability-versus-recovery distinction can be tested directly by deliberately expanding scope rather than merely accounting for it. The active profile can be expanded to thirty parent codes across thirty-nine ontology entries without retraining. This confirms the architectural claim that representable scope is configured through the ontology and active profile rather than by changing model weights.
 
@@ -1165,6 +1167,7 @@ A prospective clinical study should evaluate not only agreement with clinicians 
 HiED's contribution is an auditable architecture and a reproducible demonstration that psychiatric LLM diagnosis can fail after the correct diagnosis has already been detected and criterion-supported. Under the tested transcript-only setting, the dominant measured bottleneck is comparative primary selection. The work therefore identifies what future systems must improve and what future evaluations must measure, while stopping short of claiming clinically validated autonomous diagnosis (Chapter~\ref{ch:limitations}).
 
 \appendix
+\titleformat{\chapter}[display]{\raggedright\bfseries\LARGE}{Appendix \thechapter}{0.5em}{}
 
 \chapter{Metric Definitions and Statistical Notes}
 \label{app:metrics}
@@ -1537,6 +1540,8 @@ hit alone.
 \label{app:active-profile}
 
 This appendix lists the fourteen active disorder entries of the selected benchmark profile (\texttt{lingxi\_14}), read directly from the frozen ontology configuration (\texttt{src/\allowbreak{}culturedx/\allowbreak{}ontology/\allowbreak{}data/\allowbreak{}icd10\_criteria.json}, \texttt{disorder\_sets.py}) used by the canonical runs. F41 and F43 each contribute multiple subtype-level entries that share a parent under scoring (\Cref{sec:gold-conventions}); every other parent maps one-to-one to a single active entry.
+
+The confirmation rules below are a benchmark operationalization of ICD-10, not a reproduction of the official clinical manual: they are simplified, thresholded criteria constructed to support automated criterion checking, and several entries (for example F39 and Z71) have no official ICD-10 symptom-count threshold at all. This is the same distinction made in \Cref{ch:limitations} between checker states and clinician gold judgments, applied here to the criteria themselves rather than to the checker's evidence-span outputs.
 
 \begingroup
 \setlength{\tabcolsep}{4pt}
