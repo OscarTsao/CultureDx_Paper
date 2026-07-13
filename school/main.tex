@@ -298,7 +298,7 @@ This gap motivates the research questions this thesis addresses, pursued through
 \item[RQ4] Does the same pattern persist across model size, retrieval sensitivity and selector-side similarity probes, external synthetic distribution shift, label-space expansion, and major confusion boundaries?
 \item[RQ5] What do benchmark and audit results establish, and what remains unresolved without real-patient data or a transcript-only human reference?
 \end{description}
-
+\ct{Does your thesis really answer all 5 questions?}
 These questions frame HiED not only as a diagnostic system but also as an experimental instrument: its purpose is to reveal which stage contributes which kind of evidence, and which stage remains limiting under a frozen evaluation protocol.
 
 \chapter{HiED System Architecture}
@@ -308,7 +308,7 @@ These questions frame HiED not only as a diagnostic system but also as an experi
 
 HiED takes as input a single Chinese-language psychiatric consultation transcript: a turn-based dialogue between clinician and patient, normalized while speaker turns are preserved. The task is scoped to initial outpatient consultations. LingxiDiagBench, and therefore LingxiDiag-16K, targets initial psychiatric diagnosis rather than follow-up assessment or longitudinal care coordination~\citep{xu2026lingxidiagbench}. Transcripts accordingly do not carry a prior diagnostic history beyond what a patient volunteers within the session itself, and HiED is evaluated within this same initial-visit setting rather than across a treatment course.
 
-Each diagnostician invocation is built from four parts: brief task instructions describing the differential-diagnosis objective and required output fields, the normalized transcript above, the class-balanced supporting cases retrieved for that transcript (\Cref{sec:retrieval}), and a structured output-schema specification. The diagnostician therefore never sees the transcript alone; retrieval context is assembled into the prompt before the model runs, rather than requested by the model itself mid-generation.
+\ct{Is this about input and transcript format?}Each diagnostician invocation is built from four parts: brief task instructions describing the differential-diagnosis objective and required output fields, the normalized transcript above\ct{?}, the class-balanced supporting cases retrieved for that transcript (\Cref{sec:retrieval}), and a structured output-schema specification. The diagnostician therefore never sees the transcript alone; retrieval context is assembled into the prompt before the model runs, rather than requested by the model itself mid-generation\ct{?}.
 
 \section{Model Overview}
 
@@ -349,7 +349,7 @@ This provenance map (\Cref{tab:output-provenance}) separates evidence acquisitio
 
 Retrieval-augmented generation supplements an LLM prompt with relevant examples or knowledge~\citep{lewis2020rag}. In psychiatric dialogue, retrieval can remind a model of less salient disorders, provide lexical anchors, or expose similar presentations, and can therefore improve candidate detection; it can also amplify corpus-specific wording and does not by itself resolve primary selection among already-supported candidates.
 
-The retrieval component is designed to support candidate breadth without letting frequent disorders dominate the prompt. Each query transcript is first encoded by BGE-M3, a multilingual text-embedding model used here to convert transcripts into dense retrieval vectors~\citep{chen2024bgem3}. These vectors are searched with FAISS, a local vector-similarity indexing library rather than a separate model or managed database~\citep{douze2024faiss}. Instead of returning the globally nearest cases, the retriever returns the top case per candidate disorder class. This class-balanced design keeps rare disorders visible and prevents common depression-like presentations from crowding out alternatives.
+The retrieval component is designed to support candidate breadth without letting frequent disorders dominate the prompt. Each query transcript is first encoded by BGE-M3, a multilingual text-embedding model used here to convert transcripts into dense retrieval vectors~\citep{chen2024bgem3}. These vectors are searched with FAISS, a local vector-similarity indexing library rather than a separate model or managed database~\citep{douze2024faiss}. Instead of returning the globally nearest cases, the retriever returns the top case per candidate disorder class\ct{Are the candidate classes pre-determined, or patient-specific?}. This class-balanced design keeps rare disorders visible and prevents common depression-like presentations from crowding out alternatives.
 
 Retrieval therefore plays a bounded role in the architecture. It can improve candidate coverage by supplying examples and lexical anchors to the diagnostician, but it is not treated as a selector. This distinction is important for the thesis claim: retrieval may help the system preserve the correct diagnosis among its candidates, but it does not by itself solve the problem of committing to the correct primary diagnosis.
 
@@ -360,21 +360,21 @@ The diagnostic agent is a local Qwen3-32B-AWQ model---a 32-billion-parameter mod
 \begin{itemize}
 \item a ranked differential diagnosis list;
 \item a committed primary parent diagnosis;
-\item an optional comorbid parent diagnosis;
+\item an optional comorbid parent\ct{?} diagnosis;
 \item a confidence score;
 \item a brief rationale;
 \item optional uncertainty or abstention flags.
 \end{itemize}
 
-The committed primary is constrained to the ranked differential. This constraint lets Top-1 and Top-3 be interpreted together: the primary is the first commitment, while the ranked list records the nearby alternatives the model considered. A wrong Top-1 with a correct Top-3 is therefore not a total generation failure; it is a ranking failure among generated candidates. The confidence score is self-reported by the model in its own generated text---a verbalized estimate rather than a value read from an internal probability distribution---and later experiments (Appendix~\ref{app:interventions}) test both aggregating and calibrating this self-reported value.
+The committed primary is constrained to the ranked differential. This constraint lets Top-1 and Top-3 be interpreted together: the primary is the first commitment, while the ranked list records the nearby alternatives the model considered. A wrong Top-1 with a correct Top-3 is therefore not a total generation failure; it is a ranking failure among generated candidates. The confidence score is self-reported by the model in its own generated text---a verbalized estimate rather than a value read from an internal probability distribution---and later experiments (Appendix~\ref{app:interventions}) test both aggregating and calibrating this self-reported value.\ct{Is this an ablation study? If so, why in Appendix?}
 
 \section{Criterion Checkers}
 
-The International Classification of Diseases provides a standardized vocabulary for diagnostic categories~\citep{who2019icd10}, but computational use requires operational decisions: which criteria are required, which are optional, how symptom counts are computed, how duration requirements are represented, and how exclusions are handled when evidence is missing. These decisions transform narrative diagnostic criteria into the checkable structures used below. Operationalization improves reproducibility but narrows clinical judgment: a deterministic rule can state whether a set of criterion states satisfies a threshold, but it cannot recover context the transcript never supplied, nor determine whether two compatible disorders should be treated as primary-plus-comorbid or as competing explanations for the same syndrome. The ICD-10 logic is therefore used here as an audit scaffold rather than as a replacement for expert diagnosis: it records what the transcript appears to support, contradict, or leave unresolved.
+The International Classification of Diseases\ct{Is this ICD 10?} provides a standardized vocabulary for diagnostic categories~\citep{who2019icd10}, but computational use requires operational decisions: which criteria are required, which are optional, how symptom counts are computed, how duration requirements are represented, and how exclusions are handled when evidence is missing. These decisions transform narrative diagnostic criteria into the checkable structures used below. Operationalization improves reproducibility but narrows clinical judgment: a deterministic rule can state whether a set of criterion states satisfies a threshold, but it cannot recover context the transcript never supplied, nor determine whether two compatible disorders should be treated as primary-plus-comorbid or as competing explanations for the same syndrome. The ICD-10 logic is therefore used here as an audit scaffold rather than as a replacement for expert diagnosis: it records what the transcript appears to support, contradict, or leave unresolved.
 
 For each candidate disorder, criterion-checking agents evaluate transcript evidence against the operationalized ICD-10 criteria. Each criterion receives one of three states: \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_evidence}. The checker may also provide an evidence quote, confidence value, and short justification.
 
-The three-state design is the clinical core of the audit. A missing duration statement, unasked substance history, or absent exclusion clause should not automatically become a negative criterion. Recording insufficient evidence preserves the uncertainty that a single transcript creates. It also allows the results to measure whether the checker bank is high recall, high selectivity, or neither.
+The three-state design\ct{What 3 states?} is the clinical core of the audit. A missing duration statement, unasked substance history, or absent exclusion clause should not automatically become a negative criterion. Recording insufficient evidence preserves the uncertainty that a single transcript creates. It also allows the results to measure whether the checker bank is high recall, high selectivity, or neither.
 
 Checker outputs are not clinician-level gold. They are structured model outputs subject to error. Their value is that they can be inspected and replayed through deterministic logic. A reviewer can challenge whether a cited span supports a criterion without accepting or rejecting the entire final diagnosis.
 
