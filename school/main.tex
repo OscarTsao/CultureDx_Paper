@@ -187,11 +187,11 @@ During a first psychiatric visit in Taiwan, clinicians often have limited time t
 \section{Problem Definition and Challenges}
 \label{sec:problem-definition}
 
-HiED does not solve short consultation time, missing history, or clinical uncertainty. It studies a narrower technical problem under a fixed transcript: whether an LLM fails because it never proposes a reference diagnosis, because its criterion audit does not support that diagnosis, or because it proposes the diagnosis but commits another output. Large language models can read free-form dialogue, summarize symptoms, generate differential diagnoses, and return structured outputs~\citep{li2024taiwan,raballo2025,sarma2025}, but plausible language is not the same as reliable fine-grained selection~\citep{xu2026lingxidiagbench}.\ct{Does our model deal with all these problems?}
+HiED does not solve short consultation time, missing history, or clinical uncertainty. It studies a narrower technical problem under a fixed transcript: whether an LLM fails because it never proposes a reference diagnosis, because its criterion audit does not support that diagnosis, or because it proposes the diagnosis but commits another diagnosis. Large language models can read free-form dialogue, summarize symptoms, generate differential diagnoses, and return structured outputs~\citep{li2024taiwan,raballo2025,sarma2025}, but plausible language is not the same as reliable fine-grained selection~\citep{xu2026lingxidiagbench}.\ct{Does our model deal with all these problems?}
 
-We study this question with three measures. \emph{Candidate detection} asks whether a reference parent diagnosis appears in the ranked Top-3. \emph{Criterion verification} asks whether a reference parent appears in the rule-confirmed set when that diagnosis has an active checker. \emph{Committed selection} asks whether the final output belongs to the reference parent set. These measures are used to locate disagreements among output views; they do not form a fixed chronological funnel for every policy.
+We study this question with three measures. \emph{Candidate detection} asks whether a reference parent diagnosis appears in the ranked Top-3. \emph{Criterion verification} asks whether a reference parent appears in the rule-confirmed set when that diagnosis has an active checker. \emph{Committed selection} asks whether the committed diagnosis belongs to the reference parent set. These measures are used to locate disagreements among output views; they do not form a fixed chronological funnel for every policy.
 
-We use the term \emph{primary-selection bottleneck} for the operational pattern in which a reference diagnosis is present among leading candidates or criterion-supported alternatives but the final committed output is another diagnosis. The term describes benchmark disagreement under the reference-set scoring rule. It does not show that every error passes both earlier checks, that the corpus identifies a unique clinical primary diagnosis, or that every transcript contains enough evidence for one.\ct{what problem?}
+We use the term \emph{primary-selection bottleneck} for the operational pattern in which a reference diagnosis is present among leading candidates or criterion-supported alternatives but the system commits a different diagnosis. The term describes benchmark disagreement under the reference-set scoring rule. It does not show that every error passes both earlier checks, that the corpus identifies a unique clinical primary diagnosis, or that every transcript contains enough evidence for one.\ct{what problem?}
 
 This distinction matters because different errors need different solutions. Missing candidates call for better generation or retrieval. A candidate that fails criterion checking points to the checker, the rules, or missing evidence. A candidate that remains available but is not selected points to the final comparison among plausible diagnoses. The detailed metric definitions are given in \Cref{sec:gold-conventions}.
 
@@ -201,7 +201,7 @@ To study these errors, this thesis introduces HiED, a hybrid multi-agent system 
 
 HiED has five main parts. It formats the dialogue while preserving speaker turns, retrieves class-balanced examples, asks an LLM diagnostician for a ranked differential and a primary diagnosis, checks each active diagnosis against operationalized ICD-10 criteria, and applies deterministic rules to form a logic-confirmed set. Each criterion is marked as \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_evidence}.
 
-The selected Direct-Answer policy keeps the diagnostician's primary diagnosis and uses the checker and logic outputs as an audit. The alternative Nominate-then-Select policy uses the same upstream outputs but allows the logic-confirmed set to change the final primary. Their comparison tests whether criterion compatibility is more useful as an audit or as a selector. Chapter~\ref{ch:architecture} describes the architecture in detail.
+The selected Direct-Answer policy keeps the diagnostician's primary diagnosis and uses outputs from the Criterion Checker and deterministic rule layer as audit artifacts. The alternative Nominate-then-Select policy uses the same upstream outputs but allows the logic-confirmed set to determine a different committed diagnosis. Their comparison tests whether criterion compatibility is more useful as an audit or as a selector. Chapter~\ref{ch:architecture} describes the architecture in detail.
 
 \section{Contributions}
 
@@ -258,7 +258,7 @@ This thesis therefore uses five research questions:
 
 \begin{description}[style=nextline,leftmargin=3cm,labelwidth=2.5cm]
 \item[RQ1] How does HiED compare with conventional and single-model baselines under the same data split, label mapping, and primary evaluation endpoint?
-\item[RQ2] How often is a reference diagnosis present among ranked candidates or criterion-supported alternatives but absent from the committed output?
+\item[RQ2] How often is a reference diagnosis present among ranked candidates or criterion-supported alternatives but not selected as the committed diagnosis?
 \item[RQ3] Does class-balanced retrieval improve over no retrieval and ordinary global nearest-neighbor RAG in matched Single and HiED pipelines?
 \item[RQ4] Do criterion-based re-selection or the tested selection-repair methods improve over Direct-Answer?
 \item[RQ5] How stable are the main findings across model size, external synthetic corpora, label-space expansion, and major error groups?
@@ -275,7 +275,7 @@ This thesis therefore uses five research questions:
 RQ & Experiment and primary evidence & Status in this version\\
 \midrule
 RQ1 & Conventional baselines, Single models, and HiED; any-reference Top-1 and F1 & Partial: matched Single rows exist; same-split TF--IDF and ordinary RAG are pending\\
-RQ2 & Top-3, reference-in-confirmed, committed output, and confirmed-set size & Answered with separate marginal analyses; a full $D_3/R/S$ joint table is pending\\
+RQ2 & Top-3, reference-in-confirmed, committed diagnosis, and confirmed-set size & Answered with separate marginal analyses; a full $D_3/R/S$ joint table is pending\\
 RQ3 & No retrieval, global Top-5 RAG, and class-balanced RAG under matched pipelines & Partial: no-retrieval versus balanced Single exists; global and matched HiED runs are pending\\
 RQ4 & DA, NtS, pairwise, debate, fusion, SC, and CISC; paired Top-1 and flip accounting & Answered for the tested implementations\\
 RQ5 & Model size, MDD-5k, scope expansion, and error groups & Answered within synthetic-data and Qwen3-family limits\\
@@ -298,7 +298,7 @@ Three terms are used throughout the architecture. An \emph{active entry} is one 
 
 The diagnostician prompt contains four readable parts: the task and the fixed list of active diagnoses; the speaker-labeled transcript; retrieved training examples, when retrieval is enabled; and the required structured output fields. Retrieval is completed before generation. The model sees only the current transcript and the supplied examples.\ct{?}\ct{?}
 
-\ThesisFigure{fig_pipeline.pdf}{HiED pipeline. The diagnostician produces a ranked differential and an emitted primary diagnosis. Criterion checkers and deterministic rules create a separate audit. Direct-Answer keeps the emitted primary, whereas Nominate-then-Select uses the audit to choose a primary.}{fig:pipeline-thesis-rewrite}
+\ThesisFigure[1.0\textwidth]{fig_pipeline.pdf}{Overview of the HiED pipeline and its intermediate artifacts. Direct-Answer keeps the Diagnostician's emitted primary diagnosis, whereas Nominate-then-Select uses Criterion Checker and deterministic rule-layer artifacts to determine the committed diagnosis.}{fig:pipeline-thesis-rewrite}
 
 The pipeline performs six steps:
 
@@ -306,7 +306,7 @@ The pipeline performs six steps:
 \item Format the transcript and load the same fixed diagnostic profile for every case.
 \item Retrieve examples using the selected retrieval strategy.
 \item Ask the diagnostician for five ranked diagnoses, one primary diagnosis, and at most one optional comorbid diagnosis.
-\item Apply the fourteen criterion checkers to the transcript.
+\item Apply the Criterion Checker module across the fourteen active entries.
 \item Apply deterministic study rules to form the rule-confirmed set.
 \item Apply the selected finalization policy and return the diagnosis with its audit trace.
 \end{enumerate}
@@ -322,7 +322,7 @@ The help-seeker reports about two weeks of low mood, loss of interest, fatigue, 
 
 \begin{table}[htbp]
 \centering
-\caption{Running example across the HiED pipeline.}
+\caption{Illustrative running example showing intermediate artifacts and finalization policies in the HiED pipeline.}
 \label{tab:running-example}
 \begin{tabularx}{\textwidth}{|p{3.3cm}|X|}
 \hline
@@ -330,15 +330,15 @@ The help-seeker reports about two weeks of low mood, loss of interest, fatigue, 
 \hline
 Diagnostician & Ranks F32, F41.1, F41.2, F51, and F39; emits F32 as the primary field.\\
 \hline
-Criterion checkers & Record support for depressive symptoms and partial support for generalized anxiety, while marking anxiety duration as unresolved.\\
+Criterion Checker & Records support for depressive symptoms and partial support for generalized anxiety, while marking anxiety duration as unresolved.\\
 \hline
-Rule layer & Confirms F32 under its configured rule and retains F41.1 as a compatible alternative.\\
+Deterministic Rule Layer & Confirms F32 under its configured rule and retains F41.1 as a compatible alternative.\\
 \hline
 Direct-Answer & Keeps the diagnostician's emitted F32 primary. The later audit does not overwrite it.\\
 \hline
 Nominate-then-Select & Uses confirmed diagnoses and their ranked order to choose a primary instead of automatically preserving the emitted field.\\
 \hline
-Audit value & Shows that F41.1 was considered and partly supported even if F32 is committed. It cannot determine the clinically correct diagnosis when decisive information is absent.\\
+Audit Artifacts & Show that F41.1 was considered and partly supported even if F32 is committed. It cannot determine the clinically correct diagnosis when decisive information is absent.\\
 \hline
 \end{tabularx}
 \end{table}
@@ -348,7 +348,7 @@ Chapter~\ref{ch:data} uses the same example to explain parent-level scoring. Cha
 \section{Retrieval Strategies}
 \label{sec:retrieval}
 
-Retrieval-augmented generation adds relevant examples to the prompt~\citep{lewis2020rag}. HiED encodes the current transcript and training cases with BGE-M3 and searches the vectors with FAISS~\citep{chen2024bgem3,douze2024faiss}. The canonical configuration uses class-balanced retrieval: instead of returning only the globally nearest cases, it attempts to return at most one case for each of the eleven active parent diagnoses. This reduces domination by frequent classes such as depression and anxiety.
+The Similar-Case Retriever adds relevant training examples to the diagnostician prompt. It follows the retrieval-augmented generation pattern~\citep{lewis2020rag}: the current transcript and training cases are encoded with BGE-M3 and searched with FAISS~\citep{chen2024bgem3,douze2024faiss}. The canonical configuration uses class-balanced retrieval: instead of returning only the globally nearest cases, it attempts to return at most one case for each of the eleven active parent diagnoses. This reduces domination by frequent classes such as depression and anxiety.
 
 The retrieval classes are predetermined by the fixed diagnostic profile and are identical for every patient.\ct{Are the candidate classes pre-determined, or patient-specific?} Only the example selected within each class depends on the current transcript. Subtypes that share a parent code, such as F41.0, F41.1, and F41.2, share one retrieval class. Retrieved cases are shown only to the diagnostician; they do not enter checker prompts or directly choose the final output.
 
@@ -360,7 +360,7 @@ The canonical diagnostician uses Qwen3-32B-AWQ served through vLLM. Its prompt r
 
 The reference diagnostician is a system specification, not an ablation. It uses greedy decoding and does not request a calibrated probability or an abstention decision. Confidence-based sampling, calibration, and selective-output ideas are evaluated only as later repair or future-work directions.\ct{Is this an ablation study? If so, why in Appendix?}
 
-\section{Criterion Checkers and Deterministic Rules}
+\section{Criterion Checker and Deterministic Rule Layer}
 
 Each of the fourteen active entries has one criterion checker based on the study's operational rule set.\ct{Is this ICD 10?} The rules are linked to ICD-10 disorder descriptions~\citep{who2019icd10}, but several thresholds are simplified study rules. Appendix~\ref{app:active-profile} lists the active entries and configured thresholds so readers can distinguish the study implementation from official clinical guidance.
 
@@ -372,15 +372,15 @@ Checker states are model-generated and have not been validated as clinician grou
 
 \section{Finalization Policies}
 
-Under Direct-Answer (DA), the diagnostician's primary field becomes the final output; the first ranked diagnosis is used only when that field is missing. An optional comorbidity is retained when it differs from the primary. Checker and rule outputs do not replace the DA primary.
+Under Direct-Answer (DA), the diagnostician's primary field becomes the committed diagnosis; the first ranked diagnosis is used only when that field is missing. An optional comorbidity is retained when it differs from the primary. Outputs from the Criterion Checker and deterministic rule layer do not replace the DA committed diagnosis.
 
-Nominate-then-Select (NtS) uses criterion compatibility to choose the primary. It selects the first confirmed diagnosis in the five-entry ranking. If none is confirmed, it selects another confirmed active entry with the highest met ratio. If no diagnosis is confirmed, it falls back to the first ranked diagnosis. NtS does not emit a comorbid diagnosis.
+Nominate-then-Select (NtS) uses criterion compatibility to choose the committed diagnosis. It selects the first confirmed diagnosis in the five-entry ranking. If none is confirmed, it selects another confirmed active entry with the highest met ratio. If no diagnosis is confirmed, it falls back to the first ranked diagnosis. NtS does not emit a comorbid diagnosis.
 
-DA and NtS reuse the same ranked candidates and checker traces and differ mainly in the finalization rule. This provides a direct test of whether criterion-based re-selection improves committed output. Pairwise comparison and debate are separate selection-repair methods discussed in Chapter~\ref{ch:experimental}.
+DA and NtS reuse the same ranked candidates and checker traces and differ mainly in the finalization rule. This provides a direct test of whether criterion-based re-selection improves the committed diagnosis. Pairwise comparison and debate are separate selection-repair methods discussed in Chapter~\ref{ch:experimental}.
 
-\section{Audit Output}
+\section{Audit Artifacts}
 
-The final record contains the predicted diagnosis set, ranked differential, criterion states, short evidence spans, confirmed diagnoses, finalization source, and run failures. A reviewer can therefore challenge the candidate ranking, an individual criterion judgment, a study rule, or the final selection separately.
+The audit artifacts include the predicted diagnosis set, ranked differential, criterion states, short evidence spans, confirmed diagnoses, finalization source, and run failures. A reviewer can therefore challenge the candidate ranking, an individual criterion judgment, a study rule, or the final selection separately.
 
 This record follows the definition of auditability in Section~\ref{sec:auditability-definition}. It makes the system easier to inspect, but it does not expose the LLM's hidden reasoning, prove clinical correctness, or replace real-patient validation.
 
@@ -401,7 +401,7 @@ The accessible data contained 14,000 training cases and 1,000 public validation 
 
 \begin{table}[htbp]
 \centering
-\caption{LingxiDiag data split used in this thesis.}
+\caption{Summary of the LingxiDiag training, development, and internal test splits used in this thesis.}
 \label{tab:data-roles-rewrite}
 \begin{tabularx}{\textwidth}{@{}p{3.2cm}rX@{}}
 \toprule
@@ -433,7 +433,7 @@ Chapter~\ref{ch:architecture} introduced ICD-10 and the fixed fourteen-entry pro
 
 \begin{table}[htbp]
 \centering
-\caption{Plain-language parent labels and one-row-per-case distributions.}
+\caption{Plain-language ICD-10 parent labels and case distributions for the internal and external synthetic evaluation sets.}
 \label{tab:class-distribution}
 \small
 \begin{adjustbox}{max width=\textwidth}
@@ -474,7 +474,7 @@ The evaluator keeps three outputs separate:
 \item The \emph{multilabel view}, $M(x)$, contains the primary and any emitted comorbid parent.
 \end{enumerate}
 
-In plain language, Top-1 is any-reference agreement: it asks whether the committed output matches any corpus-reference diagnosis. Top-3 asks whether a reference diagnosis appears anywhere in the first three candidates. Exact Match asks whether the complete predicted parent set equals the complete reference set. These are benchmark-agreement measures, not independent measures of the patient's true clinical diagnosis.
+In plain language, Top-1 is any-reference agreement: it asks whether the committed diagnosis matches any corpus-reference diagnosis. Top-3 asks whether a reference diagnosis appears anywhere in the first three candidates. Exact Match asks whether the complete predicted parent set equals the complete reference set. These are benchmark-agreement measures, not independent measures of the patient's true clinical diagnosis.
 
 \[
 \mathrm{Top\text{-}1}=\frac{1}{N}\sum_x \mathbb{1}[p_1(x)\in G(x)],
@@ -488,7 +488,7 @@ In plain language, Top-1 is any-reference agreement: it asks whether the committ
 
 Macro-F1 gives each of the twelve scored classes equal weight. Weighted-F1 weights classes by their reference frequency. A system without a real ranked output is not assigned an artificial Top-3 from a fixed candidate list.
 
-A legacy single-label metric compares the committed output only with the first-listed reference diagnosis. It is used for the confusion matrix but not for the main result. This is why the canonical run can have first-listed agreement 0.509 and any-reference Top-1 agreement 0.518 without contradiction.
+A legacy single-label metric compares the committed diagnosis only with the first-listed reference diagnosis. It is used for the confusion matrix but not for the main result. This is why the canonical run can have first-listed agreement 0.509 and any-reference Top-1 agreement 0.518 without contradiction.
 
 \section{Stage-Wise Analysis}
 
@@ -523,7 +523,7 @@ RQ1 asks how HiED compares with conventional and single-model baselines under th
 
 \begin{table}[htbp]
 \centering
-\caption{Baseline ladder, proposed system, and current evidence status.}
+\caption{Conventional baselines, LLM baselines, the proposed HiED system, and the status of matched internal comparisons.}
 \label{tab:failure-ladder-rewrite}
 \begin{tabularx}{\textwidth}{@{}p{3.0cm}p{4.2cm}p{3.6cm}X@{}}
 \toprule
@@ -545,7 +545,7 @@ The current internal table can compare Single, Single + balanced RAG, and HiED--
 
 \section{Failure Localization (RQ2)}
 
-RQ2 uses the $D_3$--$R$--$S$ measures defined in Chapter~\ref{ch:data}. They ask whether a reference diagnosis appears in the Top-3, appears in the confirmed set when it is checkable, and is committed as the final output. Confirmed-set size and criterion-state counts show whether the audit rejects the reference diagnosis or keeps many diagnoses at the same time.
+RQ2 uses the $D_3$--$R$--$S$ measures defined in Chapter~\ref{ch:data}. They ask whether a reference diagnosis appears in the Top-3, appears in the confirmed set when it is checkable, and is selected as the committed diagnosis. Confirmed-set size and criterion-state counts show whether the audit rejects the reference diagnosis or keeps many diagnoses at the same time.
 
 The Top-3--Top-1 difference directly counts cases in which a reference diagnosis is already ranked but not committed. Reference-in-confirmed is reported on the separate checker-eligible denominator. Because the retained summary artifact does not contain the complete eight-cell $D_3/R/S$ joint table, the thesis does not infer individual transition counts from the three marginal rates. A full joint table remains a required case-level supplementary analysis.
 
@@ -559,7 +559,7 @@ The frozen evidence contains no retrieval versus balanced retrieval for the Sing
 
 \section{Finalization and Selection Repair (RQ4)}
 
-The closest matched finalization comparison is HiED--DA versus HiED--NtS. They share the same model, balanced retrieval, diagnostician ranking, criterion-checker set, deterministic rules, and case set. DA keeps the emitted primary field. NtS uses confirmed diagnoses to choose the committed output. Any-reference Top-1 is the primary outcome. Exact Match and multilabel F1 are secondary because NtS does not emit a comorbid diagnosis.
+The closest matched finalization comparison is HiED--DA versus HiED--NtS. They share the same model, balanced retrieval, diagnostician ranking, criterion-checker set, deterministic rules, and case set. DA keeps the emitted primary field. NtS uses confirmed diagnoses to choose the committed diagnosis. Any-reference Top-1 is the primary outcome. Exact Match and multilabel F1 are secondary because NtS does not emit a comorbid diagnosis.
 
 Four additional repair families test different explanations for the gap:
 
@@ -620,7 +620,7 @@ The main results use the 1,000-case internal test split. Supporting checker and 
 
 \begin{table}[htbp]
 \centering
-\caption{Available internal-test comparisons ($N=1000$). Top-1 is any-reference agreement. The Single baselines do not expose a real ranked differential, so Top-3 is not reported. Matched TF--IDF and global-RAG rows are pending supplementary analyses.}
+\caption{Available matched results on the 1,000-case internal test split. Top-1 denotes any-reference agreement. Single-model rows without a real ranked differential have no reported Top-3 value; matched TF--IDF and global-RAG results remain pending supplementary analyses.}
 \label{tab:ladder-rewrite}
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{lccccc}
@@ -644,7 +644,7 @@ Exact Match measures a different property. The Single systems emit too many labe
 
 \ThesisFigure{fig_b_selection_bottleneck.pdf}{Internal test split decomposition of committed Top-1, ranked Top-3 coverage, and reference-assisted close-cluster opportunity.}{fig:bottleneck-thesis-rewrite}
 
-HiED--DA reaches 0.802 Top-3 coverage and 0.518 any-reference Top-1 agreement. Because the ranked view begins with the committed output, the 0.284 difference represents 284 cases in which a reference parent is already in the Top-3 but another diagnosis is committed. This directly shows that candidate generation alone does not explain all benchmark disagreements.
+HiED--DA reaches 0.802 Top-3 coverage and 0.518 any-reference Top-1 agreement. Because the ranked view begins with the committed diagnosis, the 0.284 difference represents 284 cases in which a reference parent is already in the Top-3 but another diagnosis is committed. This directly shows that candidate generation alone does not explain all benchmark disagreements.
 
 A separate reference-assisted analysis identifies 349 misclassified cases whose reference parent lies in a wider cluster of similarly supported candidates. Correcting all of them without harming any correct case would give an upper bound of 0.867. This is an opportunity count, not a deployable selector or a clinical ceiling, because the analysis uses the reference label and a wider candidate set than Top-3.
 
@@ -922,7 +922,7 @@ The evaluation target is agreement with corpus-assigned ICD-10 labels after pare
 
 The selection bottleneck is an observed difference among output views, not a proven causal process inside the model. Under Direct-Answer, the primary diagnosis is chosen before the checker creates the audit trace. Top-1 and Top-3 use all 1,000 internal cases, whereas Reference-in-confirmed uses 915 checker-eligible cases. These measures help locate errors but should not be read as one nested funnel. The reference-assisted recovery analysis is likewise an upper bound, not a deployable selector.
 
-Criterion states are produced by an LLM checker rather than clinicians. The checker may miss negation, duration, or context, and the deterministic logic engine will carry those errors forward. The audit trace is inspectable and reproducible, but it is not a faithful record of hidden reasoning and has not been clinically validated at the criterion level.
+Criterion states are produced by an LLM checker rather than clinicians. The checker may miss negation, duration, or context, and the deterministic rule layer will carry those errors forward. The audit trace is inspectable and reproducible, but it is not a faithful record of hidden reasoning and has not been clinically validated at the criterion level.
 
 \section{Internal and Statistical Limits}
 
@@ -953,7 +953,7 @@ Future work with patient data will require institutional approval, privacy contr
 
 \section{Conclusions}
 
-This thesis introduced HiED, a modular multi-stage LLM system that separates ranked candidate generation, an evidence-linked criterion audit, and final committed output. The main result is that these views can disagree. On the internal test set, the reference diagnosis appears in the Top-3 far more often than it is selected as primary, and the criterion layer retains many diagnoses at once. The central problem is therefore not only whether the system can name the correct diagnosis, but whether it can choose it over other plausible diagnoses.
+This thesis introduced HiED, a modular multi-stage LLM system that separates ranked candidate generation, an evidence-linked criterion audit, and the committed diagnosis. The main result is that these views can disagree. On the internal test set, the reference diagnosis appears in the Top-3 far more often than it is selected as primary, and the criterion layer retains many diagnoses at once. The central problem is therefore not only whether the system can name the correct diagnosis, but whether it can choose it over other plausible diagnoses.
 
 The tested logic-based selector does not improve Top-1 over Direct-Answer, and the repair methods do not provide a clear and reproducible gain. External synthetic evaluation shows that the ranking-to-selection gap remains under distribution shift, but it does not establish the full internal verification pattern or clinical validity. HiED's strongest contribution is an auditable system and an evaluation method that makes these differences visible.
 
@@ -962,7 +962,7 @@ The tested logic-based selector does not improve Top-1 over Direct-Answer, and t
 \begin{description}[style=nextline,leftmargin=3cm,labelwidth=2.5cm]
 \item[RQ1] The frozen internal evidence compares Single, Single + balanced RAG, and HiED under the same 1,000 cases. Balanced RAG improves Single from 0.466 to 0.508, while HiED--DA reaches 0.518 but is not significantly better than Single + balanced RAG. A same-split TF--IDF baseline and ordinary global-RAG baseline have not yet been completed, so the thesis does not claim that HiED outperforms conventional or ordinary-RAG baselines.
 
-\item[RQ2] The clearest measured gap is between ranked coverage and committed output. In 284 of 1,000 internal cases, a reference diagnosis appears in the Top-3 but another diagnosis is committed. The rule-confirmed set retains a reference parent in 857 of 915 eligible cases but contains a median of six entries, showing high retention and limited selectivity. The marginal rates do not replace a complete $D_3/R/S$ joint table.
+\item[RQ2] The clearest measured gap is between ranked coverage and the committed diagnosis. In 284 of 1,000 internal cases, a reference diagnosis appears in the Top-3 but another diagnosis is committed. The rule-confirmed set retains a reference parent in 857 of 915 eligible cases but contains a median of six entries, showing high retention and limited selectivity. The marginal rates do not replace a complete $D_3/R/S$ joint table.
 
 \item[RQ3] Class-balanced retrieval improves the Single pipeline relative to no retrieval. Superiority over ordinary global RAG and the retrieval contribution within a matched HiED pipeline are not established because those runs were not in the original experiment set. They remain post-freeze supplementary analyses.
 

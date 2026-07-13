@@ -1,0 +1,85 @@
+\documentclass[tikz,border=5pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,calc}
+
+\definecolor{bggray}{RGB}{236,236,236}
+\definecolor{boxgrayfill}{RGB}{228,228,223}
+\definecolor{boxgraydraw}{RGB}{120,120,120}
+\definecolor{retrfill}{RGB}{252,238,238}
+\definecolor{retrdraw}{RGB}{212,76,76}
+\definecolor{diagfill}{RGB}{252,244,226}
+\definecolor{diagdraw}{RGB}{223,150,24}
+\definecolor{checkfill}{RGB}{252,244,226}
+\definecolor{checkdraw}{RGB}{223,150,24}
+\definecolor{logicfill}{RGB}{244,238,252}
+\definecolor{logicdraw}{RGB}{141,83,204}
+\definecolor{commitfill}{RGB}{234,248,244}
+\definecolor{commitdraw}{RGB}{0,122,94}
+\definecolor{auditfill}{RGB}{236,244,253}
+\definecolor{auditdraw}{RGB}{30,114,214}
+\definecolor{textgray}{RGB}{70,70,70}
+
+\newcommand{\TitleText}[1]{{\sffamily\fontsize{13.8}{15.2}\selectfont #1}}
+\newcommand{\SubText}[1]{{\sffamily\fontsize{8.8}{10.0}\selectfont #1}}
+
+\begin{document}
+\begin{tikzpicture}[
+  font=\sffamily,
+  >={Latex[length=2.3mm]},
+  mainarrow/.style={draw=textgray, line width=0.7pt, -{Latex[length=2.4mm]}},
+  altarrow/.style={draw=auditdraw, dashed, line width=0.9pt, -{Latex[length=2.3mm]}},
+  module/.style={rounded corners=4pt, line width=0.85pt, minimum height=1.42cm, align=center, inner sep=4pt},
+  flowlabel/.style={font=\sffamily\fontsize{10.1}{11}\selectfont, text=textgray},
+  altlabel/.style={font=\sffamily\fontsize{9.6}{10.5}\selectfont, text=auditdraw}
+]
+
+% background
+\fill[bggray] (-0.2,-2.95) rectangle (18.8,1.45);
+
+% top row
+\node[module, draw=boxgraydraw, fill=boxgrayfill, text=black, minimum width=2.15cm] (transcript) at (1.35,0.4)
+{\TitleText{Transcript}};
+
+\node[module, draw=retrdraw, fill=retrfill, text=retrdraw, minimum width=3.35cm] (retriever) at (5.55,0.4)
+{\TitleText{Similar-Case Retriever}\\[-1pt]
+ \textcolor{retrdraw}{\SubText{Retrieved similar cases}}\\[-1pt]
+ \textcolor{retrdraw}{\SubText{at most 1 / parent}}};
+
+\node[module, draw=diagdraw, fill=diagfill, text=diagdraw, minimum width=3.9cm] (diagnostician) at (10.25,0.4)
+{\TitleText{Diagnostician}\\[-1pt]
+ \textcolor{diagdraw}{\SubText{Ranked candidate diagnoses}}\\[-1pt]
+ \textcolor{diagdraw}{\SubText{Emitted primary diagnosis}}};
+
+\node[module, draw=commitdraw, fill=commitfill, text=commitdraw, minimum width=4.15cm] (commit) at (16.15,0.4)
+{\TitleText{Committed diagnosis}\\[-1pt]
+ \textcolor{commitdraw}{\SubText{primary + optional comorbidity}}};
+
+% bottom row
+\node[module, draw=checkdraw, fill=checkfill, text=checkdraw, minimum width=4.0cm] (checker) at (6.4,-1.95)
+{\TitleText{Criterion Checker}\\[-1pt]
+ \textcolor{checkdraw}{\SubText{Criterion states}}};
+
+\node[module, draw=logicdraw, fill=logicfill, text=logicdraw, minimum width=4.2cm] (logic) at (11.25,-1.95)
+{\TitleText{Deterministic rule layer}\\[-1pt]
+ \textcolor{logicdraw}{\SubText{Logic-confirmed diagnoses}}};
+
+\node[module, draw=auditdraw, fill=auditfill, text=auditdraw, minimum width=4.65cm] (audit) at (16.3,-1.95)
+{\TitleText{Audit artifacts}\\[-1pt]
+ \textcolor{auditdraw}{\SubText{Criterion states, evidence, and rules}}};
+
+% arrows top
+\draw[mainarrow] (transcript.east) -- (retriever.west);
+\draw[mainarrow] (retriever.east) -- (diagnostician.west);
+\draw[mainarrow] (diagnostician.east) -- node[above=2pt, flowlabel] {Direct-Answer} (commit.west);
+
+% arrows down and bottom
+\draw[mainarrow] (diagnostician.south) |- (checker.north);
+\draw[mainarrow] (checker.east) -- (logic.west);
+\draw[mainarrow] (logic.east) -- (audit.west);
+
+% NtS path to committed output without output-output arrow
+\draw[altarrow] ($(logic.north)+(0.2,0)$) -- ++(0,1.0) -| ($(commit.south)+(0.0,-0.03)$);
+\node[altlabel] at (15.5,-0.45) {Nominate-then-Select};
+
+\end{tikzpicture}
+\end{document}
