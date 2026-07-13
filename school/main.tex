@@ -182,22 +182,22 @@ The evidence may also be indirect. In Chinese-speaking settings, patients often 
 
 Differential diagnosis remains difficult because common psychiatric disorders share many symptoms. Depression, anxiety, stress-related disorders, obsessive-compulsive disorder, somatic symptom disorders, and sleep disorders may all involve insomnia, fatigue, poor concentration, and impaired daily function. ICD-10 provides requirements for symptoms, duration, impairment, course, and exclusions~\citep{who2019icd10}, but several disorders may still fit the same transcript. Evidence for both depression and anxiety, for example, may reflect comorbidity or overlapping symptoms from one main condition~\citep{brown2001comorbidity}. Even structured diagnostic studies report limited agreement for some common disorders~\citep{regier2013dsm5}.
 
-During a first psychiatric visit in Taiwan, clinicians often have limited time to compare disorders that share the same symptoms. Insomnia, fatigue, poor concentration, worry, and low mood may fit several diagnoses, while decisive facts about onset, duration, previous episodes, medical or substance-related causes, and independent comorbidity may still be missing. The clinician must therefore document a best-supported working diagnosis, keep plausible alternatives in view, and decide what information must be collected at follow-up. Time pressure can increase the risk of anchoring or premature closure~\citep{croskerry2003cognitive}.\ct{I don't quite understand this part.}\ct{I don't fully understand this paragraph. Don't mention your thesis here. Focus on just the challenges in current clinical setting in Taiwan}
+These features make first-visit psychiatric diagnosis a problem of comparative bookkeeping under incomplete evidence. The clinician must document a best-supported working diagnosis, keep plausible alternatives visible, and identify which missing information should be collected at follow-up. Time pressure can increase the risk of anchoring or premature closure when several disorders share the same symptoms~\citep{croskerry2003cognitive}.\ct{I don't quite understand this part.}\ct{I don't fully understand this paragraph. Don't mention your thesis here. Focus on just the challenges in current clinical setting in Taiwan}
 
 \section{Problem Definition and Challenges}
 \label{sec:problem-definition}
 
-HiED does not solve short consultation time, missing history, or clinical uncertainty. It studies a narrower technical problem under a fixed transcript: whether an LLM fails because it never proposes a reference diagnosis, because its criterion audit does not support that diagnosis, or because it proposes the diagnosis but commits another diagnosis. Large language models can read free-form dialogue, summarize symptoms, generate differential diagnoses, and return structured outputs~\citep{li2024taiwan,raballo2025,sarma2025}, but plausible language is not the same as reliable fine-grained selection~\citep{xu2026lingxidiagbench}.\ct{Does our model deal with all these problems?}
+Large language models and medical multi-agent systems are attractive for psychiatric transcript analysis because they can process free-form dialogue, summarize symptoms, retrieve relevant examples, assign specialized roles, and return structured outputs~\citep{li2024taiwan,raballo2025,sarma2025,tang2024medagents,kim2024mdagents}. However, these capabilities do not by themselves ensure reliable differential diagnosis from a fixed transcript. A fluent answer may still fail because the model never proposes a reference diagnosis, because its criterion audit does not support that diagnosis, or because it proposes the diagnosis but commits another one. HiED studies this narrower technical problem; it does not solve short consultation time, missing history, or clinical uncertainty.\ct{Does our model deal with all these problems?}
 
 We study this question with three measures. \emph{Candidate detection} asks whether a reference parent diagnosis appears in the ranked Top-3. \emph{Criterion verification} asks whether a reference parent appears in the rule-confirmed set when that diagnosis has an active checker. \emph{Committed selection} asks whether the committed diagnosis belongs to the reference parent set. These measures are used to locate disagreements among output views; they do not form a fixed chronological funnel for every policy.
 
-We use the term \emph{primary-selection bottleneck} for the operational pattern in which a reference diagnosis is present among leading candidates or criterion-supported alternatives but the system commits a different diagnosis. The term describes benchmark disagreement under the reference-set scoring rule. It does not show that every error passes both earlier checks, that the corpus identifies a unique clinical primary diagnosis, or that every transcript contains enough evidence for one.\ct{what problem?}
+We use the term \emph{primary-selection bottleneck} for the operational pattern in which a reference diagnosis is present among leading candidates or criterion-supported alternatives but the system commits a different diagnosis. The bottleneck is therefore a benchmark-local pattern showing that candidate ranking or criterion compatibility can exceed final commitment; it is not a claim about the true clinical primary diagnosis. It does not show that every error passes both earlier checks, that the corpus identifies a unique clinical primary diagnosis, or that every transcript contains enough evidence for one.\ct{what problem?}
 
 This distinction matters because different errors need different solutions. Missing candidates call for better generation or retrieval. A candidate that fails criterion checking points to the checker, the rules, or missing evidence. A candidate that remains available but is not selected points to the final comparison among plausible diagnoses. The detailed metric definitions are given in \Cref{sec:gold-conventions}.
 
 \section{System Overview}
 
-To study these errors, this thesis introduces HiED, a hybrid multi-agent system for Chinese psychiatric differential diagnosis from initial-consultation transcripts. The intended context is Taiwanese outpatient care, but all quantitative results in this thesis use synthetic Chinese transcript datasets; no Taiwanese patient results are reported.
+To make these failure modes observable, this thesis introduces HiED, a hybrid multi-agent system for Chinese psychiatric differential diagnosis from initial-consultation transcripts. The intended context is Taiwanese outpatient care, but all quantitative results in this thesis use synthetic Chinese transcript datasets; no Taiwanese patient results are reported.
 
 HiED has five main parts. It formats the dialogue while preserving speaker turns, retrieves class-balanced examples, asks an LLM diagnostician for a ranked differential and a primary diagnosis, checks each active diagnosis against operationalized ICD-10 criteria, and applies deterministic rules to form a logic-confirmed set. Each criterion is marked as \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_evidence}.
 
@@ -209,7 +209,7 @@ This thesis makes two main contributions.
 
 First, it presents an auditable hybrid architecture that combines LLM diagnosis, explicit ICD-10 criterion checking, and deterministic rules. The system records criterion states and supporting evidence instead of relying only on a free-form rationale. The trace can be inspected and replayed, but it does not prove that the LLM's hidden reasoning is faithful or that the checker judgments are clinically correct~\citep{turpin2023unfaithful}.
 
-Second, it presents a stage-aware evaluation framework for separating candidate detection, criterion verification, and primary selection. This framework makes the selection bottleneck measurable and supports controlled tests of logic-based re-selection and other repair methods. The negative repair results narrow several simple explanations under the tested settings, but they do not show that better selectors or additional clinical information can never help.
+Second, it presents a stage-wise failure-localization and empirical evaluation framework that separates candidate detection, criterion verification, and committed selection, quantifies the primary-selection bottleneck, and tests whether criterion-based finalization and several repair methods close the observed gap. The negative repair results narrow several simple explanations under the tested settings, but they do not show that better selectors or additional clinical information can never help.
 
 \section{Thesis Organization}
 
@@ -401,14 +401,14 @@ The accessible data contained 14,000 training cases and 1,000 public validation 
 
 \begin{table}[htbp]
 \centering
-\caption{Summary of the LingxiDiag training, development, and internal test splits used in this thesis.}
+\caption{Summary of the LingxiDiag training-source, public-validation, and internal-test roles used in this thesis.}
 \label{tab:data-roles-rewrite}
 \begin{tabularx}{\textwidth}{@{}p{3.2cm}rX@{}}
 \toprule
 Split & $N$ & Use\\
 \midrule
 Training / retrieval corpus & 13,000 & Builds the case-retrieval index; not used as a scored test set\\
-Development split & 1,000 & Selects prompts, rules, and analysis settings\\
+Public validation / development split & 1,000 & Selects prompts, rules, and analysis settings\\
 Internal test split & 1,000 & Reports the main in-domain results after prompts, rules, and evaluation settings were fixed\ct{headline}\\
 \bottomrule
 \end{tabularx}
@@ -644,7 +644,7 @@ Exact Match measures a different property. The Single systems emit too many labe
 
 \ThesisFigure{fig_b_selection_bottleneck.pdf}{Internal test split decomposition of committed Top-1, ranked Top-3 coverage, and reference-assisted close-cluster opportunity.}{fig:bottleneck-thesis-rewrite}
 
-HiED--DA reaches 0.802 Top-3 coverage and 0.518 any-reference Top-1 agreement. Because the ranked view begins with the committed diagnosis, the 0.284 difference represents 284 cases in which a reference parent is already in the Top-3 but another diagnosis is committed. This directly shows that candidate generation alone does not explain all benchmark disagreements.
+HiED--DA reaches 0.802 Top-3 coverage and 0.518 any-reference Top-1 agreement. Because the ranked view begins with the committed diagnosis, the 0.284 difference represents 284 cases in which a reference parent is already in the Top-3 but another diagnosis is committed. This gap measures recoverable opportunity under the benchmark reference-set convention, not clinical recoverability without additional information. It directly shows that candidate generation alone does not explain all benchmark disagreements.
 
 A separate reference-assisted analysis identifies 349 misclassified cases whose reference parent lies in a wider cluster of similarly supported candidates. Correcting all of them without harming any correct case would give an upper bound of 0.867. This is an opportunity count, not a deployable selector or a clinical ceiling, because the analysis uses the reference label and a wider candidate set than Top-3.
 
@@ -756,13 +756,13 @@ A configuration-only retargeting experiment expands the active profile from four
 
 \begin{table}[htbp]
 \centering
-\caption{TF--IDF with logistic-regression transfer matrix. The MDD evaluation cells use the same 185-case holdout.}
+\caption{Development-lineage and cross-corpus TF--IDF with logistic-regression results. The LingxiDiag-to-LingxiDiag row uses the public validation/development split and is not the frozen internal-test baseline required for RQ1. The MDD evaluation cells use the same 185-case holdout.}
 \label{tab:lexical-transfer-rewrite}
 \begin{tabular}{llrcl}
 \toprule
 Training corpus & Evaluation corpus & $N$ & Top-1 & Interpretation\\
 \midrule
-LingxiDiag & LingxiDiag & 1000 & 0.610 & in-domain fit\\
+LingxiDiag & LingxiDiag & 1000 & 0.610 & development-lineage fit\\
 LingxiDiag & MDD-5k & 185 & 0.049 & transfer collapse\\
 MDD-5k & LingxiDiag & 1000 & 0.485 & reverse degradation\\
 MDD-5k & MDD-5k & 185 & 0.692 & within-MDD fit\\
@@ -770,7 +770,7 @@ MDD-5k & MDD-5k & 185 & 0.692 & within-MDD fit\\
 \end{tabular}
 \end{table}
 
-The same classifier family performs well within each training corpus but transfers poorly. These results show that lexical features can fit corpus-specific wording and label priors without learning a portable diagnostic boundary. The 185 MDD cases are a holdout from the 925-case release, not a second external dataset.
+The LingxiDiag-to-LingxiDiag result is a development-lineage lexical probe and must not be compared directly with the frozen 1,000-case internal HiED result. The same classifier family performs well within each training corpus but transfers poorly. These results show that lexical features can fit corpus-specific wording and label priors without learning a portable diagnostic boundary. The 185 MDD cases are a holdout from the 925-case release, not a second external dataset.
 
 \section{Matched External Repair Matrix}
 
