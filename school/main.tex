@@ -278,7 +278,7 @@ The diagnostic scope is fixed before each run. The canonical evaluation uses fou
 
 The diagnostician prompt contains the task instructions, the active diagnoses, the speaker-labeled transcript\ct{?}, retrieved examples, and the required JSON output format. Retrieval is completed before generation; the model cannot request additional tools or cases during the response.\ct{?}
 
-\ThesisFigure{fig_pipeline.pdf}{HiED pipeline. The LLM diagnostician produces a ranked differential and primary diagnosis. Criterion checkers and deterministic rules produce an audit. Direct-Answer keeps the diagnostician's primary, while Nominate-then-Select uses the same audit outputs to choose a primary.}{fig:pipeline-thesis-rewrite}
+\ThesisFigure{fig_pipeline.pdf}{HiED pipeline. The Similar Cases Retriever supplies class-balanced examples; the Diagnostician produces a ranked differential and primary diagnosis; Criterion Checkers and the Compatibility Auditor produce an audit. Direct-Answer keeps the diagnostician's primary, while Nominate-then-Select uses the same audit outputs to choose a primary. Table~\ref{tab:output-provenance} lists each output's role.}{fig:pipeline-thesis-rewrite}
 
 The canonical pipeline performs six steps:
 
@@ -293,18 +293,22 @@ The canonical pipeline performs six steps:
 
 \begin{table}[t]
 \centering
-\caption{Main outputs of the HiED pipeline.}
+\caption{Output objects in Figure~\ref{fig:pipeline-thesis-rewrite}, and their role.}
 \label{tab:output-provenance}
-\begin{tabularx}{\textwidth}{@{}p{0.25\textwidth}p{0.27\textwidth}X@{}}
-\toprule
-Output & Source & Main use\\
-\midrule
-Ranked differential & Diagnostician & Top-$k$ candidate coverage and differential review.\\
-Primary and optional comorbidity & Diagnostician under Direct-Answer & Final predicted diagnosis set.\\
-Criterion states and evidence & Criterion checkers & Per-diagnosis audit of supporting, contradictory, and missing evidence.\\
-Logic-confirmed set & Deterministic rules & Verification analysis and Nominate-then-Select finalization.\\
-Decision trace & Pipeline & Records prompts, rankings, checker results, rules, failures, and finalization source.\\
-\bottomrule
+\begin{tabularx}{\textwidth}{|p{0.32\textwidth}|X|}
+\hline
+Output & Main use\\
+\hline
+Ranked differential & Top-$k$ coverage; differential review\\
+\hline
+Primary and optional comorbidity & Final predicted diagnosis set\\
+\hline
+Criterion states and evidence & Per-diagnosis audit: supporting, contradictory, missing\\
+\hline
+Logic-confirmed set & Verification analysis; Nominate-then-Select finalization\\
+\hline
+Decision trace & Full record: prompts, rankings, checker results, rules, finalization source\\
+\hline
 \end{tabularx}
 \end{table}
 

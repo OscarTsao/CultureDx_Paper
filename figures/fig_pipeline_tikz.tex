@@ -1,9 +1,4 @@
-% fig_pipeline_tikz.tex
-% Standalone TikZ source for the corrected HiED pipeline figure.
-% Compile:  pdflatex fig_pipeline_tikz.tex   ->  fig_pipeline_tikz.pdf
-% Then copy/rename to fig_pipeline.pdf in paper/drafts, paper/school, paper/jbhi.
-% The three .tex files keep their existing \includegraphics{fig_pipeline.pdf} unchanged.
-
+% fig_pipeline_tikz.tex — v3: unified agent-style names + intermediate-output arrow labels (maps to Table 3.1)
 \documentclass[border=3pt]{standalone}
 \usepackage{tikz}
 \usetikzlibrary{positioning, arrows.meta}
@@ -28,6 +23,7 @@
 \definecolor{audFill}{HTML}{E6F1FB}
 \definecolor{audDraw}{HTML}{185FA5}
 \definecolor{audText}{HTML}{0C447C}
+\definecolor{lblText}{HTML}{55524A}
 
 \begin{document}
 \begin{tikzpicture}[
@@ -41,36 +37,31 @@
   dec/.style={box,  fill=decFill,  draw=decDraw,  text=decText},
   aud/.style={box,  fill=audFill,  draw=audDraw,  text=audText},
   arr/.style={-{Stealth[length=4pt,width=4pt]}, line width=0.5pt, draw=procDraw},
-  darr/.style={-{Stealth[length=4pt,width=4pt]}, line width=0.6pt, draw=audDraw, dashed},
+  lbl/.style={font=\scriptsize\itshape, text=lblText},
 ]
 
 % ---- Row 1: selection path ----
 \node[proc]   (tx)  at (0,0)     {Transcript};
-\node[ragbox] (rag) at (3.3,0)   {Retrieval (RAG)\\[-1pt]{\scriptsize 1 case / disorder}};
-\node[agent] (dx)  at (6.6,0)   {Diagnostician\\[-1pt]{\scriptsize 5 candidates}};
-\node[dec]  (pri) at (11.4,0)  {Committed primary\\[-1pt]{\scriptsize + comorbid}};
+\node[ragbox] (rag) at (3.6,0)   {Similar Cases\\Retriever\\[-1pt]{\scriptsize 1 case / disorder}};
+\node[agent] (dx)  at (7.4,0)   {Diagnostician\\[-1pt]{\scriptsize 5 candidates}};
+\node[dec]  (pri) at (12.4,0)  {Committed primary\\[-1pt]{\scriptsize + comorbid}};
 
 % ---- Row 2: audit branch ----
-\node[agent] (chk)   at (3.3,-2.4)  {Criterion checkers\\[-1pt]{\scriptsize Per-disorder ICD-10}};
-\node[logic] (logic) at (6.6,-2.4)  {Logic engine\\[-1pt]{\scriptsize Count thresholds}};
-\node[aud]  (audit) at (11.4,-2.4) {Audit record\\[-1pt]{\scriptsize criteria \& why}};
+\node[agent] (chk)   at (3.6,-2.9)  {Criterion\\Checkers\\[-1pt]{\scriptsize Per-disorder ICD-10}};
+\node[logic] (logic) at (7.4,-2.9)  {Compatibility\\Auditor\\[-1pt]{\scriptsize Count thresholds}};
+\node[aud]  (audit) at (12.4,-2.9) {Audit record\\[-1pt]{\scriptsize criteria \& why}};
 
-% ---- Selection-path arrows ----
-\draw[arr] (tx)  -- (rag);
-\draw[arr] (rag) -- (dx);
-\draw[arr] (dx)  -- node[above, font=\scriptsize, text=procText] {Direct-Answer} (pri);
+% ---- Selection-path arrows (with intermediate-output labels, matches Table 3.1 provenance) ----
+\draw[arr] (tx)  -- node[lbl, above] {transcript} (rag);
+\draw[arr] (rag) -- node[lbl, above] {similar cases} (dx);
+\draw[arr] (dx)  -- node[lbl, above, text=procText, font=\scriptsize] {Direct-Answer} (pri);
 
 % ---- Branch: candidates feed the checkers ----
-\draw[arr] (dx.south) -- ++(0,-0.85) -| (chk.north);
+\draw[arr] (dx.south) -- ++(0,-0.9) -| node[lbl, pos=0.28, above] {ranked candidates} (chk.north);
 
 % ---- Audit-branch arrows ----
-\draw[arr] (chk)   -- (logic);
-\draw[arr] (logic) -- (audit);
-
-% ---- Output-side annotation ----
-\draw[darr] (audit.north) -- (pri.south);
-\node[font=\scriptsize, text=audText, align=center] at (8.9,-1.15)
-     {output-side trace;\\does not drive selection};
+\draw[arr] (chk)   -- node[lbl, above] {criterion states} (logic);
+\draw[arr] (logic) -- node[lbl, above] {logic-confirmed set} (audit);
 
 \end{tikzpicture}
 \end{document}
