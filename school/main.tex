@@ -92,24 +92,28 @@ Common Mental Disorders in the Taiwanese Context\par}
 \pagenumbering{roman}
 \chapter*{中文摘要}
 \addcontentsline{toc}{chapter}{中文摘要}
-初診精神科晤談逐字稿中的鑑別診斷，是在證據不完整的情況下比較多個可能疾病，並選出一個主診斷。病程、發病時序、排除病因與共病關係等關鍵資訊，未必會在單次晤談中被完整問出。大型語言模型能流暢地閱讀這類逐字稿，但流暢的語言理解不代表能可靠完成鑑別診斷。
+初診精神科晤談逐字稿中的鑑別診斷，本質上是在證據不完整的情況下比較多個可能疾病，並選出一個主診斷。多個疾病可能同時與同一份逐字稿相容，但病程、發病時序、排除病因與共病關係等關鍵資訊，未必會在單次晤談中被完整問出。大型語言模型雖然能流暢地閱讀這類逐字稿，也已被廣泛應用於精神科診斷研究，但流暢的語言理解不代表能可靠完成鑑別診斷。
 
-常見的終點準確率只能顯示最終答案是否正確，無法分辨系統是沒有找出正確候選、正確候選未通過準則驗證，還是已找到並通過驗證，卻選錯主診斷。為了分析並定位這些失敗，本研究提出 HiED，一套面向中文精神科初診逐字稿的混合式多代理鑑別診斷框架。HiED 將候選診斷生成、ICD-10 逐準則驗證與主診斷選擇分開記錄，並為每次預測產生可檢視的稽核軌跡。
+常見的終點準確率只能顯示最終答案是否正確，無法說明錯誤是因為系統沒有找出正確候選、沒有從逐字稿中找到足以支持該候選的診斷準則證據，還是已經生成合理候選，卻在最後選錯主診斷。因此，候選診斷生成、依準則驗證與主診斷選擇之間的差異，容易被單一準確率所掩蓋。
 
-在 1,000 例內部測試中，參考診斷出現在前三名候選的比例為 0.802，但主診斷 Top-1 準確率僅為 0.518。在具有對應準則檢查器的 915 例中，857 例（0.937）的參考診斷仍出現在邏輯確認集合。這些結果顯示，系統的主要落差不只在於能否生成合理的候選診斷，也在於能否從多個受到準則支持的候選中，選出最適合的主診斷。本文將此現象稱為主診斷選擇瓶頸。
+為了分析並定位這些失敗，本研究提出 HiED，一套面向中文精神科初診逐字稿的混合式多代理鑑別診斷框架。系統先由診斷代理產生排序後的鑑別診斷，再由準則檢查代理逐項判斷各候選是否受到 ICD-10 準則與逐字稿證據支持。確定性規則層整理這些檢查結果，而最終主診斷則另外記錄，使候選生成、準則驗證與主診斷選擇可以分別觀察。系統也會為每次預測輸出逐準則的稽核軌跡，讓研究者與臨床人員檢查候選疾病、支持證據、未確定資訊與最終選擇。
 
-本論文有兩項主要貢獻：其一，提出一套可分別觀察候選生成、準則驗證與主診斷選擇的稽核框架；其二，提供可重現的實驗證據，顯示在本研究使用的合成中文逐字稿中，主診斷選擇是重要的錯誤來源。HiED 尚未使用臺灣真實病人資料進行驗證，應視為研究與臨床審查原型，而非自主診斷工具。題目中的臺灣脈絡指繁體中文互動、本地端推論及面向臨床人員的稽核設計；真實病人臨床驗證仍是後續工作。
+在 1,000 例內部測試中，參考診斷出現在前三名候選的比例為 0.802，但主診斷 Top-1 準確率僅為 0.518。這個落差顯示，即使系統已將參考診斷列為主要候選，仍可能在最後的主診斷選擇中失敗。本文將此現象稱為主診斷選擇瓶頸。
+
+本論文有兩項主要貢獻：其一，提出一套可分別觀察候選生成、準則驗證與主診斷選擇的可稽核框架；其二，提供可重現的實驗證據，顯示在本研究使用的合成中文逐字稿中，主診斷選擇是重要的錯誤來源。HiED 尚未使用臺灣真實病人資料進行驗證，應視為研究與臨床審查原型，而非自主診斷工具。題目中的臺灣脈絡指繁體中文互動、本地端推論及面向臨床人員的稽核設計；真實病人臨床驗證仍是後續工作。
 
 \noindent\textbf{關鍵詞：}大型語言模型、多代理系統、精神科鑑別診斷、臨床決策支援、ICD-10、可稽核人工智慧
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
-Differential diagnosis from an initial psychiatric consultation transcript requires comparing several possible disorders under incomplete evidence and selecting one primary diagnosis. Key information about illness course, onset, exclusionary causes, and comorbidity may not be fully elicited in a single consultation. Large language models can read such transcripts fluently, but fluent language understanding does not ensure reliable differential diagnosis.
+Differential diagnosis from an initial psychiatric consultation transcript is a comparative decision under incomplete evidence. Several disorders may fit the same transcript, yet one must usually be selected as primary. Key information about illness course, onset, exclusionary causes, and comorbidity may not be fully elicited in a single consultation. Large language models can read such transcripts fluently, but linguistic fluency does not ensure reliable differential diagnosis.
 
-Endpoint accuracy shows whether the final answer is correct, but not whether the error occurred because the system failed to generate the reference diagnosis, did not retain it after criterion verification, or generated and verified it but selected another disorder as primary. To study and localize these failures, we propose HiED, a hybrid multi-agent framework for Chinese psychiatric initial-consultation transcripts. HiED records candidate generation, ICD-10 criterion-by-criterion verification, and primary-diagnosis selection separately and produces an inspectable audit trace for each prediction.
+Endpoint accuracy shows whether the final answer is correct, but not whether the system failed to generate the reference diagnosis, failed to find supporting criterion-level evidence, or generated a reasonable candidate but selected another disorder as primary. A single score therefore hides the difference among candidate generation, criterion verification, and primary selection.
 
-On an internal test set of 1,000 cases, Top-3 coverage of the reference diagnosis was 0.802, whereas Top-1 primary-diagnosis accuracy was 0.518. Among 915 cases with a corresponding criterion checker, the reference diagnosis remained in the logic-confirmed set in 857 cases (0.937). These results show that the main gap is not only whether the system can generate a plausible candidate diagnosis, but also whether it can choose the most appropriate primary diagnosis from several candidates supported by the criteria. We call this the primary-selection bottleneck.
+To study and localize these failures, we propose HiED, a hybrid multi-agent framework for Chinese psychiatric initial-consultation transcripts. A diagnostician agent produces a ranked differential diagnosis. Criterion-checking agents examine each candidate against ICD-10 criteria and transcript evidence, and a deterministic rule layer summarizes the checks. The final primary diagnosis is recorded separately. HiED also produces a criterion-level audit trace that shows the candidates, supporting evidence, unresolved information, and final choice.
 
-This thesis makes two contributions: (1) an auditable framework that separates candidate generation, criterion verification, and primary selection; and (2) reproducible experimental evidence that primary selection is an important source of error in the synthetic Chinese transcripts used in this study. HiED has not been validated using real-patient data from Taiwan and should be viewed as a prototype for research and clinician review, not an autonomous diagnostic tool. The Taiwanese context refers to Traditional Chinese interaction, local inference, and clinician-facing audit design; real-patient clinical validation remains future work.
+On an internal test set of 1,000 cases, the reference diagnosis appeared among the top three candidates in 0.802 of cases, whereas Top-1 primary-diagnosis accuracy was 0.518. This gap shows that the system may generate the reference diagnosis as a leading candidate yet fail to select it as primary. We call this the primary-selection bottleneck.
+
+This thesis makes two main contributions: an auditable framework that separates candidate generation, criterion verification, and primary selection, and reproducible evidence that primary selection is an important source of error in the synthetic Chinese transcripts used in this study. HiED has not been validated using real-patient data from Taiwan and should be viewed as a prototype for research and clinician review, not an autonomous diagnostic tool. The Taiwanese context refers to Traditional Chinese interaction, local inference, and clinician-facing audit design; real-patient clinical validation remains future work.
 
 \noindent\textbf{Keywords:} Large language models, multi-agent systems, psychiatric differential diagnosis, clinical decision support, ICD-10, auditable AI
 
