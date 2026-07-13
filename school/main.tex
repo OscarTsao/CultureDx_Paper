@@ -298,7 +298,7 @@ Three terms are used throughout the architecture. An \emph{active entry} is one 
 
 The diagnostician prompt contains four readable parts: the task and the fixed list of active diagnoses; the speaker-labeled transcript; retrieved training examples, when retrieval is enabled; and the required structured output fields. Retrieval is completed before generation. The model sees only the current transcript and the supplied examples.\ct{?}\ct{?}
 
-\ThesisFigure[1.0\textwidth]{fig_pipeline.pdf}{Overview of the HiED pipeline and its intermediate artifacts. Direct-Answer keeps the Diagnostician's emitted primary diagnosis, whereas Nominate-then-Select uses Criterion Checker and deterministic rule-layer artifacts to determine the committed diagnosis.}{fig:pipeline-thesis-rewrite}
+\ThesisFigure[1.0\textwidth]{fig_pipeline_round20c.pdf}{Overview of the HiED pipeline and its intermediate artifacts. Direct-Answer keeps the Diagnostician's emitted primary diagnosis, whereas Nominate-then-Select uses Criterion Checker and deterministic rule-layer artifacts to determine the committed diagnosis.}{fig:pipeline-thesis-rewrite}
 
 The pipeline performs six steps:
 
