@@ -296,7 +296,7 @@ ICD-10 is the diagnostic coding system used to name the disorders in this study~
 
 Three terms are used throughout the architecture. An \emph{active entry} is one code that the diagnostician may rank and that has a corresponding criterion checker. The \emph{criterion-checker set} is the collection of those fourteen checker definitions; it is not a learned memory bank. Each criterion receives one of three model-generated evidence states: \texttt{met} when the transcript supports it, \texttt{not\_met} when the transcript contains evidence against it, and \texttt{insufficient\_evidence} when the transcript supports neither conclusion. The rules are study-specific operationalizations informed by ICD-10 descriptions, not a reproduction of the full official manual and not independently clinician-validated ground truth.
 
-The diagnostician prompt contains four readable parts: the task and the fixed list of active diagnoses; the speaker-labeled transcript; retrieved training examples, when retrieval is enabled; and the required structured output fields. Retrieval is completed before generation. The model sees only the current transcript and the supplied examples.\ct{?}\ct{?}
+The diagnostician prompt contains four readable parts: the task and the fixed list of active diagnoses; the speaker-labeled transcript; retrieved training examples, when retrieval is enabled; and the required structured output fields. Retrieval is completed before generation. The model sees only the current transcript and the supplied examples.
 
 \ThesisFigure[1.0\textwidth]{fig_pipeline_round20c.pdf}{Overview of the HiED pipeline and its intermediate artifacts. Direct-Answer keeps the Diagnostician's emitted primary diagnosis, whereas Nominate-then-Select uses Criterion Checker and deterministic rule-layer artifacts to determine the committed diagnosis.}{fig:pipeline-thesis-rewrite}
 
@@ -356,7 +356,7 @@ The codebase can also perform ordinary global Top-5 nearest-neighbor retrieval, 
 
 \section{Diagnostician}
 
-The canonical diagnostician uses Qwen3-32B-AWQ served through vLLM. Its prompt requests five ordered diagnoses from the active profile, a short reason for each, one primary field chosen from the first three, and at most one separate comorbid field.\ct{?} The primary field and the ranked list are stored separately. In the running example, F41.1 can therefore remain in the Top-3 even though F32 is emitted as primary.
+The canonical diagnostician uses Qwen3-32B-AWQ served through vLLM. Its prompt requests five ordered diagnoses from the active profile, a short reason for each, one primary field chosen from the first three, and at most one separate comorbid field. The primary field and the ranked list are stored separately. In the running example, F41.1 can therefore remain in the Top-3 even though F32 is emitted as primary.
 
 The reference diagnostician is a system specification, not an ablation. It uses greedy decoding and does not request a calibrated probability or an abstention decision. Confidence-based sampling, calibration, and selective-output ideas are evaluated only as later repair or future-work directions.\ct{Is this an ablation study? If so, why in Appendix?}
 
@@ -395,7 +395,7 @@ The study uses two synthetic Chinese psychiatric dialogue datasets. LingxiDiagBe
 
 \subsection{LingxiDiagBench}
 
-LingxiDiagBench contains synthetic Chinese psychiatric consultations aligned with electronic medical records~\citep{xu2026lingxidiagbench}. The benchmark includes binary, four-class, and twelve-class tasks and is used here because it provides a fixed label space and enough cases for training, development, and internal evaluation. The published benchmark shows that fine-grained diagnosis is harder than broad depression--anxiety classification.\ct{?}
+LingxiDiagBench contains synthetic Chinese psychiatric consultations aligned with electronic medical records~\citep{xu2026lingxidiagbench}. The benchmark includes binary, four-class, and twelve-class tasks and is used here because it provides a fixed label space and enough cases for training, development, and internal evaluation. The published benchmark shows that fine-grained diagnosis is harder than broad depression--anxiety classification.
 
 The accessible data contained 14,000 training cases and 1,000 public validation cases. The official test file was unavailable when the experiments were fixed. Before confirmatory evaluation, 1,000 cases were set aside from the training source as an internal test split. These cases were excluded from retrieval and from model or rule selection.
 
@@ -409,22 +409,22 @@ Split & $N$ & Use\\
 \midrule
 Training / retrieval corpus & 13,000 & Builds the case-retrieval index; not used as a scored test set\\
 Public validation / development split & 1,000 & Selects prompts, rules, and analysis settings\\
-Internal test split & 1,000 & Reports the main in-domain results after prompts, rules, and evaluation settings were fixed\ct{headline}\\
+Internal test split & 1,000 & Reports the main in-domain results after prompts, rules, and evaluation settings were fixed\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-All internal methods are evaluated on the same 1,000 case IDs. These cases were excluded from the retrieval index and were not used to choose prompts, study rules, or analysis settings. A paired case-level comparison matches two methods on each identical case before calculating their difference, rather than treating the two result sets as independent samples. This controls for case difficulty and supports exact McNemar tests for binary correctness and paired bootstrap confidence intervals for metric differences. In a paired bootstrap, case IDs are resampled once and the corresponding outputs from both methods are carried together.\ct{?}
+All internal methods are evaluated on the same 1,000 case IDs. These cases were excluded from the retrieval index and were not used to choose prompts, study rules, or analysis settings. A paired case-level comparison matches two methods on each identical case before calculating their difference, rather than treating the two result sets as independent samples. This controls for case difficulty and supports exact McNemar tests for binary correctness and paired bootstrap confidence intervals for metric differences. In a paired bootstrap, case IDs are resampled once and the corresponding outputs from both methods are carried together.
 
 \subsection{MDD-5k}
 
 MDD-5k was generated from anonymized psychiatric cases through a neuro-symbolic multi-agent process~\citep{yin2024mdd5k}. Each patient file may contain several dialogue rounds. The adapter joins those rounds and treats the patient file as one case.
 
-The external evaluation contains 925 matched patient-level cases. Under the selected eleven-parent output space, 878 cases have an in-scope reference parent and 47 have a reference diagnosis that the canonical system cannot emit. Additional checker definitions exist only for the later scope-expansion experiment; they are not active in the canonical run.\ct{Anything specific about a bank?} Chapter~\ref{ch:external} reports the full 925-case result, the 878-case in-scope result, and the 47-case scope limitation. It also reports a 490-case F32-versus-F41 subset to test coarse depression--anxiety discrimination; this subset excludes F41.2 and records containing both F32 and F41.\ct{?}
+The external evaluation contains 925 matched patient-level cases. Under the selected eleven-parent output space, 878 cases have an in-scope reference parent and 47 have a reference diagnosis that the canonical system cannot emit. Additional checker definitions exist only for the later scope-expansion experiment; they are not active in the canonical run.\ct{Anything specific about a bank?} Chapter~\ref{ch:external} reports the full 925-case result, the 878-case in-scope result, and the 47-case scope limitation. It also reports a 490-case F32-versus-F41 subset to test coarse depression--anxiety discrimination; this subset excludes F41.2 and records containing both F32 and F41.
 
 \subsection{Synthetic-Data Boundary}
 
-Synthetic data allow every method to be tested on the same cases and allow case-by-case paired comparisons.\ct{?} They also reflect the language, templates, and assumptions of their generators. They may simplify comorbidity, omit nonverbal behavior, and underrepresent Taiwanese language and clinical workflow. The experiments therefore study model behavior under controlled transcript-only conditions; they do not establish clinical safety or real-patient effectiveness.
+Synthetic data allow every method to be tested on the same cases and allow case-by-case paired comparisons. They also reflect the language, templates, and assumptions of their generators. They may simplify comorbidity, omit nonverbal behavior, and underrepresent Taiwanese language and clinical workflow. The experiments therefore study model behavior under controlled transcript-only conditions; they do not establish clinical safety or real-patient effectiveness.
 
 \section{ICD-10 Label Space and Gold-Label Construction}
 \label{sec:gold-conventions}
