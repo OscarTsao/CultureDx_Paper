@@ -199,7 +199,7 @@ These features make first-visit psychiatric diagnosis a problem of comparative b
 
 Large language models and medical multi-agent systems are attractive for psychiatric transcript analysis because they can process free-form dialogue, summarize symptoms, retrieve relevant examples, assign specialized roles, and return structured outputs~\citep{li2024taiwan,raballo2025,sarma2025,tang2024medagents,kim2024mdagents}. However, these capabilities do not by themselves ensure reliable differential diagnosis from a fixed transcript. A fluent answer may still fail because the model never proposes a gold label, because its criterion audit does not support that diagnosis, or because it proposes the diagnosis but commits another one. HiED studies this narrower technical problem; it does not solve short consultation time, missing history, or clinical uncertainty.\ct{Does our model deal with all these problems?}
 
-We study this question with three measures. \emph{Candidate detection} asks whether a gold parent diagnosis appears in the ranked Top-3. \emph{Criterion verification} asks whether a gold parent appears in the rule-confirmed set when that diagnosis has an active checker. \emph{Committed selection} asks whether the committed diagnosis belongs to the gold parent set. These measures are used to locate disagreements among output views; they do not form a fixed chronological funnel for every policy.
+We study this question with three measures. \emph{Candidate detection} asks whether a gold parent label appears in the ranked Top-3. \emph{Criterion verification} asks whether a gold parent appears in the rule-confirmed set when that diagnosis has a corresponding checker. \emph{Committed selection} asks whether the committed diagnosis belongs to the gold parent set. These measures are used to locate disagreements among output views; they do not form a fixed chronological funnel for every policy.
 
 We use the term \emph{primary-selection bottleneck} for the operational pattern in which a gold label is present among leading candidates or criterion-supported alternatives but the system commits a different diagnosis. The bottleneck is therefore a benchmark-local pattern showing that candidate ranking or criterion compatibility can exceed final commitment; it is not a claim about the true clinical primary diagnosis. It does not show that every error passes both earlier checks, that the corpus identifies a unique clinical primary diagnosis, or that every transcript contains enough evidence for one.\ct{what problem?}
 
@@ -308,18 +308,18 @@ RQ1 and RQ3 use matched comparisons on the same fixed internal test set, with co
 
 HiED processes one Chinese psychiatric consultation transcript at a time. The input is an ordered sequence of turns, each marked as \texttt{Clinician} or \texttt{Patient}; speaker labels and turn order are preserved in the prompt. Transcripts longer than the available prompt budget are deterministically truncated by retaining complete turns from the beginning and end, with an explicit marker for the omitted middle. The system does not summarize or invent missing text. This is a fixed-input study: the system cannot ask the patient a follow-up question during inference.\ct{Is this about input and transcript format?}
 
-ICD-10 is the diagnostic coding system used to name the disorders in this study~\citep{who2019icd10}. The system does not search all ICD-10 diagnoses. Before a run begins, it loads one fixed \emph{active diagnostic profile} that is used for every patient. The canonical profile contains fourteen active entries. F41 and F43 include subtype entries, so the fourteen entries collapse to eleven broader parent diagnoses for scoring. A raw gold label outside those parents is evaluated as \emph{Others}.
+ICD-10 is the diagnostic coding system used to name the disorders in this study~\citep{who2019icd10}. The system does not search all ICD-10 diagnoses. Before a run begins, it loads one fixed \emph{configured diagnostic profile} that is used for every patient. The canonical diagnostic profile contains fourteen configured diagnostic categories. F41 and F43 include subtype-level categories, so the fourteen categories are projected to eleven broader parent labels for scoring. A raw gold label outside those parents is evaluated as \emph{Others}.
 
-Three terms are used throughout the architecture. An \emph{active entry} is one code that the diagnostician may rank and that has a corresponding criterion checker. The \emph{criterion-checker set} is the collection of those fourteen checker definitions; it is not a learned memory bank. Each criterion receives one of three model-generated evidence states: \texttt{met} when the transcript supports it, \texttt{not\_met} when the transcript contains evidence against it, and \texttt{insufficient\_\allowbreak{}evidence} when the transcript supports neither conclusion. The rules are study-specific operationalizations informed by ICD-10 descriptions, not a reproduction of the full official manual and not independently clinician-validated ground truth.
+Three terms are used throughout the architecture. A \emph{configured diagnostic category} is an ICD-10 code that the diagnostician may rank and for which the system defines a corresponding criterion checker. The \emph{criterion-checker set} is the collection of those fourteen checker definitions; it is not a learned memory bank. Each criterion receives one of three model-generated evidence states: \texttt{met} when the transcript supports it, \texttt{not\_met} when the transcript contains evidence against it, and \texttt{insufficient\_\allowbreak{}evidence} when the transcript supports neither conclusion. The rules are study-specific operationalizations informed by ICD-10 descriptions, not a reproduction of the full official manual and not independently clinician-validated ground truth.
 
 \begin{table}[htbp]
 \centering
-\caption{Configured diagnostic entries and their evaluation parent labels.}
+\caption{Configured ICD-10 diagnostic categories and their scoring parent labels.}
 \label{tab:configured-profile-summary}
 \small
 \begin{tabularx}{\textwidth}{|p{3.0cm}|p{2.2cm}|X|}
 \hline
-Configured entry & Parent label & Diagnosis\\
+ICD-10 code & Scoring parent & Diagnostic category\\
 \hline
 F20 & F20 & Schizophrenia\\
 \hline
@@ -367,13 +367,13 @@ The diagnostician prompt contains four readable parts: the task and the fixed li
 \hline
 Block & Main input & Function & Output and downstream use\\
 \hline
-Transcript Input & Speaker-labeled transcript & Preserves turn order, applies the fixed prompt-budget rule, and attaches the active profile & Supplies the Diagnostician and Criterion Checker prompts\\
+Transcript Input & Speaker-labeled transcript & Preserves turn order, applies the fixed prompt-budget rule, and attaches the configured diagnostic profile & Supplies the Diagnostician and Criterion Checker prompts\\
 \hline
 Similar-Case Retriever & Transcript and training-set retrieval index & Finds prompt-side examples; retrieved cases go only to the Diagnostician & Optional examples, never direct finalization evidence\\
 \hline
 Diagnostician & Transcript, profile, and optional retrieved examples & Produces a ranked differential diagnosis and emitted primary & Ranked candidate list, primary field, optional comorbid field\\
 \hline
-Criterion Checker & Transcript and active entry criteria & Assigns \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_\allowbreak{}evidence} states & Criterion trace for audit and deterministic compatibility rules\\
+Criterion Checker & Transcript and category-specific criteria & Assigns \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_\allowbreak{}evidence} states & Criterion trace for audit and deterministic compatibility rules\\
 \hline
 Compatibility Auditor & Checker states and fixed rules & Deterministic rule application over each active diagnosis & Logic-confirmed diagnoses and rule trace\\
 \hline
@@ -446,27 +446,27 @@ The example separates compatibility from primacy. The transcript supports a depr
 
 The Similar-Case Retriever adds relevant training examples to the diagnostician prompt. It follows the retrieval-augmented generation pattern~\citep{lewis2020rag}: BGE-M3 is the multilingual text-embedding model used to convert the query transcript and training transcripts into normalized dense vectors~\citep{chen2024bgem3}. FAISS is the vector similarity-search library and index used for retrieval, not a standalone data store~\citep{douze2024faiss}. FAISS inner-product search over normalized vectors corresponds to cosine-similarity ranking. The canonical configuration uses class-balanced retrieval: instead of returning only the globally nearest cases, it attempts to return at most one high-similarity example for each of the eleven parent labels in the configured output space. This reduces domination by frequent classes such as depression and anxiety.
 
-The retrieval classes are fixed by the active diagnostic profile and are identical for every patient.\ct{Are the candidate classes pre-determined, or patient-specific?} Only the example selected within each class depends on the current transcript. Subtypes that share a parent code, such as F41.0, F41.1, and F41.2, share one retrieval class. Global Top-5 retrieval and class-balanced retrieval use the same FAISS index but different selection policies. Retrieved cases are included only in the Diagnostician prompt; they do not enter checker prompts or directly choose the final output.
+The retrieval classes are fixed by the configured diagnostic profile and are identical for every patient.\ct{Are the candidate classes pre-determined, or patient-specific?} Only the example selected within each class depends on the current transcript. Subtypes that share a parent code, such as F41.0, F41.1, and F41.2, share one retrieval class. Global Top-5 retrieval and class-balanced retrieval use the same FAISS index but different selection policies. Retrieved cases are included only in the Diagnostician prompt; they do not enter checker prompts or directly choose the final output.
 
 The evaluation includes three distinct retrieval conditions: no retrieval, ordinary global Top-5 nearest-neighbor retrieval, and class-balanced retrieval. They use the same retrieval index and embedding model, while differing in whether and how retrieved examples are selected.
 
 \section{Ranked Differential Generation}
 
-The canonical diagnostician uses Qwen3-32B with 4-bit Activation-aware Weight Quantization (AWQ). Its input contains the transcript, the active diagnostic profile, and optional retrieved examples. Its prompt requests a ranked candidate list containing five ordered diagnoses from the active profile, a short reason for each, one primary field chosen from the first three, and at most one separate comorbid field. In clinical prose this is a ranked differential diagnosis; as a formal artifact it is the ranked candidate list. The primary field and the ranked list are stored separately. In the running example, F41.1 can therefore remain in the Top-3 even though F32 is emitted as primary.
+The canonical diagnostician uses Qwen3-32B with 4-bit Activation-aware Weight Quantization (AWQ). Its input contains the transcript, the configured diagnostic profile, and optional retrieved examples. Its prompt requests a ranked candidate list containing five ordered diagnoses from that profile, a short reason for each, one primary field chosen from the first three, and at most one separate comorbid field. In clinical prose this is a ranked differential diagnosis; as a formal artifact it is the ranked candidate list. The primary field and the ranked list are stored separately. In the running example, F41.1 can therefore remain in the Top-3 even though F32 is emitted as primary.
 
 The reference diagnostician is a system specification, not an ablation. It uses greedy decoding and does not request a calibrated probability or an abstention decision. Confidence-based sampling, calibration, and selective-output ideas are evaluated only as later repair or future-work directions.\ct{Is this an ablation study? If so, why in Appendix?}
 
 \section{Criterion-Level Evidence Checking}
 
-Each of the fourteen active entries has one criterion checker based on the study's operational rule set.\ct{Is this ICD 10?} The rules are linked to ICD-10 disorder descriptions~\citep{who2019icd10}, but several thresholds are simplified study rules. Appendix~\ref{app:active-profile} lists the active entries and configured thresholds so readers can distinguish the study implementation from official clinical guidance.
+Each of the fourteen configured diagnostic categories has a corresponding criterion checker based on the study's operational rule set.\ct{Is this ICD 10?} The rules are linked to ICD-10 disorder descriptions~\citep{who2019icd10}, but several thresholds are simplified study rules. Appendix~\ref{app:active-profile} lists the diagnostic codes and configured thresholds so readers can distinguish the study implementation from official clinical guidance.
 
-Every checker assigns the three states defined at the start of this chapter.\ct{What 3 states?} It may also return a short transcript span linked to the judgment. The five ranked diagnoses are checked first, followed by the remaining active entries, so every case receives an audit over the same fourteen-entry profile.
+Every checker assigns the three states defined at the start of this chapter.\ct{What 3 states?} It may also return a short transcript span linked to the judgment. The five ranked diagnoses are checked first, followed by the remaining configured diagnostic categories, so every case receives an audit over the same fourteen-category profile.
 
 Missing information is not negative evidence. A criterion is \texttt{not\_met} only when the transcript contains evidence against it; otherwise unresolved evidence remains \texttt{insufficient\_\allowbreak{}evidence}.
 
 \section{Deterministic Diagnostic Compatibility Aggregation}
 
-The Compatibility Auditor is a deterministic rule-based module. It applies the stored threshold for each active entry: read the Criterion Checker states for one active diagnosis, apply its fixed diagnosis-specific rule, add the diagnosis to the logic-confirmed set if the rule is satisfied, and retain the rule application in the audit trace. A rule may require all criteria, a minimum number of core and total criteria, a symptom count, or particular criterion groups. The same checker trace always produces the same confirmed set. Confirmation means compatibility with the configured study rule; it is not primacy and does not mean that the diagnosis is clinically correct or should be primary. Several diagnoses may be confirmed in the same case.
+The Compatibility Auditor is a deterministic rule-based module. For each configured diagnostic category, it reads the Criterion Checker states, applies the predefined confirmation rule, adds the diagnosis to the rule-confirmed set when that rule is satisfied, and retains the rule application in the audit trace. A rule may require all criteria, a minimum number of core and total criteria, a symptom count, or particular criterion groups. The same checker trace always produces the same confirmed set. Confirmation means compatibility with the configured study rule; it is not primacy and does not mean that the diagnosis is clinically correct or should be primary. Several diagnoses may be confirmed in the same case.
 
 Checker states are model-generated and have not been validated as clinician ground truth. They create an evidence-linked record that can be inspected and replayed, but they do not prove that the criterion judgments or evidence spans are correct.
 
@@ -476,7 +476,7 @@ HiED defines two finalization policies over the same upstream ranked candidates,
 
 Under Direct-Answer (DA), the diagnostician's primary field becomes the committed diagnosis; the first ranked diagnosis is used only when that field is missing. An optional comorbidity is retained when it differs from the primary. Outputs from the Criterion Checker and Compatibility Auditor do not replace the DA committed diagnosis.
 
-Nominate-then-Select (NtS) uses criterion compatibility to choose the committed diagnosis. It selects the first confirmed diagnosis in the five-entry ranking. If none is confirmed, it selects another confirmed active entry with the highest met ratio. If no diagnosis is confirmed, it falls back to the first ranked diagnosis.
+Nominate-then-Select (NtS) uses criterion compatibility to choose the committed diagnosis. It selects the first confirmed diagnosis in the five-diagnosis ranking. If none is confirmed, it selects another rule-confirmed diagnosis with the highest met ratio. If no diagnosis is confirmed, it falls back to the first ranked diagnosis.
 
 \emph{NtS-single} emits only the re-selected primary, so it changes both the primary-selection rule and the cardinality of the emitted diagnostic set. The controlled \emph{NtS-primary} contract applies the same primary-selection rule while preserving the DA comorbidity after parent projection, except when it duplicates the newly selected primary. NtS-primary is an analytic configuration that isolates primary re-selection from secondary-label suppression. NtS-primary and NtS-single consequently have identical committed primaries and Top-1 values, while their set-level metrics can differ.
 
@@ -500,7 +500,7 @@ Runs are checked for case count, valid outputs, parse failures, ranked-output av
 \section{Configured Output Space and Evaluation Label Projection}
 \label{sec:gold-conventions}
 
-The canonical system is configured with fourteen ICD-10 diagnostic entries, listed in Table~\ref{tab:configured-profile-summary}. For evaluation, subtype entries are projected to eleven broader parent labels. For example, panic disorder (F41.0), generalized anxiety disorder (F41.1), and mixed anxiety and depressive disorder (F41.2) are evaluated under the F41 parent label. A case is considered in scope when at least one gold diagnosis maps to this configured parent-label set. A case is considered out of scope when none of its gold diagnoses maps to the set. Out-of-scope gold labels are recorded as \emph{Others}. Because the canonical system has neither an \emph{Others} output nor a trained unknown detector, it cannot correctly represent these cases.
+The canonical system uses fourteen configured ICD-10 diagnostic categories, listed in Table~\ref{tab:configured-profile-summary}. For evaluation, subtype-level categories are projected to eleven broader parent labels. For example, panic disorder (F41.0), generalized anxiety disorder (F41.1), and mixed anxiety and depressive disorder (F41.2) are evaluated under the F41 parent label. A case is considered in scope when at least one gold diagnosis maps to this configured parent-label set. A case is considered out of scope when none of its gold diagnoses maps to the set. Out-of-scope gold labels are recorded as \emph{Others}. Because the canonical system has neither an \emph{Others} output nor a trained unknown detector, it cannot correctly represent these cases.
 
 Following standard machine-learning evaluation terminology, benchmark-provided diagnosis codes are referred to as \emph{gold labels}. In this thesis, the term denotes the dataset annotations used for scoring and does not imply an independently adjudicated clinical gold standard. For case $x$, $G(x)$ is the deduplicated gold-label set after parent-level projection. LingxiDiag cases may contain more than one gold parent label, and neither dataset provides an independently adjudicated unique clinical primary diagnosis. The first-listed gold parent is used only for explicitly single-label descriptive analyses such as the confusion matrix.
 
@@ -885,7 +885,7 @@ A separate oracle upper-bound analysis identifies 349 misclassified cases whose 
 \section{Gold-Label Retention in Criterion Verification}
 \label{sec:criterion-verification}
 
-Among the 915 cases with a non-\emph{Others} gold parent and an active checker, the rule-confirmed set contains a gold parent in 857 cases (0.937; 95\% CI [0.919, 0.951]). The median confirmed set contains six of the fourteen active entries. This shows high gold-label retention but limited selectivity.
+Among the 915 cases with a non-\emph{Others} gold parent and a corresponding checker, the rule-confirmed set contains a gold parent in 857 cases (0.937; 95\% CI [0.919, 0.951]). The median confirmed set contains six of the fourteen configured diagnostic categories. This shows high gold-label retention but limited selectivity.
 
 The joint analysis localizes the remaining gap on the same 915 cases. A gold label is in the Top-3 for 802 cases; among these, 778 also retain a gold label in the confirmed set, giving $P(R\mid D_3)=0.9701$. Across all 857 cases that retain a gold label, 506 commit one, giving $P(S\mid R)=0.5904$. Of the 778 cases with both candidate presence and gold-label retention, 506 commit a gold label and 272 do not, giving $P(S\mid D_3,R)=0.6504$. The 272 cases with $D_3=1$, $R=1$, and $S=0$ directly identify candidate-present, audit-retained non-commitments under the benchmark endpoint. These are benchmark-condition quantities derived from algorithmic checker states, not clinician-validated probabilities.
 
@@ -1010,7 +1010,7 @@ The matched retrieval-transfer analysis evaluates Single and HiED--DA under no r
 
 The 47 out-of-scope cases must be counted in full-corpus performance because a deployed system also fails when it cannot represent the diagnosis. The in-scope row answers a separate question: how well the system selects among diagnoses it is allowed to emit.
 
-A configuration-only scope-expansion experiment expands the configured diagnostic profile from fourteen entries to 33 entries representing 30 unique parent diagnoses, without changing model weights. The expanded configuration contains the original fourteen subtype-aware entries plus nineteen new parent-level entries; the fourteen original entries collapse to eleven parents for scoring. This proves that the architecture can load and audit more diagnoses. It does not prove that the model knows when to select them. In a separate 58-case sample of newly available diagnoses, recovery is 0/58. The result separates output availability from learned diagnostic behavior.
+A configuration-only scope-expansion experiment expands the configured diagnostic profile from fourteen categories to 33 categories representing 30 unique parent labels, without changing model weights. The expanded configuration contains the original fourteen subtype-aware categories plus nineteen new parent-level categories; the fourteen original categories are projected to eleven parents for scoring. This proves that the architecture can load and audit more diagnostic categories. It does not prove that the model knows when to select them. In a separate 58-case sample of newly available diagnoses, recovery is 0/58. The result separates output availability from learned diagnostic behavior.
 
 \section{Cross-Corpus Transfer of TF--IDF Classifiers}
 
@@ -1117,7 +1117,7 @@ Missing information is also common in the audit trace. An \texttt{insufficient\_
 
 \section{Gold Labels Ranked but Not Committed}
 
-The 284 candidate-present, wrong-commitment cases are the clearest selection errors: a gold parent is already in Top-3, but another diagnosis is chosen. Criterion verification offers related evidence, but not on the same denominator: it retains a gold parent in 857 of 915 eligible cases and confirms a median of six entries. The audit therefore often preserves the answer without resolving primacy.
+The 284 candidate-present, wrong-commitment cases are the clearest selection errors: a gold parent is already in Top-3, but another diagnosis is chosen. Criterion verification offers related evidence, but not on the same denominator: it retains a gold parent in 857 of 915 eligible cases and confirms a median of six diagnostic categories. The audit therefore often preserves the answer without resolving primacy.
 
 Two further patterns concern the output contract. NtS-single changes the committed primary and removes secondary labels, whereas NtS-primary changes only the primary. Likewise, broader scope makes more diagnoses legal to emit, yet the retargeting sample recovers none of the 58 newly available gold parents. Output cardinality, scope, and primary selection must therefore be evaluated separately.
 
@@ -1136,7 +1136,7 @@ For a new case without a gold label, a clinician can instead review the evidence
 \chapter{Discussion}
 \label{ch:discussion}
 
-The main finding is that one accuracy score hides three different questions: whether the gold label appears in the ranked candidate list, whether the criterion layer finds it compatible with the transcript, and whether the system selects it as the primary diagnosis. On the test set, HiED--DA reaches 0.802 Top-3 Accuracy and 0.518 Top-1 Accuracy. Gold-label retention in the confirmed set is 857 of 915 checker-eligible cases, but the median confirmed set contains six active entries. These values use different denominators and do not form a strict sequence. Together, they show that finding a plausible diagnosis is easier than choosing one final diagnosis.
+The main finding is that one accuracy score hides three different questions: whether the gold label appears in the ranked candidate list, whether the criterion layer finds it compatible with the transcript, and whether the system selects it as the primary diagnosis. On the test set, HiED--DA reaches 0.802 Top-3 Accuracy and 0.518 Top-1 Accuracy. Gold-label retention in the confirmed set is 857 of 915 checker-eligible cases, but the median confirmed set contains six configured diagnostic categories. These values use different denominators and do not form a strict sequence. Together, they show that finding a plausible diagnosis is easier than choosing one final diagnosis.
 
 The external MDD-5k results support the same point more narrowly. In the matched 925-case run, Top-3 Accuracy is 0.8508 and Top-1 Accuracy is 0.5708. This shows that the ranking-to-selection gap remains under a different synthetic data distribution. However, the external analysis does not include the same verification measure and therefore does not reproduce the full internal analysis.
 
@@ -1301,23 +1301,23 @@ A psychiatric LLM can include the gold label among its leading candidates and st
 \appendix
 \titleformat{\chapter}[display]{\raggedright\bfseries\LARGE}{Appendix \thechapter}{0.5em}{}
 
-\chapter{Active Diagnostic Profile}
+\chapter{Configured Diagnostic Profile}
 \label{app:active-profile}
 
-The canonical benchmark profile contains fourteen active entries. F41 and F43 contain subtype-level entries that collapse to a shared parent during scoring. Each entry has one checker definition. The displayed thresholds are study-specific operational rules informed by ICD-10 descriptions~\citep{who2019icd10}; they are not a verbatim official diagnostic standard, have not been independently clinician-validated, and must not replace the ICD-10 manual or clinician judgment.
+The canonical benchmark profile contains fourteen configured diagnostic categories. F41 and F43 contain subtype-level categories that are projected to a shared parent label during scoring. Each diagnostic category has one checker definition. The displayed thresholds are study-specific operational rules informed by ICD-10 descriptions~\citep{who2019icd10}; they are not a verbatim official diagnostic standard, have not been independently clinician-validated, and must not replace the ICD-10 manual or clinician judgment.
 
 \begingroup
 \small
 \setlength{\tabcolsep}{3pt}
-\begin{longtable}{|>{\raggedright\arraybackslash}p{1.8cm}|>{\raggedright\arraybackslash}p{1.0cm}|>{\raggedright\arraybackslash}p{3.5cm}|>{\centering\arraybackslash}p{0.8cm}|>{\raggedright\arraybackslash}p{7.0cm}|}
-\caption{Active diagnostic profile and configured confirmation rules.}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{1.8cm}|>{\raggedright\arraybackslash}p{1.4cm}|>{\raggedright\arraybackslash}p{3.1cm}|>{\centering\arraybackslash}p{0.8cm}|>{\raggedright\arraybackslash}p{7.0cm}|}
+\caption{Configured diagnostic profile and confirmation rules.}
 \label{tab:active-profile}\\
 \hline
-Active entry & Parent & Name & \# criteria & Confirmation rule\\
+ICD-10 code & \shortstack{Scoring\\parent} & Diagnostic category & \# criteria & Confirmation rule\\
 \hline
 \endfirsthead
 \hline
-Active entry & Parent & Name & \# criteria & Confirmation rule\\
+ICD-10 code & \shortstack{Scoring\\parent} & Diagnostic category & \# criteria & Confirmation rule\\
 \hline
 \endhead
 F20 & F20 & Schizophrenia & 8 & $\geq$1 first-rank symptom, or $\geq$2 other symptoms; duration $\geq$1 month\\
@@ -1351,7 +1351,7 @@ Z71 & Z71 & Counseling & 3 & $\geq$2 total symptoms; exclusion of a diagnosable 
 \end{longtable}
 \endgroup
 
-The fourteen entries collapse to eleven ICD-10 parents. Together with \emph{Others}, they form the twelve scored classes defined in \Cref{sec:gold-conventions}. This appendix reports only the diagnostic profile needed to interpret the main text.
+The fourteen diagnostic categories are projected to eleven ICD-10 parent labels. Together with \emph{Others}, they form the twelve scored classes defined in \Cref{sec:gold-conventions}. This appendix reports only the diagnostic profile needed to interpret the main text.
 
 \chapter{System and Inference Configuration}
 \label{app:system-config}
@@ -1398,9 +1398,9 @@ Prompt-budget handling & Deterministic truncation keeps complete beginning and e
 \hline
 Module & Main inputs & Main outputs\\
 \hline
-Diagnostician & Transcript, active profile, optional retrieved examples & Ranked candidate list, primary field, optional comorbid field, rationales\\
+Diagnostician & Transcript, configured diagnostic profile, optional retrieved examples & Ranked candidate list, primary field, optional comorbid field, rationales\\
 \hline
-Criterion Checker & Transcript and one active entry's criteria & Criterion states, evidence spans, parse/recovery status\\
+Criterion Checker & Transcript and one configured diagnostic category's criteria & Criterion states, evidence spans, parse/recovery status\\
 \hline
 Compatibility Auditor & Checker states and fixed rules & Logic-confirmed diagnoses and rule trace\\
 \hline
