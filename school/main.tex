@@ -237,32 +237,6 @@ Chinese psychiatric datasets make disorder-level evaluation possible. LingxiDiag
 
 Existing systems also differ in whether they can ask questions. MIND, WiseMind/ProAI, MAGI, and DSM5AgentFlow study inquiry or interactive diagnostic workflows~\citep{li2026mind,wu2026wisemind,bi2025magi,ozgun2025dsm5agentflow}. MentalSeek-Dx and MoodAngels focus more on diagnosis from information already available in records or transcripts~\citep{sun2026mentalseek,xiao2025moodangels}. Interactive systems can obtain missing evidence, while fixed-input systems isolate how well a model uses the same evidence. This thesis studies the fixed-input setting.
 
-Across MIND, WiseMind/ProAI, MAGI, DSM5AgentFlow, MentalSeek-Dx, and MoodAngels, the published evaluations do not report, on the same fixed cases, whether the correct diagnosis entered the leading candidates, survived explicit criterion checking, and was finally selected as primary~\citep{li2026mind,wu2026wisemind,bi2025magi,ozgun2025dsm5agentflow,sun2026mentalseek,xiao2025moodangels}.
-
-\begin{table}[htbp]
-\centering
-\caption{Compact comparison of related study families and the outputs needed for HiED's stage-wise evaluation question.}
-\label{tab:related-work-matrix}
-\scriptsize
-\begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{|l|l|l|l|l|l|l|}
-\hline
-Study family / representative systems & Input setting & Interactive questioning & Ranked differential & Criterion grounding & Multi-agent & Stage-wise evaluation\\
-\hline
-Psychiatric LLM diagnosis & vignettes or records & varies & limited & varies & limited & usually final answer only\\
-\hline
-Interactive agents & dialogue & yes & varies & not always explicit & yes & consultation or final diagnosis metrics\\
-\hline
-Record/transcript diagnosis & fixed input & no & not always reported & limited & varies & usually endpoint accuracy\\
-\hline
-Constraint or symptom logic & structured evidence & no & varies & explicit & limited & criterion outputs may be inspectable\\
-\hline
-HiED & fixed transcript & no & yes & explicit checker states & role-specific modules & candidate generation, criterion verification, and commitment on the same cases\\
-\hline
-\end{tabular}
-\end{adjustbox}
-\end{table}
-
 \section{Medical Multi-Agent Reasoning}
 
 Medical multi-agent systems assign different roles to LLMs and combine their outputs through consultation, debate, or adaptive collaboration~\citep{tang2024medagents,kim2024mdagents}. AMIE and related work also show the value of broad differential diagnosis, realistic consultation, and expert review~\citep{mcduff2025amie,tu2025conversational}. These systems demonstrate that structured interaction can help, but adding agents does not guarantee a better final answer. Agents may repeat the same model bias, and free-form discussion can make it difficult to identify which component changed the decision.
@@ -283,6 +257,89 @@ Constraint-logic systems are the closest related approach because they translate
 Knowledge-based diagnosis methods represent relations among symptoms, disorders, and missing information. MedKGI supports information-guided inquiry, and DKEC uses structured domain knowledge for label prediction~\citep{wang2025medkgi,ge2024dkec}. Such relations may help when disorders share symptoms but differ in onset, duration, exclusions, or causal direction.
 
 HiED does not implement a full knowledge-graph selector. Instead, this literature motivates future work if simple criterion counts and local re-ranking are not enough. A stronger selector may need to compare which diagnosis best explains the full presentation, not only how many criteria each diagnosis satisfies.
+
+\clearpage
+Table~\ref{tab:related-work-matrix} does not compare overall system quality. It compares whether each study exposes the intermediate outputs needed to distinguish candidate-generation, criterion-verification, and primary-selection errors.
+
+\begin{table}[htbp]
+\centering
+\caption{Comparison of representative psychiatric diagnostic systems by the outputs available for stage-wise failure localization.}
+\label{tab:related-work-matrix}
+\scriptsize
+\begingroup
+\setlength{\tabcolsep}{2pt}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{|p{2.2cm}|p{1.9cm}|p{1.35cm}|p{2.35cm}|p{3.2cm}|p{3.7cm}|}
+\hline
+Study or system &
+Evidence setting &
+Follow-up questioning &
+Ranked differential &
+Criterion or evidence audit &
+Separate evaluation of candidate generation, verification, and commitment\\
+\hline
+MIND~\citep{li2026mind} &
+Interactive psychiatric consultation &
+Yes &
+Not reported as a ranked output &
+Criteria-grounded rationales and process rewards &
+No---final diagnosis and dialogue/process metrics\\
+\hline
+WiseMind/ProAI\newline\citep{wu2026wisemind} &
+Interactive simulated and real-user dialogue &
+Yes &
+Not reported as a ranked output &
+DSM-guided action states for met criteria, unmet criteria, missing details, and contradictions &
+Partial---critical-node recall and final diagnostic accuracy, without candidate-to-commitment decomposition\\
+\hline
+MAGI~\citep{bi2025magi} &
+Interactive MINI-guided interview &
+Yes &
+Not reported as a ranked output &
+PsyCoT maps symptoms and dialogue evidence to diagnostic criteria &
+Partial---interview, PsyCoT, and final diagnosis metrics, without a ranked-candidate stage\\
+\hline
+DSM5AgentFlow\newline\citep{ozgun2025dsm5agentflow} &
+Simulated interactive questionnaire &
+Yes &
+Not reported as a ranked output &
+Rationale links utterances to supporting or contradictory DSM-5 criteria &
+Partial---diagnostic and explanation metrics, without candidate-stage evaluation\\
+\hline
+MentalSeek-Dx\newline\citep{sun2026mentalseek} &
+Fixed de-identified clinical record &
+No &
+Hypothesis list generated; ranking not separately reported as a test metric &
+Criteria-guided staged reasoning, without case-level criterion states linked to evidence &
+Partial---category, disorder, and joint accuracy, without criterion-retention analysis\\
+\hline
+MoodAngels~\citep{xiao2025moodangels} &
+Fixed records and assessment scales &
+No &
+Not reported as a ranked output &
+DSM-5 criterion retrieval and granular symptom matching &
+Partial---agent and component results, without candidate--verification--commitment evaluation\\
+\hline
+Constraint-logic CDSS~\citep{kim2025clp} &
+Structured patient facts &
+No &
+No &
+Inspectable, expert-corrected Datalog diagnostic rules &
+No---program fidelity and final diagnosis accuracy\\
+\hline
+HiED &
+Fixed transcript &
+No &
+Ranked Top-5; Top-3 evaluated &
+Criterion states linked to transcript evidence &
+Yes---candidate generation, criterion retention, and commitment evaluated on the same cases\\
+\hline
+\end{tabular}
+\end{adjustbox}
+\endgroup
+\end{table}
+
+The comparison shows that prior systems address complementary parts of the diagnostic process. Interactive systems can collect missing information, whereas fixed-input systems permit controlled evaluation under identical evidence. Some methods expose candidate hypotheses or criterion-related outputs, but the reviewed studies do not jointly evaluate candidate detection, criterion-level retention, and final primary commitment on the same fixed cases. HiED is designed to make these three output views separately measurable rather than to claim superiority across all clinical or conversational capabilities.
 
 \section{Research Gap and Research Questions}
 
