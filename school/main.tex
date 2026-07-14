@@ -640,7 +640,9 @@ These indicators ask three simple questions: Was a gold label in the ranked cand
 
 \section{Statistical Analysis}
 
-Single proportions use 95\% Wilson intervals where useful. Paired system comparisons use the exact McNemar test. Holm--Bonferroni correction is applied within stated comparison families. A non-significant result is not treated as proof of equivalence.
+The case is the unit of analysis. Single-system binary proportions are summarized with 95\% Wilson confidence intervals. Pairwise comparisons are restricted to systems evaluated on the same case IDs with the same endpoint definition. For binary correctness outcomes, the exact McNemar test is computed from the two discordant counts: cases correct only under the first system and cases correct only under the second. These counts are reported with the corresponding $p$-value so that the direction and magnitude of the paired difference remain visible.
+
+Reported $p$-values are interpreted together with the discordant counts and effect direction rather than as standalone evidence. A non-significant result indicates insufficient evidence of a difference and is not treated as proof of equivalence. Comparisons that do not share the same cases, endpoint, or execution contract are treated as descriptive rather than as paired statistical tests.
 
 \chapter{Experimental Design}
 \label{ch:experimental}
