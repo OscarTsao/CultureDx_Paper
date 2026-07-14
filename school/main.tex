@@ -488,6 +488,15 @@ Runs are checked for case count, valid outputs, parse failures, ranked-output av
 \chapter{Data and Evaluation Protocol}
 \label{ch:data}
 
+\section{Configured Output Space and Evaluation Label Projection}
+\label{sec:gold-conventions}
+
+The canonical system is configured with fourteen ICD-10 diagnostic entries, listed in Table~\ref{tab:configured-profile-summary}. For evaluation, subtype entries are projected to eleven broader parent labels. For example, panic disorder (F41.0), generalized anxiety disorder (F41.1), and mixed anxiety and depressive disorder (F41.2) are evaluated under the F41 parent label. A case is considered in scope when at least one reference diagnosis is represented in this configured parent-label set. A case is considered out of scope when none of its reference diagnoses is represented in the set. Out-of-scope references are recorded as \emph{Others}. Because the canonical system has neither an \emph{Others} output nor a trained unknown detector, it cannot correctly represent these cases.
+
+For brevity, benchmark-provided diagnosis codes are referred to as \emph{gold labels}. They are dataset annotations rather than independently adjudicated clinical ground truth. For case $x$, $G(x)$ is the deduplicated gold-label set after parent projection. LingxiDiag cases may contain more than one gold parent and do not provide an independently adjudicated unique clinical primary diagnosis. The first-listed gold parent is used only for explicitly single-label descriptive analyses such as the confusion matrix.
+
+In the running example from Chapter~\ref{ch:architecture}, F41.1 is scored as F41. If the gold-label set contains F41 and the system emits F32 while ranking F41.1 second, Top-1 is wrong but Top-3 is correct.
+
 \section{Datasets and Splits}
 
 The study uses two synthetic Chinese psychiatric dialogue datasets. LingxiDiagBench provides the in-domain training, development, and internal test data. MDD-5k provides an external synthetic test set.
@@ -519,14 +528,13 @@ All internal methods are evaluated on the same fixed set of 1,000 test cases. Th
 
 \subsection{MDD-5k}
 
-MDD-5k was generated from anonymized psychiatric cases through a neuro-symbolic multi-agent process~\citep{yin2024mdd5k}. Each patient file may contain several dialogue rounds. The adapter joins those rounds and treats the patient file as one case.
+MDD-5k was generated from anonymized psychiatric cases through a neuro-symbolic multi-agent process~\citep{yin2024mdd5k}. Each patient file may contain several dialogue rounds. The adapter joins those rounds and treats the patient file as one case.\ct{Anything specific about a bank?}
 
-The canonical system is configured to emit diagnoses that map to eleven parent labels. Among the 925 matched patient-level cases, 878 have at least one reference diagnosis within this configured label set and are therefore classified as in scope. The remaining 47 cases have no reference diagnosis within the configured label set and are classified as out of scope. Additional checker definitions are used only in the later scope-expansion experiment and are not enabled in the canonical configuration.\ct{Anything specific about a bank?} The full set contains 925 cases, the in-scope subset contains 878 cases, and the out-of-scope subset contains 47 cases. The 490-case F32-versus-F41 subset tests coarse depression--anxiety discrimination; this subset excludes F41.2 and records containing both F32 and F41. MDD transcripts are substantially longer, and the deterministic prompt-budget truncation rule is applied in the canonical external evaluation. Both datasets are synthetic and are used for controlled benchmark evaluation rather than clinical validation.
+MDD-5k contains 925 matched patient-level cases. Under the configured parent-label set defined in Section~\ref{sec:gold-conventions}, 878 cases are in scope and 47 are out of scope.\ct{Should you introduce ICD-10 earlier} Additional checker definitions are used only in the later scope-expansion experiment and are not enabled in the canonical configuration.
 
-\section{Configured Diagnostic Scope and Label Projection}
-\label{sec:gold-conventions}
+The 490-case F32-versus-F41 subset tests coarse depression--anxiety discrimination; this subset excludes F41.2 and records containing both F32 and F41. MDD transcripts are substantially longer, and the deterministic prompt-budget truncation rule is applied in the canonical external evaluation. Both datasets are synthetic and are used for controlled benchmark evaluation rather than clinical validation.
 
-The fourteen configured entries introduced in Chapter~\ref{ch:architecture} are projected to eleven broader parent labels for evaluation.\ct{Should you introduce ICD-10 earlier} For example, panic disorder (F41.0), generalized anxiety disorder (F41.1), and mixed anxiety and depressive disorder (F41.2) are all evaluated under the F41 parent label. The in-scope and out-of-scope distinction concerns output-space coverage: an in-scope case has at least one reference diagnosis represented in this configured parent-label set, whereas an out-of-scope case has none. Out-of-scope references are recorded as \emph{Others}. Because the canonical system has neither an \emph{Others} output nor a trained unknown detector, it cannot correctly represent these cases.
+\subsection{Evaluation-Set Label Distributions}
 
 \begin{table}[htbp]
 \centering
@@ -567,10 +575,6 @@ Others & No reference diagnosis in the configured label set & 85 & 0 & 47\\
 \end{tabular}
 \end{adjustbox}
 \end{table}
-
-For brevity, benchmark-provided diagnosis codes are referred to as \emph{gold labels}. They are dataset annotations rather than independently adjudicated clinical ground truth. For case $x$, $G(x)$ is the deduplicated gold-label set after parent projection. LingxiDiag cases may contain more than one gold parent and do not provide an independently adjudicated unique clinical primary diagnosis. The first-listed gold parent is used only for explicitly single-label descriptive analyses such as the confusion matrix.
-
-In the running example from Chapter~\ref{ch:architecture}, F41.1 is scored as F41. If the gold-label set contains F41 and the system emits F32 while ranking F41.1 second, Top-1 is wrong but Top-3 is correct.
 
 \section{Prediction Views and Metrics}
 
