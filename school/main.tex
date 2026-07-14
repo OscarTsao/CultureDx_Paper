@@ -931,6 +931,33 @@ Balanced HiED--DA differs from Single + global Top-5 by only 0.001: 58 discordan
 
 Exact Match measures a different property. The Single systems emit too many labels on average, whereas NtS-single emits exactly one. Its Exact Match of 0.437 and Top-1 of 0.490 therefore combine primary re-selection with secondary-label suppression. The controlled replay below separates those effects.
 
+\section{Published Results on the Public Validation Split}
+
+To provide same-dataset context, Table~\ref{tab:published-validation-context} reports selected results from the original LingxiDiagBench static evaluation on the public 1,000-case validation split~\citep{xu2026lingxidiagbench}. The published systems and HiED use the same evaluation cases but different prompts, inference procedures, output contracts, and experimental roles. In particular, this thesis uses the public split for configuration validation rather than as its main held-out evaluation. The values are therefore descriptive references, not matched experimental controls, and no paired significance test or system-ranking claim is made.
+
+\begin{table}[htbp]
+\centering
+\caption{Descriptive comparison with selected published LingxiDiagBench results on the public validation split. Published rows and HiED use the same evaluation cases but different prompts, system configurations, and validation roles; this is not a matched head-to-head comparison.}
+\label{tab:published-validation-context}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{|p{4.0cm}|p{5.0cm}|c|c|c|c|}
+\hline
+System & Source and evaluation role & Top-1 & Top-3 & Macro-F1 & Weighted-F1\\
+\hline
+TF--IDF + logistic regression & Published LingxiDiagBench baseline & 0.496 & 0.645 & 0.295 & 0.520\\
+\hline
+Qwen3-32B & Published zero-shot LLM & 0.470 & 0.566 & 0.188 & 0.431\\
+\hline
+GPT-5-Mini & Published zero-shot proprietary LLM & 0.487 & 0.505 & 0.188 & 0.418\\
+\hline
+HiED--DA, final validation configuration & This thesis; configuration-validation result & 0.522 & 0.795 & 0.182 & 0.434\\
+\hline
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+The original benchmark reports Top-1 values of 0.496 for TF--IDF with logistic regression, 0.470 for zero-shot Qwen3-32B, and 0.487 for GPT-5-Mini. HiED--DA records a descriptive Top-1 value of 0.522 and Top-3 value of 0.795 on the same public cases. These values provide useful context, but they do not establish that HiED outperforms any published system because the protocols are not matched and the validation split contributes to configuration selection in this thesis. The benchmark's separate \emph{Acc} column is not shown because it is not assumed to be identical to the Exact Match definition used in this thesis.
+
 \section{Ranking-to-Commitment Gap}
 
 \ThesisFigure{fig_b_selection_bottleneck.pdf}{Test-set decomposition of committed Top-1 Accuracy, Top-3 Accuracy, and oracle upper-bound close-cluster opportunity.}{fig:bottleneck-thesis-rewrite}
