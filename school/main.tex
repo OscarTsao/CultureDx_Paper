@@ -528,9 +528,9 @@ All internal methods are evaluated on the same fixed set of 1,000 test cases. Th
 
 \subsection{MDD-5k}
 
-MDD-5k was generated from anonymized psychiatric cases through a neuro-symbolic multi-agent process~\citep{yin2024mdd5k}. Each patient file may contain several dialogue rounds. The adapter joins those rounds and treats the patient file as one case.\ct{Anything specific about a bank?}
+MDD-5k was generated from anonymized psychiatric cases through a neuro-symbolic multi-agent process~\citep{yin2024mdd5k}. Each patient file may contain several dialogue rounds. The adapter joins those rounds and treats the patient file as one case.
 
-MDD-5k contains 925 matched patient-level cases. Under the configured parent-label set defined in Section~\ref{sec:gold-conventions}, 878 cases are in scope and 47 are out of scope.\ct{Should you introduce ICD-10 earlier} Additional checker definitions are used only in the later scope-expansion experiment and are not enabled in the canonical configuration.
+MDD-5k contains 925 matched patient-level cases. Under the configured parent-label set defined in Section~\ref{sec:gold-conventions}, 878 cases are in scope and 47 are out of scope. Additional checker definitions are used only in the later scope-expansion experiment and are not enabled in the canonical configuration.
 
 The 490-case F32-versus-F41 subset tests coarse depression--anxiety discrimination; this subset excludes F41.2 and records containing both F32 and F41. MDD transcripts are substantially longer, and the deterministic prompt-budget truncation rule is applied in the canonical external evaluation. Both datasets are synthetic and are used for controlled benchmark evaluation rather than clinical validation.
 
