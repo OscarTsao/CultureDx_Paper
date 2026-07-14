@@ -1195,28 +1195,30 @@ The selection bottleneck is an observed difference among output views, not a pro
 
 \begin{table}[htbp]
 \centering
-\caption{Threats to validity and remaining uncertainty.}
+\caption{Main threats to validity, affected inferences, and residual uncertainty.}
 \label{tab:threats-validity}
 \scriptsize
-\begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{|l|l|l|l|l|}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{2.6cm}|>{\raggedright\arraybackslash}p{2.5cm}|X|X|}
 \hline
-Threat & Affected claim & Likely direction & Existing mitigation & Remaining uncertainty\\
+Source of uncertainty & Affected inference & Mitigation or analysis & Residual limitation\\
 \hline
-Synthetic corpora & Clinical generality & May overestimate robustness & Explicit synthetic-data boundary & Real-patient performance unknown\\
+Synthetic dialogue corpora & Clinical and linguistic generalizability & Results are explicitly limited to synthetic benchmark evaluation; two corpora are evaluated & Real Taiwanese patient performance remains unknown\\
 \hline
-Train-source held-out split & In-domain estimate & May share generator artifacts & Retrieval/development exclusion & Template or exposure effects possible\\
+Dataset-provided gold labels and parent projection & Meaning of Top-1, Top-3, and selection errors & Gold labels are defined as benchmark annotations; subtype codes are mapped consistently & Labels are not independently adjudicated clinical diagnoses, and subtype detail is lost\\
 \hline
-Generator/evaluator family dependence & Model-family conclusion & May favor related models & Qwen3 size analysis reported as bounded & Cross-family validity unknown\\
+Internal split drawn from the training-source corpus & In-domain performance estimate & Test cases are excluded from retrieval and configuration selection & Generator templates, near-duplicates, or public-corpus exposure may remain\\
 \hline
-MDD prompt-budget truncation & External results & May omit useful middle evidence & Deterministic truncation rule & No dedicated truncation-impact audit\\
+Qwen3-family generation and evaluation & Model-family robustness & Multiple Qwen3 sizes are evaluated under a common protocol & Results may not transfer to unrelated model families\\
 \hline
-Non-clinician-validated checker states & Audit interpretation & May overstate evidence quality & States labeled as model outputs & Criterion-level clinical validity pending\\
+Model-generated criterion states & Interpretation of $D_3$, $R$, $S$, and auditability & Checker states and evidence spans are retained for inspection & Criterion judgments have not been independently clinician validated\\
 \hline
-Cross-budget debate comparison & Repair conclusions & May confound method and budget & Execution contract reported & Not a matched component ablation\\
+Long-transcript truncation on MDD-5k & External transfer estimate & A deterministic truncation policy is applied consistently & The performance impact of omitted middle turns is not separately quantified\\
 \hline
-\end{tabular}
-\end{adjustbox}
+Larger context budget for debate & Comparison with Direct-Answer & Context size and additional calls are reported explicitly & Debate is a complete configuration comparison, not a matched-budget component ablation\\
+\hline
+Fixed diagnostic output space & Full-corpus external accuracy & Full-set and in-scope results are reported separately & The system cannot correctly represent diagnoses outside its configured scope\\
+\hline
+\end{tabularx}
 \end{table}
 
 Criterion states are produced by an LLM checker rather than clinicians. The checker may miss negation, duration, or context, and the Compatibility Auditor will carry those errors forward. The audit trace is inspectable and reproducible, but it is not a faithful record of hidden reasoning and has not been clinically validated at the criterion level.
