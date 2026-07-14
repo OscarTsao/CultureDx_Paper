@@ -299,7 +299,7 @@ This thesis therefore uses five research questions:
 \end{description}
 \ct{Does your thesis really answer all 5 questions?}
 
-RQ1 and RQ3 are intentionally marked partial until the advisor-requested matched TF--IDF, ordinary-RAG, and HiED retrieval runs are completed. Their absence is an experimental limitation, not a value inferred from the existing balanced-RAG runs. Clinical effectiveness, transcript-only human performance, and criterion-level clinical validity remain future work.
+RQ1 and RQ3 combine the original frozen comparisons with explicitly post-freeze supplementary runs requested to complete the matched TF--IDF and retrieval controls. This separation prevents later evidence from being presented as if it had been part of the original experiment plan. Clinical effectiveness, transcript-only human performance, and criterion-level clinical validity remain future work.
 
 \chapter{HiED System Architecture}
 \label{ch:architecture}
@@ -423,7 +423,7 @@ The Similar-Case Retriever adds relevant training examples to the diagnostician 
 
 The retrieval classes are fixed by the active diagnostic profile and are identical for every patient.\ct{Are the candidate classes pre-determined, or patient-specific?} Only the example selected within each class depends on the current transcript. Subtypes that share a parent code, such as F41.0, F41.1, and F41.2, share one retrieval class. Global Top-5 retrieval and class-balanced retrieval use the same FAISS index but different selection policies. Retrieved cases are included only in the Diagnostician prompt; they do not enter checker prompts or directly choose the final output.
 
-The codebase can also perform ordinary global Top-5 nearest-neighbor retrieval, but no matched global-RAG result was included in the original frozen experiment set. No retrieval, global retrieval, and class-balanced retrieval are therefore distinct conditions rather than interchangeable names for the existing balanced run.
+The codebase can also perform ordinary global Top-5 nearest-neighbor retrieval. No matched global-RAG result was included in the original frozen experiment set, so no retrieval, global retrieval, and class-balanced retrieval remain distinct conditions. Post-freeze supplementary runs evaluate all three conditions without treating the later results as part of the original frozen evidence.
 
 \section{Diagnostician}
 
@@ -642,12 +642,12 @@ These indicators ask three simple questions: Was a gold label in the ranked cand
 
 The case is the unit of analysis. Single-system binary proportions are summarized with 95\% Wilson confidence intervals. Pairwise comparisons are restricted to systems evaluated on the same case IDs with the same endpoint definition. For binary correctness outcomes, the exact McNemar test is computed from the two discordant counts: cases correct only under the first system and cases correct only under the second. These counts are reported with the corresponding $p$-value so that the direction and magnitude of the paired difference remain visible.
 
-Reported $p$-values are interpreted together with the discordant counts and effect direction rather than as standalone evidence. A non-significant result indicates insufficient evidence of a difference and is not treated as proof of equivalence. Comparisons that do not share the same cases, endpoint, or execution contract are treated as descriptive rather than as paired statistical tests.
+Reported $p$-values are interpreted together with the discordant counts and effect direction rather than as standalone evidence. The post-freeze supplementary analysis reports both raw exact McNemar $p$-values and Holm-adjusted values within three comparison families: baseline comparisons, Single retrieval variants, and HiED retrieval variants. A non-significant result indicates insufficient evidence of a difference and is not treated as proof of equivalence. Comparisons that do not share the same cases, endpoint, or execution contract are treated as descriptive rather than as paired statistical tests.
 
 \chapter{Experimental Design}
 \label{ch:experimental}
 
-This chapter maps each experiment to the five research questions. It separates conventional baselines, failure localization, retrieval ablation, selection repair, and robustness. Missing matched controls are stated explicitly rather than inferred from non-equivalent runs.
+This chapter maps each experiment to the five research questions. It separates conventional baselines, failure localization, retrieval ablation, selection repair, and robustness. It also distinguishes the original frozen evidence from post-freeze supplementary controls.
 
 \section{Baseline Comparison (RQ1)}
 
@@ -663,17 +663,17 @@ RQ1 asks how HiED compares with conventional and single-model baselines under th
 \hline
 System & Retrieval & Ranked Diagnostician & Criterion Checker & Compatibility Auditor & Finalization & Interpretation\\
 \hline
-Majority / class prior & None & No & No & No & Most frequent class & Same-split floor pending\\
+Majority / class prior & None & No & No & No & Most frequent class & Post-freeze same-split floor\\
 \hline
-TF--IDF + LR & None & No & No & No & Classifier output & Development/transfer result only\\
+TF--IDF + LR & None & No & No & No & Classifier output & Post-freeze same-split baseline\\
 \hline
 Single & None & No formal ranking & No & No & Single LLM output & Frozen internal result\\
 \hline
-Single + global RAG & Global Top-5 & No formal ranking & No & No & Single LLM output & Pending matched run\\
+Single + global RAG & Global Top-5 & No formal ranking & No & No & Single LLM output & Post-freeze matched run\\
 \hline
 Single + balanced RAG & At most one per parent & No formal ranking & No & No & Single LLM output & Retrieval comparison versus Single\\
 \hline
-HiED--DA & Class-balanced & Yes & Yes & Yes & Diagnostician primary & Package comparison versus Single + balanced RAG\\
+HiED--DA & None, global, or class-balanced & Yes & Yes & Yes & Diagnostician primary & Frozen balanced run plus post-freeze retrieval variants\\
 \hline
 HiED--NtS & Class-balanced & Yes & Yes & Yes & Criterion-based selection & Closest finalization ablation versus HiED--DA\\
 \hline
@@ -683,13 +683,13 @@ HiED--NtS & Class-balanced & Yes & Yes & Yes & Criterion-based selection & Close
 
 In the running example, TF--IDF + LR uses transcript words only. Single uses one LLM call. Global RAG adds the five nearest training cases without class control. Balanced RAG attempts to provide one relevant example per configured parent label. HiED adds a five-diagnosis ranking, the full criterion-checker set, deterministic rules, and a separate finalization record.
 
-The current internal table can compare Single, Single + balanced RAG, and HiED--DA. It cannot establish whether TF--IDF + LR or ordinary global RAG is stronger on the same split. Those controls must be run on the same 1,000 cases and labeled as post-freeze supplementary analyses.
+The original frozen evidence compares Single, Single + balanced RAG, and HiED--DA. Post-freeze supplementary analyses add the same-split majority and TF--IDF + logistic-regression baselines, Single + global RAG, and matched HiED--DA runs with no, global, and class-balanced retrieval. All use the same 1,000 case IDs and label mapping, but their later status is retained in interpretation.
 
 \section{Failure Localization (RQ2)}
 
 RQ2 uses the $D_3$--$R$--$S$ measures defined in Chapter~\ref{ch:data}. They ask whether a gold label appears in the Top-3, appears in the confirmed set when it is checkable, and is selected as the committed diagnosis. Confirmed-set size and criterion-state counts show whether the audit rejects the gold label or keeps many diagnoses at the same time.
 
-The Top-3--Top-1 difference directly counts cases in which a gold label is already ranked but not committed. Verification retention is reported on the separate checker-eligible denominator. Because the retained summary artifact does not contain the complete eight-cell $D_3/R/S$ joint table, the thesis does not infer individual transition counts from the three marginal rates. A full joint table remains a required case-level supplementary analysis.
+The Top-3--Top-1 difference directly counts cases in which a gold label is already ranked but not committed. Verification retention is reported on the separate checker-eligible denominator. A post-freeze case-level analysis supplies the complete eight-cell $D_3/R/S$ joint table for the 915 checker-eligible cases, allowing the conditional retention and selection rates to be reported without combining incompatible marginal denominators.
 
 A separate close-cluster analysis estimates how many wrong DA cases might be recoverable if a better rule could choose among similarly supported alternatives. Because this oracle upper-bound analysis uses the gold label to identify recoverable cases, it is an upper bound, not a deployable method or an accuracy estimate.
 
@@ -697,7 +697,7 @@ A separate close-cluster analysis estimates how many wrong DA cases might be rec
 
 RQ3 separates three retrieval conditions: no retrieval, ordinary global Top-5 retrieval, and class-balanced retrieval. A clean ablation holds the model, prompt schema, label space, decoding, checker set, rule layer, and finalization policy fixed while changing only retrieval.
 
-The frozen evidence contains no retrieval versus balanced retrieval for the Single pipeline. It does not contain Single + global RAG, HiED without retrieval, or HiED with global RAG. Therefore, the existing Single result can show that the tested balanced setup helps relative to no retrieval, but it cannot show that class balancing is better than ordinary RAG or isolate retrieval within HiED. The missing matched runs are specified as post-freeze supplementary analyses.
+The frozen evidence contains no retrieval versus balanced retrieval for the Single pipeline but not Single + global RAG, HiED without retrieval, or HiED with global RAG. Post-freeze supplementary runs complete these cells. Global Top-5 returns five examples, whereas class-balanced retrieval may return one example per configured parent label; the comparison therefore changes both selection policy and retrieved-example count. It tests the complete retrieval configurations rather than isolating class balancing alone.
 
 \section{Finalization and Selection Repair (RQ4)}
 
@@ -756,39 +756,53 @@ The main internal comparisons use the same case set and Top-1 Accuracy definitio
 
 The internal test cases were excluded from retrieval and development decisions. Configurations selected before the main internal evaluation are treated as primary evidence. Later experiments, including matched TF--IDF, ordinary RAG, and additional HiED retrieval conditions, must be labeled as post-freeze supplementary analyses rather than retroactively described as part of the original confirmatory set.
 
-Under this design, RQ2, RQ4, and RQ5 are answered by existing analyses. RQ1 and RQ3 are answered only for the available matched rows and remain incomplete until the stated supplementary baselines are run. Chapter~\ref{ch:results} reports the internal results without filling those gaps by assumption.
+Under this design, the original evidence answers RQ2, RQ4, and RQ5. The completed post-freeze supplement closes the specified RQ1 and RQ3 comparison cells and adds the joint $D_3/R/S$ analysis for RQ2. Chapter~\ref{ch:results} reports those later results separately and does not retroactively classify them as frozen evidence.
 
 \chapter{In-Domain Results}
 \label{ch:results}
 
 \section{Overview}
 
-The main results use the 1,000-case test set. Supporting checker and model-size analyses are identified separately. The available matched rows show that class-balanced retrieval improves the Single baseline, Top-3 Accuracy is much higher than Top-1 Accuracy, and the tested selection repairs do not provide a clear and reproducible gain over Direct-Answer (DA). The table does not yet contain same-split TF--IDF or ordinary global-RAG controls.
+The main results use the 1,000-case test set. Supporting checker and model-size analyses are identified separately. The original frozen rows show that class-balanced retrieval improves the Single baseline, Top-3 Accuracy is much higher than Top-1 Accuracy, and the tested selection repairs do not provide a clear and reproducible gain over Direct-Answer (DA). Post-freeze supplementary rows complete the same-split conventional baseline and matched retrieval comparisons.
 
 \section{Matched System Comparison}
 
 \begin{table}[htbp]
 \centering
-\caption{Available matched results on the 1,000-case test set. Top-1 and Top-3 denote Top-1 Accuracy and Top-3 Accuracy against benchmark gold labels. Single-model rows without a real ranked differential have no reported Top-3 value; matched TF--IDF and global-RAG results remain pending supplementary analyses.}
+\caption{Matched results on the 1,000-case test set. An asterisk marks post-freeze supplementary rows. Top-1 is any-reference agreement; Top-3 is reported only for systems with a real ranked output.}
 \label{tab:ladder-rewrite}
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{|l|c|c|c|c|c|}
 \hline
 System & Top-1 & Top-3 & Exact Match & Macro-F1 & Weighted-F1\\
 \hline
-Single & 0.466 & --- & 0.017 & 0.183 & 0.426\\
+Majority* & 0.398 & --- & 0.327 & 0.047 & 0.207\\
+\hline
+TF--IDF + LR* & 0.632 & 0.923 & 0.321 & 0.393 & 0.601\\
+\hline
+Single, no retrieval & 0.466 & --- & 0.017 & 0.183 & 0.426\\
+\hline
+Single + global Top-5* & 0.517 & --- & 0.029 & 0.224 & 0.447\\
 \hline
 Single + balanced RAG & 0.508 & --- & 0.011 & 0.192 & 0.433\\
 \hline
-HiED--NtS & 0.490 & 0.802 & 0.437 & 0.181 & 0.408\\
+HiED--DA, no retrieval* & 0.510 & 0.786 & 0.404 & 0.174 & 0.437\\
 \hline
-HiED--DA & \textbf{0.518} & \textbf{0.802} & 0.409 & 0.178 & 0.434\\
+HiED--DA, global Top-5* & 0.524 & 0.815 & 0.435 & 0.196 & 0.437\\
+\hline
+HiED--DA, balanced RAG & 0.518 & 0.802 & 0.409 & 0.178 & 0.434\\
+\hline
+HiED--NtS, balanced RAG & 0.490 & 0.802 & 0.437 & 0.181 & 0.408\\
 \hline
 \end{tabular}
 \end{adjustbox}
 \end{table}
 
-Adding class-balanced retrieval raises Top-1 Accuracy from 0.466 to 0.508. The paired comparison has 88 cases corrected only by balanced RAG and 46 corrected only by Single ($p=4.0\times10^{-4}$). Because an ordinary global-neighbor RAG run is unavailable on this split, the result supports the tested balanced setup relative to no retrieval, not superiority over standard RAG. HiED--DA reaches 0.518; relative to Single + balanced RAG, 60 cases favor HiED and 50 favor the Single RAG baseline ($p=0.391$). Single + balanced RAG is the closest matched HiED package ablation, but this comparison changes the prompt, output format, checkers, rules, and finalization, so it is a package comparison rather than a component ablation.
+The post-freeze conventional baselines materially change the RQ1 comparison. Majority agreement is 0.398, whereas TF--IDF + logistic regression reaches 0.632. Against balanced HiED--DA at 0.518, 229 cases favor TF--IDF and 115 favor HiED; the difference is $-0.114$ for HiED (95\% CI [$-0.150$, $-0.079$], Holm-adjusted $p=3.14\times10^{-9}$). Thus, HiED does not outperform the strongest conventional baseline on this synthetic benchmark. The result concerns benchmark prediction, not clinical usefulness or explanation quality.
+
+For the Single pipeline, global Top-5 and balanced retrieval raise Top-1 agreement from 0.466 to 0.517 and 0.508. Both improve over no retrieval after within-family Holm adjustment ($p=9.42\times10^{-5}$ and $p=7.19\times10^{-4}$), but global and balanced retrieval do not differ significantly (0.517 versus 0.508; adjusted $p=0.362$). For HiED--DA, no retrieval, global Top-5, and balanced retrieval yield 0.510, 0.524, and 0.518; none of the three paired differences is significant after adjustment. Because global and balanced retrieval also differ in retrieved-example count, these results compare complete retrieval configurations and do not isolate class balancing as the cause.
+
+Balanced HiED--DA differs from Single + global Top-5 by only 0.001: 58 discordant cases favor HiED and 57 favor Single (adjusted $p=1.000$). It differs from Single + balanced RAG by 0.010, with 60 cases favoring HiED and 50 favoring Single (adjusted $p=0.782$). These are package comparisons because the prompt, output format, checkers, rules, and finalization differ, not one-component ablations.
 
 Exact Match measures a different property. The Single systems emit too many labels on average, whereas NtS emits exactly one. NtS therefore raises Exact Match to 0.437 while lowering Top-1 to 0.490 and removing comorbidity detection. The result reflects output conservatism rather than better primary selection.
 
@@ -803,7 +817,9 @@ A separate oracle upper-bound analysis identifies 349 misclassified cases whose 
 \section{Criterion Verification and Finalization}
 \label{sec:criterion-verification}
 
-Among the 915 cases with a non-\emph{Others} gold parent and an active checker, the rule-confirmed set contains a gold parent in 857 cases (0.937; 95\% CI [0.919, 0.951]). The median confirmed set contains six of the fourteen active entries. This shows high reference retention but limited selectivity. Because the retained summary reports this rate separately from Top-3 and Top-1, it does not by itself identify the complete case-level $D_3/R/S$ transition pattern.
+Among the 915 cases with a non-\emph{Others} gold parent and an active checker, the rule-confirmed set contains a gold parent in 857 cases (0.937; 95\% CI [0.919, 0.951]). The median confirmed set contains six of the fourteen active entries. This shows high reference retention but limited selectivity.
+
+The post-freeze joint analysis localizes the remaining gap on the same 915 cases. A gold label is in the Top-3 for 802 cases; among these, 778 also retain a gold label in the confirmed set, giving $P(R\mid D_3)=0.970$. Of the 778 cases with both candidate presence and verification retention, 506 commit a gold label and 272 do not, giving $P(S\mid D_3,R)=0.650$. The 272 cases with $D_3=1$, $R=1$, and $S=0$ directly identify candidate-present, audit-retained non-commitments under the benchmark endpoint.
 
 The checker audit records 48.3\% \texttt{met}, 23.5\% \texttt{not\_met}, and 28.3\% \texttt{insufficient\_\allowbreak{}evidence} across 77,999 criterion states. These are model outputs rather than clinician-verified criterion labels, so they describe checker behavior, not clinical accuracy.
 
@@ -867,20 +883,20 @@ Its largest errors are F41$\rightarrow$F32 (178), F39$\rightarrow$F32 (43), \emp
 \hline
 Question & Main estimate & Statistical evidence & Supported conclusion & Remaining gap\\
 \hline
-Balanced retrieval vs no retrieval & 0.508 vs 0.466 & 88 vs 46 discordant cases; $p=4.0\times10^{-4}$ & Tested balanced retrieval helps Single & Ordinary RAG and matched HiED retrieval pending\\
+Single retrieval & 0.466 none; 0.517 global; 0.508 balanced & Both retrieval modes beat none after Holm adjustment; global vs balanced $p=0.362$ & Retrieval helps Single & Policy and example count differ\\
 \hline
-HiED package vs matched Single RAG & 0.518 vs 0.508 & 60 vs 50 discordant cases; $p=0.391$ & No significant package gain & Not a one-component ablation\\
+HiED retrieval & 0.510 none; 0.524 global; 0.518 balanced & No pair significant after Holm adjustment & No attributable retrieval gain within HiED & Post-freeze evidence\\
 \hline
-Top-3 vs Top-1 & 0.802 vs 0.518 & 284 candidate-present non-commitments & Ranking headroom is large & Needs complete $D_3/R/S$ joint table\\
+TF--IDF vs balanced HiED & 0.632 vs 0.518 & 229 vs 115 discordant cases; adjusted $p=3.14\times10^{-9}$ & TF--IDF is stronger on this benchmark & Does not compare auditability or clinical utility\\
 \hline
-Verification retention/selectivity & 857/915 = 0.937 & 95\% CI [0.919, 0.951]; median six confirmed entries & High retention, limited selectivity & Clinician validation of states pending\\
+Joint $D_3/R/S$ gap & 272 cases with $D_3=1,R=1,S=0$ & $P(R\mid D_3)=0.970$; $P(S\mid D_3,R)=0.650$ & Final commitment remains the main measured bottleneck & Clinician validation of states pending\\
 \hline
-Repair outcomes & No clear gain & Negative or non-significant tested repairs & Simple selection repairs do not solve DA errors & Matched RQ3/RQ1 controls pending\\
+Repair outcomes & No clear gain & Negative or non-significant tested repairs & Simple selection repairs do not solve DA errors & Bounded to tested implementations\\
 \hline
 \end{tabularx}
 \end{table}
 
-The current internal results support three conclusions. First, class-balanced retrieval improves Single relative to no retrieval, but ordinary RAG and matched HiED retrieval ablations are still missing. Second, Top-3 Accuracy is much higher than Top-1 Accuracy. Third, the tested criterion-based or post-hoc selection repairs do not provide a clear improvement over DA.
+The combined frozen and post-freeze results support three conclusions. First, TF--IDF + logistic regression is the strongest same-split baseline, so HiED is not the most accurate system on this benchmark. Second, retrieval improves Single relative to no retrieval, but class-balanced retrieval does not outperform global Top-5, and no matched retrieval variant gives a significant HiED gain. Third, the joint analysis confirms that many cases retain a gold label through ranking and criterion verification but lose it at final commitment; the tested selection repairs do not resolve that gap.
 
 
 \chapter{External Synthetic Evaluation and Configuration-Level Scope Transfer}
@@ -1248,7 +1264,7 @@ Future work with patient data will require institutional approval, privacy contr
 
 This thesis introduced HiED, a modular multi-stage LLM system that separates ranked candidate generation, an evidence-linked criterion audit, and the committed diagnosis. The main result is that these views can disagree. On the internal test set, the gold label appears in the Top-3 far more often than it is selected as primary, and the criterion layer retains many diagnoses at once. The central problem is therefore not only whether the system can name the correct diagnosis, but whether it can choose it over other plausible diagnoses.
 
-The tested logic-based selector does not improve Top-1 over Direct-Answer, and the repair methods do not provide a clear and reproducible gain. External synthetic evaluation shows that the ranking-to-selection gap remains under distribution shift, but it does not establish the full internal verification pattern or clinical validity. HiED's strongest contribution is an auditable system and an evaluation method that makes these differences visible.
+The tested logic-based selector does not improve Top-1 over Direct-Answer, and the repair methods do not provide a clear and reproducible gain. The post-freeze controls show that a conventional TF--IDF classifier is more accurate on the internal benchmark and that retrieval-policy changes do not produce a significant HiED gain. External synthetic evaluation shows that the ranking-to-selection gap remains under distribution shift, but it does not establish clinical validity. HiED's strongest contribution is an auditable system and an evaluation method that makes these differences visible rather than state-of-the-art benchmark accuracy.
 
 \section{Answers to the Research Questions}
 
@@ -1261,11 +1277,11 @@ The tested logic-based selector does not improve Top-1 over Direct-Answer, and t
 \hline
 RQ & Answer & Key evidence & Status / boundary\\
 \hline
-RQ1 & HiED is not yet shown to beat all conventional or ordinary-RAG baselines & HiED--DA 0.518; Single + balanced RAG 0.508; $p=0.391$ & Partial until same-split TF--IDF and ordinary RAG complete\\
+RQ1 & HiED does not outperform the strongest matched baseline & TF--IDF 0.632 vs balanced HiED 0.518; adjusted $p=3.14\times10^{-9}$ & Closed with post-freeze controls\\
 \hline
-RQ2 & Candidate generation and criterion retention exceed final commitment & Top-3 0.802; retention 857/915; Top-1 0.518 & Joint $D_3/R/S$ table pending\\
+RQ2 & Candidate generation and criterion retention exceed final commitment & 272 eligible cases have $D_3=1,R=1,S=0$ & Closed for benchmark outputs; no clinical criterion validation\\
 \hline
-RQ3 & Balanced retrieval helps Single versus no retrieval only & Single 0.466 to balanced RAG 0.508; $p=4.0\times10^{-4}$ & Global RAG and matched HiED retrieval pending\\
+RQ3 & Retrieval helps Single, but balancing does not beat global retrieval and no HiED retrieval gain is significant & Single: 0.466/0.517/0.508; HiED: 0.510/0.524/0.518 & Closed with post-freeze configuration comparisons\\
 \hline
 RQ4 & Tested finalization and repairs do not improve DA & NtS, debate, fusion, SC, CISC, pairwise results & Bounded to tested implementations\\
 \hline
@@ -1275,11 +1291,11 @@ RQ5 & Main pattern persists across synthetic robustness analyses & Qwen3 size, M
 \end{table}
 
 \begin{description}[style=nextline,leftmargin=3cm,labelwidth=2.5cm]
-\item[RQ1] The frozen internal evidence compares Single, Single + balanced RAG, and HiED under the same 1,000 cases. Balanced RAG improves Single from 0.466 to 0.508, while HiED--DA reaches 0.518 but is not significantly better than Single + balanced RAG. A same-split TF--IDF baseline and ordinary global-RAG baseline have not yet been completed, so the thesis does not claim that HiED outperforms conventional or ordinary-RAG baselines.
+\item[RQ1] The post-freeze same-split TF--IDF + logistic-regression baseline reaches 0.632 any-reference Top-1 agreement, compared with 0.518 for balanced HiED--DA. The paired difference favors TF--IDF by 0.114 (Holm-adjusted $p=3.14\times10^{-9}$). Balanced HiED does not differ significantly from Single + global Top-5 at 0.517 or Single + balanced RAG at 0.508. HiED therefore does not provide the strongest benchmark accuracy; its contribution is the explicit ranked, criterion-audited, and finalization record.
 
-\item[RQ2] The clearest measured gap is between Top-3 Accuracy and the committed diagnosis. In 284 of 1,000 internal cases, a gold label appears in the Top-3 but another diagnosis is committed. The rule-confirmed set retains a gold parent in 857 of 915 eligible cases but contains a median of six entries, showing high retention and limited selectivity. The marginal rates do not replace a complete $D_3/R/S$ joint table.
+\item[RQ2] The clearest measured gap is between Top-3 coverage and the committed diagnosis. In 284 of 1,000 internal cases, a gold label appears in the Top-3 but another diagnosis is committed. Within the 915 checker-eligible cases, 272 have a gold label both ranked and retained by verification but not committed: $D_3=1,R=1,S=0$. The corresponding conditional rates are $P(R\mid D_3)=0.970$ and $P(S\mid D_3,R)=0.650$. These are benchmark-output relationships, not clinician-validated criterion judgments.
 
-\item[RQ3] Class-balanced retrieval improves the Single pipeline relative to no retrieval. Superiority over ordinary global RAG and the retrieval contribution within a matched HiED pipeline are not established because those runs were not in the original experiment set. They remain post-freeze supplementary analyses.
+\item[RQ3] In post-freeze matched runs, Single improves from 0.466 without retrieval to 0.517 with global Top-5 and 0.508 with class-balanced retrieval. Both retrieval configurations beat no retrieval after Holm adjustment, but they do not differ significantly from each other. HiED--DA gives 0.510, 0.524, and 0.518 under no, global, and balanced retrieval, with no significant paired difference. Because global and balanced conditions differ in both selection policy and example count, the evidence does not isolate a benefit from class balancing.
 
 \item[RQ4] Nominate-then-Select does not improve Top-1 Accuracy over Direct-Answer. Pairwise reasoning, debate, fixed fusion, self-consistency, CISC, and similarity-based selection also do not give a clear and repeatable improvement under the tested procedures. This conclusion applies to these implementations, not to every possible method in those families.
 
@@ -1422,24 +1438,26 @@ Audit Artifacts & Candidate, checker, auditor, and finalization records & Inspec
 \centering
 \caption{Supplementary statistical evidence retained in this thesis.}
 \label{tab:supplementary-statistics}
-\scriptsize
-\begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{|l|l|l|}
+\small
+\begin{tabularx}{\textwidth}{|p{3.0cm}|X|p{3.8cm}|}
 \hline
 Evidence item & Retained value & Status\\
 \hline
-Balanced RAG vs Single & 88 cases corrected only by balanced RAG; 46 corrected only by Single; $p=4.0\times10^{-4}$ & Reported as matched Single retrieval evidence\\
+TF--IDF vs balanced HiED & 229 cases favor TF--IDF; 115 favor HiED; adjusted $p=3.14\times10^{-9}$ & Post-freeze baseline family\\
 \hline
-HiED--DA vs Single + balanced RAG & 60 cases favor HiED; 50 favor Single RAG; $p=0.391$ & Package comparison, not component ablation\\
+Single global vs none & 99 cases favor global; 48 favor none; adjusted $p=9.42\times10^{-5}$ & Post-freeze Single retrieval family\\
+\hline
+Single balanced vs none & 88 cases favor balanced; 46 favor none; adjusted $p=7.19\times10^{-4}$ & Same balanced run as frozen comparison, adjusted in supplement\\
+\hline
+Single balanced vs global & 34 cases favor balanced; 43 favor global; adjusted $p=0.362$ & No significant difference\\
+\hline
+HiED retrieval family & none/global/balanced Top-1: 0.510/0.524/0.518; all adjusted $p\geq0.359$ & No significant paired retrieval difference\\
 \hline
 Verification retention & 857 of 915 eligible cases; 95\% CI [0.919, 0.951] & Uses checker-eligible denominator\\
 \hline
-Criterion-state proportions & 48.3\% \texttt{met}, 23.5\% \texttt{not\_met}, 28.3\% \texttt{insufficient\_\allowbreak{}evidence} & Model-generated states, not clinical labels\\
+$D_3/R/S$ joint table & 000/001/010/011/100/101/110/111: 34/0/79/0/12/12/272/506 & Post-freeze case-level analysis, $N=915$\\
 \hline
-Pending joint table & Complete $D_3/R/S$ eight-cell table unavailable & Must not be inferred from marginal rates\\
-\hline
-\end{tabular}
-\end{adjustbox}
+\end{tabularx}
 \end{table}
 
 \chapter{Experiment Inventory and Inclusion Decisions}
@@ -1467,7 +1485,7 @@ MDD repair matrix & Frozen external repair & External repair table & Same ordere
 \hline
 Case-neighbor reranking & Exploratory/archived & External selector analysis & Development-selected modes, negative transfer result\\
 \hline
-Matched TF--IDF and ordinary RAG & Pending & Stated as missing & Required for complete RQ1/RQ3 closure\\
+Matched TF--IDF and retrieval controls & Post-freeze supplementary & RQ1/RQ3 results and supplementary appendix & Complete matched control cells without reclassifying frozen evidence\\
 \hline
 \end{tabular}
 \end{adjustbox}
