@@ -474,9 +474,11 @@ Checker states are model-generated and have not been validated as clinician grou
 
 Under Direct-Answer (DA), the diagnostician's primary field becomes the committed diagnosis; the first ranked diagnosis is used only when that field is missing. An optional comorbidity is retained when it differs from the primary. Outputs from the Criterion Checker and Compatibility Auditor do not replace the DA committed diagnosis.
 
-Nominate-then-Select (NtS) uses criterion compatibility to choose the committed diagnosis. It selects the first confirmed diagnosis in the five-entry ranking. If none is confirmed, it selects another confirmed active entry with the highest met ratio. If no diagnosis is confirmed, it falls back to the first ranked diagnosis. NtS does not emit a comorbid diagnosis.
+Nominate-then-Select (NtS) uses criterion compatibility to choose the committed diagnosis. It selects the first confirmed diagnosis in the five-entry ranking. If none is confirmed, it selects another confirmed active entry with the highest met ratio. If no diagnosis is confirmed, it falls back to the first ranked diagnosis.
 
-DA and NtS reuse the same ranked candidates and checker traces and differ mainly in the finalization rule. This provides a direct test of whether criterion-based re-selection improves the committed diagnosis. Pairwise comparison and debate are separate selection-repair methods with different execution contracts.
+The historical NtS output used in the frozen architecture ladder then emits only that re-selected primary. It is therefore denoted \emph{NtS-single}: it changes both the primary-selection rule and the cardinality of the emitted diagnostic set. A post-freeze controlled replay introduces a second analytic contract, \emph{NtS-primary}. It applies the same replayed primary-selection rule while preserving the DA comorbidity after parent projection, except when it duplicates the newly selected primary. NtS-primary is not a deployed configuration; it isolates primary re-selection from secondary-label suppression. NtS-primary and NtS-single consequently have identical committed primaries and Top-1 values, while their set-level metrics can differ.
+
+DA, NtS-single, and NtS-primary reuse the same ranked candidates and checker traces. The post-freeze comparison therefore tests whether criterion-based re-selection improves the committed diagnosis without conflating that question with output cardinality. Pairwise comparison and debate are separate selection-repair methods with different execution contracts.
 
 \section{Audit Artifacts}
 
@@ -722,7 +724,9 @@ Within each architecture, all three conditions use the same model, diagnostic pr
 
 \section{Finalization and Selection Repair (RQ4)}
 
-The closest matched finalization comparison is HiED--DA versus HiED--NtS. They share the same model, balanced retrieval, diagnostician ranking, criterion-checker set, deterministic rules, and case set. DA keeps the emitted primary field. NtS uses confirmed diagnoses to choose the committed diagnosis. Top-1 Accuracy is the primary outcome. Exact Match and multilabel F1 are secondary because NtS does not emit a comorbid diagnosis.
+The frozen finalization comparison is HiED--DA versus historical HiED--NtS-single under parent-balanced retrieval. They share the same model, diagnostician ranking, criterion-checker set, deterministic rules, and case set, but NtS-single changes both primary selection and output cardinality. A post-freeze supplementary deterministic replay therefore crosses three already generated DA rows---no retrieval, ordinary global Top-5 retrieval, and parent-balanced retrieval---with DA and NtS-primary finalization. All rows contain the same 1,000 ordered test cases. The replay changes only the committed primary, preserves the upstream ranking and criterion trace, retains the DA comorbidity unless it duplicates the new primary after parent projection, and performs no new LLM inference.
+
+Top-1 Accuracy is the primary outcome. Within each retrieval strategy, paired DA--NtS-primary outcomes are compared using exact McNemar tests, paired-bootstrap confidence intervals, and Holm correction across the three comparisons. Difference-in-differences bootstrap contrasts test whether the finalization effect varies across retrieval strategies. Historical NtS-single is retained only as a secondary output-contract comparison that separates primary re-selection from secondary-label suppression.
 
 Four additional repair families test different explanations for the gap:
 
@@ -777,7 +781,7 @@ The main internal comparisons use the same case set and Top-1 Accuracy definitio
 
 The internal test cases were excluded from retrieval and development decisions. Configurations selected before the main internal evaluation are treated as primary evidence. Later experiments, including matched TF--IDF, ordinary RAG, and additional HiED retrieval conditions, must be labeled as post-freeze supplementary analyses rather than retroactively described as part of the original confirmatory set.
 
-Under this design, the original evidence answers RQ2, RQ4, and RQ5. The completed post-freeze supplement closes the specified RQ1 and RQ3 comparison cells and adds the joint $D_3/R/S$ analysis for RQ2. Chapter~\ref{ch:results} reports those later results separately and does not retroactively classify them as frozen evidence.
+Under this design, the original evidence supplies the frozen RQ2, RQ4, and RQ5 analyses. The completed post-freeze supplement closes the specified RQ1 and RQ3 comparison cells, adds the joint $D_3/R/S$ analysis for RQ2, and tests the RQ4 finalization effect across all three retrieval configurations. Chapter~\ref{ch:results} reports those later results separately and does not retroactively classify them as frozen evidence.
 
 \chapter{In-Domain Results}
 \label{ch:results}
@@ -786,12 +790,13 @@ Under this design, the original evidence answers RQ2, RQ4, and RQ5. The complete
 
 The main results use the 1,000-case test set. Supporting checker and model-size analyses are identified separately. The original frozen rows show that class-balanced retrieval improves the Single baseline, Top-3 Accuracy is much higher than Top-1 Accuracy, and the tested selection repairs do not provide a clear and reproducible gain over Direct-Answer (DA). Post-freeze supplementary rows complete the same-split conventional baseline and matched retrieval comparisons.
 
-\section{Matched System Comparison}
+\section{Post-Freeze Matched Baselines and Retrieval Controls}
+\label{sec:round20c-matched-controls}
 
 \begin{table}[htbp]
 \centering
-\caption{Matched results on the 1,000-case test set. An asterisk marks post-freeze supplementary rows. Top-1 is any-reference agreement; Top-3 is reported only for systems with a real ranked output.}
-\label{tab:ladder-rewrite}
+\caption{Matched results on the 1,000-case test set. An asterisk marks post-freeze supplementary rows, which do not replace the frozen architecture ladder. Top-1 is any-reference agreement; Top-3 is reported only for systems with a real ranked output.}
+\label{tab:round20c-matched-controls}
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{|l|c|c|c|c|c|}
 \hline
@@ -813,7 +818,7 @@ HiED--DA, global Top-5* & 0.524 & 0.815 & 0.435 & 0.196 & 0.437\\
 \hline
 HiED--DA, balanced RAG & 0.518 & 0.802 & 0.409 & 0.178 & 0.434\\
 \hline
-HiED--NtS, balanced RAG & 0.490 & 0.802 & 0.437 & 0.181 & 0.408\\
+Historical HiED--NtS-single, balanced RAG & 0.490 & 0.802 & 0.437 & 0.181 & 0.408\\
 \hline
 \end{tabular}
 \end{adjustbox}
@@ -821,11 +826,13 @@ HiED--NtS, balanced RAG & 0.490 & 0.802 & 0.437 & 0.181 & 0.408\\
 
 The post-freeze conventional baselines materially change the RQ1 comparison. Majority agreement is 0.398, whereas TF--IDF + logistic regression reaches 0.632. Against balanced HiED--DA at 0.518, 229 cases favor TF--IDF and 115 favor HiED; the difference is $-0.114$ for HiED (95\% CI [$-0.150$, $-0.079$], Holm-adjusted $p=3.14\times10^{-9}$). Thus, HiED does not outperform the strongest conventional baseline on this synthetic benchmark. The result concerns benchmark prediction, not clinical usefulness or explanation quality.
 
+The strong lexical row is also a counterweight to an exclusively missing-information interpretation. At least some benchmark labels are recoverable from transcript surface regularities more effectively than the evaluated LLM pipeline recovers them. This does not establish clinical or cross-corpus superiority for TF--IDF: synthetic generation may create lexical shortcuts, and transfer must be evaluated separately. It does show that residual HiED errors cannot, by themselves, prove that the transcripts contain no usable primary-diagnosis signal. HiED's contribution is instead the ranked differential, criterion-level audit, and stage-wise failure localization that a flat lexical classifier does not provide.
+
 For the Single pipeline, global Top-5 and balanced retrieval raise Top-1 agreement from 0.466 to 0.517 and 0.508. Both improve over no retrieval after within-family Holm adjustment ($p=9.42\times10^{-5}$ and $p=7.19\times10^{-4}$), but global and balanced retrieval do not differ significantly (0.517 versus 0.508; adjusted $p=0.362$). For HiED--DA, no retrieval, global Top-5, and balanced retrieval yield 0.510, 0.524, and 0.518; none of the three paired differences is significant after adjustment. Because global and balanced retrieval also differ in retrieved-example count, these results compare complete retrieval configurations and do not isolate class balancing as the cause.
 
 Balanced HiED--DA differs from Single + global Top-5 by only 0.001: 58 discordant cases favor HiED and 57 favor Single (adjusted $p=1.000$). It differs from Single + balanced RAG by 0.010, with 60 cases favoring HiED and 50 favoring Single (adjusted $p=0.782$). These are package comparisons because the prompt, output format, checkers, rules, and finalization differ, not one-component ablations.
 
-Exact Match measures a different property. The Single systems emit too many labels on average, whereas NtS emits exactly one. NtS therefore raises Exact Match to 0.437 while lowering Top-1 to 0.490 and removing comorbidity detection. The result reflects output conservatism rather than better primary selection.
+Exact Match measures a different property. The Single systems emit too many labels on average, whereas historical NtS-single emits exactly one. Its Exact Match of 0.437 and Top-1 of 0.490 therefore combine primary re-selection with secondary-label suppression. The controlled replay below separates those effects.
 
 \section{Top-3 Accuracy and the Selection Gap}
 
@@ -840,11 +847,37 @@ A separate oracle upper-bound analysis identifies 349 misclassified cases whose 
 
 Among the 915 cases with a non-\emph{Others} gold parent and an active checker, the rule-confirmed set contains a gold parent in 857 cases (0.937; 95\% CI [0.919, 0.951]). The median confirmed set contains six of the fourteen active entries. This shows high gold-label retention but limited selectivity.
 
-The post-freeze joint analysis localizes the remaining gap on the same 915 cases. A gold label is in the Top-3 for 802 cases; among these, 778 also retain a gold label in the confirmed set, giving $P(R\mid D_3)=0.970$. Of the 778 cases with both candidate presence and gold-label retention, 506 commit a gold label and 272 do not, giving $P(S\mid D_3,R)=0.650$. The 272 cases with $D_3=1$, $R=1$, and $S=0$ directly identify candidate-present, audit-retained non-commitments under the benchmark endpoint.
+The post-freeze joint analysis localizes the remaining gap on the same 915 cases. A gold label is in the Top-3 for 802 cases; among these, 778 also retain a gold label in the confirmed set, giving $P(R\mid D_3)=0.9701$. Across all 857 cases that retain a gold label, 506 commit one, giving $P(S\mid R)=0.5904$. Of the 778 cases with both candidate presence and gold-label retention, 506 commit a gold label and 272 do not, giving $P(S\mid D_3,R)=0.6504$. The 272 cases with $D_3=1$, $R=1$, and $S=0$ directly identify candidate-present, audit-retained non-commitments under the benchmark endpoint. These are benchmark-condition quantities derived from algorithmic checker states, not clinician-validated probabilities.
 
 The checker audit records 48.3\% \texttt{met}, 23.5\% \texttt{not\_met}, and 28.3\% \texttt{insufficient\_\allowbreak{}evidence} across 77,999 criterion states. These are model outputs rather than clinician-verified criterion labels, so they describe checker behavior, not clinical accuracy.
 
-DA and Nominate-then-Select (NtS) use matched upstream components and differ mainly in finalization. NtS lowers Top-1 from 0.518 to 0.490 while increasing Exact Match through single-label output. A separate checker-sensitivity analysis also leaves DA Top-1 unchanged across the five full-size settings, as expected because DA does not allow the downstream audit to overwrite the diagnostician's primary.
+\subsection{Finalization-by-Retrieval Factorial}
+\label{sec:round20e-nts-factorial}
+
+\begin{table}[htbp]
+\centering
+\caption{Post-freeze supplementary DA versus NtS-primary controlled replay across retrieval strategies ($N=1000$ paired cases per row). NtS-single has the same committed primary and Top-1 as NtS-primary but clears secondary labels.}
+\label{tab:round20e-nts-factorial}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\hline
+Retrieval & DA & NtS-primary & NtS-single & NtS$-$DA & Holm $p$ & 95\% CI\\
+\hline
+None & 0.510 & 0.482 & 0.482 & $-0.028$ & 0.0001217 & [$-0.041$, $-0.015$]\\
+\hline
+Global Top-5 & 0.524 & 0.495 & 0.495 & $-0.029$ & 0.0004074 & [$-0.044$, $-0.014$]\\
+\hline
+Parent-balanced & 0.518 & 0.490 & 0.490 & $-0.028$ & 0.0004971 & [$-0.043$, $-0.013$]\\
+\hline
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+Criterion-derived primary re-selection lowers Top-1 under every tested retrieval condition. The paired losses are 2.8--2.9 percentage points, and all three confidence intervals exclude zero after Holm correction. This extends the original balanced-only result: its direction is reproduced when retrieval is removed and when ordinary global Top-5 retrieval is used.
+
+The interaction contrasts are small in point estimate: global minus balanced is $-0.001$ (95\% CI [$-0.013$, $0.010$]), none minus balanced is $0.000$ (95\% CI [$-0.012$, $0.012$]), and global minus none is $-0.001$ (95\% CI [$-0.011$, $0.009$]). The supported conclusion is that there is no evidence that retrieval strategy moderates the NtS primary-selection penalty. This is not an equivalence result.
+
+NtS-primary and NtS-single use identical primaries, but preserving the DA secondary output raises mean cardinality and changes set metrics. Relative to NtS-single, NtS-primary lowers Exact Match by 0.045, 0.026, and 0.047 under no, global, and parent-balanced retrieval, while slightly increasing Macro-F1 and Weighted-F1. The historical single-label NtS Exact Match behavior is therefore an output-cardinality trade-off; it is not evidence that verification-derived primary re-selection improves primary selection or set calibration by itself. A separate checker-sensitivity analysis leaves DA Top-1 unchanged across the five full-size settings, as expected because DA does not allow the downstream audit to overwrite the diagnostician's primary.
 
 \section{Selection-Repair Evidence}
 
@@ -910,7 +943,9 @@ HiED retrieval & 0.510 none; 0.524 global; 0.518 balanced & No pair significant 
 \hline
 TF--IDF vs balanced HiED & 0.632 vs 0.518 & 229 vs 115 discordant cases; adjusted $p=3.14\times10^{-9}$ & TF--IDF is stronger on this benchmark & Does not compare auditability or clinical utility\\
 \hline
-Joint $D_3/R/S$ gap & 272 cases with $D_3=1,R=1,S=0$ & $P(R\mid D_3)=0.970$; $P(S\mid D_3,R)=0.650$ & Final commitment remains the main measured bottleneck & Clinician validation of states pending\\
+Joint $D_3/R/S$ gap & 272 cases with $D_3=1,R=1,S=0$ & $P(R\mid D_3)=0.9701$; $P(S\mid R)=0.5904$; $P(S\mid D_3,R)=0.6504$ & Final commitment remains the main measured bottleneck & Clinician validation of states pending\\
+\hline
+NtS-primary factorial & DA exceeds NtS-primary by 0.028--0.029 & All three Holm-adjusted $p<0.001$; interaction CIs include zero & Criterion-derived re-selection is harmful in all three tested retrieval settings & No equivalence claim; post-freeze replay\\
 \hline
 Repair outcomes & No clear gain & Negative or non-significant tested repairs & Simple selection repairs do not solve DA errors & Bounded to tested implementations\\
 \hline
@@ -1097,7 +1132,7 @@ Unresolved evidence & 28.3\% of criterion states are \texttt{insufficient\_}\all
 \hline
 Reference present, wrong commitment & 284 of 1,000 cases have a gold parent in Top-3 but not as final primary & Candidate detection does not guarantee correct selection\\
 \hline
-Single-label conservatism & NtS Exact Match 0.437 vs. DA 0.409, but Top-1 0.490 vs. 0.518 & Suppressing secondary labels can improve set match while worsening primary selection\\
+Finalization and cardinality trade-off & NtS-primary and NtS-single share Top-1, but their set metrics differ & Primary re-selection and secondary-label suppression are separate interventions\\
 \hline
 Scope-limited diagnosis & 47 of 925 external cases are out of scope; retarget recovery is 0/58 & Making a label available is different from learning to select it\\
 \hline
@@ -1115,7 +1150,13 @@ Missing information is also common in the audit trace. An \texttt{insufficient\_
 
 The 284 candidate-present, wrong-commitment cases are the clearest selection errors: a gold parent is already in Top-3, but another diagnosis is chosen. Criterion verification offers related evidence, but not on the same denominator: it retains a gold parent in 857 of 915 eligible cases and confirms a median of six entries. The audit therefore often preserves the answer without resolving primacy.
 
-Two further patterns concern the output contract. NtS improves Exact Match by emitting one label, but it lowers Top-1 and cannot detect comorbidity. Likewise, broader scope makes more diagnoses legal to emit, yet the retargeting sample recovers none of the 58 newly available gold parents. Output conservatism, scope, and primary selection must therefore be evaluated separately.
+Two further patterns concern the output contract. Historical NtS-single changes the committed primary and removes secondary labels, whereas NtS-primary changes only the primary. Likewise, broader scope makes more diagnoses legal to emit, yet the retargeting sample recovers none of the 58 newly available gold parents. Output cardinality, scope, and primary selection must therefore be evaluated separately.
+
+\section{Finalization and Label-Cardinality Trade-Off}
+
+Historical NtS-single emits only the re-selected primary. Its apparently more conservative set behavior therefore combines two interventions: changing the primary and deleting the DA secondary output. Round 20E separates them. NtS-primary preserves the same re-selected primary while retaining the DA comorbidity set; it has exactly the same Top-1 as NtS-single but lower Exact Match and slightly higher classwise F1.
+
+The error archetype is consequently not that verification chooses a better diagnostic set. Primary re-selection remains harmful, while single-label emission can improve Exact Match when the benchmark gold set is itself a singleton and can harm cases in which a secondary diagnosis is appropriate. Top-1, Exact Match, classwise F1, and output cardinality must therefore be reported as distinct operating characteristics. A deliberately conservative one-label display may still be a usable interface choice, but it should be justified as an output policy rather than as evidence that verification resolved diagnostic primacy.
 
 \section{Two Uses of the Audit Trace}
 
@@ -1137,6 +1178,12 @@ The main finding is that one accuracy score hides three different questions: whe
 
 The external MDD-5k results support the same point more narrowly. In the matched 925-case run, Top-3 Accuracy is 0.8508 and Top-1 Accuracy is 0.5708. This shows that the ranking-to-selection gap remains under a different synthetic data distribution. However, the external analysis does not include the same verification measure and therefore does not reproduce the full internal analysis.
 
+\section{What the Matched Lexical Baseline Changes}
+
+The post-freeze TF--IDF result prevents the selection bottleneck from being read as proof of intrinsic transcript underdetermination. A supervised lexical model reaches 0.632 Top-1 on the same internal synthetic split, substantially above the canonical HiED--DA result. The benchmark therefore contains lexical signal that the evaluated LLM pipeline does not fully exploit. The selection bottleneck remains a valid description of where HiED and the matched LLM configurations fail, but it is a system-level empirical finding rather than a universal ceiling on transcript-only prediction.
+
+The lexical result has its own boundary. Synthetic corpora may contain generator-specific wording and label cues, and the thesis's cross-corpus selector results already caution that fitted lexical signals need not transfer. A transcript-only human ceiling and external real-patient evaluation remain necessary to distinguish model limitation, corpus shortcut, and genuine missing-information limits.
+
 \section{Relation to Prior Psychiatric and Multi-Agent Systems}
 
 Compared with interactive psychiatric agents, HiED deliberately studies fixed-input diagnosis: every method receives the same transcript and cannot ask follow-up questions. Compared with free-form multi-agent debate, HiED separates role-specific generation, criterion checking, deterministic compatibility auditing, and final commitment so that these outputs can be inspected independently. More agents therefore do not automatically imply better commitment. The tested debate and repair methods show that additional reasoning steps can add cost or change execution contracts without improving Top-1 Accuracy. Auditability can still have value without a Top-1 gain because it identifies candidates, unresolved evidence, and finalization sources for human review. The same ranking-to-commitment issue also appears in broader candidate-ranking problems: retrieving or naming a plausible item is easier than choosing the final item under incomplete evidence.
@@ -1154,7 +1201,7 @@ Top-3 exceeds Top-1 & 0.802 vs 0.518 & Candidate generation is easier than commi
 \hline
 High gold-label retention & 857/915 & Audit often keeps a gold parent & Use checker trace for review and debugging & Checker states are not clinician labels\\
 \hline
-NtS lowers Top-1 & 0.490 vs 0.518 & Compatibility is not primacy & Separate audit from final selection & Tested rule only\\
+NtS-primary lowers Top-1 & DA exceeds NtS-primary by 0.028--0.029 across retrieval settings & Compatibility is not primacy & Separate audit from final selection & Post-freeze replay; tested rule only\\
 \hline
 Repairs lack clear gain & Repair battery & Simple post-hoc selection is insufficient & Need evidence-aware comparison or follow-up questions & Not a proof against all methods\\
 \hline
@@ -1167,7 +1214,9 @@ External gap persists & MDD Top-3 vs Top-1 & Selection remains difficult under s
 
 The criterion checker evaluates each diagnosis separately. It asks whether the transcript supports that diagnosis, not whether it is better than the other supported diagnoses. This distinction matters because common symptoms such as poor sleep, fatigue, low mood, worry, avoidance, and reduced concentration can support several disorders. Choosing a primary diagnosis often depends on comparative facts such as onset, duration, previous episodes, exclusionary causes, and whether one disorder explains the other symptoms.
 
-This explains why broad criterion confirmation does not lead directly to a reliable final choice. It also explains the Direct-Answer and Nominate-then-Select result. Replacing the diagnostician's choice with the current logic-based selector lowers Top-1 from 0.518 to 0.490. Nominate-then-Select has higher Exact Match, but it outputs no secondary diagnosis and therefore benefits from the large number of single-label cases. The current criterion track is useful as a high-recall audit, but it is not a better primary selector.
+This explains why broad criterion confirmation does not lead directly to a reliable final choice. NtS demonstrates the compatibility--primacy distinction causally. Across no retrieval, global Top-5 retrieval, and parent-balanced retrieval, applying the criterion-derived primary rule to the same upstream outputs reduces Top-1 by 2.8--2.9 percentage points. The historical NtS-single policy also changes output cardinality, so its Exact Match behavior cannot be credited to improved primary re-selection. The current criterion track is useful as a high-recall audit, but the tested rule is not a better primary selector.
+
+The near-identical negative point estimates across the three retrieval conditions weaken the hypothesis that the original balanced-only NtS result was a retrieval-specific artifact. Because every interaction confidence interval includes zero, however, this is evidence of no detected moderation rather than proof that the retrieval conditions are equivalent.
 
 The stage-wise analysis still changes how errors are understood. Missing the gold label in the ranked candidate list points to candidate generation or retrieval. Finding it in the ranked candidate list but not in the confirmed set points to evidence interpretation or missing information. Finding it in both views but selecting another diagnosis points more directly to comparative selection. These cases require different remedies and cannot be separated by endpoint accuracy alone.
 
@@ -1181,7 +1230,7 @@ This is not evidence that the broader method families cannot work. It shows only
 
 \section{Model Error or Missing Information}
 
-The present experiments cannot fully separate two causes of error. First, the transcript may contain enough information, but the model may use it poorly. Second, the transcript may omit the information needed for a unique primary diagnosis. The 284 cases in which the gold label is in the Top-3 but is not selected show that useful candidate generation has already occurred in many errors. Broad confirmed sets and frequent \texttt{insufficient\_\allowbreak{}evidence} states also suggest that some cases lack clear discriminating facts, but they do not prove that missing information caused each error.
+The present experiments cannot fully separate two causes of error. First, the transcript may contain enough information, but the model may use it poorly. Second, the transcript may omit the information needed for a unique primary diagnosis. The 284 cases in which the gold label is in the Top-3 but is not selected show that useful candidate generation has already occurred in many errors. Broad confirmed sets and frequent \texttt{insufficient\_\allowbreak{}evidence} states also suggest that some cases lack clear discriminating facts, but they do not prove that missing information caused each error. The stronger same-split TF--IDF result provides an important counterexample to a universal missing-information explanation: at least some label signal is recoverable from these transcripts, although synthetic lexical shortcuts may contribute.
 
 A transcript-only human study is needed to separate these causes. Psychiatrists should receive the same transcript and label space as the model. If clinicians also disagree or judge the evidence insufficient, the task or gold label may be the main limit. If clinicians consistently resolve cases that HiED misses, the main problem is more likely the method.
 
@@ -1201,6 +1250,10 @@ Finally, the Taiwanese setting is the intended use context, not the population v
 The evaluation target is agreement with benchmark gold labels after parent-level projection. It is not an independent judgment of the patient's true diagnosis. Parent projection makes two corpora easier to compare but removes subtype detail. Top-1 Accuracy with a gold-label set is also less strict than matching only the first listed diagnosis. Top-1 Accuracy, Top-3 Accuracy, Exact Match, Macro-F1, and Weighted-F1 therefore measure different parts of benchmark performance; none alone measures clinical correctness or safety.
 
 The selection bottleneck is an observed difference among output views, not a proven causal process inside the model. Under Direct-Answer, the primary diagnosis is chosen before the checker creates the audit trace. Top-1 Accuracy and Top-3 Accuracy use all 1,000 test cases, whereas gold-label retention uses 915 checker-eligible cases. These measures help locate errors but should not be read as one nested funnel. The oracle upper-bound recovery analysis is likewise an upper bound, not a deployable selector.
+
+\paragraph{Post-freeze supplementary evidence.} The matched baseline, retrieval, and finalization-factorial analyses were specified and executed after the frozen headline results had been examined. They close identified control gaps and test robustness; they do not retroactively become confirmatory evidence or replace the frozen architecture ladder.
+
+\paragraph{Lexical baseline and construct validity.} The strong internal TF--IDF result may reflect real transcript signal, source-corpus lexical regularities, synthetic-generator artifacts, or a mixture of all three. It narrows the interpretation of the LLM selection bottleneck but does not establish that a lexical classifier is clinically superior or transferable. Conversely, because this stronger same-split baseline exists, HiED errors alone cannot establish that primary diagnosis is intrinsically unrecoverable from a transcript.
 
 \begin{table}[htbp]
 \centering
@@ -1237,6 +1290,8 @@ The official LingxiDiagBench test split was unavailable, so the main in-domain r
 Not every comparison isolates one component. Single versus Single + balanced RAG mainly tests retrieval. Single + balanced RAG versus HiED--DA changes several parts of the system and measures a package effect. Direct-Answer versus Nominate-then-Select is more tightly matched, while pairwise, debate, fusion, self-consistency, and similarity-based reranking use different execution procedures. Their results support conclusions about the tested implementations, not a general ranking of method families.
 
 Several analyses are exploratory or use small samples. Rare classes have wide uncertainty, and a non-significant difference does not prove that two methods are equivalent. Multiple repair attempts also increase the chance of isolated favorable results. The thesis reduces this risk through frozen protocols, paired tests, and reporting negative results, but exploratory findings remain exploratory.
+
+The historical balanced NtS row is only a descriptive parity anchor for the post-freeze replay because its upstream checker and logic-confirmed traces are not exact matches, even though its parent-level primary agrees for all 1,000 cases. Checker states remain algorithmic outputs rather than clinician labels, and an offline replayed change is not a deployable correction merely because benchmark labels are available for evaluation.
 
 The canonical system also depends on one model family, prompt set, quantized checkpoint, serving stack, context window, and decoding setup. The Qwen3 size analysis does not establish that the same findings hold for unrelated models or runtimes.
 
@@ -1280,7 +1335,7 @@ RQ2 & Candidate generation and criterion retention exceed final commitment & 272
 \hline
 RQ3 & Retrieval helps Single, but balancing does not beat global retrieval and no HiED retrieval gain is significant & Single: 0.466/0.517/0.508; HiED: 0.510/0.524/0.518 & Closed with post-freeze configuration comparisons\\
 \hline
-RQ4 & Tested finalization and repairs do not improve DA & NtS, debate, fusion, SC, CISC, pairwise results & Bounded to tested implementations\\
+RQ4 & Criterion-derived re-selection lowers Top-1 across all tested retrieval strategies & DA vs NtS-primary losses of 0.028--0.029; all Holm-adjusted $p<0.001$ & Post-freeze replay; no equivalence claim for interactions\\
 \hline
 RQ5 & Main pattern persists across synthetic robustness analyses & Qwen3 size, MDD-5k, scope, and error analyses & Synthetic data and Qwen3-family boundary\\
 \hline
@@ -1290,11 +1345,11 @@ RQ5 & Main pattern persists across synthetic robustness analyses & Qwen3 size, M
 \begin{description}[style=nextline,leftmargin=3cm,labelwidth=2.5cm]
 \item[RQ1] The post-freeze same-split TF--IDF + logistic-regression baseline reaches 0.632 any-reference Top-1 agreement, compared with 0.518 for balanced HiED--DA. The paired difference favors TF--IDF by 0.114 (Holm-adjusted $p=3.14\times10^{-9}$). Balanced HiED does not differ significantly from Single + global Top-5 at 0.517 or Single + balanced RAG at 0.508. HiED therefore does not provide the strongest benchmark accuracy; its contribution is the explicit ranked, criterion-audited, and finalization record.
 
-\item[RQ2] The clearest measured gap is between Top-3 coverage and the committed diagnosis. In 284 of 1,000 internal cases, a gold label appears in the Top-3 but another diagnosis is committed. Within the 915 checker-eligible cases, 272 have a gold label both ranked and retained by verification but not committed: $D_3=1,R=1,S=0$. The corresponding conditional rates are $P(R\mid D_3)=0.970$ and $P(S\mid D_3,R)=0.650$. These are benchmark-output relationships, not clinician-validated criterion judgments.
+\item[RQ2] The clearest measured gap is between Top-3 coverage and the committed diagnosis. In 284 of 1,000 internal cases, a gold label appears in the Top-3 but another diagnosis is committed. Within the 915 checker-eligible cases, 272 have a gold label both ranked and retained by verification but not committed: $D_3=1,R=1,S=0$. The corresponding conditional rates are $P(R\mid D_3)=0.9701$, $P(S\mid R)=0.5904$, and $P(S\mid D_3,R)=0.6504$. These are benchmark-output relationships, not clinician-validated criterion judgments.
 
 \item[RQ3] In post-freeze matched runs, Single improves from 0.466 without retrieval to 0.517 with global Top-5 and 0.508 with class-balanced retrieval. Both retrieval configurations beat no retrieval after Holm adjustment, but they do not differ significantly from each other. HiED--DA gives 0.510, 0.524, and 0.518 under no, global, and balanced retrieval, with no significant paired difference. Because global and balanced conditions differ in both selection policy and example count, the evidence does not isolate a benefit from class balancing.
 
-\item[RQ4] Nominate-then-Select does not improve Top-1 Accuracy over Direct-Answer. Pairwise reasoning, debate, fixed fusion, self-consistency, CISC, and similarity-based selection also do not give a clear and repeatable improvement under the tested procedures. This conclusion applies to these implementations, not to every possible method in those families.
+\item[RQ4] Criterion-derived NtS-primary re-selection lowers any-reference Top-1 under no retrieval, ordinary global Top-5 retrieval, and parent-balanced retrieval by 0.028--0.029. All three paired losses remain significant after Holm correction. Their interaction confidence intervals include zero, so no moderation by retrieval strategy was detected, but equivalence is not established. Historical NtS-single additionally suppresses secondary labels; its Exact Match behavior is an output-cardinality trade-off rather than evidence of better primary selection. Pairwise reasoning, debate, fixed fusion, self-consistency, CISC, and similarity-based selection also do not give a clear and repeatable improvement under the tested procedures. This conclusion applies to these implementations, not every possible method in those families.
 
 \item[RQ5] The ranking-to-commitment gap remains visible across the tested Qwen3 sizes and on MDD-5k. Performance also changes with corpus, diagnostic scope, and the number of diagnosis classes. These results do not establish performance on real Taiwanese clinical transcripts, criterion-level clinical validity, or robustness across unrelated model families.
 \end{description}
@@ -1454,7 +1509,32 @@ Gold-label retention & 857 of 915 eligible cases; 95\% CI [0.919, 0.951] & Uses 
 \hline
 $D_3/R/S$ joint table & 000/001/010/011/100/101/110/111: 34/0/79/0/12/12/272/506 & Post-freeze case-level analysis, $N=915$\\
 \hline
+DA--NtS-primary factorial & none/global/balanced Top-1 deltas: $-0.028/-0.029/-0.028$; all Holm-adjusted $p<0.001$ & Post-freeze deterministic replay; no new LLM inference\\
+\hline
 \end{tabularx}
+\end{table}
+
+For the post-freeze Round 20c retrieval family, Holm correction is applied within the predeclared related comparisons reported by the result bundle. For Round 20E, the three paired DA--NtS-primary tests form one Holm-corrected family. Interaction contrasts are reported with paired-bootstrap confidence intervals. Failure to reject a difference is not interpreted as equivalence.
+
+The historical balanced NtS-single row is retained only as a descriptive parity anchor. Its parent-level committed primaries match the replay for all 1,000 cases, but its upstream checker and logic-confirmed traces are not exact matches; it is therefore not treated as an execution-identical causal comparison.
+
+\begin{table}[htbp]
+\centering
+\caption{Post-freeze NtS-primary minus NtS-single set-output effects. Both contracts use the same committed primary; the difference is preservation versus clearing of the DA secondary output.}
+\label{tab:round20e-set-deconfounding}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+Retrieval & Exact Match & Macro-F1 & Weighted-F1 & Mean cardinality\\
+\hline
+None & $-0.045$ & $+0.00215$ & $+0.0242$ & $+0.148$\\
+\hline
+Global Top-5 & $-0.026$ & $+0.0100$ & $+0.00973$ & $+0.100$\\
+\hline
+Parent-balanced & $-0.047$ & $+0.00977$ & $+0.0146$ & $+0.127$\\
+\hline
+\end{tabular}
+\end{adjustbox}
 \end{table}
 
 \chapter{Experiment Inventory and Inclusion Decisions}
@@ -1483,6 +1563,8 @@ MDD repair matrix & Frozen external repair & External repair table & Same ordere
 Case-neighbor reranking & Exploratory/archived & External selector analysis & Development-selected modes, negative transfer result\\
 \hline
 Matched TF--IDF and retrieval controls & Post-freeze supplementary & RQ1/RQ3 results and supplementary appendix & Complete matched control cells without reclassifying frozen evidence\\
+\hline
+NtS finalization-by-retrieval factorial & Post-freeze deterministic replay & RQ4 results and set-output deconfounding & Complete; no new LLM inference\\
 \hline
 \end{tabular}
 \end{adjustbox}
