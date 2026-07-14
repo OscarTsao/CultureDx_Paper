@@ -747,10 +747,10 @@ RQ5 uses several distinct analyses:
 
 These analyses answer different questions. Model-size stability does not prove cross-family robustness. Scope expansion shows that a diagnosis can be added to the output space, not that the model has learned when to select it.
 
-\section{Evidence Status and Statistical Analysis}
+\section{Evidence Status}
 \label{sec:freeze-discipline}
 
-The main internal comparisons use the same case set and Top-1 Accuracy definition. Paired comparisons use exact McNemar tests, and individual proportions use Wilson intervals. The key retrieval comparison is accompanied by discordant counts, not only a $p$-value. Multiplicity correction is used only within declared comparison families. Non-significant differences are not called equivalent.
+The main internal comparisons use the same case set and Top-1 Accuracy definition. The key retrieval comparison reports discordant counts alongside its $p$-value.
 
 The internal test cases were excluded from retrieval and development decisions. Configurations selected before the main internal evaluation are treated as primary evidence. Later experiments, including matched TF--IDF, ordinary RAG, and additional HiED retrieval conditions, must be labeled as post-freeze supplementary analyses rather than retroactively described as part of the original confirmatory set.
 
