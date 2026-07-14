@@ -1278,15 +1278,21 @@ This section summarizes how the final experiments answer the five research quest
 
 \section{Future Work}
 
-Three steps should come before deployment.
+\subsection{Clinician Validation of Diagnostic Labels and Criterion Audits}
 
-\begin{enumerate}
-    \item \textbf{Validate the target and the audit.} Psychiatrists should review the same transcripts and label space as the model, record acceptable alternatives and missing facts, and judge whether one primary diagnosis is supported. A separate sample should be annotated for criterion status and evidence spans. These studies will show whether errors mainly come from the model, the transcript, the gold label, or the checker.
+Future work should first validate both the benchmark target and the criterion-level audit. Psychiatrists should review the same transcripts and diagnostic scope provided to the system, indicate whether one primary diagnosis is adequately supported, record acceptable alternatives, and identify information that is missing for differential diagnosis. A separate annotation study should evaluate the Criterion Checker's evidence states and linked transcript spans. These analyses would help distinguish errors caused by the model, incomplete transcripts, ambiguous dataset labels, or incorrect criterion judgments.
 
-    \item \textbf{Improve selection and evidence collection.} Future selectors should compare diagnoses directly using onset, duration, exclusions, episode history, and symptoms left unexplained by the leading diagnosis. When the transcript lacks a decisive fact, the system should ask a focused question or abstain rather than force a precise answer. Conversational diagnostic systems show that LLMs can collect history~\citep{tu2025conversational}; the next step is to ask the question that best separates the remaining candidates.
+\subsection{Comparative Selection with Structured Diagnostic Knowledge}
 
-    \item \textbf{Run pre-registered Taiwanese clinical studies.} A fully specified system should first be tested on the full eligible cohort of de-identified outpatient transcripts, with the recorded diagnosis, transcript-only clinician review, and fuller clinical adjudication reported separately. Only after target validity, audit accuracy, and patient-data performance are established should studies examine workflow value, fairness, automation bias, privacy, monitoring, and broader diagnostic scope.
-\end{enumerate}
+The current criterion layer evaluates each diagnosis independently and therefore represents compatibility more directly than comparative primacy. A stronger selector should explicitly model relations among diagnoses, symptoms, temporal course, exclusion conditions, causal explanations, and comorbidities. One possible direction is a structured diagnostic knowledge graph in which nodes represent diagnoses, symptoms, episodes, and clinical findings, while edges represent temporal order, support, contradiction, exclusion, and explanatory dependence. The selector could then compare which candidate explains the overall presentation with the fewest unresolved conflicts, rather than selecting the diagnosis with the largest number of independently satisfied criteria. This approach should be evaluated against the current criterion-count and finalization rules under the same candidate rankings and case sets.
+
+\subsection{Targeted Evidence Acquisition and Abstention}
+
+Some cases may remain ambiguous because the transcript does not establish duration, onset, previous episodes, substance use, medical causes, or the relationship between concurrent syndromes. In these cases, applying another ranking rule may not be sufficient. Future systems should identify the unresolved fact that would best distinguish the leading candidates, ask a targeted follow-up question when interaction is possible, or abstain from committing to one diagnosis when the available evidence is insufficient. Conversational diagnostic systems show that LLMs can collect history~\citep{tu2025conversational}; the value of each question should be evaluated by whether it reduces diagnostic ambiguity rather than only by conversational fluency.
+
+\subsection{Prospective Clinical Evaluation in Taiwan}
+
+After the target labels, criterion audit, and final system configuration have been validated, HiED should be evaluated prospectively on de-identified Taiwanese psychiatric consultation transcripts. The inclusion criteria, primary and secondary outcomes, system configuration, subgroup analyses, and statistical plan should be specified before outcome analysis and publicly registered when appropriate. The evaluation should distinguish the recorded clinical diagnosis, transcript-only clinician review, and fuller clinical adjudication. Subsequent studies should examine workflow value, subgroup performance, automation bias, privacy, monitoring, and patient safety before any deployment claim is made.
 
 \section{Closing Statement}
 
