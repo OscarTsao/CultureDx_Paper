@@ -237,6 +237,14 @@ Chinese psychiatric datasets make disorder-level evaluation possible. LingxiDiag
 
 Existing systems also differ in whether they can ask questions. MIND, WiseMind/ProAI, MAGI, and DSM5AgentFlow study inquiry or interactive diagnostic workflows~\citep{li2026mind,wu2026wisemind,bi2025magi,ozgun2025dsm5agentflow}. MentalSeek-Dx and MoodAngels focus more on diagnosis from information already available in records or transcripts~\citep{sun2026mentalseek,xiao2025moodangels}. Interactive systems can obtain missing evidence, while fixed-input systems isolate how well a model uses the same evidence. This thesis studies the fixed-input setting.
 
+\section{Retrieval-Augmented Diagnostic Reasoning}
+
+Retrieval-augmented generation conditions a model on external records selected for the current query rather than relying only on information encoded in model parameters~\citep{lewis2020rag}. In-context-learning studies similarly show that semantically related demonstrations can be retrieved to construct a query-specific prompt and that performance depends on which examples are selected~\citep{liu2022incontext}. In transcript-based diagnosis, retrieved cases can therefore provide prompt-side examples of symptom descriptions and diagnostic labels. They are demonstrations rather than patient evidence and should not directly determine the committed diagnosis.
+
+Similarity retrieval can expose useful corpus-local regularities, but it can also reproduce the frequency and wording patterns of the indexed data. Ordinary nearest-neighbor retrieval may repeatedly select examples from common labels, while a parent-balanced policy changes the label composition of the prompt. It may also change the number, ordering, and total token length of the retrieved examples. A comparison between global and parent-balanced retrieval consequently evaluates complete retrieval configurations rather than isolating balancing as a single causal factor.
+
+These considerations motivate the retrieval experiments in this thesis. No retrieval, global Top-5 retrieval, and parent-balanced retrieval are compared using the same training-set retrieval index, evaluation cases, label projection, and scoring implementation. The comparison is repeated in both the Single and HiED pipelines so that retrieval behavior is not inferred from only one architecture.
+
 \section{Medical Multi-Agent Reasoning}
 
 Medical multi-agent systems assign different roles to LLMs and combine their outputs through consultation, debate, or adaptive collaboration~\citep{tang2024medagents,kim2024mdagents}. AMIE and related work also show the value of broad differential diagnosis, realistic consultation, and expert review~\citep{mcduff2025amie,tu2025conversational}. These systems demonstrate that structured interaction can help, but adding agents does not guarantee a better final answer. Agents may repeat the same model bias, and free-form discussion can make it difficult to identify which component changed the decision.
@@ -250,7 +258,7 @@ A fluent explanation is not proof of faithful reasoning. Model-generated chains 
 
 Diagnostic-chain and symptom-based methods make outputs easier to inspect~\citep{chen2025cod,lee2026interpretable,lyu2026depllm}. However, a generated reasoning chain is still another model output. This thesis uses the narrower term \emph{auditability}: an external record that links transcript evidence, criterion states, rule results, and the final output. The record can be checked and replayed, but it does not reveal the model's hidden reasoning or turn checker outputs into clinical ground truth.
 
-Constraint-logic systems are the closest related approach because they translate diagnostic criteria into explicit rules~\citep{kim2025clp}. HiED keeps the learned diagnostician separate from the criterion and rule layer. Under Direct-Answer, the structured layer audits the decision; under Nominate-then-Select, it is tested as a selector. Prior work has not used this separation to compare gold-label retention with primary selection on Chinese psychiatric transcripts.
+Constraint-logic systems are the closest related approach because they translate diagnostic criteria into explicit rules~\citep{kim2025clp}. HiED keeps the learned diagnostician separate from the criterion and rule layer. Under Direct-Answer, the structured layer audits the decision; under Nominate-then-Select, it is tested as a selector. Among the reviewed studies, we did not identify an evaluation that uses this separation to compare gold-label retention with primary selection on the same Chinese psychiatric transcripts.
 
 \section{Structured Diagnostic Knowledge and Primary Selection}
 
@@ -339,20 +347,22 @@ Yes---candidate generation, criterion retention, and commitment evaluated on the
 \endgroup
 \end{table}
 
+\noindent\textit{Note:} ``Not reported'' indicates that the output or evaluation was not described in the reviewed publication; it does not establish that the underlying implementation lacks the capability.
+
 The comparison shows that prior systems address complementary parts of the diagnostic process. Interactive systems can collect missing information, whereas fixed-input systems permit controlled evaluation under identical evidence. Some methods expose candidate hypotheses or criterion-related outputs, but the reviewed studies do not jointly evaluate candidate detection, criterion-level retention, and final primary commitment on the same fixed cases. HiED is designed to make these three output views separately measurable rather than to claim superiority across all clinical or conversational capabilities.
 
 \section{Research Gap and Research Questions}
 
-Prior work shows that LLMs can diagnose psychiatric cases, retrieve examples, use diagnostic criteria, and work in multi-agent systems. Four gaps remain. First, conventional text classifiers, single LLMs, retrieval-augmented LLMs, and structured systems are not always compared under the same split and endpoint. Second, final accuracy does not show whether a gold label was absent from the candidate list or present but not committed. Third, ordinary nearest-neighbor retrieval and class-balanced retrieval require matched comparison. Fourth, criterion-based finalization and later repair methods must be separated from broader robustness and transfer analyses. The precise gap addressed here is that HiED retains ranked candidate generation, criterion compatibility, and final commitment as separate outputs evaluated on the same cases.
+Prior work shows that LLMs can diagnose psychiatric cases, retrieve examples, use diagnostic criteria, and work in multi-agent systems. Five gaps remain. First, conventional text classifiers, single LLMs, retrieval-augmented LLMs, and structured systems are not always compared under the same split and endpoint. Second, final accuracy does not show whether a gold label was absent from the candidate list or present but not committed. Third, global nearest-neighbor retrieval and parent-balanced retrieval require matched comparison across architectures. Fourth, criterion-based finalization and later repair methods must be evaluated separately from candidate generation and retrieval. Fifth, it remains unclear whether the observed ranking-to-commitment pattern persists across model sizes, external corpora, and changes in the configured diagnostic scope. The precise gap addressed here is that HiED retains ranked candidate generation, criterion compatibility, and final commitment as separate outputs evaluated on the same cases.
 
 This thesis therefore uses five research questions:
 
 \begin{description}[style=nextline,leftmargin=3cm,labelwidth=2.5cm]
 \item[RQ1] How does HiED compare with conventional and single-model baselines under the same data split, label mapping, and primary evaluation endpoint?
 \item[RQ2] How often is a gold label present among ranked candidates or criterion-supported alternatives but not selected as the committed diagnosis?
-\item[RQ3] Does class-balanced retrieval improve over no retrieval and ordinary global nearest-neighbor RAG in matched Single and HiED pipelines?
+\item[RQ3] How do no retrieval, global Top-5 retrieval, and parent-balanced retrieval compare in matched Single and HiED pipelines?
 \item[RQ4] Do criterion-based re-selection or the tested selection-repair methods improve over Direct-Answer?
-\item[RQ5] How stable are the main findings across model size, external synthetic corpora, label-space expansion, and major error groups?
+\item[RQ5] To what extent do the main findings persist across model sizes, external synthetic corpora, and changes in the configured diagnostic scope, and what error patterns characterize the remaining failures?
 \end{description}
 \ct{Does your thesis really answer all 5 questions?}
 
