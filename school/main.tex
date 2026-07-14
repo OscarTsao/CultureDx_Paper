@@ -405,7 +405,7 @@ Audit Artifacts & Show that F41.1 was considered and partly supported even if F3
 \section{Retrieval Strategies}
 \label{sec:retrieval}
 
-The Similar-Case Retriever adds relevant training examples to the diagnostician prompt. It follows the retrieval-augmented generation pattern~\citep{lewis2020rag}: BGE-M3 is the multilingual text-embedding model used to convert the query transcript and training transcripts into normalized dense vectors~\citep{chen2024bgem3}. FAISS is the vector similarity-search library and index used for retrieval, not a standalone data store~\citep{douze2024faiss}. FAISS inner-product search over normalized vectors corresponds to cosine-similarity ranking. The canonical configuration uses class-balanced retrieval: instead of returning only the globally nearest cases, it attempts to return at most one high-similarity example for each of the eleven active parent diagnoses. This reduces domination by frequent classes such as depression and anxiety.
+The Similar-Case Retriever adds relevant training examples to the diagnostician prompt. It follows the retrieval-augmented generation pattern~\citep{lewis2020rag}: BGE-M3 is the multilingual text-embedding model used to convert the query transcript and training transcripts into normalized dense vectors~\citep{chen2024bgem3}. FAISS is the vector similarity-search library and index used for retrieval, not a standalone data store~\citep{douze2024faiss}. FAISS inner-product search over normalized vectors corresponds to cosine-similarity ranking. The canonical configuration uses class-balanced retrieval: instead of returning only the globally nearest cases, it attempts to return at most one high-similarity example for each of the eleven parent labels in the configured output space. This reduces domination by frequent classes such as depression and anxiety.
 
 The retrieval classes are fixed by the active diagnostic profile and are identical for every patient.\ct{Are the candidate classes pre-determined, or patient-specific?} Only the example selected within each class depends on the current transcript. Subtypes that share a parent code, such as F41.0, F41.1, and F41.2, share one retrieval class. Global Top-5 retrieval and class-balanced retrieval use the same FAISS index but different selection policies. Retrieved cases are included only in the Diagnostician prompt; they do not enter checker prompts or directly choose the final output.
 
@@ -529,7 +529,7 @@ All internal methods are evaluated on the same 1,000 case IDs. These cases were 
 
 MDD-5k was generated from anonymized psychiatric cases through a neuro-symbolic multi-agent process~\citep{yin2024mdd5k}. Each patient file may contain several dialogue rounds. The adapter joins those rounds and treats the patient file as one case.
 
-The external evaluation contains 925 matched patient-level cases. Under the selected eleven-parent output space, 878 cases have an in-scope gold parent and 47 have a gold label that the canonical system cannot emit. Additional checker definitions exist only for the later scope-expansion experiment; they are not active in the canonical run.\ct{Anything specific about a bank?} The full set contains 925 cases, the in-scope subset contains 878 cases, and the out-of-scope subset contains 47 cases. The 490-case F32-versus-F41 subset tests coarse depression--anxiety discrimination; this subset excludes F41.2 and records containing both F32 and F41. MDD transcripts are substantially longer, and the deterministic prompt-budget truncation rule is applied in the canonical external evaluation.
+The canonical system is configured to emit diagnoses that map to eleven parent labels. Among the 925 matched patient-level cases, 878 have at least one reference diagnosis within this configured label set and are therefore classified as in scope. The remaining 47 cases have no reference diagnosis within the configured label set and are classified as out of scope. Additional checker definitions are used only in the later scope-expansion experiment and are not enabled in the canonical configuration.\ct{Anything specific about a bank?} The full set contains 925 cases, the in-scope subset contains 878 cases, and the out-of-scope subset contains 47 cases. The 490-case F32-versus-F41 subset tests coarse depression--anxiety discrimination; this subset excludes F41.2 and records containing both F32 and F41. MDD transcripts are substantially longer, and the deterministic prompt-budget truncation rule is applied in the canonical external evaluation.
 
 \subsection{Synthetic-Data Boundary}
 
@@ -538,7 +538,7 @@ Synthetic data allow every method to be tested on the same cases and allow case-
 \section{ICD-10 Label Space and Gold-Label Construction}
 \label{sec:gold-conventions}
 
-Chapter~\ref{ch:architecture} introduced ICD-10 and the fixed fourteen-entry profile before the system components.\ct{Should you introduce ICD-10 earlier} For evaluation, decimal subtype codes are grouped into eleven parent diagnoses. For example, panic disorder (F41.0), generalized anxiety disorder (F41.1), and mixed anxiety and depressive disorder (F41.2) are all scored under F41, anxiety disorders. A raw gold label outside the active parents maps to \emph{Others}; the canonical system has no trained unknown detector and cannot correctly emit those out-of-scope diagnoses.
+The canonical system is configured with fourteen ICD-10 diagnostic entries that it may rank or emit.\ct{Should you introduce ICD-10 earlier} For evaluation, subtype entries are mapped to eleven broader parent labels. For example, panic disorder (F41.0), generalized anxiety disorder (F41.1), and mixed anxiety and depressive disorder (F41.2) are all evaluated under the F41 parent label. The in-scope and out-of-scope distinction concerns output-space coverage: an in-scope case has at least one reference diagnosis represented in this configured parent-label set, whereas an out-of-scope case has none. Out-of-scope references are recorded as \emph{Others}. Because the canonical system has neither an \emph{Others} output nor a trained unknown detector, it cannot correctly represent these cases.
 
 \begin{table}[htbp]
 \centering
@@ -548,7 +548,7 @@ Chapter~\ref{ch:architecture} introduced ICD-10 and the fixed fourteen-entry pro
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{|l|l|r|r|r|}
 \hline
-Code & Plain-language diagnosis & Internal test & MDD in-scope & MDD out-of-scope\\
+Code & Plain-language diagnosis & Internal test & MDD-5k in scope & MDD-5k out of scope\\
 \hline
 F20 & Schizophrenia & 5 & 3 & 0\\
 \hline
@@ -572,7 +572,7 @@ F98 & Other behavioral and emotional disorders & 30 & 24 & 0\\
 \hline
 Z71 & Counseling without a specific disorder & 8 & 8 & 0\\
 \hline
-Others & Outside the active parent set & 85 & 0 & 47\\
+Others & No reference diagnosis in the configured label set & 85 & 0 & 47\\
 \hline
  & Total & 1000 & 878 & 47\\
 \hline
@@ -693,7 +693,7 @@ HiED--NtS & Class-balanced & Yes & Yes & Yes & Criterion-based selection & Close
 \end{adjustbox}
 \end{table}
 
-In the running example, TF--IDF + LR uses transcript words only. Single uses one LLM call. Global RAG adds the five nearest training cases without class control. Balanced RAG attempts to provide one relevant example per active parent class. HiED adds a five-diagnosis ranking, the full criterion-checker set, deterministic rules, and a separate finalization record.
+In the running example, TF--IDF + LR uses transcript words only. Single uses one LLM call. Global RAG adds the five nearest training cases without class control. Balanced RAG attempts to provide one relevant example per configured parent label. HiED adds a five-diagnosis ranking, the full criterion-checker set, deterministic rules, and a separate finalization record.
 
 The current internal table can compare Single, Single + balanced RAG, and HiED--DA. It cannot establish whether TF--IDF + LR or ordinary global RAG is stronger on the same split. Those controls must be run on the same 1,000 cases and labeled as post-freeze supplementary analyses.
 
@@ -929,11 +929,11 @@ MDD-5k provides a second Chinese synthetic corpus with different dialogue genera
 \hline
 Analysis & Sample & $N$ & Configuration & Selection data & Baseline & Purpose\\
 \hline
-Canonical external positioning & MDD full set & 925 & Canonical HiED--DA & None from MDD & Majority & Synthetic transfer positioning\\
+Canonical external positioning & MDD-5k full (V4-fixed) & 925 & Canonical HiED--DA & None from MDD & Majority & Synthetic transfer positioning\\
 \hline
-In-scope evaluation & MDD in-scope & 878 & Canonical profile & None from MDD & In-scope majority & Separates output coverage from selection\\
+In-scope evaluation & MDD-5k in scope & 878 & Canonical profile & None from MDD & In-scope majority & Separates output coverage from selection\\
 \hline
-F32/F41 subset & Restricted MDD subset & 490 & Canonical profile & None from MDD & F32 majority & Coarse depression--anxiety discrimination\\
+F32/F41 subset & MDD-5k F32/F41 & 490 & Canonical profile & None from MDD & F32 majority & Coarse depression--anxiety discrimination\\
 \hline
 Lexical transfer & MDD holdout & 185 & TF--IDF + LR & 740 MDD training cases & Corpus-specific classifiers & Tests lexical portability\\
 \hline
@@ -959,16 +959,16 @@ Set & $N$ & Top-1 & Maj. baseline & Macro-F1\\
 \hline
 LingxiDiag internal test split & 1000 & 0.518 & --- & 0.178\\
 \hline
-MDD full set & 925 & 0.5805 & 0.4432 & 0.2287\\
+MDD-5k full (V4-fixed) & 925 & 0.5805 & 0.4432 & 0.2287\\
 \hline
-MDD in-scope & 878 & 0.6116 & 0.4670 & 0.2649\\
+MDD-5k in scope & 878 & 0.6116 & 0.4670 & 0.2649\\
 \hline
-MDD F32/F41 & 490 & 0.9224 & 0.7837 & 0.9055\\
+MDD-5k F32/F41 & 490 & 0.9224 & 0.7837 & 0.9055\\
 \hline
 \end{tabular}
 \end{table}
 
-The canonical run transfers the transcript-processing prompt, diagnostic model, ontology, checker, and finalization procedure to MDD-5k without MDD-specific development. Full-set Top-1 is 0.5805, and excluding the 47 diagnoses that the deployed profile cannot emit raises it to 0.6116. Both exceed their F32 majority baselines, showing useful signal beyond the external label prior.
+The canonical run transfers the transcript-processing prompt, diagnostic model, ontology, checker, and finalization procedure to MDD-5k without MDD-specific development. Full-set Top-1 is 0.5805, and excluding the 47 cases whose reference diagnoses are absent from the configured output space raises it to 0.6116. Both exceed their F32 majority baselines, showing useful signal beyond the external label prior.
 
 F32 denotes depressive episode, whereas F41 is the parent category for anxiety disorders. F41.2 denotes mixed anxiety and depressive disorder and cannot be assigned unambiguously to one side of a mutually exclusive F32-versus-F41 comparison. Cases whose gold-label set contains both F32 and F41 are excluded for the same reason. The resulting subset evaluates coarse depression--anxiety discrimination rather than comorbidity recognition. Its 0.9224 Top-1 shows strong coarse discrimination, but it does not prove that the internal multi-way depression--anxiety selection problem has been solved under a matched setting.
 
@@ -977,7 +977,7 @@ F32 denotes depressive episode, whereas F41 is the parent category for anxiety d
 
 The 47 out-of-scope cases must be counted in full-corpus performance because a deployed system also fails when it cannot represent the diagnosis. The in-scope row answers a separate question: how well the system selects among diagnoses it is allowed to emit.
 
-A configuration-only retargeting experiment expands the active profile from fourteen entries to 33 active entries representing 30 unique parent diagnoses, without changing model weights. The expanded configuration contains the original fourteen subtype-aware entries plus nineteen new parent-level entries; the fourteen original entries collapse to eleven parents for scoring. This proves that the architecture can load and audit more diagnoses. It does not prove that the model knows when to select them. In a separate 58-case raw-dataset sample of newly available diagnoses, recovery is 0/58. The twenty paired in-scope controls change from 13 correct to 12 correct ($p=1.0$), but this small smoke test is not evidence of equivalence. The result separates output availability from learned diagnostic behavior.
+A configuration-only retargeting experiment expands the configured diagnostic profile from fourteen entries to 33 entries representing 30 unique parent diagnoses, without changing model weights. The expanded configuration contains the original fourteen subtype-aware entries plus nineteen new parent-level entries; the fourteen original entries collapse to eleven parents for scoring. This proves that the architecture can load and audit more diagnoses. It does not prove that the model knows when to select them. In a separate 58-case raw-dataset sample of newly available diagnoses, recovery is 0/58. The twenty paired in-scope controls change from 13 correct to 12 correct ($p=1.0$), but this small smoke test is not evidence of equivalence. The result separates output availability from learned diagnostic behavior.
 
 \section{Lexical-Selector Transfer}
 
