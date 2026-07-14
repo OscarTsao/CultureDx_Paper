@@ -98,7 +98,7 @@ Common Mental Disorders in the Taiwanese Context\par}
 
 為了分析並定位這些失敗，本研究提出 HiED，一套面向中文精神科初診逐字稿的混合式多代理鑑別診斷框架。系統先由診斷代理產生排序後的鑑別診斷，再由準則檢查代理逐項判斷各候選是否受到 ICD-10 準則與逐字稿證據支持。確定性規則層整理這些檢查結果，而最終主診斷則另外記錄，使候選生成、準則驗證與主診斷選擇可以分別觀察。系統也會為每次預測輸出逐準則的稽核軌跡，讓研究者與臨床人員檢查候選疾病、支持證據、未確定資訊與最終選擇。
 
-在 1,000 例內部測試中，參考診斷出現在前三名候選的比例為 0.802，但最終輸出命中任一參考診斷的 Top-1 一致率僅為 0.518。這個落差顯示，即使系統已將參考診斷列為主要候選，仍可能在最後的單一診斷輸出中選擇另一個疾病。本文將此操作性現象稱為主診斷選擇瓶頸；它不等同於經臨床裁決的唯一主診斷錯誤。
+在 1,000 例內部測試中，資料集提供的診斷標籤出現在前三名候選的 Top-3 準確率為 0.802，但最終輸出命中任一資料集診斷標籤的 Top-1 準確率僅為 0.518。這個落差顯示，即使系統已將資料集診斷標籤列為主要候選，仍可能在最後的單一診斷輸出中選擇另一個疾病。本文將此操作性現象稱為主診斷選擇瓶頸；它不等同於經臨床裁決的唯一主診斷錯誤。
 
 本論文有兩項主要貢獻：其一，提出一套可分別觀察候選生成、準則驗證與主診斷選擇的可稽核框架；其二，提供可重現的實驗證據，顯示在本研究使用的合成中文逐字稿中，主診斷選擇是重要的錯誤來源。HiED 尚未使用臺灣真實病人資料進行驗證，應視為研究與臨床審查原型，而非自主診斷工具。題目中的臺灣脈絡指繁體中文互動、本地端推論及面向臨床人員的稽核設計；真實病人臨床驗證仍是後續工作。
 
@@ -107,11 +107,11 @@ Common Mental Disorders in the Taiwanese Context\par}
 \addcontentsline{toc}{chapter}{Abstract}
 Differential diagnosis from an initial psychiatric consultation transcript is a comparative decision under incomplete evidence. Several disorders may fit the same transcript, yet one must usually be selected as primary. Key information about illness course, onset, exclusionary causes, and comorbidity may not be fully elicited in a single consultation. Large language models can read such transcripts fluently, but linguistic fluency does not ensure reliable differential diagnosis.
 
-Endpoint accuracy shows whether the final answer is correct, but not whether the system failed to generate the reference diagnosis, failed to find supporting criterion-level evidence, or generated a reasonable candidate but selected another disorder as primary. A single score therefore hides the difference among candidate generation, criterion verification, and primary selection.
+Endpoint accuracy shows whether the final answer is correct, but not whether the system failed to generate a gold label, failed to find supporting criterion-level evidence, or generated a reasonable candidate but selected another disorder as primary. A single score therefore hides the difference among candidate generation, criterion verification, and primary selection.
 
 To study and localize these failures, we propose HiED, a hybrid multi-agent framework for Chinese psychiatric initial-consultation transcripts. A diagnostician agent produces a ranked differential diagnosis. Criterion-checking agents examine each candidate against ICD-10 criteria and transcript evidence, and a Compatibility Auditor summarizes the checks. The final primary diagnosis is recorded separately. HiED also produces a criterion-level audit trace that shows the candidates, supporting evidence, unresolved information, and final choice.
 
-On a held-out internal test set of 1,000 cases, Top-3 Accuracy was 0.802 and Top-1 Accuracy was 0.518 against benchmark-provided diagnosis codes. This gap shows that the system may generate a reference diagnosis as a leading candidate yet commit another disorder as its final output. We call this operational pattern the primary-selection bottleneck; it is not the same as error against an independently adjudicated unique clinical primary diagnosis.
+On a held-out internal test set of 1,000 cases, Top-3 Accuracy was 0.802 and Top-1 Accuracy was 0.518 against benchmark-provided diagnosis codes. This gap shows that the system may generate a gold label as a leading candidate yet commit another disorder as its final output. We call this operational pattern the primary-selection bottleneck; it is not the same as error against an independently adjudicated unique clinical primary diagnosis.
 
 This thesis makes two main contributions: an auditable framework that separates candidate generation, criterion verification, and primary selection, and reproducible evidence that primary selection is an important source of error in the synthetic Chinese transcripts used in this study. HiED has not been validated using real-patient data from Taiwan and should be viewed as a prototype for research and clinician review, not an autonomous diagnostic tool. The Taiwanese context refers to Traditional Chinese interaction, local inference, and clinician-facing audit design; real-patient clinical validation remains future work.
 
@@ -158,8 +158,10 @@ NtS & Nominate-then-Select\\
 DTV & Diagnose-then-Verify\\
 BGE-M3 & Multilingual embedding/retrieval model (BAAI General Embedding, M3)\\
 FAISS & Facebook AI Similarity Search (vector-index library)\\
+AWQ & Activation-aware Weight Quantization\\
 RAG & Retrieval-augmented generation\\
 TF--IDF & Term frequency--inverse document frequency\\
+vLLM & High-throughput LLM inference and serving framework\\
 \bottomrule
 \end{longtable}
 \clearpage
@@ -187,11 +189,11 @@ These features make first-visit psychiatric diagnosis a problem of comparative b
 \section{Problem Definition and Challenges}
 \label{sec:problem-definition}
 
-Large language models and medical multi-agent systems are attractive for psychiatric transcript analysis because they can process free-form dialogue, summarize symptoms, retrieve relevant examples, assign specialized roles, and return structured outputs~\citep{li2024taiwan,raballo2025,sarma2025,tang2024medagents,kim2024mdagents}. However, these capabilities do not by themselves ensure reliable differential diagnosis from a fixed transcript. A fluent answer may still fail because the model never proposes a reference diagnosis, because its criterion audit does not support that diagnosis, or because it proposes the diagnosis but commits another one. HiED studies this narrower technical problem; it does not solve short consultation time, missing history, or clinical uncertainty.\ct{Does our model deal with all these problems?}
+Large language models and medical multi-agent systems are attractive for psychiatric transcript analysis because they can process free-form dialogue, summarize symptoms, retrieve relevant examples, assign specialized roles, and return structured outputs~\citep{li2024taiwan,raballo2025,sarma2025,tang2024medagents,kim2024mdagents}. However, these capabilities do not by themselves ensure reliable differential diagnosis from a fixed transcript. A fluent answer may still fail because the model never proposes a gold label, because its criterion audit does not support that diagnosis, or because it proposes the diagnosis but commits another one. HiED studies this narrower technical problem; it does not solve short consultation time, missing history, or clinical uncertainty.\ct{Does our model deal with all these problems?}
 
-We study this question with three measures. \emph{Candidate detection} asks whether a reference parent diagnosis appears in the ranked Top-3. \emph{Criterion verification} asks whether a reference parent appears in the rule-confirmed set when that diagnosis has an active checker. \emph{Committed selection} asks whether the committed diagnosis belongs to the reference parent set. These measures are used to locate disagreements among output views; they do not form a fixed chronological funnel for every policy.
+We study this question with three measures. \emph{Candidate detection} asks whether a gold parent diagnosis appears in the ranked Top-3. \emph{Criterion verification} asks whether a gold parent appears in the rule-confirmed set when that diagnosis has an active checker. \emph{Committed selection} asks whether the committed diagnosis belongs to the gold parent set. These measures are used to locate disagreements among output views; they do not form a fixed chronological funnel for every policy.
 
-We use the term \emph{primary-selection bottleneck} for the operational pattern in which a reference diagnosis is present among leading candidates or criterion-supported alternatives but the system commits a different diagnosis. The bottleneck is therefore a benchmark-local pattern showing that candidate ranking or criterion compatibility can exceed final commitment; it is not a claim about the true clinical primary diagnosis. It does not show that every error passes both earlier checks, that the corpus identifies a unique clinical primary diagnosis, or that every transcript contains enough evidence for one.\ct{what problem?}
+We use the term \emph{primary-selection bottleneck} for the operational pattern in which a gold label is present among leading candidates or criterion-supported alternatives but the system commits a different diagnosis. The bottleneck is therefore a benchmark-local pattern showing that candidate ranking or criterion compatibility can exceed final commitment; it is not a claim about the true clinical primary diagnosis. It does not show that every error passes both earlier checks, that the corpus identifies a unique clinical primary diagnosis, or that every transcript contains enough evidence for one.\ct{what problem?}
 
 This distinction matters because different errors need different solutions. Missing candidates call for better generation or retrieval. A candidate that fails criterion checking points to the checker, the rules, or missing evidence. A candidate that remains available but is not selected points to the final comparison among plausible diagnoses. The detailed metric definitions are given in \Cref{sec:gold-conventions}.
 
@@ -199,7 +201,7 @@ This distinction matters because different errors need different solutions. Miss
 
 To make these failure modes observable, this thesis introduces HiED, a hybrid multi-agent system for Chinese psychiatric differential diagnosis from initial-consultation transcripts. The intended context is Taiwanese outpatient care, but all quantitative results in this thesis use synthetic Chinese transcript datasets; no Taiwanese patient results are reported.
 
-HiED has five main parts. It formats the dialogue while preserving speaker turns, retrieves class-balanced examples, asks an LLM diagnostician for a ranked differential and a primary diagnosis, checks each active diagnosis against operationalized ICD-10 criteria, and applies deterministic rules to form a logic-confirmed set. Each criterion is marked as \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_evidence}.
+HiED has five main parts. It formats the dialogue while preserving speaker turns, retrieves class-balanced examples, asks an LLM diagnostician for a ranked differential and a primary diagnosis, checks each active diagnosis against operationalized ICD-10 criteria, and applies deterministic rules to form a logic-confirmed set. Each criterion is marked as \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_\allowbreak{}evidence}.
 
 The selected Direct-Answer policy keeps the diagnostician's primary diagnosis and uses outputs from the Criterion Checker and Compatibility Auditor as audit artifacts. The alternative Nominate-then-Select policy uses the same upstream outputs but allows the logic-confirmed set to determine a different committed diagnosis. Their comparison tests whether criterion compatibility is more useful as an audit or as a selector. Chapter~\ref{ch:architecture} describes the architecture in detail.
 
@@ -229,6 +231,26 @@ Existing systems also differ in whether they can ask questions. MIND, WiseMind/P
 
 Most psychiatric studies report final diagnostic accuracy, consultation quality, or explanation quality. They do not usually report, on the same cases, whether the correct diagnosis entered the leading candidates, passed explicit criterion checking, and was finally selected as primary.
 
+\begin{table}[htbp]
+\centering
+\caption{Compact comparison of related study families and the outputs needed for HiED's stage-wise evaluation question.}
+\label{tab:related-work-matrix}
+\scriptsize
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lllllll}
+\toprule
+Study family / representative systems & Input setting & Interactive questioning & Ranked differential & Criterion grounding & Multi-agent & Stage-wise evaluation\\
+\midrule
+Psychiatric LLM diagnosis & vignettes or records & varies & limited & varies & limited & usually final answer only\\
+Interactive agents & dialogue & yes & varies & not always explicit & yes & consultation or final diagnosis metrics\\
+Record/transcript diagnosis & fixed input & no & not always reported & limited & varies & usually endpoint accuracy\\
+Constraint or symptom logic & structured evidence & no & varies & explicit & limited & criterion outputs may be inspectable\\
+HiED & fixed transcript & no & yes & explicit checker states & role-specific modules & candidate generation, criterion verification, and commitment on the same cases\\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
 \section{Medical Multi-Agent Reasoning}
 
 Medical multi-agent systems assign different roles to LLMs and combine their outputs through consultation, debate, or adaptive collaboration~\citep{tang2024medagents,kim2024mdagents}. AMIE and related work also show the value of broad differential diagnosis, realistic consultation, and expert review~\citep{mcduff2025amie,tu2025conversational}. These systems demonstrate that structured interaction can help, but adding agents does not guarantee a better final answer. Agents may repeat the same model bias, and free-form discussion can make it difficult to identify which component changed the decision.
@@ -252,13 +274,13 @@ HiED does not implement a full knowledge-graph selector. Instead, this literatur
 
 \section{Research Gap and Research Questions}
 
-Prior work shows that LLMs can diagnose psychiatric cases, retrieve examples, use diagnostic criteria, and work in multi-agent systems. Four gaps remain. First, conventional text classifiers, single LLMs, retrieval-augmented LLMs, and structured systems are not always compared under the same split and endpoint. Second, final accuracy does not show whether a reference diagnosis was absent from the candidate list or present but not committed. Third, ordinary nearest-neighbor retrieval and class-balanced retrieval require matched comparison. Fourth, criterion-based finalization and later repair methods must be separated from broader robustness and transfer analyses.
+Prior work shows that LLMs can diagnose psychiatric cases, retrieve examples, use diagnostic criteria, and work in multi-agent systems. Four gaps remain. First, conventional text classifiers, single LLMs, retrieval-augmented LLMs, and structured systems are not always compared under the same split and endpoint. Second, final accuracy does not show whether a gold label was absent from the candidate list or present but not committed. Third, ordinary nearest-neighbor retrieval and class-balanced retrieval require matched comparison. Fourth, criterion-based finalization and later repair methods must be separated from broader robustness and transfer analyses. The precise gap addressed here is that HiED retains ranked candidate generation, criterion compatibility, and final commitment as separate outputs evaluated on the same cases.
 
 This thesis therefore uses five research questions:
 
 \begin{description}[style=nextline,leftmargin=3cm,labelwidth=2.5cm]
 \item[RQ1] How does HiED compare with conventional and single-model baselines under the same data split, label mapping, and primary evaluation endpoint?
-\item[RQ2] How often is a reference diagnosis present among ranked candidates or criterion-supported alternatives but not selected as the committed diagnosis?
+\item[RQ2] How often is a gold label present among ranked candidates or criterion-supported alternatives but not selected as the committed diagnosis?
 \item[RQ3] Does class-balanced retrieval improve over no retrieval and ordinary global nearest-neighbor RAG in matched Single and HiED pipelines?
 \item[RQ4] Do criterion-based re-selection or the tested selection-repair methods improve over Direct-Answer?
 \item[RQ5] How stable are the main findings across model size, external synthetic corpora, label-space expansion, and major error groups?
@@ -270,15 +292,15 @@ This thesis therefore uses five research questions:
 \caption{Research-question map. ``Partial'' means that a required matched control has not yet been run.}
 \label{tab:rq-map}
 \small
-\begin{tabularx}{\textwidth}{@{}p{0.8cm}X p{4.3cm}@{}}
+\begin{tabularx}{\textwidth}{@{}p{0.8cm}p{3.1cm}p{2.8cm}p{4.2cm}p{2.3cm}@{}}
 \toprule
-RQ & Experiment and primary evidence & Status in this version\\
+RQ & Comparison & Primary outcome & Main evidence & Status\\
 \midrule
-RQ1 & Conventional baselines, Single models, and HiED; Top-1 Accuracy and F1 & Partial: matched Single rows exist; same-split TF--IDF and ordinary RAG are pending\\
-RQ2 & Top-3 Accuracy, verification retention, committed diagnosis, and confirmed-set size & Answered with separate marginal analyses; a full $D_3/R/S$ joint table is pending\\
-RQ3 & No retrieval, global Top-5 RAG, and class-balanced RAG under matched pipelines & Partial: no-retrieval versus balanced Single exists; global and matched HiED runs are pending\\
-RQ4 & DA, NtS, pairwise, debate, fusion, SC, and CISC; paired Top-1 and flip accounting & Answered for the tested implementations\\
-RQ5 & Model size, MDD-5k, scope expansion, and error groups & Answered within synthetic-data and Qwen3-family limits\\
+RQ1 & Baselines, Single systems, and HiED & Top-1 Accuracy and F1 & Available matched rows in \Cref{tab:ladder-rewrite} & Partial\\
+RQ2 & Candidate, verification, and commitment views & Top-3 Accuracy, verification retention, committed diagnosis & Marginal $D_3$, $R$, and $S$ summaries & Partial joint-table gap\\
+RQ3 & No retrieval, global RAG, and class-balanced RAG & Top-1 Accuracy under matched pipelines & No-retrieval versus balanced Single & Partial\\
+RQ4 & DA, NtS, and repair methods & Paired Top-1 Accuracy and flips & Finalization and repair battery & Answered for tested implementations\\
+RQ5 & Model size, MDD-5k, scope, and error groups & Stability across analyses & Size, external, scope, and audit summaries & Bounded\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -290,26 +312,37 @@ RQ1 and RQ3 are intentionally marked partial until the advisor-requested matched
 
 \section{Transcript Input and Fixed ICD-10 Scope}
 
-HiED processes one Chinese psychiatric consultation transcript at a time. The input is an ordered sequence of turns, each marked as \texttt{Clinician} or \texttt{Patient}; speaker labels and turn order are preserved in the prompt. If the transcript exceeds the model context, the system keeps complete turns from the beginning and end and marks the omitted middle. It does not summarize or invent missing text. This is a fixed-input study: the system cannot ask the patient a follow-up question during inference.\ct{Is this about input and transcript format?}
+HiED processes one Chinese psychiatric consultation transcript at a time. The input is an ordered sequence of turns, each marked as \texttt{Clinician} or \texttt{Patient}; speaker labels and turn order are preserved in the prompt. Transcripts longer than the available prompt budget are deterministically truncated by retaining complete turns from the beginning and end, with an explicit marker for the omitted middle. The system does not summarize or invent missing text. This is a fixed-input study: the system cannot ask the patient a follow-up question during inference.\ct{Is this about input and transcript format?}
 
-ICD-10 is the diagnostic coding system used to name the disorders in this study~\citep{who2019icd10}. The system does not search all ICD-10 diagnoses. Before a run begins, it loads one fixed \emph{active diagnostic profile} that is used for every patient. The canonical profile contains fourteen active entries. F41 and F43 include subtype entries, so the fourteen entries collapse to eleven broader parent diagnoses for scoring. A raw reference diagnosis outside those parents is evaluated as \emph{Others}.
+ICD-10 is the diagnostic coding system used to name the disorders in this study~\citep{who2019icd10}. The system does not search all ICD-10 diagnoses. Before a run begins, it loads one fixed \emph{active diagnostic profile} that is used for every patient. The canonical profile contains fourteen active entries. F41 and F43 include subtype entries, so the fourteen entries collapse to eleven broader parent diagnoses for scoring. A raw gold label outside those parents is evaluated as \emph{Others}.
 
-Three terms are used throughout the architecture. An \emph{active entry} is one code that the diagnostician may rank and that has a corresponding criterion checker. The \emph{criterion-checker set} is the collection of those fourteen checker definitions; it is not a learned memory bank. Each criterion receives one of three model-generated evidence states: \texttt{met} when the transcript supports it, \texttt{not\_met} when the transcript contains evidence against it, and \texttt{insufficient\_evidence} when the transcript supports neither conclusion. The rules are study-specific operationalizations informed by ICD-10 descriptions, not a reproduction of the full official manual and not independently clinician-validated ground truth.
+Three terms are used throughout the architecture. An \emph{active entry} is one code that the diagnostician may rank and that has a corresponding criterion checker. The \emph{criterion-checker set} is the collection of those fourteen checker definitions; it is not a learned memory bank. Each criterion receives one of three model-generated evidence states: \texttt{met} when the transcript supports it, \texttt{not\_met} when the transcript contains evidence against it, and \texttt{insufficient\_\allowbreak{}evidence} when the transcript supports neither conclusion. The rules are study-specific operationalizations informed by ICD-10 descriptions, not a reproduction of the full official manual and not independently clinician-validated ground truth.
+
+\section{System Overview}
 
 The diagnostician prompt contains four readable parts: the task and the fixed list of active diagnoses; the speaker-labeled transcript; retrieved training examples, when retrieval is enabled; and the required structured output fields. Retrieval is completed before generation. The model sees only the current transcript and the supplied examples.
 
 \ThesisFigure[1.0\textwidth]{fig_pipeline_round20c.pdf}{Overview of the HiED pipeline and its intermediate artifacts. Direct-Answer keeps the Diagnostician's emitted primary diagnosis, whereas Nominate-then-Select uses Criterion Checker and deterministic rule-layer artifacts to determine the committed diagnosis.}{fig:pipeline-thesis-rewrite}
 
-The pipeline performs six steps:
-
-\begin{enumerate}[label=\arabic*.]
-\item Format the transcript and load the same fixed diagnostic profile for every case.
-\item Retrieve examples using the selected retrieval strategy.
-\item Ask the diagnostician for five ranked diagnoses, one primary diagnosis, and at most one optional comorbid diagnosis.
-\item Apply the Criterion Checker module across the fourteen active entries.
-\item Apply deterministic study rules to form the rule-confirmed set.
-\item Apply the selected finalization policy and return the diagnosis with its audit trace.
-\end{enumerate}
+\begin{table}[htbp]
+\centering
+\caption{Functions and interfaces of the blocks shown in Figure~\ref{fig:pipeline-thesis-rewrite}.}
+\label{tab:fig31-block-functions}
+\small
+\begin{tabularx}{\textwidth}{@{}p{2.8cm}p{3.0cm}p{4.1cm}X@{}}
+\toprule
+Block & Main input & Function & Output and downstream use\\
+\midrule
+Transcript Input & Speaker-labeled transcript & Preserves turn order, applies the fixed prompt-budget rule, and attaches the active profile & Supplies the Diagnostician and Criterion Checker prompts\\
+Similar-Case Retriever & Transcript and training index & Finds prompt-side examples; retrieved cases go only to the Diagnostician & Optional examples, never direct finalization evidence\\
+Diagnostician & Transcript, profile, and optional retrieved examples & Produces a ranked differential diagnosis and emitted primary & Ranked candidate list, primary field, optional comorbid field\\
+Criterion Checker & Transcript and active entry criteria & Assigns \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_\allowbreak{}evidence} states & Criterion trace for audit and deterministic compatibility rules\\
+Compatibility Auditor & Checker states and fixed rules & Deterministic rule application over each active diagnosis & Logic-confirmed diagnoses and rule trace\\
+Committed Diagnosis & Ranked candidate list, emitted primary, confirmed set, and policy & Applies DA or NtS finalization & Final primary diagnosis depends on the selected finalization policy\\
+Audit Artifacts & Candidates, checker states, rules, and finalization source & Records inspectable intermediate outputs & Offline review only; Audit Artifacts do not feed back into the Direct-Answer commitment\\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 In this thesis, an \emph{agent} means an LLM call with a distinct prompt and task. The checker agents run independently; they do not have autonomous memory, planning, or free-form negotiation. HiED is therefore a modular multi-stage LLM orchestration with role-specific agents and deterministic rule aggregation.
 
@@ -343,20 +376,18 @@ Audit Artifacts & Show that F41.1 was considered and partly supported even if F3
 \end{tabularx}
 \end{table}
 
-Chapter~\ref{ch:data} uses the same example to explain parent-level scoring. Chapter~\ref{ch:experimental} uses it to show what information each baseline and retrieval condition receives.
-
 \section{Retrieval Strategies}
 \label{sec:retrieval}
 
-The Similar-Case Retriever adds relevant training examples to the diagnostician prompt. It follows the retrieval-augmented generation pattern~\citep{lewis2020rag}: the current transcript and training cases are encoded with BGE-M3 and searched with FAISS~\citep{chen2024bgem3,douze2024faiss}. The canonical configuration uses class-balanced retrieval: instead of returning only the globally nearest cases, it attempts to return at most one case for each of the eleven active parent diagnoses. This reduces domination by frequent classes such as depression and anxiety.
+The Similar-Case Retriever adds relevant training examples to the diagnostician prompt. It follows the retrieval-augmented generation pattern~\citep{lewis2020rag}: BGE-M3 is the multilingual text-embedding model used to convert the query transcript and training transcripts into normalized dense vectors~\citep{chen2024bgem3}. FAISS is the vector similarity-search library and index used for retrieval, not a standalone data store~\citep{douze2024faiss}. FAISS inner-product search over normalized vectors corresponds to cosine-similarity ranking. The canonical configuration uses class-balanced retrieval: instead of returning only the globally nearest cases, it attempts to return at most one high-similarity example for each of the eleven active parent diagnoses. This reduces domination by frequent classes such as depression and anxiety.
 
-The retrieval classes are predetermined by the fixed diagnostic profile and are identical for every patient.\ct{Are the candidate classes pre-determined, or patient-specific?} Only the example selected within each class depends on the current transcript. Subtypes that share a parent code, such as F41.0, F41.1, and F41.2, share one retrieval class. Retrieved cases are shown only to the diagnostician; they do not enter checker prompts or directly choose the final output.
+The retrieval classes are fixed by the active diagnostic profile and are identical for every patient.\ct{Are the candidate classes pre-determined, or patient-specific?} Only the example selected within each class depends on the current transcript. Subtypes that share a parent code, such as F41.0, F41.1, and F41.2, share one retrieval class. Global Top-5 retrieval and class-balanced retrieval use the same FAISS index but different selection policies. Retrieved cases are included only in the Diagnostician prompt; they do not enter checker prompts or directly choose the final output.
 
-The codebase can also perform ordinary global Top-5 nearest-neighbor retrieval, but no matched global-RAG result was included in the original frozen experiment set. Chapter~\ref{ch:experimental} therefore treats no retrieval, global retrieval, and class-balanced retrieval as distinct conditions rather than calling the existing balanced run ``ordinary RAG.''
+The codebase can also perform ordinary global Top-5 nearest-neighbor retrieval, but no matched global-RAG result was included in the original frozen experiment set. No retrieval, global retrieval, and class-balanced retrieval are therefore distinct conditions rather than interchangeable names for the existing balanced run.
 
 \section{Diagnostician}
 
-The canonical diagnostician uses Qwen3-32B-AWQ served through vLLM. Its prompt requests five ordered diagnoses from the active profile, a short reason for each, one primary field chosen from the first three, and at most one separate comorbid field. The primary field and the ranked list are stored separately. In the running example, F41.1 can therefore remain in the Top-3 even though F32 is emitted as primary.
+The canonical diagnostician uses Qwen3-32B-AWQ served through vLLM. Its input contains the transcript, the active diagnostic profile, and optional retrieved examples. Its prompt requests a ranked candidate list containing five ordered diagnoses from the active profile, a short reason for each, one primary field chosen from the first three, and at most one separate comorbid field. In clinical prose this is a ranked differential diagnosis; as a formal artifact it is the ranked candidate list. The primary field and the ranked list are stored separately. In the running example, F41.1 can therefore remain in the Top-3 even though F32 is emitted as primary.
 
 The reference diagnostician is a system specification, not an ablation. It uses greedy decoding and does not request a calibrated probability or an abstention decision. Confidence-based sampling, calibration, and selective-output ideas are evaluated only as later repair or future-work directions.\ct{Is this an ablation study? If so, why in Appendix?}
 
@@ -366,7 +397,28 @@ Each of the fourteen active entries has one criterion checker based on the study
 
 Every checker assigns the three states defined at the start of this chapter.\ct{What 3 states?} It may also return a short transcript span linked to the judgment. The five ranked diagnoses are checked first, followed by the remaining active entries, so every case receives an audit over the same fourteen-entry profile.
 
-The Compatibility Auditor applies the stored threshold for each active entry. A rule may require all criteria, a minimum number of core and total criteria, a symptom count, or particular criterion groups. The same checker trace always produces the same confirmed set. Confirmation means compatibility with the configured study rule; it does not mean that the diagnosis is clinically correct or should be primary. Several diagnoses may be confirmed in the same case.
+\begin{table}[htbp]
+\centering
+\caption{Illustrative criterion-level outputs for the Criterion Checker. The rows are schema-faithful examples, not clinician-validated exported traces.}
+\label{tab:criterion-state-example}
+\small
+\begin{tabularx}{\textwidth}{@{}p{3.3cm}X p{3.0cm}@{}}
+\toprule
+Criterion & Transcript evidence & Checker state\\
+\midrule
+Depressed mood & Patient explicitly reports low mood & \texttt{met}\\
+Suicidal ideation & Patient explicitly denies suicidal thoughts & \texttt{not\_met}\\
+Appetite or weight change & Appetite and weight are not discussed & \texttt{insufficient\_\allowbreak{}evidence}\\
+Anxiety duration & Transcript does not establish six months of anxiety & \texttt{insufficient\_\allowbreak{}evidence}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Missing information is not negative evidence. A criterion is \texttt{not\_met} only when the transcript contains evidence against it; otherwise unresolved evidence remains \texttt{insufficient\_\allowbreak{}evidence}.
+
+\section{Compatibility Auditor}
+
+The Compatibility Auditor is a deterministic rule-based module. It applies the stored threshold for each active entry: read the Criterion Checker states for one active diagnosis, apply its fixed diagnosis-specific rule, add the diagnosis to the logic-confirmed set if the rule is satisfied, and retain the rule application in the audit trace. A rule may require all criteria, a minimum number of core and total criteria, a symptom count, or particular criterion groups. The same checker trace always produces the same confirmed set. Confirmation means compatibility with the configured study rule; it is not primacy and does not mean that the diagnosis is clinically correct or should be primary. Several diagnoses may be confirmed in the same case.
 
 Checker states are model-generated and have not been validated as clinician ground truth. They create an evidence-linked record that can be inspected and replayed, but they do not prove that the criterion judgments or evidence spans are correct.
 
@@ -376,13 +428,17 @@ Under Direct-Answer (DA), the diagnostician's primary field becomes the committe
 
 Nominate-then-Select (NtS) uses criterion compatibility to choose the committed diagnosis. It selects the first confirmed diagnosis in the five-entry ranking. If none is confirmed, it selects another confirmed active entry with the highest met ratio. If no diagnosis is confirmed, it falls back to the first ranked diagnosis. NtS does not emit a comorbid diagnosis.
 
-DA and NtS reuse the same ranked candidates and checker traces and differ mainly in the finalization rule. This provides a direct test of whether criterion-based re-selection improves the committed diagnosis. Pairwise comparison and debate are separate selection-repair methods discussed in Chapter~\ref{ch:experimental}.
+DA and NtS reuse the same ranked candidates and checker traces and differ mainly in the finalization rule. This provides a direct test of whether criterion-based re-selection improves the committed diagnosis. Pairwise comparison and debate are separate selection-repair methods with different execution contracts.
 
 \section{Audit Artifacts}
 
 The audit artifacts include the predicted diagnosis set, ranked differential, criterion states, short evidence spans, confirmed diagnoses, finalization source, and run failures. A reviewer can therefore challenge the candidate ranking, an individual criterion judgment, a study rule, or the final selection separately.
 
 This record follows the definition of auditability in Section~\ref{sec:auditability-definition}. It makes the system easier to inspect, but it does not expose the LLM's hidden reasoning, prove clinical correctness, or replace real-patient validation.
+
+\section{Implementation Details}
+
+The canonical model is the Qwen3-32B 4-bit AWQ checkpoint. AWQ reduces inference-memory requirements through weight quantization, and no canonical system component fine-tunes model weights. vLLM is the inference and serving backend for loading the model and generating outputs; it is not a diagnostic component and does not alter prompts, criteria, rules, or finalization. The system uses greedy decoding, an 8,192-token context window, a 1,536-token output cap, structured JSON output, guided decoding where supported, schema validation, and checker-output recovery for duplicate or invalid criterion items.
 
 \chapter{Data and Evaluation Protocol}
 \label{ch:data}
@@ -392,6 +448,25 @@ This chapter follows the usual machine-learning reporting order: datasets, data 
 \section{Datasets and Split}
 
 The study uses two synthetic Chinese psychiatric dialogue datasets. LingxiDiagBench provides the in-domain training, development, and internal test data. MDD-5k provides an external synthetic test set. Neither dataset is treated as real-patient clinical validation.
+
+\begin{table}[htbp]
+\centering
+\caption{Dataset/split contract for selection, retrieval, labels, and transcript handling.}
+\label{tab:dataset-contract}
+\scriptsize
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrl llll}
+\toprule
+Dataset / split & $N$ & Role & Used for selection? & In retrieval index? & Label treatment & Transcript handling\\
+\midrule
+LingxiDiag training/retrieval & 13,000 & Retrieval corpus & No & Yes & Parent-projected gold labels & Original transcript text\\
+Public validation/development & 1,000 & Prompt/rule selection & Yes & No & Development-only gold labels & Original transcript text\\
+Held-out internal test & 1,000 & Main in-domain evaluation & No & No & Test gold-label set & Fixed-input transcript\\
+MDD-5k external evaluation & 925 & Synthetic external evaluation & No & No & Full, in-scope, and subset gold labels & Joined rounds; prompt-budget truncation when needed\\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
 
 \subsection{LingxiDiagBench}
 
@@ -420,7 +495,7 @@ All internal methods are evaluated on the same 1,000 case IDs. These cases were 
 
 MDD-5k was generated from anonymized psychiatric cases through a neuro-symbolic multi-agent process~\citep{yin2024mdd5k}. Each patient file may contain several dialogue rounds. The adapter joins those rounds and treats the patient file as one case.
 
-The external evaluation contains 925 matched patient-level cases. Under the selected eleven-parent output space, 878 cases have an in-scope reference parent and 47 have a reference diagnosis that the canonical system cannot emit. Additional checker definitions exist only for the later scope-expansion experiment; they are not active in the canonical run.\ct{Anything specific about a bank?} Chapter~\ref{ch:external} reports the full 925-case result, the 878-case in-scope result, and the 47-case scope limitation. It also reports a 490-case F32-versus-F41 subset to test coarse depression--anxiety discrimination; this subset excludes F41.2 and records containing both F32 and F41.
+The external evaluation contains 925 matched patient-level cases. Under the selected eleven-parent output space, 878 cases have an in-scope gold parent and 47 have a gold label that the canonical system cannot emit. Additional checker definitions exist only for the later scope-expansion experiment; they are not active in the canonical run.\ct{Anything specific about a bank?} The full set contains 925 cases, the in-scope subset contains 878 cases, and the out-of-scope subset contains 47 cases. The 490-case F32-versus-F41 subset tests coarse depression--anxiety discrimination; this subset excludes F41.2 and records containing both F32 and F41. MDD transcripts are substantially longer, and the deterministic prompt-budget truncation rule is applied in the canonical external evaluation.
 
 \subsection{Synthetic-Data Boundary}
 
@@ -429,7 +504,7 @@ Synthetic data allow every method to be tested on the same cases and allow case-
 \section{ICD-10 Label Space and Gold-Label Construction}
 \label{sec:gold-conventions}
 
-Chapter~\ref{ch:architecture} introduced ICD-10 and the fixed fourteen-entry profile before the system components.\ct{Should you introduce ICD-10 earlier} For evaluation, decimal subtype codes are grouped into eleven parent diagnoses. For example, panic disorder (F41.0), generalized anxiety disorder (F41.1), and mixed anxiety and depressive disorder (F41.2) are all scored under F41, anxiety disorders. A raw reference diagnosis outside the active parents maps to \emph{Others}; the canonical system has no trained unknown detector and cannot correctly emit those out-of-scope diagnoses.
+Chapter~\ref{ch:architecture} introduced ICD-10 and the fixed fourteen-entry profile before the system components.\ct{Should you introduce ICD-10 earlier} For evaluation, decimal subtype codes are grouped into eleven parent diagnoses. For example, panic disorder (F41.0), generalized anxiety disorder (F41.1), and mixed anxiety and depressive disorder (F41.2) are all scored under F41, anxiety disorders. A raw gold label outside the active parents maps to \emph{Others}; the canonical system has no trained unknown detector and cannot correctly emit those out-of-scope diagnoses.
 
 \begin{table}[htbp]
 \centering
@@ -462,7 +537,7 @@ Others & Outside the active parent set & 85 & 0 & 47\\
 
 For brevity, benchmark-provided diagnosis codes are referred to as \emph{gold labels}. They are dataset annotations rather than independently adjudicated clinical ground truth. For case $x$, $G(x)$ is the deduplicated gold-label set after parent projection. LingxiDiag cases may contain more than one gold parent and do not provide an independently adjudicated unique clinical primary diagnosis. The first-listed gold parent is used only for explicitly single-label descriptive analyses such as the confusion matrix.
 
-In the running example from Chapter~\ref{ch:architecture}, F41.1 is scored as F41. If the reference set contains F41 and the system emits F32 while ranking F41.1 second, Top-1 is wrong but Top-3 is correct.
+In the running example from Chapter~\ref{ch:architecture}, F41.1 is scored as F41. If the gold-label set contains F41 and the system emits F32 while ranking F41.1 second, Top-1 is wrong but Top-3 is correct.
 
 \section{Prediction Views and Metrics}
 
@@ -475,6 +550,25 @@ The evaluator keeps three outputs separate:
 \end{enumerate}
 
 Because a case may contain more than one gold label, Top-$k$ Accuracy counts a case as correct when at least one gold label appears among the first $k$ predictions. Exact Match, also called subset accuracy, requires the complete predicted label set to equal the complete gold-label set. These are benchmark-agreement measures, not independent measures of the patient's true clinical diagnosis.
+
+\begin{table}[htbp]
+\centering
+\caption{Metric contract for the main output views.}
+\label{tab:metric-contract}
+\small
+\begin{tabularx}{\textwidth}{@{}p{2.3cm}p{2.7cm}p{2.2cm}p{3.4cm}X@{}}
+\toprule
+Measure & Output view & Denominator & Correct when & Question answered\\
+\midrule
+Top-1 Accuracy & Committed primary & All evaluated cases & Primary is in the gold-label set & Was the final diagnosis acceptable under benchmark labels?\\
+Top-3 Accuracy & Top-three candidate diagnoses & All evaluated cases with a ranked output & Any top-three candidate is in the gold-label set & Did candidate generation find a gold label?\\
+Verification retention & Logic-confirmed set & Checker-eligible cases & Any gold parent is confirmed & Did criterion compatibility retain a gold parent?\\
+Exact Match & Multilabel output & All evaluated cases & Predicted set equals gold-label set & Did the complete set match?\\
+Macro-F1 & Parent labels & All evaluated cases & Class-level F1, equal class weight & How are rare and frequent classes balanced?\\
+Weighted-F1 & Parent labels & All evaluated cases & Class-level F1, frequency weighted & How is average label performance weighted by support?\\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \[
 \mathrm{Top\text{-}1\ Accuracy}=\frac{1}{N}\sum_x \mathbb{1}[p_1(x)\in G(x)],
@@ -504,7 +598,7 @@ S(x)=\mathbb{1}[p_1(x)\in G(x)],
 \]
 where $L(x)$ is the logic-confirmed parent set. $D_3$ and $S$ use all cases. Verification retention, $R$, is calculated only for cases whose gold-label set contains at least one non-\emph{Others} parent represented by an active Criterion Checker. This checker-eligible subset contains 915 of the 1,000 test cases, whereas Top-1 and Top-3 use all 1,000 cases. The rates therefore have different denominators and should not be interpreted as consecutive stages of one case-level funnel.
 
-These indicators ask three simple questions: Was a reference diagnosis in the short list? Was it supported by the criterion audit? Was it selected as primary? They are analysis views of one recorded output, not a claim that every finalization policy executes the steps in that order.
+These indicators ask three simple questions: Was a gold label in the ranked candidate list? Was it supported by the criterion audit? Was it selected as primary? They are analysis views of one recorded output, not a claim that every finalization policy executes the steps in that order.
 
 \section{Implementation and Statistical Analysis}
 
@@ -525,18 +619,22 @@ RQ1 asks how HiED compares with conventional and single-model baselines under th
 \centering
 \caption{Conventional baselines, LLM baselines, the proposed HiED system, and the status of matched internal comparisons.}
 \label{tab:failure-ladder-rewrite}
-\begin{tabularx}{\textwidth}{@{}p{3.0cm}p{4.2cm}p{3.6cm}X@{}}
+\scriptsize
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lllllll}
 \toprule
-System & Main input & Retrieval & Status\\
+System & Retrieval & Ranked Diagnostician & Criterion Checker & Compatibility Auditor & Finalization & Interpretation\\
 \midrule
-Majority / class prior & No transcript model & None & Pending same-split floor\\
-TF--IDF + LR & Transcript words & None & Development/transfer result only\\
-Single & Transcript & None & Frozen internal result\\
-Single + global RAG & Transcript and five nearest cases & Global Top-5 & Pending matched run\\
-Single + balanced RAG & Transcript and class-balanced cases & At most one per parent & Frozen internal result\\
-HiED--DA & Transcript, ranking, and criterion audit & Class-balanced & Frozen reference system\\
+Majority / class prior & None & No & No & No & Most frequent class & Same-split floor pending\\
+TF--IDF + LR & None & No & No & No & Classifier output & Development/transfer result only\\
+Single & None & No formal ranking & No & No & Single LLM output & Frozen internal result\\
+Single + global RAG & Global Top-5 & No formal ranking & No & No & Single LLM output & Pending matched run\\
+Single + balanced RAG & At most one per parent & No formal ranking & No & No & Single LLM output & Retrieval comparison versus Single\\
+HiED--DA & Class-balanced & Yes & Yes & Yes & Diagnostician primary & Package comparison versus Single + balanced RAG\\
+HiED--NtS & Class-balanced & Yes & Yes & Yes & Criterion-based selection & Closest finalization ablation versus HiED--DA\\
 \bottomrule
-\end{tabularx}
+\end{tabular}
+\end{adjustbox}
 \end{table}
 
 In the running example, TF--IDF + LR uses transcript words only. Single uses one LLM call. Global RAG adds the five nearest training cases without class control. Balanced RAG attempts to provide one relevant example per active parent class. HiED adds a five-diagnosis ranking, the full criterion-checker set, deterministic rules, and a separate finalization record.
@@ -545,11 +643,11 @@ The current internal table can compare Single, Single + balanced RAG, and HiED--
 
 \section{Failure Localization (RQ2)}
 
-RQ2 uses the $D_3$--$R$--$S$ measures defined in Chapter~\ref{ch:data}. They ask whether a reference diagnosis appears in the Top-3, appears in the confirmed set when it is checkable, and is selected as the committed diagnosis. Confirmed-set size and criterion-state counts show whether the audit rejects the reference diagnosis or keeps many diagnoses at the same time.
+RQ2 uses the $D_3$--$R$--$S$ measures defined in Chapter~\ref{ch:data}. They ask whether a gold label appears in the Top-3, appears in the confirmed set when it is checkable, and is selected as the committed diagnosis. Confirmed-set size and criterion-state counts show whether the audit rejects the gold label or keeps many diagnoses at the same time.
 
-The Top-3--Top-1 difference directly counts cases in which a reference diagnosis is already ranked but not committed. Verification retention is reported on the separate checker-eligible denominator. Because the retained summary artifact does not contain the complete eight-cell $D_3/R/S$ joint table, the thesis does not infer individual transition counts from the three marginal rates. A full joint table remains a required case-level supplementary analysis.
+The Top-3--Top-1 difference directly counts cases in which a gold label is already ranked but not committed. Verification retention is reported on the separate checker-eligible denominator. Because the retained summary artifact does not contain the complete eight-cell $D_3/R/S$ joint table, the thesis does not infer individual transition counts from the three marginal rates. A full joint table remains a required case-level supplementary analysis.
 
-A separate close-cluster analysis estimates how many wrong DA cases might be recoverable if a better rule could choose among similarly supported alternatives. Because this analysis uses the reference label to identify recoverable cases, it is an upper bound, not a deployable method or an accuracy estimate.
+A separate close-cluster analysis estimates how many wrong DA cases might be recoverable if a better rule could choose among similarly supported alternatives. Because this oracle upper-bound analysis uses the gold label to identify recoverable cases, it is an upper bound, not a deployable method or an accuracy estimate.
 
 \section{Retrieval Ablation (RQ3)}
 
@@ -565,15 +663,19 @@ Four additional repair families test different explanations for the gap:
 
 \begin{table}[htbp]
 \centering
-\caption{Selection-repair families. Debate, self-consistency, and CISC follow the method families in \citet{du2024debate}, \citet{wang2023selfconsistency}, and \citet{taubenfeld2025cisc}.}
-\begin{tabularx}{\textwidth}{@{}p{2.8cm}p{4.0cm}X@{}}
+\caption{Selection-repair execution contracts. Debate, self-consistency, and CISC follow the method families in \citet{du2024debate}, \citet{wang2023selfconsistency}, and \citet{taubenfeld2025cisc}.}
+\label{tab:repair-contract-matrix}
+\small
+\begin{tabularx}{\textwidth}{@{}p{2.5cm}p{2.0cm}p{1.9cm}p{2.0cm}p{2.0cm}X@{}}
 \toprule
-Method & Hypothesis & Test\\
+Repair & Regenerates candidate ranking & Reuses checker trace & Changes finalization only & Context budget & Interpretation\\
 \midrule
-Pairwise comparison & The error is local confusion between close candidates & Compare nearby candidates using recorded evidence; use fixed-output replay to isolate the final comparison step\\
-Debate & Disorder-level ranking and criterion-level evidence provide complementary views that may resolve final commitment errors & Use two-view ranking reconciliation over the same candidate union\\
-Deterministic fusion & A simple rule over rank and criterion support can select better & Choose the rule on development data, fix it, and evaluate it on the internal split\\
-Self-consistency / CISC & Greedy decoding hides a stable voting signal & Sample the diagnostician three or five times and aggregate primary outputs\\
+Pairwise full run & Yes & No & No & Standard & Tests a regenerated local comparison, not an isolated finalizer\\
+Pairwise controlled replay & No & Yes & Yes & Standard & Cleanest test of the downstream pairwise rule\\
+Debate & Yes & No & No & Larger when required & Two-view ranking reconciliation with transcript summary for both advocates\\
+Deterministic fusion & No & Yes & Yes & Standard & Fixed rule over rank and criterion support\\
+SC & Yes & No & No & Standard & Tests whether sampled diagnostician outputs contain a stable vote\\
+CISC & Yes & No & No & Standard & Confidence-weighted sampled commitment test\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -640,16 +742,16 @@ Exact Match measures a different property. The Single systems emit too many labe
 
 \section{Top-3 Accuracy and the Selection Gap}
 
-\ThesisFigure{fig_b_selection_bottleneck.pdf}{Test-set decomposition of committed Top-1 Accuracy, Top-3 Accuracy, and reference-assisted close-cluster opportunity.}{fig:bottleneck-thesis-rewrite}
+\ThesisFigure{fig_b_selection_bottleneck.pdf}{Test-set decomposition of committed Top-1 Accuracy, Top-3 Accuracy, and oracle upper-bound close-cluster opportunity.}{fig:bottleneck-thesis-rewrite}
 
 HiED--DA reaches 0.802 Top-3 Accuracy and 0.518 Top-1 Accuracy. Because the ranked view begins with the committed diagnosis, the 0.284 difference represents 284 cases in which a gold parent is already in the Top-3 but another diagnosis is committed. This gap measures recoverable opportunity under the benchmark gold-label convention, not clinical recoverability without additional information. It directly shows that candidate generation alone does not explain all benchmark disagreements.
 
-A separate reference-assisted analysis identifies 349 misclassified cases whose reference parent lies in a wider cluster of similarly supported candidates. Correcting all of them without harming any correct case would give an upper bound of 0.867. This is an opportunity count, not a deployable selector or a clinical ceiling, because the analysis uses the reference label and a wider candidate set than Top-3.
+A separate oracle upper-bound analysis identifies 349 misclassified cases whose gold parent lies in a wider cluster of similarly supported candidates. Correcting all of them without harming any correct case would give an upper bound of 0.867. This is an opportunity count, not a deployable selector or a clinical ceiling, because the analysis uses the gold label and a wider candidate set than Top-3.
 
 \section{Criterion Verification and Finalization}
 \label{sec:criterion-verification}
 
-Among the 915 cases with a non-\emph{Others} reference parent and an active checker, the rule-confirmed set contains a reference parent in 857 cases (0.937; 95\% CI [0.919, 0.951]). The median confirmed set contains six of the fourteen active entries. This shows high reference retention but limited selectivity. Because the retained summary reports this rate separately from Top-3 and Top-1, it does not by itself identify the complete case-level $D_3/R/S$ transition pattern.
+Among the 915 cases with a non-\emph{Others} gold parent and an active checker, the rule-confirmed set contains a gold parent in 857 cases (0.937; 95\% CI [0.919, 0.951]). The median confirmed set contains six of the fourteen active entries. This shows high reference retention but limited selectivity. Because the retained summary reports this rate separately from Top-3 and Top-1, it does not by itself identify the complete case-level $D_3/R/S$ transition pattern.
 
 The checker audit records 48.3\% \texttt{met}, 23.5\% \texttt{not\_met}, and 28.3\% \texttt{insufficient\_\allowbreak{}evidence} across 77,999 criterion states. These are model outputs rather than clinician-verified criterion labels, so they describe checker behavior, not clinical accuracy.
 
@@ -703,13 +805,31 @@ Within the tested Qwen3 family, Single Top-1 varies by 0.322, while HiED varies 
 
 \section{Descriptive Confusion Structure}
 
-The first-listed-reference confusion analysis has agreement 0.509, distinct from the main Top-1 Accuracy of 0.518. Its largest errors are F41$\rightarrow$F32 (178), F39$\rightarrow$F32 (43), \emph{Others}$\rightarrow$F32 (37), \emph{Others}$\rightarrow$F41 (26), and F32$\rightarrow$F41 (24).
+The first-listed gold-label confusion analysis has agreement 0.509, distinct from the main Top-1 Accuracy of 0.518. Figure~\ref{fig:confusion-thesis-rewrite} shows the confusion matrix obtained by representing each case with its first-listed gold label. Under this descriptive single-label convention, accuracy is 0.509, compared with 0.518 under the main set-based Top-1 Accuracy definition.
 
-\ThesisFigure{fig_d_confusion_heatmap.pdf}{Test-set first-listed-reference-parent confusion matrix. This descriptive view uses a different reference convention from the main Top-1 Accuracy result; see Figure~\ref{fig:confusion-thesis-rewrite}.}{fig:confusion-thesis-rewrite}
+\ThesisFigure{fig_d_confusion_heatmap.pdf}{Confusion matrix on the test set using the first-listed gold label for each case.}{fig:confusion-thesis-rewrite}
 
-The concentration around depression and anxiety is consistent with overlapping symptoms and missing temporal or exclusion information, but the matrix alone cannot prove the cause of each error. Chapter~\ref{ch:error} examines the main error patterns in more detail.
+Its largest errors are F41$\rightarrow$F32 (178), F39$\rightarrow$F32 (43), \emph{Others}$\rightarrow$F32 (37), \emph{Others}$\rightarrow$F41 (26), and F32$\rightarrow$F41 (24). The concentration around depression and anxiety is consistent with overlapping symptoms and missing temporal or exclusion information, but the matrix alone cannot prove the cause of each error. Chapter~\ref{ch:error} examines the main error patterns in more detail.
 
 \section{Summary}
+
+\begin{table}[htbp]
+\centering
+\caption{Chapter-end evidence summary for the in-domain results.}
+\label{tab:results-evidence-summary}
+\small
+\begin{tabularx}{\textwidth}{@{}p{2.5cm}p{2.6cm}p{3.4cm}p{3.2cm}X@{}}
+\toprule
+Question & Main estimate & Statistical evidence & Supported conclusion & Remaining gap\\
+\midrule
+Balanced retrieval vs no retrieval & 0.508 vs 0.466 & 88 vs 46 discordant cases; $p=4.0\times10^{-4}$ & Tested balanced retrieval helps Single & Ordinary RAG and matched HiED retrieval pending\\
+HiED package vs matched Single RAG & 0.518 vs 0.508 & 60 vs 50 discordant cases; $p=0.391$ & No significant package gain & Not a one-component ablation\\
+Top-3 vs Top-1 & 0.802 vs 0.518 & 284 candidate-present non-commitments & Ranking headroom is large & Needs complete $D_3/R/S$ joint table\\
+Verification retention/selectivity & 857/915 = 0.937 & 95\% CI [0.919, 0.951]; median six confirmed entries & High retention, limited selectivity & Clinician validation of states pending\\
+Repair outcomes & No clear gain & Negative or non-significant tested repairs & Simple selection repairs do not solve DA errors & Matched RQ3/RQ1 controls pending\\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 The current internal results support three conclusions. First, class-balanced retrieval improves Single relative to no retrieval, but ordinary RAG and matched HiED retrieval ablations are still missing. Second, Top-3 Accuracy is much higher than Top-1 Accuracy. Third, the tested criterion-based or post-hoc selection repairs do not provide a clear improvement over DA.
 
@@ -719,7 +839,29 @@ The current internal results support three conclusions. First, class-balanced re
 
 \section{Overview}
 
-MDD-5k provides a second Chinese synthetic corpus with different dialogue generation, label distribution, and diagnostic coverage. It tests synthetic distribution shift, not real-patient performance in Taiwan. The external evaluation contains 925 matched patient-level cases. A case is in scope when its projected gold-label set contains at least one of the eleven parent labels that the canonical system can emit. A case is out of scope when none of its projected gold labels belongs to that output set. Out-of-scope cases are grouped under \emph{Others} for analysis, but the canonical system cannot predict them correctly because it has neither an \emph{Others} output nor an unknown-diagnosis detector. Under this definition, 878 cases are in scope and 47 are out of scope. The V4-fixed set also contains 490 cases for a restricted F32/F41 binary subset. Two additional analyses use different samples from the same source corpus: a 185-case lexical-transfer holdout and a 58-case raw-dataset retarget sample. These are not independent external cohorts.
+MDD-5k provides a second Chinese synthetic corpus with different dialogue generation, label distribution, and diagnostic coverage. It tests synthetic distribution shift, not real-patient performance in Taiwan. The external evaluation contains 925 matched patient-level cases. A case is in scope when its projected gold-label set contains at least one of the eleven parent labels that the canonical system can emit. A case is out of scope when none of its projected gold labels belongs to that output set. Out-of-scope cases are grouped under \emph{Others} for analysis, but the canonical system cannot predict them correctly because it has neither an \emph{Others} output nor an unknown-diagnosis detector. Under this definition, 878 cases are in scope and 47 are out of scope. The \texttt{V4-fixed} set also contains 490 cases for a restricted F32/F41 binary subset. Two additional analyses use different samples from the same source corpus: a 185-case lexical-transfer holdout and a 58-case raw-dataset retarget sample. These are not independent external cohorts.
+
+\begin{table}[htbp]
+\centering
+\caption{External-analysis inventory and inclusion purpose.}
+\label{tab:external-inventory}
+\scriptsize
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{llrllll}
+\toprule
+Analysis & Sample & $N$ & Configuration & Selection data & Baseline & Purpose\\
+\midrule
+Canonical external positioning & MDD full set & 925 & Canonical HiED--DA & None from MDD & Majority & Synthetic transfer positioning\\
+In-scope evaluation & MDD in-scope & 878 & Canonical profile & None from MDD & In-scope majority & Separates output coverage from selection\\
+F32/F41 subset & Restricted MDD subset & 490 & Canonical profile & None from MDD & F32 majority & Coarse depression--anxiety discrimination\\
+Lexical transfer & MDD holdout & 185 & TF--IDF + LR & 740 MDD training cases & Corpus-specific classifiers & Tests lexical portability\\
+Scope retargeting & Raw-dataset sample & 58 & Expanded profile & Configuration only & Original profile & Tests output-space expansion\\
+Matched repair matrix & Ordered MDD cases & 925 & Repair variants & Frozen protocols & Matched DA & Tests repair transfer\\
+Case-neighbor reranking & MDD cases & 925 & BGE-M3 modes & Lingxi development data & S0\_hied & Tests neighbor-label selection\\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
 
 \section{Canonical External Positioning}
 
@@ -732,7 +874,7 @@ MDD-5k provides a second Chinese synthetic corpus with different dialogue genera
 Set & $N$ & Top-1 & Maj. baseline & Macro-F1\\
 \midrule
 LingxiDiag internal test split & 1000 & 0.518 & --- & 0.178\\
-MDD full (V4-fixed) & 925 & 0.5805 & 0.4432 & 0.2287\\
+MDD full set & 925 & 0.5805 & 0.4432 & 0.2287\\
 MDD in-scope & 878 & 0.6116 & 0.4670 & 0.2649\\
 MDD F32/F41 & 490 & 0.9224 & 0.7837 & 0.9055\\
 \bottomrule
@@ -768,7 +910,7 @@ MDD-5k & MDD-5k & 185 & 0.692 & within-MDD fit\\
 \end{tabular}
 \end{table}
 
-The LingxiDiag-to-LingxiDiag result is a within-corpus lexical probe and must not be compared directly with the frozen 1,000-case HiED result. The same classifier family performs well within each training corpus but transfers poorly. These results show that lexical features can fit corpus-specific wording and label priors without learning a portable diagnostic boundary. The separate lexical-transfer experiment used 740 training cases and 185 evaluation cases from MDD-5k. The 185 MDD evaluation cases are a holdout from the 925-case release, not a second external dataset.
+The LingxiDiag-to-LingxiDiag result is a within-corpus lexical probe and must not be compared directly with the frozen 1,000-case HiED result. The same classifier family performs well within each training corpus but transfers poorly. These results show that lexical features can fit corpus-specific wording and label priors without learning a portable diagnostic boundary. The separate lexical-transfer experiment used a deterministic random 80/20 split with seed 42, producing 740 training cases and 185 evaluation cases from MDD-5k. The split was not stratified and is separate from the canonical 925-case evaluation. The 185 MDD evaluation cases are a holdout from the 925-case release, not a second external dataset.
 
 \section{Matched External Repair Matrix}
 
@@ -795,7 +937,7 @@ Deterministic fusion & 0.4714 & $-0.0995$ & $2.3\times10^{-14}$ & Frozen post-ho
 \end{adjustbox}
 \end{table}
 
-NtS and deterministic fusion are clearly harmful. Pairwise produces no change in case-level correctness. SC and CISC show small nominal gains, but neither is significant, and both resample only the diagnostician while reusing the DA retrieval context. Debate cannot run within the shared 8,192-token budget; even after increasing the context to 24,576 tokens, Top-1 falls to 0.3784. Because these methods do not all share the same execution path, the matrix does not support a component-wise causal ranking. It does show that none provides a statistically supported, execution-matched improvement over DA.
+NtS and deterministic fusion are clearly harmful. Pairwise produces no change in case-level correctness. SC and CISC show small nominal gains, but neither is significant, and both resample only the diagnostician while reusing the DA retrieval context. Debate cannot run within the shared 8,192-token budget; even after increasing the context to 24,576 tokens, Top-1 falls to 0.3784. The canonical 0.5805 and matched DA 0.5708 are separate frozen runs under different execution contracts and should not be interpreted as a direct paired change. Because these methods do not all share the same execution path, the matrix does not support a component-wise causal ranking. It does show that none provides a statistically supported, execution-matched improvement over DA.
 
 The matched DA run has Top-3 of 0.8508 and Top-1 of 0.5708, leaving a 28.0-point ranking-to-commitment gap. MDD-5k does not include a matched verification-retention analysis, so it supports external ranking headroom but not the complete internal $D_3$--$R$--$S$ decomposition.
 
@@ -842,7 +984,7 @@ Archetype & Retained evidence & Interpretation\\
 \midrule
 Depression--anxiety boundary & F41$\rightarrow$F32 = 178; F32$\rightarrow$F41 = 24 & Overlapping symptoms often end in disagreement about which diagnosis is primary\\
 Unresolved evidence & 28.3\% of criterion states are \texttt{insufficient\_}\allowbreak\texttt{evidence} & Important duration, course, exclusion, or comorbidity facts may be missing from the transcript\\
-Reference present, wrong commitment & 284 of 1,000 cases have a reference parent in Top-3 but not as final primary & Candidate detection does not guarantee correct selection\\
+Reference present, wrong commitment & 284 of 1,000 cases have a gold parent in Top-3 but not as final primary & Candidate detection does not guarantee correct selection\\
 Single-label conservatism & NtS Exact Match 0.437 vs. DA 0.409, but Top-1 0.490 vs. 0.518 & Suppressing secondary labels can improve set match while worsening primary selection\\
 Scope-limited diagnosis & 47 of 925 external cases are out of scope; retarget recovery is 0/58 & Making a label available is different from learning to select it\\
 Frequent-label attraction & Macro-F1 0.178 vs. weighted-F1 0.434; many errors end at F32 & Weighted results can hide weak performance on less frequent classes\\
@@ -851,21 +993,41 @@ Frequent-label attraction & Macro-F1 0.178 vs. weighted-F1 0.434; many errors en
 \end{adjustbox}
 \end{table}
 
+\begin{table}[htbp]
+\centering
+\caption{Failure-localization decision table for audit interpretation.}
+\label{tab:failure-localization}
+\small
+\begin{tabularx}{\textwidth}{@{}p{2.0cm}p{1.7cm}p{1.8cm}p{2.0cm}p{3.0cm}X@{}}
+\toprule
+Scope & Gold in Top-3 & Gold confirmed & Committed primary correct & Failure location & Appropriate remedy\\
+\midrule
+Out of scope & No & Not applicable & No & Output scope & Expand and validate the diagnostic profile\\
+In scope & No & No or yes & No & Candidate generation/retrieval & Improve ranking, retrieval, or transcript representation\\
+In scope & Yes & No & No & Verification or missing evidence & Improve checker evidence use or collect missing facts\\
+In scope & Yes & Yes & No & Final selection & Improve comparative selection among compatible diagnoses\\
+In scope & Any & Any & Yes & No primary error & Use audit for review, not correction\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+These rows are bounded output categories. They are not clinician-adjudicated causes and should not be read as proof that one mechanism caused every individual error.
+
 \section{Main Error Patterns}
 
 The largest confusion is F41$\rightarrow$F32 (178 cases), compared with only 24 in the reverse direction. Several other errors also end at F32, including F39, \emph{Others}, F51, and F98 cases. This suggests a frequent depression-label attractor when symptoms overlap or the transcript does not clearly establish duration, onset, autonomic symptoms, or the main source of impairment. The counts describe model--reference disagreement in a synthetic corpus; they do not adjudicate which label is clinically correct in every case.
 
-Missing information is also common in the audit trace. An \texttt{insufficient\_evidence} state may be appropriate when a transcript never establishes prior episodes, substance use, medical causes, or whether a second syndrome is independent. Changing thresholds can retain or reject more candidates, but it cannot create a missing fact. This supports testing targeted evidence acquisition rather than relying only on new weights or rules.
+Missing information is also common in the audit trace. An \texttt{insufficient\_\allowbreak{}evidence} state may be appropriate when a transcript never establishes prior episodes, substance use, medical causes, or whether a second syndrome is independent. Changing thresholds can retain or reject more candidates, but it cannot create a missing fact. This supports testing targeted evidence acquisition rather than relying only on new weights or rules.
 
-The 284 candidate-present, wrong-commitment cases are the clearest selection errors: a reference parent is already in Top-3, but another diagnosis is chosen. Criterion verification offers related evidence, but not on the same denominator: it retains a reference parent in 857 of 915 eligible cases and confirms a median of six entries. The audit therefore often preserves the answer without resolving primacy.
+The 284 candidate-present, wrong-commitment cases are the clearest selection errors: a gold parent is already in Top-3, but another diagnosis is chosen. Criterion verification offers related evidence, but not on the same denominator: it retains a gold parent in 857 of 915 eligible cases and confirms a median of six entries. The audit therefore often preserves the answer without resolving primacy.
 
-Two further patterns concern the output contract. NtS improves Exact Match by emitting one label, but it lowers Top-1 and cannot detect comorbidity. Likewise, broader scope makes more diagnoses legal to emit, yet the retargeting sample recovers none of the 58 newly available reference parents. Output conservatism, scope, and primary selection must therefore be evaluated separately.
+Two further patterns concern the output contract. NtS improves Exact Match by emitting one label, but it lowers Top-1 and cannot detect comorbidity. Likewise, broader scope makes more diagnoses legal to emit, yet the retargeting sample recovers none of the 58 newly available gold parents. Output conservatism, scope, and primary selection must therefore be evaluated separately.
 
 \section{Two Uses of the Audit Trace}
 
-In offline research, reference labels allow the analyst to ask whether the diagnosis was in scope, in Top-3, retained by verification, and finally selected. The same trace also shows how many alternatives were confirmed and which facts remained unresolved. This supports failure localization, but it uses the reference label and is unavailable during live inference.
+In offline research, gold labels allow the analyst to ask whether the diagnosis was in scope, in Top-3, retained by verification, and finally selected. The same trace also shows how many alternatives were confirmed and which facts remained unresolved. This supports failure localization, but it uses the gold label and is unavailable during live inference.
 
-For a new case without a reference label, a clinician can instead review the evidence for the final primary, the leading alternatives, unresolved discriminative criteria, useful follow-up questions, and the source of finalization. This can expose ambiguity and unsupported claims, but it cannot determine the correct diagnosis automatically.
+For a new case without a gold label, a clinician can instead review the evidence for the final primary, the leading alternatives, unresolved discriminative criteria, useful follow-up questions, and the source of finalization. This can expose ambiguity and unsupported claims, but it cannot determine the correct diagnosis automatically.
 
 \section{Summary}
 
@@ -877,9 +1039,31 @@ The main errors arise from four distinct sources: missing candidates, wrong comm
 
 \section{Main Interpretation}
 
-The main finding is that one accuracy score hides three different questions: whether the reference diagnosis appears in the ranked candidate list, whether the criterion layer finds it compatible with the transcript, and whether the system selects it as the primary diagnosis. On the test set, HiED--DA reaches 0.802 Top-3 Accuracy and 0.518 Top-1 Accuracy. Gold-label retention in the confirmed set is 857 of 915 checker-eligible cases, but the median confirmed set contains six active entries. These values use different denominators and do not form a strict sequence. Together, they show that finding a plausible diagnosis is easier than choosing one final diagnosis.
+The main finding is that one accuracy score hides three different questions: whether the gold label appears in the ranked candidate list, whether the criterion layer finds it compatible with the transcript, and whether the system selects it as the primary diagnosis. On the test set, HiED--DA reaches 0.802 Top-3 Accuracy and 0.518 Top-1 Accuracy. Gold-label retention in the confirmed set is 857 of 915 checker-eligible cases, but the median confirmed set contains six active entries. These values use different denominators and do not form a strict sequence. Together, they show that finding a plausible diagnosis is easier than choosing one final diagnosis.
 
 The external MDD-5k results support the same point more narrowly. In the matched 925-case run, Top-3 Accuracy is 0.8508 and Top-1 Accuracy is 0.5708. This shows that the ranking-to-selection gap remains under a different synthetic data distribution. However, the external analysis does not include the same verification measure and therefore does not reproduce the full internal analysis.
+
+\section{Relation to Prior Psychiatric and Multi-Agent Systems}
+
+Compared with interactive psychiatric agents, HiED deliberately studies fixed-input diagnosis: every method receives the same transcript and cannot ask follow-up questions. Compared with free-form multi-agent debate, HiED separates role-specific generation, criterion checking, deterministic compatibility auditing, and final commitment so that these outputs can be inspected independently. More agents therefore do not automatically imply better commitment. The tested debate and repair methods show that additional reasoning steps can add cost or change execution contracts without improving Top-1 Accuracy. Auditability can still have value without a Top-1 gain because it identifies candidates, unresolved evidence, and finalization sources for human review. The same ranking-to-commitment issue also appears in broader candidate-ranking problems: retrieving or naming a plausible item is easier than choosing the final item under incomplete evidence.
+
+\begin{table}[htbp]
+\centering
+\caption{Discussion matrix linking findings to design implications and boundaries.}
+\label{tab:discussion-matrix}
+\small
+\begin{tabularx}{\textwidth}{@{}p{2.5cm}p{3.1cm}p{3.0cm}p{3.0cm}X@{}}
+\toprule
+Finding & Evidence & Interpretation & Design implication & Boundary\\
+\midrule
+Top-3 exceeds Top-1 & 0.802 vs 0.518 & Candidate generation is easier than commitment & Build explicit comparative selectors & Synthetic benchmark labels\\
+High verification retention & 857/915 & Audit often keeps a gold parent & Use checker trace for review and debugging & Checker states are not clinician labels\\
+NtS lowers Top-1 & 0.490 vs 0.518 & Compatibility is not primacy & Separate audit from final selection & Tested rule only\\
+Repairs lack clear gain & Repair battery & Simple post-hoc selection is insufficient & Need evidence-aware comparison or follow-up questions & Not a proof against all methods\\
+External gap persists & MDD Top-3 vs Top-1 & Selection remains difficult under shift & Test corpus shift and scope separately & Synthetic external corpus\\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \section{Compatibility Is Not the Same as Primary Diagnosis}
 
@@ -887,7 +1071,7 @@ The criterion checker evaluates each diagnosis separately. It asks whether the t
 
 This explains why broad criterion confirmation does not lead directly to a reliable final choice. It also explains the Direct-Answer and Nominate-then-Select result. Replacing the diagnostician's choice with the current logic-based selector lowers Top-1 from 0.518 to 0.490. Nominate-then-Select has higher Exact Match, but it outputs no secondary diagnosis and therefore benefits from the large number of single-label cases. The current criterion track is useful as a high-recall audit, but it is not a better primary selector.
 
-The stage-wise analysis still changes how errors are understood. Missing the reference diagnosis in the shortlist points to candidate generation or retrieval. Finding it in the shortlist but not in the confirmed set points to evidence interpretation or missing information. Finding it in both views but selecting another diagnosis points more directly to comparative selection. These cases require different remedies and cannot be separated by endpoint accuracy alone.
+The stage-wise analysis still changes how errors are understood. Missing the gold label in the ranked candidate list points to candidate generation or retrieval. Finding it in the ranked candidate list but not in the confirmed set points to evidence interpretation or missing information. Finding it in both views but selecting another diagnosis points more directly to comparative selection. These cases require different remedies and cannot be separated by endpoint accuracy alone.
 
 \section{What the Repair Studies Show}
 
@@ -899,9 +1083,9 @@ This is not evidence that the broader method families cannot work. It shows only
 
 \section{Model Error or Missing Information}
 
-The present experiments cannot fully separate two causes of error. First, the transcript may contain enough information, but the model may use it poorly. Second, the transcript may omit the information needed for a unique primary diagnosis. The 284 cases in which the reference diagnosis is in the Top-3 but is not selected show that useful candidate generation has already occurred in many errors. Broad confirmed sets and frequent \texttt{insufficient\_evidence} states also suggest that some cases lack clear discriminating facts, but they do not prove that missing information caused each error.
+The present experiments cannot fully separate two causes of error. First, the transcript may contain enough information, but the model may use it poorly. Second, the transcript may omit the information needed for a unique primary diagnosis. The 284 cases in which the gold label is in the Top-3 but is not selected show that useful candidate generation has already occurred in many errors. Broad confirmed sets and frequent \texttt{insufficient\_\allowbreak{}evidence} states also suggest that some cases lack clear discriminating facts, but they do not prove that missing information caused each error.
 
-A transcript-only human study is needed to separate these causes. Psychiatrists should receive the same transcript and label space as the model. If clinicians also disagree or judge the evidence insufficient, the task or reference label may be the main limit. If clinicians consistently resolve cases that HiED misses, the main problem is more likely the method.
+A transcript-only human study is needed to separate these causes. Psychiatrists should receive the same transcript and label space as the model. If clinicians also disagree or judge the evidence insufficient, the task or gold label may be the main limit. If clinicians consistently resolve cases that HiED misses, the main problem is more likely the method.
 
 \section{Implications for System Design and Use}
 
@@ -918,7 +1102,28 @@ Finally, the Taiwanese setting is the intended use context, not the population v
 
 The evaluation target is agreement with benchmark gold labels after parent-level projection. It is not an independent judgment of the patient's true diagnosis. Parent projection makes two corpora easier to compare but removes subtype detail. Top-1 Accuracy with a gold-label set is also less strict than matching only the first listed diagnosis. Top-1 Accuracy, Top-3 Accuracy, Exact Match, Macro-F1, and Weighted-F1 therefore measure different parts of benchmark performance; none alone measures clinical correctness or safety.
 
-The selection bottleneck is an observed difference among output views, not a proven causal process inside the model. Under Direct-Answer, the primary diagnosis is chosen before the checker creates the audit trace. Top-1 Accuracy and Top-3 Accuracy use all 1,000 test cases, whereas verification retention uses 915 checker-eligible cases. These measures help locate errors but should not be read as one nested funnel. The reference-assisted recovery analysis is likewise an upper bound, not a deployable selector.
+The selection bottleneck is an observed difference among output views, not a proven causal process inside the model. Under Direct-Answer, the primary diagnosis is chosen before the checker creates the audit trace. Top-1 Accuracy and Top-3 Accuracy use all 1,000 test cases, whereas verification retention uses 915 checker-eligible cases. These measures help locate errors but should not be read as one nested funnel. The oracle upper-bound recovery analysis is likewise an upper bound, not a deployable selector.
+
+\begin{table}[htbp]
+\centering
+\caption{Threats to validity and remaining uncertainty.}
+\label{tab:threats-validity}
+\scriptsize
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lllll}
+\toprule
+Threat & Affected claim & Likely direction & Existing mitigation & Remaining uncertainty\\
+\midrule
+Synthetic corpora & Clinical generality & May overestimate robustness & Explicit synthetic-data boundary & Real-patient performance unknown\\
+Train-source held-out split & In-domain estimate & May share generator artifacts & Retrieval/development exclusion & Template or exposure effects possible\\
+Generator/evaluator family dependence & Model-family conclusion & May favor related models & Qwen3 size analysis reported as bounded & Cross-family validity unknown\\
+MDD prompt-budget truncation & External results & May omit useful middle evidence & Deterministic truncation rule & No frozen truncation-impact audit\\
+Non-clinician-validated checker states & Audit interpretation & May overstate evidence quality & States labeled as model outputs & Criterion-level clinical validity pending\\
+Cross-budget debate comparison & Repair conclusions & May confound method and budget & Execution contract reported & Not a matched component ablation\\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
 
 Criterion states are produced by an LLM checker rather than clinicians. The checker may miss negation, duration, or context, and the Compatibility Auditor will carry those errors forward. The audit trace is inspectable and reproducible, but it is not a faithful record of hidden reasoning and has not been clinically validated at the criterion level.
 
@@ -951,16 +1156,34 @@ Future work with patient data will require institutional approval, privacy contr
 
 \section{Conclusions}
 
-This thesis introduced HiED, a modular multi-stage LLM system that separates ranked candidate generation, an evidence-linked criterion audit, and the committed diagnosis. The main result is that these views can disagree. On the internal test set, the reference diagnosis appears in the Top-3 far more often than it is selected as primary, and the criterion layer retains many diagnoses at once. The central problem is therefore not only whether the system can name the correct diagnosis, but whether it can choose it over other plausible diagnoses.
+This thesis introduced HiED, a modular multi-stage LLM system that separates ranked candidate generation, an evidence-linked criterion audit, and the committed diagnosis. The main result is that these views can disagree. On the internal test set, the gold label appears in the Top-3 far more often than it is selected as primary, and the criterion layer retains many diagnoses at once. The central problem is therefore not only whether the system can name the correct diagnosis, but whether it can choose it over other plausible diagnoses.
 
 The tested logic-based selector does not improve Top-1 over Direct-Answer, and the repair methods do not provide a clear and reproducible gain. External synthetic evaluation shows that the ranking-to-selection gap remains under distribution shift, but it does not establish the full internal verification pattern or clinical validity. HiED's strongest contribution is an auditable system and an evaluation method that makes these differences visible.
 
 \section{Answers to the Research Questions}
 
+\begin{table}[htbp]
+\centering
+\caption{Research-question closure.}
+\label{tab:rq-closure}
+\small
+\begin{tabularx}{\textwidth}{@{}p{0.8cm}p{3.0cm}p{4.3cm}X@{}}
+\toprule
+RQ & Answer & Key evidence & Status / boundary\\
+\midrule
+RQ1 & HiED is not yet shown to beat all conventional or ordinary-RAG baselines & HiED--DA 0.518; Single + balanced RAG 0.508; $p=0.391$ & Partial until same-split TF--IDF and ordinary RAG complete\\
+RQ2 & Candidate generation and criterion retention exceed final commitment & Top-3 0.802; retention 857/915; Top-1 0.518 & Joint $D_3/R/S$ table pending\\
+RQ3 & Balanced retrieval helps Single versus no retrieval only & Single 0.466 to balanced RAG 0.508; $p=4.0\times10^{-4}$ & Global RAG and matched HiED retrieval pending\\
+RQ4 & Tested finalization and repairs do not improve DA & NtS, debate, fusion, SC, CISC, pairwise results & Bounded to tested implementations\\
+RQ5 & Main pattern persists across synthetic robustness analyses & Qwen3 size, MDD-5k, scope, and error analyses & Synthetic data and Qwen3-family boundary\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
 \begin{description}[style=nextline,leftmargin=3cm,labelwidth=2.5cm]
 \item[RQ1] The frozen internal evidence compares Single, Single + balanced RAG, and HiED under the same 1,000 cases. Balanced RAG improves Single from 0.466 to 0.508, while HiED--DA reaches 0.518 but is not significantly better than Single + balanced RAG. A same-split TF--IDF baseline and ordinary global-RAG baseline have not yet been completed, so the thesis does not claim that HiED outperforms conventional or ordinary-RAG baselines.
 
-\item[RQ2] The clearest measured gap is between ranked coverage and the committed diagnosis. In 284 of 1,000 internal cases, a reference diagnosis appears in the Top-3 but another diagnosis is committed. The rule-confirmed set retains a reference parent in 857 of 915 eligible cases but contains a median of six entries, showing high retention and limited selectivity. The marginal rates do not replace a complete $D_3/R/S$ joint table.
+\item[RQ2] The clearest measured gap is between Top-3 Accuracy and the committed diagnosis. In 284 of 1,000 internal cases, a gold label appears in the Top-3 but another diagnosis is committed. The rule-confirmed set retains a gold parent in 857 of 915 eligible cases but contains a median of six entries, showing high retention and limited selectivity. The marginal rates do not replace a complete $D_3/R/S$ joint table.
 
 \item[RQ3] Class-balanced retrieval improves the Single pipeline relative to no retrieval. Superiority over ordinary global RAG and the retrieval contribution within a matched HiED pipeline are not established because those runs were not in the original experiment set. They remain post-freeze supplementary analyses.
 
@@ -974,7 +1197,7 @@ The tested logic-based selector does not improve Top-1 over Direct-Answer, and t
 Three steps should come before deployment.
 
 \begin{enumerate}
-    \item \textbf{Validate the target and the audit.} Psychiatrists should review the same transcripts and label space as the model, record acceptable alternatives and missing facts, and judge whether one primary diagnosis is supported. A separate sample should be annotated for criterion status and evidence spans. These studies will show whether errors mainly come from the model, the transcript, the reference label, or the checker.
+    \item \textbf{Validate the target and the audit.} Psychiatrists should review the same transcripts and label space as the model, record acceptable alternatives and missing facts, and judge whether one primary diagnosis is supported. A separate sample should be annotated for criterion status and evidence spans. These studies will show whether errors mainly come from the model, the transcript, the gold label, or the checker.
 
     \item \textbf{Improve selection and evidence collection.} Future selectors should compare diagnoses directly using onset, duration, exclusions, episode history, and symptoms left unexplained by the leading diagnosis. When the transcript lacks a decisive fact, the system should ask a focused question or abstain rather than force a precise answer. Conversational diagnostic systems show that LLMs can collect history~\citep{tu2025conversational}; the next step is to ask the question that best separates the remaining candidates.
 
@@ -983,7 +1206,7 @@ Three steps should come before deployment.
 
 \section{Final Conclusion}
 
-A psychiatric LLM can include the reference diagnosis among its leading candidates and still choose another diagnosis as primary. Criterion checking makes this problem easier to inspect, but broad compatibility does not solve the final comparison. HiED provides an auditable architecture and an evaluation framework that separates these stages. It is not a clinically validated autonomous diagnostic system.
+A psychiatric LLM can include the gold label among its leading candidates and still choose another diagnosis as primary. Criterion checking makes this problem easier to inspect, but broad compatibility does not solve the final comparison. HiED provides an auditable architecture and an evaluation framework that separates these stages. It is not a clinically validated autonomous diagnostic system.
 
 \appendix
 \titleformat{\chapter}[display]{\raggedright\bfseries\LARGE}{Appendix \thechapter}{0.5em}{}
@@ -1026,6 +1249,100 @@ Z71 & Z71 & Counseling & 3 & $\geq$2 total symptoms; exclusion of a diagnosable 
 \endgroup
 
 The fourteen entries collapse to eleven ICD-10 parents. Together with \emph{Others}, they form the twelve scored classes defined in \Cref{sec:gold-conventions}. This appendix reports only the diagnostic profile needed to interpret the main text.
+
+\chapter{System and Inference Configuration}
+\label{app:system-config}
+
+\begin{table}[htbp]
+\centering
+\caption{Compact system and inference configuration.}
+\label{tab:system-config}
+\small
+\begin{tabularx}{\textwidth}{@{}p{3.5cm}X@{}}
+\toprule
+Component & Configuration\\
+\midrule
+Backbone & Qwen3-32B-AWQ; AWQ reduces inference-memory requirements through 4-bit weight quantization\\
+Serving backend & vLLM for model loading and inference serving; not a diagnostic module\\
+Context/output caps & 8,192-token context window and 1,536-token output cap\\
+Decoding & Greedy decoding for the canonical run\\
+Embedding model & BGE-M3 multilingual embedding model for transcript and case vectors\\
+Retrieval index & FAISS vector index with inner-product search over normalized vectors\\
+Retrieval policies & Global Top-5 and class-balanced retrieval use the same index with different selection policies\\
+Structured output & JSON schema, guided decoding where supported, validation, and checker-output recovery\\
+Prompt-budget handling & Deterministic truncation keeps complete beginning and ending turns and marks the omitted middle\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\chapter{Module Input and Output Schemas}
+\label{app:module-schemas}
+
+\begin{table}[htbp]
+\centering
+\caption{Module input and output schemas without full prompts.}
+\label{tab:module-schema-summary}
+\small
+\begin{tabularx}{\textwidth}{@{}p{3.0cm}p{4.8cm}X@{}}
+\toprule
+Module & Main inputs & Main outputs\\
+\midrule
+Diagnostician & Transcript, active profile, optional retrieved examples & Ranked candidate list, primary field, optional comorbid field, rationales\\
+Criterion Checker & Transcript and one active entry's criteria & Criterion states, evidence spans, parse/recovery status\\
+Compatibility Auditor & Checker states and fixed rules & Logic-confirmed diagnoses and rule trace\\
+Finalization & Ranked candidate list, emitted primary, confirmed set, policy & Committed diagnosis and finalization source\\
+Audit Artifacts & Candidate, checker, auditor, and finalization records & Inspectable trace for offline review and failure localization\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\chapter{Supplementary Statistical Evidence}
+\label{app:supplementary-statistics}
+
+\begin{table}[htbp]
+\centering
+\caption{Supplementary statistical evidence retained in this thesis.}
+\label{tab:supplementary-statistics}
+\scriptsize
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lll}
+\toprule
+Evidence item & Retained value & Status\\
+\midrule
+Balanced RAG vs Single & 88 cases corrected only by balanced RAG; 46 corrected only by Single; $p=4.0\times10^{-4}$ & Reported as matched Single retrieval evidence\\
+HiED--DA vs Single + balanced RAG & 60 cases favor HiED; 50 favor Single RAG; $p=0.391$ & Package comparison, not component ablation\\
+Verification retention & 857 of 915 eligible cases; 95\% CI [0.919, 0.951] & Uses checker-eligible denominator\\
+Criterion-state proportions & 48.3\% \texttt{met}, 23.5\% \texttt{not\_met}, 28.3\% \texttt{insufficient\_\allowbreak{}evidence} & Model-generated states, not clinical labels\\
+Pending joint table & Complete $D_3/R/S$ eight-cell table unavailable & Must not be inferred from marginal rates\\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\chapter{Experiment Inventory and Inclusion Decisions}
+\label{app:experiment-inventory}
+
+\begin{table}[htbp]
+\centering
+\caption{Experiment inventory and inclusion decisions.}
+\label{tab:experiment-inventory}
+\scriptsize
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{llll}
+\toprule
+Experiment & Evidence status & Main-text inclusion & Reason\\
+\midrule
+Internal HiED--DA and HiED--NtS & Primary/frozen & Main result and finalization comparison & Same case set and retained outputs\\
+Single and Single + balanced RAG & Primary/frozen & Retrieval and package comparisons & Matched available rows\\
+Qwen3 size analysis & Post-freeze supplementary & Robustness section & Bounded model-family evidence\\
+MDD-5k canonical evaluation & Primary external & External positioning & Synthetic corpus shift\\
+MDD repair matrix & Frozen external repair & External repair table & Same ordered external cases, with execution-contract caveats\\
+Case-neighbor reranking & Exploratory/archived & External selector analysis & Development-selected modes, negative transfer result\\
+Matched TF--IDF and ordinary RAG & Pending & Stated as missing & Required for complete RQ1/RQ3 closure\\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
 
 \renewcommand{\bibname}{References} % IEEE 慣例與 CCU「參考文獻」對齊
 \clearpage\phantomsection
