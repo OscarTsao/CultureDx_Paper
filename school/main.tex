@@ -276,7 +276,7 @@ A fluent explanation is not proof of faithful reasoning. Model-generated chains 
 
 Diagnostic-chain and symptom-based methods make outputs easier to inspect~\citep{chen2025cod,lee2026interpretable,lyu2026depllm}. However, a generated reasoning chain is still another model output. This thesis uses the narrower term \emph{auditability}: an external record that links transcript evidence, criterion states, rule results, and the final output. The record can be checked and replayed, but it does not reveal the model's hidden reasoning or turn checker outputs into clinical ground truth.
 
-Constraint-logic systems are the closest related approach because they translate diagnostic criteria into explicit rules~\citep{kim2025clp}. HiED keeps the learned diagnostician separate from the criterion and rule layer. Under Direct-Answer, the structured layer audits the decision; under Nominate-then-Select, it is tested as a selector. Prior work has not used this separation to compare verification retention with primary selection on Chinese psychiatric transcripts.
+Constraint-logic systems are the closest related approach because they translate diagnostic criteria into explicit rules~\citep{kim2025clp}. HiED keeps the learned diagnostician separate from the criterion and rule layer. Under Direct-Answer, the structured layer audits the decision; under Nominate-then-Select, it is tested as a selector. Prior work has not used this separation to compare gold-label retention with primary selection on Chinese psychiatric transcripts.
 
 \section{Structured Knowledge and Selection}
 
@@ -389,32 +389,57 @@ In this thesis, an \emph{agent} means an LLM call with a distinct prompt and tas
 \section{Running Example}
 \label{sec:running-example}
 
-A short example makes the roles of these outputs easier to distinguish. This is a constructed synthetic example that follows the evaluated schema; it is not a patient record or an exported model trace.
+A short worked example makes the roles of these outputs easier to distinguish. The constructed transcript is schema-faithful and rule-faithful, but it is neither a patient record nor an exported model trace.
 
-The help-seeker reports about two weeks of low mood, loss of interest, fatigue, poor concentration, disturbed sleep, and broad worry. The transcript does not establish that the worry has lasted six months, and it does not clearly show whether anxiety or depressed mood began first.
+\begin{quote}
+\small
+\noindent\textbf{Clinician:} What has been bothering you, and how long has it been happening?\\
+\textbf{Patient:} For about two weeks I have felt down almost every day, and I no longer enjoy the things I usually do.\\
+\textbf{Clinician:} How have you been sleeping and functioning at work?\\
+\textbf{Patient:} I wake very early, feel tired all day, and cannot concentrate.\\
+\textbf{Clinician:} Have you also been worrying?\\
+\textbf{Patient:} Yes. I worry about work and my family, and it is difficult to stop.\\
+\textbf{Clinician:} How long has the worry been present, and did it begin before the low mood?\\
+\textbf{Patient:} I cannot say clearly. It became much worse recently.\\
+\textbf{Clinician:} When you are worrying, does it affect your concentration or sleep?\\
+\textbf{Patient:} Yes. My mind goes blank, and I have trouble falling asleep.\\
+\textbf{Clinician:} Have you had periods of unusually elevated mood or needed very little sleep?\\
+\textbf{Patient:} No.\\
+\textbf{Clinician:} Have you had thoughts of harming yourself?\\
+\textbf{Patient:} No.
+\end{quote}
 
-\begin{table}[htbp]
-\centering
-\caption{Illustrative running example showing intermediate artifacts and finalization policies in the HiED pipeline.}
-\label{tab:running-example}
-\begin{tabularx}{\textwidth}{|p{3.3cm}|X|}
+{\small
+\setlength{\LTcapwidth}{\textwidth}
+\begin{longtable}{|p{3.0cm}|p{5.8cm}|p{4.6cm}|}
+\caption{Worked example linking one constructed transcript to intermediate artifacts and finalization policies. The outputs are derived from the configured study rules, not from clinical adjudication.}
+\label{tab:running-example}\\
 \hline
-\textbf{Stage} & \textbf{Example output and meaning}\\
+\textbf{Pipeline artifact} & \textbf{Constructed output} & \textbf{Evidence visible to the reader}\\
 \hline
-Diagnostician & Ranks F32, F41.1, F41.2, F51, and F39; emits F32 as the primary field.\\
+\endfirsthead
 \hline
-Criterion Checker & Records support for depressive symptoms and partial support for generalized anxiety, while marking anxiety duration as unresolved.\\
+\textbf{Pipeline artifact} & \textbf{Constructed output} & \textbf{Evidence visible to the reader}\\
 \hline
-Deterministic Rule Layer & Confirms F32 under its configured rule and retains F41.1 as a compatible alternative.\\
+\endhead
+Ranked candidates & F32, F41.1, F41.2, F51, F39; emitted primary: F32 & Explicit two-week depressive syndrome with concurrent anxiety-related symptoms\\
 \hline
-Direct-Answer & Keeps the diagnostician's emitted F32 primary. The later audit does not overwrite it.\\
+F32 checker states & A, B1--B3, C4, and C6: \texttt{met}; C3: \texttt{not\_met}; C1, C2, C5, and C7: \texttt{insufficient\_\allowbreak{}evidence} & Duration, mood, anhedonia, fatigue, concentration, and sleep are stated; suicidality is denied; self-esteem, guilt, psychomotor change, and appetite are not discussed\\
 \hline
-Nominate-then-Select & Uses confirmed diagnoses and their ranked order to choose a primary instead of automatically preserving the emitted field.\\
+F41.1 checker states & B3 and B4: \texttt{met}; A, B1, and B2: \texttt{insufficient\_\allowbreak{}evidence} & Anxiety-related concentration and sleep problems are stated, but six-month duration, motor tension, and autonomic overactivity are not established\\
 \hline
-Audit Artifacts & Show that F41.1 was considered and partly supported even if F32 is committed. It cannot determine the clinically correct diagnosis when decisive information is absent.\\
+Compatibility Auditor & F32 confirmed: 3 core criteria and 6 total criteria satisfy the configured 2-core/4-total rule; F41.1 not confirmed: 2 of 4 required criteria are met & F41.1 remains in the ranked differential and audit, but not in the logic-confirmed set\\
 \hline
-\end{tabularx}
-\end{table}
+Direct-Answer & Commits emitted F32 & Checker and rule outputs do not overwrite the emitted primary\\
+\hline
+Nominate-then-Select & Commits F32, the first confirmed diagnosis in the ranked list & The result follows the configured confirmed-set selection rule\\
+\hline
+Audit artifacts & Ranked list, criterion states, confirmed set, unresolved evidence, and finalization source & Competing evidence and missing information remain inspectable without being resolved clinically\\
+\hline
+\end{longtable}
+}
+
+The example separates compatibility from primacy. The transcript supports a depressive syndrome and some anxiety-related symptoms, while the duration and other configured criteria for F41.1 remain unresolved. F41.1 can therefore remain a ranked alternative without being rule-confirmed. The audit makes that competing evidence and missing information visible, but it cannot establish the clinically primary diagnosis without additional information.
 
 \section{Retrieval Strategies}
 \label{sec:retrieval}
@@ -436,26 +461,6 @@ The reference diagnostician is a system specification, not an ablation. It uses 
 Each of the fourteen active entries has one criterion checker based on the study's operational rule set.\ct{Is this ICD 10?} The rules are linked to ICD-10 disorder descriptions~\citep{who2019icd10}, but several thresholds are simplified study rules. Appendix~\ref{app:active-profile} lists the active entries and configured thresholds so readers can distinguish the study implementation from official clinical guidance.
 
 Every checker assigns the three states defined at the start of this chapter.\ct{What 3 states?} It may also return a short transcript span linked to the judgment. The five ranked diagnoses are checked first, followed by the remaining active entries, so every case receives an audit over the same fourteen-entry profile.
-
-\begin{table}[htbp]
-\centering
-\caption{Illustrative criterion-level outputs for the Criterion Checker. The rows are schema-faithful examples, not clinician-validated exported traces.}
-\label{tab:criterion-state-example}
-\small
-\begin{tabularx}{\textwidth}{|p{3.3cm}|X|p{3.0cm}|}
-\hline
-Criterion & Transcript evidence & Checker state\\
-\hline
-Depressed mood & Patient explicitly reports low mood & \texttt{met}\\
-\hline
-Suicidal ideation & Patient explicitly denies suicidal thoughts & \texttt{not\_met}\\
-\hline
-Appetite or weight change & Appetite and weight are not discussed & \texttt{insufficient\_\allowbreak{}evidence}\\
-\hline
-Anxiety duration & Transcript does not establish six months of anxiety & \texttt{insufficient\_\allowbreak{}evidence}\\
-\hline
-\end{tabularx}
-\end{table}
 
 Missing information is not negative evidence. A criterion is \texttt{not\_met} only when the transcript contains evidence against it; otherwise unresolved evidence remains \texttt{insufficient\_\allowbreak{}evidence}.
 
@@ -493,7 +498,7 @@ Runs are checked for case count, valid outputs, parse failures, ranked-output av
 
 The canonical system is configured with fourteen ICD-10 diagnostic entries, listed in Table~\ref{tab:configured-profile-summary}. For evaluation, subtype entries are projected to eleven broader parent labels. For example, panic disorder (F41.0), generalized anxiety disorder (F41.1), and mixed anxiety and depressive disorder (F41.2) are evaluated under the F41 parent label. A case is considered in scope when at least one reference diagnosis is represented in this configured parent-label set. A case is considered out of scope when none of its reference diagnoses is represented in the set. Out-of-scope references are recorded as \emph{Others}. Because the canonical system has neither an \emph{Others} output nor a trained unknown detector, it cannot correctly represent these cases.
 
-For brevity, benchmark-provided diagnosis codes are referred to as \emph{gold labels}. They are dataset annotations rather than independently adjudicated clinical ground truth. For case $x$, $G(x)$ is the deduplicated gold-label set after parent projection. LingxiDiag cases may contain more than one gold parent and do not provide an independently adjudicated unique clinical primary diagnosis. The first-listed gold parent is used only for explicitly single-label descriptive analyses such as the confusion matrix.
+Following standard machine-learning evaluation terminology, benchmark-provided diagnosis codes are referred to as \emph{gold labels}. In this thesis, the term denotes the dataset annotations used for scoring and does not imply an independently adjudicated clinical gold standard. For case $x$, $G(x)$ is the deduplicated gold-label set after parent-level projection. LingxiDiag cases may contain more than one gold parent label, and neither dataset provides an independently adjudicated unique clinical primary diagnosis. The first-listed gold parent is used only for explicitly single-label descriptive analyses such as the confusion matrix.
 
 In the running example from Chapter~\ref{ch:architecture}, F41.1 is scored as F41. If the gold-label set contains F41 and the system emits F32 while ranking F41.1 second, Top-1 is wrong but Top-3 is correct.
 
@@ -601,7 +606,7 @@ Top-1 Accuracy & Committed primary & Primary is in the gold-label set & Was the 
 \hline
 Top-3 Accuracy & Top-three candidate diagnoses & Any top-three candidate is in the gold-label set & Did candidate generation find a gold label?\\
 \hline
-Verification retention & Logic-confirmed set & Any gold parent is confirmed & Did criterion compatibility retain a gold parent?\\
+Gold-label retention & Logic-confirmed set & Any gold parent is confirmed & Did criterion compatibility retain a gold parent?\\
 \hline
 Exact Match & Multilabel output & Predicted set equals gold-label set & Did the complete set match?\\
 \hline
@@ -612,7 +617,7 @@ Weighted-F1 & Parent labels & Class-level F1, frequency weighted & How is averag
 \end{tabularx}
 \end{table}
 
-Top-3 and committed Top-1 are computed over all 1,000 internal test cases. Verification retention (reference-in-confirmed) is computed over the 915 cases with a non-\emph{Others} reference diagnosis and an active Criterion Checker.
+Top-3 and committed Top-1 are computed over all 1,000 internal test cases. Gold-label retention in the logic-confirmed set is computed over the 915 cases with at least one non-\emph{Others} gold parent covered by an active Criterion Checker.
 
 \[
 \mathrm{Top\text{-}1\ Accuracy}=\frac{1}{N}\sum_x \mathbb{1}[p_1(x)\in G(x)],
@@ -638,7 +643,7 @@ R(x)=\mathbb{1}[L(x)\cap G(x)\neq\varnothing],
 \[
 S(x)=\mathbb{1}[p_1(x)\in G(x)],
 \]
-where $L(x)$ is the logic-confirmed parent set. $D_3$ and $S$ use all cases. Verification retention, $R$, is calculated only for cases whose gold-label set contains at least one non-\emph{Others} parent represented by an active Criterion Checker. This checker-eligible subset contains 915 of the 1,000 test cases, whereas Top-1 and Top-3 use all 1,000 cases. The rates therefore have different denominators and should not be interpreted as consecutive stages of one case-level funnel.
+where $L(x)$ is the logic-confirmed parent set. $D_3$ and $S$ use all cases. Gold-label retention, $R$, is calculated only for cases whose gold-label set contains at least one non-\emph{Others} parent represented by an active Criterion Checker. This checker-eligible subset contains 915 of the 1,000 test cases, whereas Top-1 and Top-3 use all 1,000 cases. The rates therefore have different denominators and should not be interpreted as consecutive stages of one case-level funnel.
 
 These indicators ask three simple questions: Was a gold label in the ranked candidate list? Was it supported by the criterion audit? Was it selected as primary? They are analysis views of one recorded output, not a claim that every finalization policy executes the steps in that order.
 
@@ -659,41 +664,37 @@ RQ1 asks how HiED compares with conventional and single-model baselines under th
 
 \begin{table}[htbp]
 \centering
-\caption{Conventional baselines, LLM baselines, the proposed HiED system, and the status of matched internal comparisons.}
+\caption{Systems included in the matched RQ1 comparison. Asterisks denote post-freeze supplementary rows.}
 \label{tab:failure-ladder-rewrite}
-\scriptsize
-\begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{|l|l|l|l|l|l|l|}
+\small
+\begin{tabularx}{\textwidth}{|p{3.0cm}|p{4.4cm}|p{2.5cm}|X|}
 \hline
-System & Retrieval & Ranked Diagnostician & Criterion Checker & Compatibility Auditor & Finalization & Interpretation\\
+System & Decision mechanism & Retrieval & Output contract\\
 \hline
-Majority / class prior & None & No & No & No & Most frequent class & Post-freeze same-split floor\\
+Majority* & Most frequent training-set parent label & None & One parent label\\
 \hline
-TF--IDF + LR & None & No & No & No & Classifier output & Post-freeze same-split baseline\\
+TF--IDF + LR* & Character $n$-gram linear classifier & None & Ranked parent-label scores and predicted label set\\
 \hline
-Single & None & No formal ranking & No & No & Single LLM output & Frozen internal result\\
+Single & One LLM diagnostic call & None & Primary and optional comorbid; no formal ranked differential\\
 \hline
-Single + global RAG & Global Top-5 & No formal ranking & No & No & Single LLM output & Post-freeze matched run\\
+Single + global RAG* & Same Single prompt & Global Top-5 & Same as Single\\
 \hline
-Single + balanced RAG & At most one per parent & No formal ranking & No & No & Single LLM output & Retrieval comparison versus Single\\
+Single + balanced RAG & Same Single prompt & Parent-balanced & Same as Single\\
 \hline
-HiED--DA & None, global, or class-balanced & Yes & Yes & Yes & Diagnostician primary & Frozen balanced run plus post-freeze retrieval variants\\
+HiED--DA & Ranked Diagnostician with criterion-level audit & Parent-balanced & Ranked Top-5, committed primary, optional comorbid, and audit artifacts\\
 \hline
-HiED--NtS & Class-balanced & Yes & Yes & Yes & Criterion-based selection & Closest finalization ablation versus HiED--DA\\
-\hline
-\end{tabular}
-\end{adjustbox}
+\end{tabularx}
 \end{table}
 
-In the running example, TF--IDF + LR uses transcript words only. Single uses one LLM call. Global RAG adds the five nearest training cases without class control. Balanced RAG attempts to provide one relevant example per configured parent label. HiED adds a five-diagnosis ranking, the full criterion-checker set, deterministic rules, and a separate finalization record.
+In this comparison, TF--IDF + LR uses transcript words only. Single uses one LLM call. Global RAG adds the five nearest training cases without class control. Balanced RAG attempts to provide one relevant example per configured parent label. HiED adds a five-diagnosis ranking, the full criterion-checker set, deterministic rules, and a separate finalization record.
 
-The original frozen evidence compares Single, Single + balanced RAG, and HiED--DA. Post-freeze supplementary analyses add the same-split majority and TF--IDF + logistic-regression baselines, Single + global RAG, and matched HiED--DA runs with no, global, and class-balanced retrieval. All use the same 1,000 case IDs and label mapping, but their later status is retained in interpretation.
+The original frozen evidence compares Single, Single + balanced RAG, and HiED--DA. Post-freeze supplementary analyses add the same-split majority and TF--IDF + logistic-regression baselines, Single + global RAG, and matched HiED--DA runs with no, global, and class-balanced retrieval. All use the same 1,000 case IDs and label mapping. Asterisks mark later RQ1 rows; the additional HiED retrieval variants belong to RQ3.
 
 \section{Failure Localization (RQ2)}
 
 RQ2 uses the $D_3$--$R$--$S$ measures defined in Chapter~\ref{ch:data}. They ask whether a gold label appears in the Top-3, appears in the confirmed set when it is checkable, and is selected as the committed diagnosis. Confirmed-set size and criterion-state counts show whether the audit rejects the gold label or keeps many diagnoses at the same time.
 
-The Top-3--Top-1 difference directly counts cases in which a gold label is already ranked but not committed. Verification retention is reported on the separate checker-eligible denominator. A post-freeze case-level analysis supplies the complete eight-cell $D_3/R/S$ joint table for the 915 checker-eligible cases, allowing the conditional retention and selection rates to be reported without combining incompatible marginal denominators.
+The Top-3--Top-1 difference directly counts cases in which a gold label is already ranked but not committed. Gold-label retention is reported on the separate checker-eligible denominator. A post-freeze case-level analysis supplies the complete eight-cell $D_3/R/S$ joint table for the 915 checker-eligible cases, allowing the conditional retention and selection rates to be reported without combining incompatible marginal denominators.
 
 A separate close-cluster analysis estimates how many wrong DA cases might be recoverable if a better rule could choose among similarly supported alternatives. Because this oracle upper-bound analysis uses the gold label to identify recoverable cases, it is an upper bound, not a deployable method or an accuracy estimate.
 
@@ -701,7 +702,23 @@ A separate close-cluster analysis estimates how many wrong DA cases might be rec
 
 RQ3 separates three retrieval conditions: no retrieval, ordinary global Top-5 retrieval, and class-balanced retrieval. A clean ablation holds the model, prompt schema, label space, decoding, checker set, rule layer, and finalization policy fixed while changing only retrieval.
 
-The frozen evidence contains no retrieval versus balanced retrieval for the Single pipeline but not Single + global RAG, HiED without retrieval, or HiED with global RAG. Post-freeze supplementary runs complete these cells. Global Top-5 returns five examples, whereas class-balanced retrieval may return one example per configured parent label; the comparison therefore changes both selection policy and retrieved-example count. It tests the complete retrieval configurations rather than isolating class balancing alone.
+\begin{table}[htbp]
+\centering
+\caption{Matched retrieval conditions used for RQ3.}
+\label{tab:rq3-retrieval-matrix}
+\small
+\begin{tabular}{|l|c|c|c|}
+\hline
+Architecture & No retrieval & Global Top-5 & Parent-balanced\\
+\hline
+Single & $\checkmark$ & $\checkmark$ & $\checkmark$\\
+\hline
+HiED--DA & $\checkmark$ & $\checkmark$ & $\checkmark$\\
+\hline
+\end{tabular}
+\end{table}
+
+Within each architecture, all three conditions use the same model, diagnostic profile, decoding settings, and architecture. The frozen evidence contains no retrieval versus balanced retrieval for the Single pipeline; post-freeze supplementary runs add Single + global RAG and complete all three HiED--DA cells. Global Top-5 returns five examples, whereas parent-balanced retrieval may return one example per configured parent label. The comparison therefore changes both selection policy and retrieved-example count and tests the complete retrieval configurations rather than isolating class balancing alone.
 
 \section{Finalization and Selection Repair (RQ4)}
 
@@ -821,9 +838,9 @@ A separate oracle upper-bound analysis identifies 349 misclassified cases whose 
 \section{Criterion Verification and Finalization}
 \label{sec:criterion-verification}
 
-Among the 915 cases with a non-\emph{Others} gold parent and an active checker, the rule-confirmed set contains a gold parent in 857 cases (0.937; 95\% CI [0.919, 0.951]). The median confirmed set contains six of the fourteen active entries. This shows high reference retention but limited selectivity.
+Among the 915 cases with a non-\emph{Others} gold parent and an active checker, the rule-confirmed set contains a gold parent in 857 cases (0.937; 95\% CI [0.919, 0.951]). The median confirmed set contains six of the fourteen active entries. This shows high gold-label retention but limited selectivity.
 
-The post-freeze joint analysis localizes the remaining gap on the same 915 cases. A gold label is in the Top-3 for 802 cases; among these, 778 also retain a gold label in the confirmed set, giving $P(R\mid D_3)=0.970$. Of the 778 cases with both candidate presence and verification retention, 506 commit a gold label and 272 do not, giving $P(S\mid D_3,R)=0.650$. The 272 cases with $D_3=1$, $R=1$, and $S=0$ directly identify candidate-present, audit-retained non-commitments under the benchmark endpoint.
+The post-freeze joint analysis localizes the remaining gap on the same 915 cases. A gold label is in the Top-3 for 802 cases; among these, 778 also retain a gold label in the confirmed set, giving $P(R\mid D_3)=0.970$. Of the 778 cases with both candidate presence and gold-label retention, 506 commit a gold label and 272 do not, giving $P(S\mid D_3,R)=0.650$. The 272 cases with $D_3=1$, $R=1$, and $S=0$ directly identify candidate-present, audit-retained non-commitments under the benchmark endpoint.
 
 The checker audit records 48.3\% \texttt{met}, 23.5\% \texttt{not\_met}, and 28.3\% \texttt{insufficient\_\allowbreak{}evidence} across 77,999 criterion states. These are model outputs rather than clinician-verified criterion labels, so they describe checker behavior, not clinical accuracy.
 
@@ -1135,7 +1152,7 @@ Finding & Evidence & Interpretation & Design implication & Boundary\\
 \hline
 Top-3 exceeds Top-1 & 0.802 vs 0.518 & Candidate generation is easier than commitment & Build explicit comparative selectors & Synthetic benchmark labels\\
 \hline
-High verification retention & 857/915 & Audit often keeps a gold parent & Use checker trace for review and debugging & Checker states are not clinician labels\\
+High gold-label retention & 857/915 & Audit often keeps a gold parent & Use checker trace for review and debugging & Checker states are not clinician labels\\
 \hline
 NtS lowers Top-1 & 0.490 vs 0.518 & Compatibility is not primacy & Separate audit from final selection & Tested rule only\\
 \hline
@@ -1183,7 +1200,7 @@ Finally, the Taiwanese setting is the intended use context, not the population v
 
 The evaluation target is agreement with benchmark gold labels after parent-level projection. It is not an independent judgment of the patient's true diagnosis. Parent projection makes two corpora easier to compare but removes subtype detail. Top-1 Accuracy with a gold-label set is also less strict than matching only the first listed diagnosis. Top-1 Accuracy, Top-3 Accuracy, Exact Match, Macro-F1, and Weighted-F1 therefore measure different parts of benchmark performance; none alone measures clinical correctness or safety.
 
-The selection bottleneck is an observed difference among output views, not a proven causal process inside the model. Under Direct-Answer, the primary diagnosis is chosen before the checker creates the audit trace. Top-1 Accuracy and Top-3 Accuracy use all 1,000 test cases, whereas verification retention uses 915 checker-eligible cases. These measures help locate errors but should not be read as one nested funnel. The oracle upper-bound recovery analysis is likewise an upper bound, not a deployable selector.
+The selection bottleneck is an observed difference among output views, not a proven causal process inside the model. Under Direct-Answer, the primary diagnosis is chosen before the checker creates the audit trace. Top-1 Accuracy and Top-3 Accuracy use all 1,000 test cases, whereas gold-label retention uses 915 checker-eligible cases. These measures help locate errors but should not be read as one nested funnel. The oracle upper-bound recovery analysis is likewise an upper bound, not a deployable selector.
 
 \begin{table}[htbp]
 \centering
@@ -1433,7 +1450,7 @@ Single balanced vs global & 34 cases favor balanced; 43 favor global; adjusted $
 \hline
 HiED retrieval family & none/global/balanced Top-1: 0.510/0.524/0.518; all adjusted $p\geq0.359$ & No significant paired retrieval difference\\
 \hline
-Verification retention & 857 of 915 eligible cases; 95\% CI [0.919, 0.951] & Uses checker-eligible denominator\\
+Gold-label retention & 857 of 915 eligible cases; 95\% CI [0.919, 0.951] & Uses checker-eligible denominator\\
 \hline
 $D_3/R/S$ joint table & 000/001/010/011/100/101/110/111: 34/0/79/0/12/12/272/506 & Post-freeze case-level analysis, $N=915$\\
 \hline
