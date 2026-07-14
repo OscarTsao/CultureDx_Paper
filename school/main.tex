@@ -147,22 +147,34 @@ Finally, I thank my family for their unwavering support and
 encouragement.
 \chapter*{List of Abbreviations}
 \addcontentsline{toc}{chapter}{List of Abbreviations}
-\begin{longtable}{p{3cm}p{10cm}}
-\toprule Abbreviation & Meaning\\ \midrule
+\begin{longtable}{|p{3cm}|p{10cm}|}
+\hline Abbreviation & Meaning\\ \hline
 AI & Artificial intelligence\\
+\hline
 CISC & Confidence-informed self-consistency\\
+\hline
 DA & Direct-Answer\\
+\hline
 ICD-10 & International Classification of Diseases, Tenth Revision\\
+\hline
 LLM & Large language model\\
+\hline
 NtS & Nominate-then-Select\\
+\hline
 DTV & Diagnose-then-Verify\\
+\hline
 BGE-M3 & Multilingual embedding/retrieval model (BAAI General Embedding, M3)\\
+\hline
 FAISS & Facebook AI Similarity Search (vector-index library)\\
+\hline
 AWQ & Activation-aware Weight Quantization\\
+\hline
 RAG & Retrieval-augmented generation\\
+\hline
 TF--IDF & Term frequency--inverse document frequency\\
+\hline
 vLLM & High-throughput LLM inference and serving framework\\
-\bottomrule
+\hline
 \end{longtable}
 \clearpage
 \tableofcontents
@@ -237,16 +249,20 @@ Most psychiatric studies report final diagnostic accuracy, consultation quality,
 \label{tab:related-work-matrix}
 \scriptsize
 \begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{lllllll}
-\toprule
+\begin{tabular}{|l|l|l|l|l|l|l|}
+\hline
 Study family / representative systems & Input setting & Interactive questioning & Ranked differential & Criterion grounding & Multi-agent & Stage-wise evaluation\\
-\midrule
+\hline
 Psychiatric LLM diagnosis & vignettes or records & varies & limited & varies & limited & usually final answer only\\
+\hline
 Interactive agents & dialogue & yes & varies & not always explicit & yes & consultation or final diagnosis metrics\\
+\hline
 Record/transcript diagnosis & fixed input & no & not always reported & limited & varies & usually endpoint accuracy\\
+\hline
 Constraint or symptom logic & structured evidence & no & varies & explicit & limited & criterion outputs may be inspectable\\
+\hline
 HiED & fixed transcript & no & yes & explicit checker states & role-specific modules & candidate generation, criterion verification, and commitment on the same cases\\
-\bottomrule
+\hline
 \end{tabular}
 \end{adjustbox}
 \end{table}
@@ -292,16 +308,20 @@ This thesis therefore uses five research questions:
 \caption{Research-question map. ``Partial'' means that a required matched control has not yet been run.}
 \label{tab:rq-map}
 \small
-\begin{tabularx}{\textwidth}{@{}p{0.8cm}p{3.1cm}p{2.8cm}p{4.2cm}p{2.3cm}@{}}
-\toprule
+\begin{tabularx}{\textwidth}{|p{0.8cm}|p{3.1cm}|p{2.8cm}|p{4.2cm}|p{2.3cm}|}
+\hline
 RQ & Comparison & Primary outcome & Main evidence & Status\\
-\midrule
+\hline
 RQ1 & Baselines, Single systems, and HiED & Top-1 Accuracy and F1 & Available matched rows in \Cref{tab:ladder-rewrite} & Partial\\
+\hline
 RQ2 & Candidate, verification, and commitment views & Top-3 Accuracy, verification retention, committed diagnosis & Marginal $D_3$, $R$, and $S$ summaries & Partial joint-table gap\\
+\hline
 RQ3 & No retrieval, global RAG, and class-balanced RAG & Top-1 Accuracy under matched pipelines & No-retrieval versus balanced Single & Partial\\
+\hline
 RQ4 & DA, NtS, and repair methods & Paired Top-1 Accuracy and flips & Finalization and repair battery & Answered for tested implementations\\
+\hline
 RQ5 & Model size, MDD-5k, scope, and error groups & Stability across analyses & Size, external, scope, and audit summaries & Bounded\\
-\bottomrule
+\hline
 \end{tabularx}
 \end{table}
 
@@ -329,18 +349,24 @@ The diagnostician prompt contains four readable parts: the task and the fixed li
 \caption{Functions and interfaces of the blocks shown in Figure~\ref{fig:pipeline-thesis-rewrite}.}
 \label{tab:fig31-block-functions}
 \small
-\begin{tabularx}{\textwidth}{@{}p{2.8cm}p{3.0cm}p{4.1cm}X@{}}
-\toprule
+\begin{tabularx}{\textwidth}{|p{2.8cm}|p{3.0cm}|p{4.1cm}|X|}
+\hline
 Block & Main input & Function & Output and downstream use\\
-\midrule
+\hline
 Transcript Input & Speaker-labeled transcript & Preserves turn order, applies the fixed prompt-budget rule, and attaches the active profile & Supplies the Diagnostician and Criterion Checker prompts\\
+\hline
 Similar-Case Retriever & Transcript and training index & Finds prompt-side examples; retrieved cases go only to the Diagnostician & Optional examples, never direct finalization evidence\\
+\hline
 Diagnostician & Transcript, profile, and optional retrieved examples & Produces a ranked differential diagnosis and emitted primary & Ranked candidate list, primary field, optional comorbid field\\
+\hline
 Criterion Checker & Transcript and active entry criteria & Assigns \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_\allowbreak{}evidence} states & Criterion trace for audit and deterministic compatibility rules\\
+\hline
 Compatibility Auditor & Checker states and fixed rules & Deterministic rule application over each active diagnosis & Logic-confirmed diagnoses and rule trace\\
+\hline
 Committed Diagnosis & Ranked candidate list, emitted primary, confirmed set, and policy & Applies DA or NtS finalization & Final primary diagnosis depends on the selected finalization policy\\
+\hline
 Audit Artifacts & Candidates, checker states, rules, and finalization source & Records inspectable intermediate outputs & Offline review only; Audit Artifacts do not feed back into the Direct-Answer commitment\\
-\bottomrule
+\hline
 \end{tabularx}
 \end{table}
 
@@ -402,15 +428,18 @@ Every checker assigns the three states defined at the start of this chapter.\ct{
 \caption{Illustrative criterion-level outputs for the Criterion Checker. The rows are schema-faithful examples, not clinician-validated exported traces.}
 \label{tab:criterion-state-example}
 \small
-\begin{tabularx}{\textwidth}{@{}p{3.3cm}X p{3.0cm}@{}}
-\toprule
+\begin{tabularx}{\textwidth}{|p{3.3cm}|X|p{3.0cm}|}
+\hline
 Criterion & Transcript evidence & Checker state\\
-\midrule
+\hline
 Depressed mood & Patient explicitly reports low mood & \texttt{met}\\
+\hline
 Suicidal ideation & Patient explicitly denies suicidal thoughts & \texttt{not\_met}\\
+\hline
 Appetite or weight change & Appetite and weight are not discussed & \texttt{insufficient\_\allowbreak{}evidence}\\
+\hline
 Anxiety duration & Transcript does not establish six months of anxiety & \texttt{insufficient\_\allowbreak{}evidence}\\
-\bottomrule
+\hline
 \end{tabularx}
 \end{table}
 
@@ -455,15 +484,18 @@ The study uses two synthetic Chinese psychiatric dialogue datasets. LingxiDiagBe
 \label{tab:dataset-contract}
 \scriptsize
 \begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{lrl llll}
-\toprule
+\begin{tabular}{|l|r|l|l|l|l|l|}
+\hline
 Dataset / split & $N$ & Role & Used for selection? & In retrieval index? & Label treatment & Transcript handling\\
-\midrule
+\hline
 LingxiDiag training/retrieval & 13,000 & Retrieval corpus & No & Yes & Parent-projected gold labels & Original transcript text\\
+\hline
 Public validation/development & 1,000 & Prompt/rule selection & Yes & No & Development-only gold labels & Original transcript text\\
+\hline
 Held-out internal test & 1,000 & Main in-domain evaluation & No & No & Test gold-label set & Fixed-input transcript\\
+\hline
 MDD-5k external evaluation & 925 & Synthetic external evaluation & No & No & Full, in-scope, and subset gold labels & Joined rounds; prompt-budget truncation when needed\\
-\bottomrule
+\hline
 \end{tabular}
 \end{adjustbox}
 \end{table}
@@ -478,14 +510,16 @@ The accessible data contained 14,000 training cases and 1,000 public validation 
 \centering
 \caption{Summary of the LingxiDiag training-source, public-validation, and internal-test roles used in this thesis.}
 \label{tab:data-roles-rewrite}
-\begin{tabularx}{\textwidth}{@{}p{3.2cm}rX@{}}
-\toprule
+\begin{tabularx}{\textwidth}{|p{3.2cm}|r|X|}
+\hline
 Split & $N$ & Use\\
-\midrule
+\hline
 Training / retrieval corpus & 13,000 & Builds the case-retrieval index; not used as a scored test set\\
+\hline
 Public validation / development split & 1,000 & Selects prompts, rules, and analysis settings\\
+\hline
 Internal test split & 1,000 & Reports the main in-domain results after prompts, rules, and evaluation settings were fixed\\
-\bottomrule
+\hline
 \end{tabularx}
 \end{table}
 
@@ -512,25 +546,36 @@ Chapter~\ref{ch:architecture} introduced ICD-10 and the fixed fourteen-entry pro
 \label{tab:class-distribution}
 \small
 \begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{llrrr}
-\toprule
+\begin{tabular}{|l|l|r|r|r|}
+\hline
 Code & Plain-language diagnosis & Internal test & MDD in-scope & MDD out-of-scope\\
-\midrule
+\hline
 F20 & Schizophrenia & 5 & 3 & 0\\
+\hline
 F31 & Bipolar affective disorder & 9 & 11 & 0\\
+\hline
 F32 & Depressive episode & 365 & 410 & 0\\
+\hline
 F39 & Unspecified mood disorder & 60 & 64 & 0\\
+\hline
 F41 & Anxiety disorders & 358 & 313 & 0\\
+\hline
 F42 & Obsessive-compulsive disorder & 25 & 13 & 0\\
+\hline
 F43 & Stress-related disorders & 11 & 7 & 0\\
+\hline
 F45 & Somatoform disorders & 8 & 7 & 0\\
+\hline
 F51 & Nonorganic sleep disorders & 36 & 18 & 0\\
+\hline
 F98 & Other behavioral and emotional disorders & 30 & 24 & 0\\
+\hline
 Z71 & Counseling without a specific disorder & 8 & 8 & 0\\
+\hline
 Others & Outside the active parent set & 85 & 0 & 47\\
-\midrule
+\hline
  & Total & 1000 & 878 & 47\\
-\bottomrule
+\hline
 \end{tabular}
 \end{adjustbox}
 \end{table}
@@ -556,17 +601,22 @@ Because a case may contain more than one gold label, Top-$k$ Accuracy counts a c
 \caption{Metric contract for the main output views.}
 \label{tab:metric-contract}
 \small
-\begin{tabularx}{\textwidth}{@{}p{2.3cm}p{2.7cm}p{2.2cm}p{3.4cm}X@{}}
-\toprule
+\begin{tabularx}{\textwidth}{|p{2.3cm}|p{2.7cm}|p{2.2cm}|p{3.4cm}|X|}
+\hline
 Measure & Output view & Denominator & Correct when & Question answered\\
-\midrule
+\hline
 Top-1 Accuracy & Committed primary & All evaluated cases & Primary is in the gold-label set & Was the final diagnosis acceptable under benchmark labels?\\
+\hline
 Top-3 Accuracy & Top-three candidate diagnoses & All evaluated cases with a ranked output & Any top-three candidate is in the gold-label set & Did candidate generation find a gold label?\\
+\hline
 Verification retention & Logic-confirmed set & Checker-eligible cases & Any gold parent is confirmed & Did criterion compatibility retain a gold parent?\\
+\hline
 Exact Match & Multilabel output & All evaluated cases & Predicted set equals gold-label set & Did the complete set match?\\
+\hline
 Macro-F1 & Parent labels & All evaluated cases & Class-level F1, equal class weight & How are rare and frequent classes balanced?\\
+\hline
 Weighted-F1 & Parent labels & All evaluated cases & Class-level F1, frequency weighted & How is average label performance weighted by support?\\
-\bottomrule
+\hline
 \end{tabularx}
 \end{table}
 
@@ -621,18 +671,24 @@ RQ1 asks how HiED compares with conventional and single-model baselines under th
 \label{tab:failure-ladder-rewrite}
 \scriptsize
 \begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{lllllll}
-\toprule
+\begin{tabular}{|l|l|l|l|l|l|l|}
+\hline
 System & Retrieval & Ranked Diagnostician & Criterion Checker & Compatibility Auditor & Finalization & Interpretation\\
-\midrule
+\hline
 Majority / class prior & None & No & No & No & Most frequent class & Same-split floor pending\\
+\hline
 TF--IDF + LR & None & No & No & No & Classifier output & Development/transfer result only\\
+\hline
 Single & None & No formal ranking & No & No & Single LLM output & Frozen internal result\\
+\hline
 Single + global RAG & Global Top-5 & No formal ranking & No & No & Single LLM output & Pending matched run\\
+\hline
 Single + balanced RAG & At most one per parent & No formal ranking & No & No & Single LLM output & Retrieval comparison versus Single\\
+\hline
 HiED--DA & Class-balanced & Yes & Yes & Yes & Diagnostician primary & Package comparison versus Single + balanced RAG\\
+\hline
 HiED--NtS & Class-balanced & Yes & Yes & Yes & Criterion-based selection & Closest finalization ablation versus HiED--DA\\
-\bottomrule
+\hline
 \end{tabular}
 \end{adjustbox}
 \end{table}
@@ -666,17 +722,22 @@ Four additional repair families test different explanations for the gap:
 \caption{Selection-repair execution contracts. Debate, self-consistency, and CISC follow the method families in \citet{du2024debate}, \citet{wang2023selfconsistency}, and \citet{taubenfeld2025cisc}.}
 \label{tab:repair-contract-matrix}
 \small
-\begin{tabularx}{\textwidth}{@{}p{2.5cm}p{2.0cm}p{1.9cm}p{2.0cm}p{2.0cm}X@{}}
-\toprule
+\begin{tabularx}{\textwidth}{|p{2.5cm}|p{2.0cm}|p{1.9cm}|p{2.0cm}|p{2.0cm}|X|}
+\hline
 Repair & Regenerates candidate ranking & Reuses checker trace & Changes finalization only & Context budget & Interpretation\\
-\midrule
+\hline
 Pairwise full run & Yes & No & No & Standard & Tests a regenerated local comparison, not an isolated finalizer\\
+\hline
 Pairwise controlled replay & No & Yes & Yes & Standard & Cleanest test of the downstream pairwise rule\\
+\hline
 Debate & Yes & No & No & Larger when required & Two-view ranking reconciliation with transcript summary for both advocates\\
+\hline
 Deterministic fusion & No & Yes & Yes & Standard & Fixed rule over rank and criterion support\\
+\hline
 SC & Yes & No & No & Standard & Tests whether sampled diagnostician outputs contain a stable vote\\
+\hline
 CISC & Yes & No & No & Standard & Confidence-weighted sampled commitment test\\
-\bottomrule
+\hline
 \end{tabularx}
 \end{table}
 
@@ -723,15 +784,18 @@ The main results use the 1,000-case test set. Supporting checker and model-size 
 \caption{Available matched results on the 1,000-case test set. Top-1 and Top-3 denote Top-1 Accuracy and Top-3 Accuracy against benchmark gold labels. Single-model rows without a real ranked differential have no reported Top-3 value; matched TF--IDF and global-RAG results remain pending supplementary analyses.}
 \label{tab:ladder-rewrite}
 \begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{lccccc}
-\toprule
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
 System & Top-1 & Top-3 & Exact Match & Macro-F1 & Weighted-F1\\
-\midrule
+\hline
 Single & 0.466 & --- & 0.017 & 0.183 & 0.426\\
+\hline
 Single + balanced RAG & 0.508 & --- & 0.011 & 0.192 & 0.433\\
+\hline
 HiED--NtS & 0.490 & 0.802 & 0.437 & 0.181 & 0.408\\
+\hline
 HiED--DA & \textbf{0.518} & \textbf{0.802} & 0.409 & 0.178 & 0.434\\
-\bottomrule
+\hline
 \end{tabular}
 \end{adjustbox}
 \end{table}
@@ -764,19 +828,26 @@ DA and Nominate-then-Select (NtS) use matched upstream components and differ mai
 \caption{Internal selection-repair evidence. Deltas are percentage points relative to DA.}
 \label{tab:repair-battery-rewrite}
 \begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{p{3.0cm}p{3.3cm}ccc}
-\toprule
+\begin{tabular}{|p{3.0cm}|p{3.3cm}|c|c|c|}
+\hline
 Intervention & Evidence form & Top-1 & $\Delta$ & Interpretation\\
-\midrule
+\hline
 DA reference & frozen internal-test run & 0.518 & --- & reference\\
+\hline
 Pairwise, full run & independent execution & 0.524 & +0.6 pp & not isolated\\
+\hline
 Pairwise, controlled replay & frozen DA outputs & 0.518 & 0.0 pp & no committed flips\\
+\hline
 Pairwise, forced override & forced finalization & 0.443 & -7.5 pp & harmful\\
+\hline
 Debate & frozen internal-test run & 0.485 & -3.3 pp & negative\\
+\hline
 Deterministic fusion (E3) & pre-selected frozen rule & 0.514 & -0.4 pp & net flip $-4$\\
+\hline
 SC $K=5$ & summary-level evidence & 0.514 & -0.4 pp & no gain\\
+\hline
 CISC $K=5$ & summary-level evidence & 0.517 & -0.1 pp & no gain\\
-\bottomrule
+\hline
 \end{tabular}
 \end{adjustbox}
 \end{table}
@@ -789,15 +860,18 @@ The independent pairwise run is slightly above DA, but it regenerates upstream o
 \centering
 \caption{Post-freeze Qwen3 size analysis on the internal case set.}
 \label{tab:size-ladder-rewrite}
-\begin{tabular}{lccc}
-\toprule
+\begin{tabular}{|l|c|c|c|}
+\hline
 Backbone & Single & HiED & Difference\\
-\midrule
+\hline
 4B & 0.143 & 0.538 & +0.395\\
+\hline
 8B & 0.175 & 0.520 & +0.345\\
+\hline
 14B & 0.391 & 0.497 & +0.106\\
+\hline
 32B & 0.465 & 0.518 & +0.053\\
-\bottomrule
+\hline
 \end{tabular}
 \end{table}
 
@@ -818,16 +892,20 @@ Its largest errors are F41$\rightarrow$F32 (178), F39$\rightarrow$F32 (43), \emp
 \caption{Chapter-end evidence summary for the in-domain results.}
 \label{tab:results-evidence-summary}
 \small
-\begin{tabularx}{\textwidth}{@{}p{2.5cm}p{2.6cm}p{3.4cm}p{3.2cm}X@{}}
-\toprule
+\begin{tabularx}{\textwidth}{|p{2.5cm}|p{2.6cm}|p{3.4cm}|p{3.2cm}|X|}
+\hline
 Question & Main estimate & Statistical evidence & Supported conclusion & Remaining gap\\
-\midrule
+\hline
 Balanced retrieval vs no retrieval & 0.508 vs 0.466 & 88 vs 46 discordant cases; $p=4.0\times10^{-4}$ & Tested balanced retrieval helps Single & Ordinary RAG and matched HiED retrieval pending\\
+\hline
 HiED package vs matched Single RAG & 0.518 vs 0.508 & 60 vs 50 discordant cases; $p=0.391$ & No significant package gain & Not a one-component ablation\\
+\hline
 Top-3 vs Top-1 & 0.802 vs 0.518 & 284 candidate-present non-commitments & Ranking headroom is large & Needs complete $D_3/R/S$ joint table\\
+\hline
 Verification retention/selectivity & 857/915 = 0.937 & 95\% CI [0.919, 0.951]; median six confirmed entries & High retention, limited selectivity & Clinician validation of states pending\\
+\hline
 Repair outcomes & No clear gain & Negative or non-significant tested repairs & Simple selection repairs do not solve DA errors & Matched RQ3/RQ1 controls pending\\
-\bottomrule
+\hline
 \end{tabularx}
 \end{table}
 
@@ -847,18 +925,24 @@ MDD-5k provides a second Chinese synthetic corpus with different dialogue genera
 \label{tab:external-inventory}
 \scriptsize
 \begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{llrllll}
-\toprule
+\begin{tabular}{|l|l|r|l|l|l|l|}
+\hline
 Analysis & Sample & $N$ & Configuration & Selection data & Baseline & Purpose\\
-\midrule
+\hline
 Canonical external positioning & MDD full set & 925 & Canonical HiED--DA & None from MDD & Majority & Synthetic transfer positioning\\
+\hline
 In-scope evaluation & MDD in-scope & 878 & Canonical profile & None from MDD & In-scope majority & Separates output coverage from selection\\
+\hline
 F32/F41 subset & Restricted MDD subset & 490 & Canonical profile & None from MDD & F32 majority & Coarse depression--anxiety discrimination\\
+\hline
 Lexical transfer & MDD holdout & 185 & TF--IDF + LR & 740 MDD training cases & Corpus-specific classifiers & Tests lexical portability\\
+\hline
 Scope retargeting & Raw-dataset sample & 58 & Expanded profile & Configuration only & Original profile & Tests output-space expansion\\
+\hline
 Matched repair matrix & Ordered MDD cases & 925 & Repair variants & Frozen protocols & Matched DA & Tests repair transfer\\
+\hline
 Case-neighbor reranking & MDD cases & 925 & BGE-M3 modes & Lingxi development data & S0\_hied & Tests neighbor-label selection\\
-\bottomrule
+\hline
 \end{tabular}
 \end{adjustbox}
 \end{table}
@@ -869,15 +953,18 @@ Case-neighbor reranking & MDD cases & 925 & BGE-M3 modes & Lingxi development da
 \centering
 \caption{Internal reference and canonical external synthetic results.}
 \label{tab:external-summary-rewrite}
-\begin{tabular}{lrrrr}
-\toprule
+\begin{tabular}{|l|r|r|r|r|}
+\hline
 Set & $N$ & Top-1 & Maj. baseline & Macro-F1\\
-\midrule
+\hline
 LingxiDiag internal test split & 1000 & 0.518 & --- & 0.178\\
+\hline
 MDD full set & 925 & 0.5805 & 0.4432 & 0.2287\\
+\hline
 MDD in-scope & 878 & 0.6116 & 0.4670 & 0.2649\\
+\hline
 MDD F32/F41 & 490 & 0.9224 & 0.7837 & 0.9055\\
-\bottomrule
+\hline
 \end{tabular}
 \end{table}
 
@@ -898,15 +985,18 @@ A configuration-only retargeting experiment expands the active profile from four
 \centering
 \caption{Cross-corpus TF--IDF with logistic-regression results. The LingxiDiag-to-LingxiDiag row uses the public validation/development split and is not the frozen test-set baseline required for RQ1. The MDD evaluation cells use the same 185-case holdout.}
 \label{tab:lexical-transfer-rewrite}
-\begin{tabular}{llrcl}
-\toprule
+\begin{tabular}{|l|l|r|c|l|}
+\hline
 Training corpus & Evaluation corpus & $N$ & Top-1 & Interpretation\\
-\midrule
+\hline
 LingxiDiag & LingxiDiag & 1000 & 0.610 & within-corpus fit\\
+\hline
 LingxiDiag & MDD-5k & 185 & 0.049 & transfer collapse\\
+\hline
 MDD-5k & LingxiDiag & 1000 & 0.485 & reverse degradation\\
+\hline
 MDD-5k & MDD-5k & 185 & 0.692 & within-MDD fit\\
-\bottomrule
+\hline
 \end{tabular}
 \end{table}
 
@@ -919,20 +1009,28 @@ The LingxiDiag-to-LingxiDiag result is a within-corpus lexical probe and must no
 \caption{Selection-repair results on the same ordered 925 MDD cases. The matched DA baseline (0.5708) is distinct from the canonical positioning run (0.5805).}
 \label{tab:mdd-repair-rewrite}
 \begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{lcccp{4.7cm}}
-\toprule
+\begin{tabular}{|l|c|c|c|p{4.7cm}|}
+\hline
 Method & Top-1 & $\Delta$ vs DA & McNemar $p$ & Execution contract\\
-\midrule
+\hline
 Direct-Answer & 0.5708 & --- & --- & Full pipeline, 8,192 tokens\\
+\hline
 Nominate-then-Select & 0.4065 & $-0.1643$ & $1.7\times10^{-25}$ & Full pipeline\\
+\hline
 Pairwise differential & 0.5708 & $0.0000$ & $1.00$ & Full pipeline\\
+\hline
 Debate$^{\dagger}$ & \debatemddtopone & \debatemdddelta & \debatemddp & 24,576-token rerun\\
+\hline
 Self-Consistency ($K=3$) & 0.5784 & $+0.0076$ & $0.44$ & Diagnostician-only resampling\\
+\hline
 Self-Consistency ($K=5$) & 0.5816 & $+0.0108$ & $0.23$ & Diagnostician-only resampling\\
+\hline
 CISC ($K=3$) & 0.5784 & $+0.0076$ & $0.44$ & Confidence-weighted resampling\\
+\hline
 CISC ($K=5$) & 0.5816 & $+0.0108$ & $0.23$ & Confidence-weighted resampling\\
+\hline
 Deterministic fusion & 0.4714 & $-0.0995$ & $2.3\times10^{-14}$ & Frozen post-hoc rule\\
-\bottomrule
+\hline
 \end{tabular}
 \end{adjustbox}
 \end{table}
@@ -947,15 +1045,18 @@ The matched DA run has Top-3 of 0.8508 and Top-1 of 0.5708, leaving a 28.0-point
 \centering
 \caption{Archived BGE-M3 case-neighbor reranking on MDD-5k ($N=925$). Deltas use that experiment's S0\_hied baseline of 0.5957.}
 \label{tab:case-knn-rewrite}
-\begin{tabular}{lcccc}
-\toprule
+\begin{tabular}{|l|c|c|c|c|}
+\hline
 Mode & Lingxi dev Top-1 & MDD Top-1 & $\Delta$ & McNemar $p$\\
-\midrule
+\hline
 Dense & 0.530 & 0.5081 & $-0.0876$ & $5.1\times10^{-6}$\\
+\hline
 Sparse & 0.531 & 0.5384 & $-0.0573$ & $3.2\times10^{-4}$\\
+\hline
 ColBERT & 0.506 & 0.5092 & $-0.0865$ & $3.3\times10^{-6}$\\
+\hline
 Hybrid & 0.527 & 0.5254 & $-0.0703$ & $7.3\times10^{-5}$\\
-\bottomrule
+\hline
 \end{tabular}
 \end{table}
 
@@ -978,17 +1079,22 @@ This chapter groups recurring error patterns seen in the retained results. The c
 \caption{Main error archetypes and their evidence.}
 \label{tab:error-archetypes-rewrite}
 \begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{p{3.2cm}p{4.8cm}p{6.6cm}}
-\toprule
+\begin{tabular}{|p{3.2cm}|p{4.8cm}|p{6.6cm}|}
+\hline
 Archetype & Retained evidence & Interpretation\\
-\midrule
+\hline
 Depression--anxiety boundary & F41$\rightarrow$F32 = 178; F32$\rightarrow$F41 = 24 & Overlapping symptoms often end in disagreement about which diagnosis is primary\\
+\hline
 Unresolved evidence & 28.3\% of criterion states are \texttt{insufficient\_}\allowbreak\texttt{evidence} & Important duration, course, exclusion, or comorbidity facts may be missing from the transcript\\
+\hline
 Reference present, wrong commitment & 284 of 1,000 cases have a gold parent in Top-3 but not as final primary & Candidate detection does not guarantee correct selection\\
+\hline
 Single-label conservatism & NtS Exact Match 0.437 vs. DA 0.409, but Top-1 0.490 vs. 0.518 & Suppressing secondary labels can improve set match while worsening primary selection\\
+\hline
 Scope-limited diagnosis & 47 of 925 external cases are out of scope; retarget recovery is 0/58 & Making a label available is different from learning to select it\\
+\hline
 Frequent-label attraction & Macro-F1 0.178 vs. weighted-F1 0.434; many errors end at F32 & Weighted results can hide weak performance on less frequent classes\\
-\bottomrule
+\hline
 \end{tabular}
 \end{adjustbox}
 \end{table}
@@ -998,16 +1104,20 @@ Frequent-label attraction & Macro-F1 0.178 vs. weighted-F1 0.434; many errors en
 \caption{Failure-localization decision table for audit interpretation.}
 \label{tab:failure-localization}
 \small
-\begin{tabularx}{\textwidth}{@{}p{2.0cm}p{1.7cm}p{1.8cm}p{2.0cm}p{3.0cm}X@{}}
-\toprule
+\begin{tabularx}{\textwidth}{|p{2.0cm}|p{1.7cm}|p{1.8cm}|p{2.0cm}|p{3.0cm}|X|}
+\hline
 Scope & Gold in Top-3 & Gold confirmed & Committed primary correct & Failure location & Appropriate remedy\\
-\midrule
+\hline
 Out of scope & No & Not applicable & No & Output scope & Expand and validate the diagnostic profile\\
+\hline
 In scope & No & No or yes & No & Candidate generation/retrieval & Improve ranking, retrieval, or transcript representation\\
+\hline
 In scope & Yes & No & No & Verification or missing evidence & Improve checker evidence use or collect missing facts\\
+\hline
 In scope & Yes & Yes & No & Final selection & Improve comparative selection among compatible diagnoses\\
+\hline
 In scope & Any & Any & Yes & No primary error & Use audit for review, not correction\\
-\bottomrule
+\hline
 \end{tabularx}
 \end{table}
 
@@ -1052,16 +1162,20 @@ Compared with interactive psychiatric agents, HiED deliberately studies fixed-in
 \caption{Discussion matrix linking findings to design implications and boundaries.}
 \label{tab:discussion-matrix}
 \small
-\begin{tabularx}{\textwidth}{@{}p{2.5cm}p{3.1cm}p{3.0cm}p{3.0cm}X@{}}
-\toprule
+\begin{tabularx}{\textwidth}{|p{2.5cm}|p{3.1cm}|p{3.0cm}|p{3.0cm}|X|}
+\hline
 Finding & Evidence & Interpretation & Design implication & Boundary\\
-\midrule
+\hline
 Top-3 exceeds Top-1 & 0.802 vs 0.518 & Candidate generation is easier than commitment & Build explicit comparative selectors & Synthetic benchmark labels\\
+\hline
 High verification retention & 857/915 & Audit often keeps a gold parent & Use checker trace for review and debugging & Checker states are not clinician labels\\
+\hline
 NtS lowers Top-1 & 0.490 vs 0.518 & Compatibility is not primacy & Separate audit from final selection & Tested rule only\\
+\hline
 Repairs lack clear gain & Repair battery & Simple post-hoc selection is insufficient & Need evidence-aware comparison or follow-up questions & Not a proof against all methods\\
+\hline
 External gap persists & MDD Top-3 vs Top-1 & Selection remains difficult under shift & Test corpus shift and scope separately & Synthetic external corpus\\
-\bottomrule
+\hline
 \end{tabularx}
 \end{table}
 
@@ -1110,17 +1224,22 @@ The selection bottleneck is an observed difference among output views, not a pro
 \label{tab:threats-validity}
 \scriptsize
 \begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{lllll}
-\toprule
+\begin{tabular}{|l|l|l|l|l|}
+\hline
 Threat & Affected claim & Likely direction & Existing mitigation & Remaining uncertainty\\
-\midrule
+\hline
 Synthetic corpora & Clinical generality & May overestimate robustness & Explicit synthetic-data boundary & Real-patient performance unknown\\
+\hline
 Train-source held-out split & In-domain estimate & May share generator artifacts & Retrieval/development exclusion & Template or exposure effects possible\\
+\hline
 Generator/evaluator family dependence & Model-family conclusion & May favor related models & Qwen3 size analysis reported as bounded & Cross-family validity unknown\\
+\hline
 MDD prompt-budget truncation & External results & May omit useful middle evidence & Deterministic truncation rule & No frozen truncation-impact audit\\
+\hline
 Non-clinician-validated checker states & Audit interpretation & May overstate evidence quality & States labeled as model outputs & Criterion-level clinical validity pending\\
+\hline
 Cross-budget debate comparison & Repair conclusions & May confound method and budget & Execution contract reported & Not a matched component ablation\\
-\bottomrule
+\hline
 \end{tabular}
 \end{adjustbox}
 \end{table}
@@ -1167,16 +1286,20 @@ The tested logic-based selector does not improve Top-1 over Direct-Answer, and t
 \caption{Research-question closure.}
 \label{tab:rq-closure}
 \small
-\begin{tabularx}{\textwidth}{@{}p{0.8cm}p{3.0cm}p{4.3cm}X@{}}
-\toprule
+\begin{tabularx}{\textwidth}{|p{0.8cm}|p{3.0cm}|p{4.3cm}|X|}
+\hline
 RQ & Answer & Key evidence & Status / boundary\\
-\midrule
+\hline
 RQ1 & HiED is not yet shown to beat all conventional or ordinary-RAG baselines & HiED--DA 0.518; Single + balanced RAG 0.508; $p=0.391$ & Partial until same-split TF--IDF and ordinary RAG complete\\
+\hline
 RQ2 & Candidate generation and criterion retention exceed final commitment & Top-3 0.802; retention 857/915; Top-1 0.518 & Joint $D_3/R/S$ table pending\\
+\hline
 RQ3 & Balanced retrieval helps Single versus no retrieval only & Single 0.466 to balanced RAG 0.508; $p=4.0\times10^{-4}$ & Global RAG and matched HiED retrieval pending\\
+\hline
 RQ4 & Tested finalization and repairs do not improve DA & NtS, debate, fusion, SC, CISC, pairwise results & Bounded to tested implementations\\
+\hline
 RQ5 & Main pattern persists across synthetic robustness analyses & Qwen3 size, MDD-5k, scope, and error analyses & Synthetic data and Qwen3-family boundary\\
-\bottomrule
+\hline
 \end{tabularx}
 \end{table}
 
@@ -1219,32 +1342,45 @@ The canonical benchmark profile contains fourteen active entries. F41 and F43 co
 \begingroup
 \small
 \setlength{\tabcolsep}{3pt}
-\begin{longtable}{>{\raggedright\arraybackslash}p{1.8cm}>{\raggedright\arraybackslash}p{1.0cm}>{\raggedright\arraybackslash}p{3.5cm}>{\centering\arraybackslash}p{0.8cm}>{\raggedright\arraybackslash}p{7.0cm}}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{1.8cm}|>{\raggedright\arraybackslash}p{1.0cm}|>{\raggedright\arraybackslash}p{3.5cm}|>{\centering\arraybackslash}p{0.8cm}|>{\raggedright\arraybackslash}p{7.0cm}|}
 \caption{Active diagnostic profile and configured confirmation rules.}
 \label{tab:active-profile}\\
-\toprule
+\hline
 Active entry & Parent & Name & \# criteria & Confirmation rule\\
-\midrule
+\hline
 \endfirsthead
-\toprule
+\hline
 Active entry & Parent & Name & \# criteria & Confirmation rule\\
-\midrule
+\hline
 \endhead
 F20 & F20 & Schizophrenia & 8 & $\geq$1 first-rank symptom, or $\geq$2 other symptoms; duration $\geq$1 month\\
+\hline
 F31 & F31 & Bipolar affective disorder & 8 & $\geq$2 episodes, at least one manic\\
+\hline
 F32 & F32 & Depressive episode & 11 & $\geq$2 core symptoms and $\geq$4 total symptoms; duration $\geq$2 weeks\\
+\hline
 F39 & F39 & Unspecified mood disorder & 6 & $\geq$3 total symptoms met\\
+\hline
 F41.0 & F41 & Panic disorder & 5 & $\geq$3 attacks/month, $\geq$4 symptoms per attack\\
+\hline
 F41.1 & F41 & Generalized anxiety disorder & 5 & $\geq$4 symptoms; duration $\geq$6 months\\
+\hline
 F41.2 & F41 & Mixed anxiety and depressive disorder & 4 & $\geq$2 total symptoms; anxious and depressive criteria required\\
+\hline
 F42 & F42 & Obsessive-compulsive disorder & 4 & duration $\geq$2 weeks; distress or functional impairment required\\
+\hline
 F43.1 & F43 & Post-traumatic stress disorder & 4 & trauma exposure required; onset within 6 months\\
+\hline
 F43.2 & F43 & Adjustment disorders & 5 & onset within 1 month of stressor; duration $\leq$6 months\\
+\hline
 F45 & F45 & Somatoform disorders & 5 & $\geq$2 somatic symptom groups; duration $\geq$2 years\\
+\hline
 F51 & F51 & Nonorganic sleep disorders & 4 & $\geq$3 nights/week; duration $\geq$1 month\\
+\hline
 F98 & F98 & Other behavioral and emotional disorders & 6 & $\geq$3 total symptoms met\\
+\hline
 Z71 & Z71 & Counseling & 3 & $\geq$2 total symptoms; exclusion of a diagnosable disorder required\\
-\bottomrule
+\hline
 \end{longtable}
 \endgroup
 
@@ -1258,20 +1394,28 @@ The fourteen entries collapse to eleven ICD-10 parents. Together with \emph{Othe
 \caption{Compact system and inference configuration.}
 \label{tab:system-config}
 \small
-\begin{tabularx}{\textwidth}{@{}p{3.5cm}X@{}}
-\toprule
+\begin{tabularx}{\textwidth}{|p{3.5cm}|X|}
+\hline
 Component & Configuration\\
-\midrule
+\hline
 Backbone & Qwen3-32B-AWQ; AWQ reduces inference-memory requirements through 4-bit weight quantization\\
+\hline
 Serving backend & vLLM for model loading and inference serving; not a diagnostic module\\
+\hline
 Context/output caps & 8,192-token context window and 1,536-token output cap\\
+\hline
 Decoding & Greedy decoding for the canonical run\\
+\hline
 Embedding model & BGE-M3 multilingual embedding model for transcript and case vectors\\
+\hline
 Retrieval index & FAISS vector index with inner-product search over normalized vectors\\
+\hline
 Retrieval policies & Global Top-5 and class-balanced retrieval use the same index with different selection policies\\
+\hline
 Structured output & JSON schema, guided decoding where supported, validation, and checker-output recovery\\
+\hline
 Prompt-budget handling & Deterministic truncation keeps complete beginning and ending turns and marks the omitted middle\\
-\bottomrule
+\hline
 \end{tabularx}
 \end{table}
 
@@ -1283,16 +1427,20 @@ Prompt-budget handling & Deterministic truncation keeps complete beginning and e
 \caption{Module input and output schemas without full prompts.}
 \label{tab:module-schema-summary}
 \small
-\begin{tabularx}{\textwidth}{@{}p{3.0cm}p{4.8cm}X@{}}
-\toprule
+\begin{tabularx}{\textwidth}{|p{3.0cm}|p{4.8cm}|X|}
+\hline
 Module & Main inputs & Main outputs\\
-\midrule
+\hline
 Diagnostician & Transcript, active profile, optional retrieved examples & Ranked candidate list, primary field, optional comorbid field, rationales\\
+\hline
 Criterion Checker & Transcript and one active entry's criteria & Criterion states, evidence spans, parse/recovery status\\
+\hline
 Compatibility Auditor & Checker states and fixed rules & Logic-confirmed diagnoses and rule trace\\
+\hline
 Finalization & Ranked candidate list, emitted primary, confirmed set, policy & Committed diagnosis and finalization source\\
+\hline
 Audit Artifacts & Candidate, checker, auditor, and finalization records & Inspectable trace for offline review and failure localization\\
-\bottomrule
+\hline
 \end{tabularx}
 \end{table}
 
@@ -1305,16 +1453,20 @@ Audit Artifacts & Candidate, checker, auditor, and finalization records & Inspec
 \label{tab:supplementary-statistics}
 \scriptsize
 \begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{lll}
-\toprule
+\begin{tabular}{|l|l|l|}
+\hline
 Evidence item & Retained value & Status\\
-\midrule
+\hline
 Balanced RAG vs Single & 88 cases corrected only by balanced RAG; 46 corrected only by Single; $p=4.0\times10^{-4}$ & Reported as matched Single retrieval evidence\\
+\hline
 HiED--DA vs Single + balanced RAG & 60 cases favor HiED; 50 favor Single RAG; $p=0.391$ & Package comparison, not component ablation\\
+\hline
 Verification retention & 857 of 915 eligible cases; 95\% CI [0.919, 0.951] & Uses checker-eligible denominator\\
+\hline
 Criterion-state proportions & 48.3\% \texttt{met}, 23.5\% \texttt{not\_met}, 28.3\% \texttt{insufficient\_\allowbreak{}evidence} & Model-generated states, not clinical labels\\
+\hline
 Pending joint table & Complete $D_3/R/S$ eight-cell table unavailable & Must not be inferred from marginal rates\\
-\bottomrule
+\hline
 \end{tabular}
 \end{adjustbox}
 \end{table}
@@ -1328,18 +1480,24 @@ Pending joint table & Complete $D_3/R/S$ eight-cell table unavailable & Must not
 \label{tab:experiment-inventory}
 \scriptsize
 \begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{llll}
-\toprule
+\begin{tabular}{|l|l|l|l|}
+\hline
 Experiment & Evidence status & Main-text inclusion & Reason\\
-\midrule
+\hline
 Internal HiED--DA and HiED--NtS & Primary/frozen & Main result and finalization comparison & Same case set and retained outputs\\
+\hline
 Single and Single + balanced RAG & Primary/frozen & Retrieval and package comparisons & Matched available rows\\
+\hline
 Qwen3 size analysis & Post-freeze supplementary & Robustness section & Bounded model-family evidence\\
+\hline
 MDD-5k canonical evaluation & Primary external & External positioning & Synthetic corpus shift\\
+\hline
 MDD repair matrix & Frozen external repair & External repair table & Same ordered external cases, with execution-contract caveats\\
+\hline
 Case-neighbor reranking & Exploratory/archived & External selector analysis & Development-selected modes, negative transfer result\\
+\hline
 Matched TF--IDF and ordinary RAG & Pending & Stated as missing & Required for complete RQ1/RQ3 closure\\
-\bottomrule
+\hline
 \end{tabular}
 \end{adjustbox}
 \end{table}
