@@ -1262,27 +1262,19 @@ The tested logic-based selector does not improve Top-1 over Direct-Answer, and t
 
 \section{Answers to the Research Questions}
 
-\begin{table}[htbp]
-\centering
-\caption{Research-question closure.}
-\label{tab:rq-closure}
-\small
-\begin{tabularx}{\textwidth}{|p{0.8cm}|p{3.0cm}|p{4.3cm}|X|}
-\hline
-RQ & Answer & Key evidence & Status / boundary\\
-\hline
-RQ1 & HiED does not outperform the strongest matched baseline & TF--IDF 0.632 vs balanced HiED 0.518; adjusted $p=3.14\times10^{-9}$ & Closed with matched controls\\
-\hline
-RQ2 & Candidate generation and criterion retention exceed final commitment & 272 eligible cases have $D_3=1,R=1,S=0$ & Closed for benchmark outputs; no clinical criterion validation\\
-\hline
-RQ3 & Retrieval helps Single, but balancing does not beat global retrieval and no HiED retrieval gain is significant & Single: 0.466/0.517/0.508; HiED: 0.510/0.524/0.518 & Closed with matched configuration comparisons\\
-\hline
-RQ4 & Criterion-derived re-selection lowers Top-1 across all tested retrieval strategies & DA vs NtS-primary losses of 0.028--0.029; all Holm-adjusted $p<0.001$ & Controlled replay; no equivalence claim for interactions\\
-\hline
-RQ5 & Main pattern persists across synthetic robustness analyses & Qwen3 size, MDD-5k, scope, and error analyses & Synthetic data and Qwen3-family boundary\\
-\hline
-\end{tabularx}
-\end{table}
+This section summarizes how the final experiments answer the five research questions introduced in Chapter~\ref{ch:related}. Each answer is limited to benchmark performance on synthetic Chinese psychiatric transcripts and should not be interpreted as evidence of clinical effectiveness.
+
+\begin{description}[style=nextline,leftmargin=3cm,labelwidth=2.5cm]
+\item[RQ1] HiED does not outperform the strongest matched baseline on the internal test set. TF--IDF with logistic regression reaches 0.632 Top-1, compared with 0.518 for HiED--DA with parent-balanced retrieval (Holm-adjusted $p=3.14\times10^{-9}$); HiED's contribution is therefore auditability and failure localization rather than benchmark accuracy leadership.
+
+\item[RQ2] Candidate generation and criterion retention are substantially stronger than final commitment. Among the checker-eligible cases, 272 have a gold parent in both the Top-3 and the rule-confirmed set but not in the committed diagnosis ($D_3=1,R=1,S=0$), although the model-generated criterion states have not been independently clinician validated.
+
+\item[RQ3] Retrieval improves the Single baseline, but parent-balanced retrieval does not outperform ordinary global Top-5 retrieval, and no tested retrieval strategy produces a significant gain for HiED--DA. Top-1 across no, global, and parent-balanced retrieval is 0.466/0.517/0.508 for Single and 0.510/0.524/0.518 for HiED--DA.
+
+\item[RQ4] Criterion-derived primary re-selection does not improve Direct-Answer. NtS-primary lowers Top-1 by 0.028--0.029 under all three retrieval strategies (all Holm-adjusted $p<0.001$), while the tested pairwise, debate, fusion, and sampling-based repairs provide no clear and reproducible matched improvement; the interaction results do not establish equivalence among retrieval conditions.
+
+\item[RQ5] The ranking-to-commitment gap and the lack of a simple selection repair persist across Qwen3 model sizes, MDD-5k cross-corpus evaluation, diagnostic-scope expansion, and the major error groups. These analyses support synthetic robustness within the tested configurations, not transfer to unrelated model families or real clinical populations.
+\end{description}
 
 \section{Future Work}
 
