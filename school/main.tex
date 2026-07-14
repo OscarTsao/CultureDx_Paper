@@ -109,7 +109,7 @@ Differential diagnosis from an initial psychiatric consultation transcript is a 
 
 Endpoint accuracy shows whether the final answer is correct, but not whether the system failed to generate the reference diagnosis, failed to find supporting criterion-level evidence, or generated a reasonable candidate but selected another disorder as primary. A single score therefore hides the difference among candidate generation, criterion verification, and primary selection.
 
-To study and localize these failures, we propose HiED, a hybrid multi-agent framework for Chinese psychiatric initial-consultation transcripts. A diagnostician agent produces a ranked differential diagnosis. Criterion-checking agents examine each candidate against ICD-10 criteria and transcript evidence, and a deterministic rule layer summarizes the checks. The final primary diagnosis is recorded separately. HiED also produces a criterion-level audit trace that shows the candidates, supporting evidence, unresolved information, and final choice.
+To study and localize these failures, we propose HiED, a hybrid multi-agent framework for Chinese psychiatric initial-consultation transcripts. A diagnostician agent produces a ranked differential diagnosis. Criterion-checking agents examine each candidate against ICD-10 criteria and transcript evidence, and a Compatibility Auditor summarizes the checks. The final primary diagnosis is recorded separately. HiED also produces a criterion-level audit trace that shows the candidates, supporting evidence, unresolved information, and final choice.
 
 On a held-out internal test set of 1,000 cases, Top-3 Accuracy was 0.802 and Top-1 Accuracy was 0.518 against benchmark-provided diagnosis codes. This gap shows that the system may generate a reference diagnosis as a leading candidate yet commit another disorder as its final output. We call this operational pattern the primary-selection bottleneck; it is not the same as error against an independently adjudicated unique clinical primary diagnosis.
 
@@ -201,7 +201,7 @@ To make these failure modes observable, this thesis introduces HiED, a hybrid mu
 
 HiED has five main parts. It formats the dialogue while preserving speaker turns, retrieves class-balanced examples, asks an LLM diagnostician for a ranked differential and a primary diagnosis, checks each active diagnosis against operationalized ICD-10 criteria, and applies deterministic rules to form a logic-confirmed set. Each criterion is marked as \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_evidence}.
 
-The selected Direct-Answer policy keeps the diagnostician's primary diagnosis and uses outputs from the Criterion Checker and deterministic rule layer as audit artifacts. The alternative Nominate-then-Select policy uses the same upstream outputs but allows the logic-confirmed set to determine a different committed diagnosis. Their comparison tests whether criterion compatibility is more useful as an audit or as a selector. Chapter~\ref{ch:architecture} describes the architecture in detail.
+The selected Direct-Answer policy keeps the diagnostician's primary diagnosis and uses outputs from the Criterion Checker and Compatibility Auditor as audit artifacts. The alternative Nominate-then-Select policy uses the same upstream outputs but allows the logic-confirmed set to determine a different committed diagnosis. Their comparison tests whether criterion compatibility is more useful as an audit or as a selector. Chapter~\ref{ch:architecture} describes the architecture in detail.
 
 \section{Contributions}
 
@@ -366,13 +366,13 @@ Each of the fourteen active entries has one criterion checker based on the study
 
 Every checker assigns the three states defined at the start of this chapter.\ct{What 3 states?} It may also return a short transcript span linked to the judgment. The five ranked diagnoses are checked first, followed by the remaining active entries, so every case receives an audit over the same fourteen-entry profile.
 
-The deterministic rule layer applies the stored threshold for each active entry. A rule may require all criteria, a minimum number of core and total criteria, a symptom count, or particular criterion groups. The same checker trace always produces the same confirmed set. Confirmation means compatibility with the configured study rule; it does not mean that the diagnosis is clinically correct or should be primary. Several diagnoses may be confirmed in the same case.
+The Compatibility Auditor applies the stored threshold for each active entry. A rule may require all criteria, a minimum number of core and total criteria, a symptom count, or particular criterion groups. The same checker trace always produces the same confirmed set. Confirmation means compatibility with the configured study rule; it does not mean that the diagnosis is clinically correct or should be primary. Several diagnoses may be confirmed in the same case.
 
 Checker states are model-generated and have not been validated as clinician ground truth. They create an evidence-linked record that can be inspected and replayed, but they do not prove that the criterion judgments or evidence spans are correct.
 
 \section{Finalization Policies}
 
-Under Direct-Answer (DA), the diagnostician's primary field becomes the committed diagnosis; the first ranked diagnosis is used only when that field is missing. An optional comorbidity is retained when it differs from the primary. Outputs from the Criterion Checker and deterministic rule layer do not replace the DA committed diagnosis.
+Under Direct-Answer (DA), the diagnostician's primary field becomes the committed diagnosis; the first ranked diagnosis is used only when that field is missing. An optional comorbidity is retained when it differs from the primary. Outputs from the Criterion Checker and Compatibility Auditor do not replace the DA committed diagnosis.
 
 Nominate-then-Select (NtS) uses criterion compatibility to choose the committed diagnosis. It selects the first confirmed diagnosis in the five-entry ranking. If none is confirmed, it selects another confirmed active entry with the highest met ratio. If no diagnosis is confirmed, it falls back to the first ranked diagnosis. NtS does not emit a comorbid diagnosis.
 
@@ -920,7 +920,7 @@ The evaluation target is agreement with benchmark gold labels after parent-level
 
 The selection bottleneck is an observed difference among output views, not a proven causal process inside the model. Under Direct-Answer, the primary diagnosis is chosen before the checker creates the audit trace. Top-1 Accuracy and Top-3 Accuracy use all 1,000 test cases, whereas verification retention uses 915 checker-eligible cases. These measures help locate errors but should not be read as one nested funnel. The reference-assisted recovery analysis is likewise an upper bound, not a deployable selector.
 
-Criterion states are produced by an LLM checker rather than clinicians. The checker may miss negation, duration, or context, and the deterministic rule layer will carry those errors forward. The audit trace is inspectable and reproducible, but it is not a faithful record of hidden reasoning and has not been clinically validated at the criterion level.
+Criterion states are produced by an LLM checker rather than clinicians. The checker may miss negation, duration, or context, and the Compatibility Auditor will carry those errors forward. The audit trace is inspectable and reproducible, but it is not a faithful record of hidden reasoning and has not been clinically validated at the criterion level.
 
 \section{Internal and Statistical Limits}
 
