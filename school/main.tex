@@ -945,35 +945,6 @@ NtS-primary and NtS-single use identical primaries, but preserving the DA second
 
 \section{Selection-Repair Evidence}
 
-\begin{table}[htbp]
-\centering
-\caption{Internal selection-repair evidence. Deltas are percentage points relative to DA.}
-\label{tab:repair-battery-rewrite}
-\begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{|p{3.0cm}|p{3.3cm}|c|c|c|}
-\hline
-Intervention & Evidence form & Top-1 & $\Delta$ & Interpretation\\
-\hline
-Direct-Answer (DA) & frozen internal-test run & 0.518 & --- & reference\\
-\hline
-Pairwise comparison---independent run & independent execution & 0.524 & +0.6 pp & not isolated\\
-\hline
-Pairwise comparison---controlled replay & frozen DA outputs & 0.518 & 0.0 pp & no committed flips\\
-\hline
-Pairwise comparison---forced override & forced finalization & 0.443 & -7.5 pp & harmful\\
-\hline
-Two-view debate & frozen internal-test run & 0.485 & -3.3 pp & negative\\
-\hline
-Deterministic fusion & pre-selected frozen rule & 0.514 & -0.4 pp & net flip $-4$\\
-\hline
-Self-consistency (SC), $K=5$ & summary-level evidence & 0.514 & -0.4 pp & no gain\\
-\hline
-Confidence-informed self-consistency (CISC), $K=5$ & summary-level evidence & 0.517 & -0.1 pp & no gain\\
-\hline
-\end{tabular}
-\end{adjustbox}
-\end{table}
-
 The independent pairwise run is slightly above DA, but it regenerates upstream outputs and does not isolate the pairwise decision. Replaying the decision on frozen DA outputs produces no committed flips, while forcing the override is harmful. Debate and the pre-selected fusion rule are also negative. The internal SC and CISC values are weaker because only summary-level evidence is retained, but neither exceeds DA. Overall, none of the tested implementations gives a clear and attributable Top-1 improvement.
 
 \section{Post-Freeze Qwen3 Size Robustness}
