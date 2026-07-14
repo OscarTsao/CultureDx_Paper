@@ -452,7 +452,7 @@ The codebase can also perform ordinary global Top-5 nearest-neighbor retrieval. 
 
 \section{Diagnostician}
 
-The canonical diagnostician uses Qwen3-32B-AWQ served through vLLM. Its input contains the transcript, the active diagnostic profile, and optional retrieved examples. Its prompt requests a ranked candidate list containing five ordered diagnoses from the active profile, a short reason for each, one primary field chosen from the first three, and at most one separate comorbid field. In clinical prose this is a ranked differential diagnosis; as a formal artifact it is the ranked candidate list. The primary field and the ranked list are stored separately. In the running example, F41.1 can therefore remain in the Top-3 even though F32 is emitted as primary.
+The canonical diagnostician uses Qwen3-32B with 4-bit Activation-aware Weight Quantization (AWQ). Its input contains the transcript, the active diagnostic profile, and optional retrieved examples. Its prompt requests a ranked candidate list containing five ordered diagnoses from the active profile, a short reason for each, one primary field chosen from the first three, and at most one separate comorbid field. In clinical prose this is a ranked differential diagnosis; as a formal artifact it is the ranked candidate list. The primary field and the ranked list are stored separately. In the running example, F41.1 can therefore remain in the Top-3 even though F32 is emitted as primary.
 
 The reference diagnostician is a system specification, not an ablation. It uses greedy decoding and does not request a calibrated probability or an abstention decision. Confidence-based sampling, calibration, and selective-output ideas are evaluated only as later repair or future-work directions.\ct{Is this an ablation study? If so, why in Appendix?}
 
@@ -472,13 +472,15 @@ Checker states are model-generated and have not been validated as clinician grou
 
 \section{Finalization Policies}
 
+HiED defines two historical finalization policies over the same upstream ranked candidates, criterion states, and logic-confirmed set. Direct-Answer (DA) is the reference policy and preserves the diagnostician's emitted decision. Nominate-then-Select (NtS) is the alternative policy used to test whether criterion-derived compatibility can improve the committed primary diagnosis. A post-freeze analytic replay further separates the effect of primary re-selection from the historical policy's single-label output contract.
+
 Under Direct-Answer (DA), the diagnostician's primary field becomes the committed diagnosis; the first ranked diagnosis is used only when that field is missing. An optional comorbidity is retained when it differs from the primary. Outputs from the Criterion Checker and Compatibility Auditor do not replace the DA committed diagnosis.
 
 Nominate-then-Select (NtS) uses criterion compatibility to choose the committed diagnosis. It selects the first confirmed diagnosis in the five-entry ranking. If none is confirmed, it selects another confirmed active entry with the highest met ratio. If no diagnosis is confirmed, it falls back to the first ranked diagnosis.
 
 The historical NtS output used in the frozen architecture ladder then emits only that re-selected primary. It is therefore denoted \emph{NtS-single}: it changes both the primary-selection rule and the cardinality of the emitted diagnostic set. A post-freeze controlled replay introduces a second analytic contract, \emph{NtS-primary}. It applies the same replayed primary-selection rule while preserving the DA comorbidity after parent projection, except when it duplicates the newly selected primary. NtS-primary is not a deployed configuration; it isolates primary re-selection from secondary-label suppression. NtS-primary and NtS-single consequently have identical committed primaries and Top-1 values, while their set-level metrics can differ.
 
-DA, NtS-single, and NtS-primary reuse the same ranked candidates and checker traces. The post-freeze comparison therefore tests whether criterion-based re-selection improves the committed diagnosis without conflating that question with output cardinality. Pairwise comparison and debate are separate selection-repair methods with different execution contracts.
+DA and historical NtS-single reuse the same ranked candidates and checker traces, but differ in both the primary-selection rule and secondary-label emission: DA preserves an optional comorbid diagnosis, whereas NtS-single emits only the re-selected primary. The NtS-primary controlled replay preserves the DA secondary output when isolating primary re-selection. Pairwise comparison and debate are selection-repair methods rather than finalization policies of the reference system.
 
 \section{Audit Artifacts}
 
@@ -488,7 +490,7 @@ This record follows the definition of auditability in Section~\ref{sec:auditabil
 
 \section{Implementation Details}
 
-The canonical model is the Qwen3-32B 4-bit AWQ checkpoint. AWQ reduces inference-memory requirements through weight quantization, and no canonical system component fine-tunes model weights. vLLM is the inference and serving backend for loading the model and generating outputs; it is not a diagnostic component and does not alter prompts, criteria, rules, or finalization. The system uses greedy decoding, an 8,192-token context window, a 1,536-token output cap, structured JSON output, guided decoding where supported, schema validation, and checker-output recovery for duplicate or invalid criterion items.
+The canonical checkpoint uses 4-bit AWQ to reduce model-memory requirements and allow the 32-billion-parameter backbone to be served locally without changing the prompt, diagnostic scope, or finalization logic. No canonical system component fine-tunes model weights. vLLM is the inference and serving backend for loading the model and generating outputs; it is not a diagnostic component and does not alter prompts, criteria, rules, or finalization. The system uses greedy decoding, an 8,192-token context window, a 1,536-token output cap, structured JSON output, guided decoding where supported, schema validation, and checker-output recovery for duplicate or invalid criterion items.
 
 Runs are checked for case count, valid outputs, parse failures, ranked-output availability, and candidate validity. A checker-output recovery occurs when an LLM response can be parsed but contains duplicate or invalid criterion items. The parser removes those items and retains the valid criterion records. This is a structured-output schema-adherence warning rather than a hard parse failure.
 
@@ -660,6 +662,37 @@ Reported $p$-values are interpreted together with the discordant counts and effe
 
 This chapter maps each experiment to the five research questions. It separates conventional baselines, failure localization, retrieval ablation, selection repair, and robustness. It also distinguishes the original frozen evidence from post-freeze supplementary controls.
 
+\section{Experimental Overview and Evidence Lineage}
+\label{sec:freeze-discipline}
+
+The chapter combines experiments fixed before the main internal evaluation with later controls added after the original results were known. These evidence classes answer different questions and are not presented as one retrospectively frozen confirmatory design. Table~\ref{tab:evidence-lineage} states the timing, analysis population, and role of each experiment family. The same status labels are used in the design and results tables that follow.
+
+\begin{table}[htbp]
+\centering
+\caption{Evidence lineage of the main experiment families. Post-freeze analyses supplement rather than replace the frozen evidence.}
+\label{tab:evidence-lineage}
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{|p{3.5cm}|p{3.4cm}|p{3.0cm}|p{3.2cm}|p{4.2cm}|}
+\hline
+Experiment family & Timing & Analysis population & Evidence status & Role\\
+\hline
+Original architecture ladder & Fixed before internal-test evaluation & Internal test, $N=1{,}000$ & Frozen primary evidence & Main system characterization\\
+\hline
+Matched baselines and retrieval controls & Added after the original results & Same internal test, $N=1{,}000$ & Post-freeze supplementary & Complete the missing RQ1 and RQ3 controls\\
+\hline
+$D_3$--$R$--$S$ joint analysis & Post-freeze case-level analysis & Checker-eligible subset, $N=915$ & Supplementary decomposition & Resolve the unequal-denominator issue in RQ2\\
+\hline
+Finalization-by-retrieval factorial & Post-freeze deterministic replay & Same internal test, $N=1{,}000$ & Supplementary causal contrast & Isolate primary re-selection across retrieval conditions\\
+\hline
+MDD-5k evaluation & Applied to the external synthetic corpus & MDD-5k matched cases & External synthetic evaluation & Examine transfer beyond the internal corpus\\
+\hline
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+Internal test cases were excluded from retrieval and development decisions. Configurations fixed before the main internal evaluation are treated as primary evidence. Matched TF--IDF, ordinary global RAG, the completed retrieval matrix, the joint $D_3$--$R$--$S$ analysis, and the finalization factorial are explicitly post-freeze. They close missing controls or decompose recorded outputs, but they are not retroactively described as part of the original confirmatory set.
+
 \section{Baseline Comparison (RQ1)}
 
 RQ1 asks how HiED compares with conventional and single-model baselines under the same split, label mapping, and Top-1 Accuracy endpoint.
@@ -688,39 +721,51 @@ HiED--DA & Ranked Diagnostician with criterion-level audit & Parent-balanced & R
 \end{tabularx}
 \end{table}
 
-In this comparison, TF--IDF + LR uses transcript words only. Single uses one LLM call. Global RAG adds the five nearest training cases without class control. Balanced RAG attempts to provide one relevant example per configured parent label. HiED adds a five-diagnosis ranking, the full criterion-checker set, deterministic rules, and a separate finalization record.
+\paragraph{Conventional baselines.} The Majority baseline always predicts the most frequent parent label in the training-source corpus and therefore provides a prevalence-only reference. TF--IDF + LR represents each transcript with character $n$-gram TF--IDF features and fits one-vs-rest logistic-regression classifiers. It produces ranked parent-label scores and a predicted label set, but no criterion-level audit.
+
+\paragraph{Single-model baselines.} Single uses one LLM diagnostic call with the same configured label space and emits a primary diagnosis plus an optional comorbidity. It does not invoke HiED's Criterion Checkers, deterministic logic, or formal ranked-differential contract. Single + global RAG keeps this diagnostic contract but prepends the five globally nearest training cases. Single + balanced RAG instead attempts to retrieve at most one high-similarity example per configured parent class.
+
+\paragraph{HiED comparison.} HiED--DA uses the ranked Diagnostician, the full Criterion Checker set, deterministic compatibility rules, and Direct-Answer finalization. Its output includes a ranked Top-5, a committed primary, an optional comorbidity, and the audit trace. The RQ1 comparison is therefore a matched benchmark comparison of complete system packages, not a one-component ablation between Single and HiED.
 
 The original frozen evidence compares Single, Single + balanced RAG, and HiED--DA. Post-freeze supplementary analyses add the same-split majority and TF--IDF + logistic-regression baselines, Single + global RAG, and matched HiED--DA runs with no, global, and class-balanced retrieval. All use the same 1,000 case IDs and label mapping. Asterisks mark later RQ1 rows; the additional HiED retrieval variants belong to RQ3.
 
 \section{Failure Localization (RQ2)}
 
-RQ2 uses the $D_3$--$R$--$S$ measures defined in Chapter~\ref{ch:data}. They ask whether a gold label appears in the Top-3, appears in the confirmed set when it is checkable, and is selected as the committed diagnosis. Confirmed-set size and criterion-state counts show whether the audit rejects the gold label or keeps many diagnoses at the same time.
+RQ2 uses the $D_3$--$R$--$S$ measures defined in Chapter~\ref{ch:data}. Because the Direct-Answer committed diagnosis occupies the first position of the recorded ranking, every Top-1-correct case is also Top-3 correct. Therefore, when both metrics are computed on the same 1,000 cases, the Top-3--Top-1 difference counts cases in which at least one gold parent appears within the Top-3 but the committed diagnosis is not a gold parent.
 
-The Top-3--Top-1 difference directly counts cases in which a gold label is already ranked but not committed. Gold-label retention is reported on the separate checker-eligible denominator. A post-freeze case-level analysis supplies the complete eight-cell $D_3/R/S$ joint table for the 915 checker-eligible cases, allowing the conditional retention and selection rates to be reported without combining incompatible marginal denominators.
+Criterion retention cannot be added as a third marginal stage in the same 1,000-case funnel because it is defined only for the 915 checker-eligible cases. A post-freeze case-level analysis therefore constructs a $2\times2\times2$ joint table on those 915 cases, where $D_3$ indicates that a gold parent appears in the Top-3, $R$ indicates that a gold parent appears in the logic-confirmed set, and $S$ indicates that the committed diagnosis is a gold parent. The joint table supports quantities such as $P(R\mid D_3)$, $P(S\mid R)$, and $P(S\mid D_3,R)$ without mixing denominators. Confirmed-set size and criterion-state counts additionally show whether the audit rejects the gold label or keeps many diagnoses at the same time.
 
-A separate close-cluster analysis estimates how many wrong DA cases might be recoverable if a better rule could choose among similarly supported alternatives. Because this oracle upper-bound analysis uses the gold label to identify recoverable cases, it is an upper bound, not a deployable method or an accuracy estimate.
+A separate gold-in-close-supported-cluster analysis estimates a broader oracle opportunity beyond the recorded Top-3. For each case, diagnoses considered by either the Diagnostician or the deterministic rule layer are retained when their criterion met ratio is at least 0.50 and are sorted by met ratio. Two adjacent diagnoses are linked when their met-ratio difference is smaller than 0.10; consecutive links form a close cluster. The scan covers the full retained candidate list rather than only the Top-3. A misclassified DA case is counted as oracle-recoverable when at least one gold parent appears in any close cluster. This definition does not require the deployed primary and the gold parent to occupy the same cluster, so it is deliberately broader and more optimistic than a selector choosing only among alternatives close to the current primary. Because it also uses the gold label and assumes every counted case can be corrected without harming a currently correct prediction, the resulting 349 cases form an opportunity upper bound rather than a deployable method or an accuracy estimate.
 
 \section{Retrieval Ablation (RQ3)}
 
-RQ3 separates three retrieval conditions: no retrieval, ordinary global Top-5 retrieval, and class-balanced retrieval. A clean ablation holds the model, prompt schema, label space, decoding, checker set, rule layer, and finalization policy fixed while changing only retrieval.
+RQ3 separates three retrieval conditions. No retrieval supplies no demonstrations. Global Top-5 uses FAISS similarity to insert the five nearest training cases without class control. Parent-balanced retrieval attempts to select at most one high-similarity example per configured parent class. Within each architecture, the backbone, prompt family, label space, decoding, output contract, and non-retrieval components are held fixed.
 
 \begin{table}[htbp]
 \centering
-\caption{Matched retrieval conditions used for RQ3.}
+\caption{Retrieval ablations and controlled contrasts. Global and parent-balanced retrieval differ in both selection policy and possible context cardinality.}
 \label{tab:rq3-retrieval-matrix}
 \small
-\begin{tabular}{|l|c|c|c|}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{|p{3.0cm}|p{4.2cm}|p{3.1cm}|p{4.2cm}|p{5.1cm}|}
 \hline
-Architecture & No retrieval & Global Top-5 & Parent-balanced\\
+Comparison & Systems compared & Factor varied & Components held fixed & Question and evidence status\\
 \hline
-Single & $\checkmark$ & $\checkmark$ & $\checkmark$\\
+Retrieval effect in Single & Single--none, Single--global, Single--balanced & Retrieved context & Backbone, prompt family, label space, decoding, output contract & Does retrieval improve a direct LLM baseline? Frozen none/balanced rows plus a post-freeze global row.\\
 \hline
-HiED--DA & $\checkmark$ & $\checkmark$ & $\checkmark$\\
+Retrieval effect in HiED--DA & HiED--DA--none, HiED--DA--global, HiED--DA--balanced & Retrieved context & Diagnostician, checkers, rules, DA finalization, label space & Does retrieval improve the complete auditable pipeline? Post-freeze matched rows anchored by the frozen balanced row.\\
+\hline
+Retrieval-policy comparison & Global Top-5 versus parent-balanced & Retrieval policy and context cardinality & Architecture, model, label space, decoding, scoring & Does class-aware retrieval outperform ordinary nearest-neighbor RAG? Post-freeze matched comparison.\\
+\hline
+Finalization effect & HiED--DA versus HiED--NtS-primary within each retrieval condition & Primary finalization rule & Ranked candidates, checker traces, logic outputs & Can compatibility-based re-selection improve primary commitment? Post-freeze deterministic replay.\\
+\hline
+Output-cardinality effect & NtS-primary versus NtS-single & Secondary-label emission & Re-selected primary & How much of the set-metric change comes from clearing comorbidity? Post-freeze secondary replay.\\
 \hline
 \end{tabular}
+\end{adjustbox}
 \end{table}
 
-Within each architecture, all three conditions use the same model, diagnostic profile, decoding settings, and architecture. The frozen evidence contains no retrieval versus balanced retrieval for the Single pipeline; post-freeze supplementary runs add Single + global RAG and complete all three HiED--DA cells. Global Top-5 returns five examples, whereas parent-balanced retrieval may return one example per configured parent label. The comparison therefore changes both selection policy and retrieved-example count and tests the complete retrieval configurations rather than isolating class balancing alone.
+The frozen evidence contains no retrieval versus balanced retrieval for the Single pipeline. Post-freeze supplementary runs add Single + global RAG and complete the three HiED--DA retrieval cells. Because global Top-5 always returns five examples whereas parent-balanced retrieval may return one per configured parent label, the global-versus-balanced contrast tests complete retrieval configurations and does not isolate class balancing alone.
 
 \section{Finalization and Selection Repair (RQ4)}
 
@@ -728,35 +773,63 @@ The frozen finalization comparison is HiED--DA versus historical HiED--NtS-singl
 
 Top-1 Accuracy is the primary outcome. Within each retrieval strategy, paired DA--NtS-primary outcomes are compared using exact McNemar tests, paired-bootstrap confidence intervals, and Holm correction across the three comparisons. Difference-in-differences bootstrap contrasts test whether the finalization effect varies across retrieval strategies. Historical NtS-single is retained only as a secondary output-contract comparison that separates primary re-selection from secondary-label suppression.
 
-Four additional repair families test different explanations for the gap:
+\begin{table}[htbp]
+\centering
+\caption{Finalization-by-retrieval factorial. The primary $2\times3$ comparison is DA versus NtS-primary; NtS-single is a secondary output-cardinality analysis.}
+\label{tab:rq4-finalization-factorial}
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{|p{4.6cm}|c|c|c|p{4.3cm}|}
+\hline
+Finalization contract & No retrieval & Global Top-5 & Parent-balanced & Analytic role\\
+\hline
+Direct-Answer (DA) & Generated & Generated & Generated & Reference committed output\\
+\hline
+Nominate-then-Select---primary only (NtS-primary) & Replay & Replay & Replay & Isolates primary re-selection\\
+\hline
+Nominate-then-Select---single-label output (NtS-single) & Secondary & Secondary & Secondary & Isolates secondary-label suppression\\
+\hline
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\paragraph{Finalization contracts.} DA preserves the Diagnostician's emitted primary and optional comorbidity. NtS-primary re-selects the primary from the existing ranked and criterion-derived artifacts while preserving the DA comorbidity unless it duplicates the new primary after parent projection. NtS-single uses the same re-selected primary but clears secondary labels. The DA--NtS-primary contrast therefore tests primary selection, whereas the NtS-primary--NtS-single contrast tests output cardinality.
+
+Additional repair families test different explanations for the selection gap:
 
 \begin{table}[htbp]
 \centering
-\caption{Selection-repair execution contracts. Debate, self-consistency, and CISC follow the method families in \citet{du2024debate}, \citet{wang2023selfconsistency}, and \citet{taubenfeld2025cisc}.}
+\caption{Selection-repair execution contracts. Two-view debate, self-consistency (SC), and confidence-informed self-consistency (CISC) follow the method families in \citet{du2024debate}, \citet{wang2023selfconsistency}, and \citet{taubenfeld2025cisc}.}
 \label{tab:repair-contract-matrix}
 \small
-\begin{tabularx}{\textwidth}{|p{2.5cm}|p{2.0cm}|p{1.9cm}|p{2.0cm}|p{2.0cm}|X|}
+\begin{tabularx}{\textwidth}{|p{3.1cm}|p{3.7cm}|p{1.7cm}|p{3.2cm}|X|}
 \hline
-Repair & Regenerates candidate ranking & Reuses checker trace & Changes finalization only & Context budget & Interpretation\\
+Method & Execution basis & Fixed DA trace & Output change & Purpose\\
 \hline
-Pairwise full run & Yes & No & No & Standard & Tests a regenerated local comparison, not an isolated finalizer\\
+Pairwise comparison---independent run & New upstream generation and checker calls, then pairwise comparison & No & Primary may change; secondary follows the new-run contract & Raw intervention performance; not an isolated finalizer\\
 \hline
-Pairwise controlled replay & No & Yes & Yes & Standard & Cleanest test of the downstream pairwise rule\\
+Pairwise comparison---controlled replay & Pairwise comparison on recorded upstream artifacts; no new checker calls & Yes & Primary only; secondary preserved & Isolate the pairwise downstream decision\\
 \hline
-Debate & Yes & No & No & Larger when required & Two-view ranking reconciliation with transcript summary for both advocates\\
+Pairwise comparison---forced override & Recorded pairwise preference applied mandatorily; no new checker calls & Yes & Primary replacement mandatory; secondary preserved & Stress-test mandatory pairwise replacement\\
 \hline
-Deterministic fusion & No & Yes & Yes & Standard & Fixed rule over rank and criterion support\\
+Two-view debate & New upstream run followed by advocate and judge calls & No & Primary may change; secondary cleared & Test additional comparative reasoning\\
 \hline
-SC & Yes & No & No & Standard & Tests whether sampled diagnostician outputs contain a stable vote\\
+Deterministic fusion & Frozen zero-LLM rule over recorded rank and criterion signals & Yes & Primary only; secondary preserved & Test a fixed signal combination\\
 \hline
-CISC & Yes & No & No & Standard & Confidence-weighted sampled commitment test\\
+Self-consistency (SC) & Sampled Diagnostician calls; no checker, logic, or finalization rerun & No & Primary-vote analysis & Test sampling stability\\
+\hline
+Confidence-informed self-consistency (CISC) & Same samples, weighted by verbalized primary confidence & No & Primary-vote analysis & Test confidence weighting\\
 \hline
 \end{tabularx}
 \end{table}
 
-Pairwise results are reported as both an independent run and a replay on fixed DA outputs. The independent run includes generation variation. The replay changes only the downstream comparison and is the cleaner test of that rule. The debate protocol is a two-view ranking reconciliation rather than a pro-versus-con argument about one diagnosis. The candidate set is the union of the diagnostician Top-5 and the logic-confirmed diagnoses. Advocate-D uses the diagnostician ranking, rationale, and retrieved-case gist. Advocate-C receives the same candidates and criterion-evidence table, while diagnostician rationale and retrieved cases are withheld. Both produce a ranked Top-3; agreement on the first candidate ends the debate, whereas persistent disagreement is resolved by a neutral judge.
+\paragraph{Pairwise comparison.} The pairwise gate retains candidates with a criterion met ratio of at least 0.50 and identifies adjacent alternatives separated by less than 0.10 after sorting by support. The independent run regenerates the upstream pipeline before invoking the pairwise comparison, so its effect includes generation variation. The controlled replay fixes the DA ranking, checker trace, and logic result and applies only the downstream pairwise preference. Forced override adopts that preference whenever available, even when the original DA decision would otherwise be retained, and serves as a safety stress test rather than a proposed deployment policy.
 
-The fusion rule is selected on development data before internal evaluation. Self-consistency and CISC use stochastic diagnostician samples, whereas the reference run is greedy. The checker, rule layer, and finalization are not rerun, so these experiments test diagnostician commitment rather than uncertainty in the full pipeline.
+\paragraph{Two-view debate.} Debate is a ranking reconciliation rather than a pro-versus-con argument about one diagnosis. The candidate set is the union of the Diagnostician Top-5 and the logic-confirmed diagnoses. Advocate-D receives the ranking, rationale, and retrieved-case gist. Advocate-C receives the same candidates and criterion-evidence table, but not the Diagnostician rationale or retrieved cases. Each produces a ranked Top-3 for at most two rounds. Agreement on the first candidate ends the debate; otherwise a neutral judge selects from the shared candidate set. This is an independently generated pipeline run, and the debate contract emits one primary rather than preserving the DA secondary label.
+
+\paragraph{Deterministic fusion.} The fusion sweep evaluates fixed, zero-LLM rules over the recorded DA rank, logic-confirmation status, and criterion met ratio. The selected rule was chosen on development data before held-out evaluation. It keeps DA unless the DA primary is unconfirmed and a confirmed Top-3 alternative exceeds its met ratio by at least 0.20. The held-out test therefore evaluates one frozen rule rather than selecting among the 293 candidates on the test set.
+
+\paragraph{Self-consistency and CISC.} Self-consistency samples the Diagnostician repeatedly and selects the primary by vote. Confidence-informed self-consistency uses the same samples but weights the vote by the Diagnostician's verbalized primary confidence rather than model logits. The retained run-level protocol uses $K=3$ and $K=5$ samples at temperature 0.7 with fixed seed schedules. Criterion Checkers, deterministic logic, and finalization are not rerun, so these are primary-commitment probes rather than uncertainty estimates for the full HiED pipeline. The internal SC/CISC rows are retained only as summary-level evidence; the fully auditable sampling manifest is available for the external MDD-5k variant matrix.
 
 For all repairs, parent-projected Top-1 Accuracy is the primary outcome. Top-3 Accuracy, Exact Match, Macro-F1, and Weighted-F1 are secondary. Replay methods also report wrong-to-correct and correct-to-wrong flips.
 
@@ -773,15 +846,6 @@ RQ5 uses several distinct analyses:
 \end{itemize}
 
 These analyses answer different questions. Model-size stability does not prove cross-family robustness. Scope expansion shows that a diagnosis can be added to the output space, not that the model has learned when to select it.
-
-\section{Evidence Status}
-\label{sec:freeze-discipline}
-
-The main internal comparisons use the same case set and Top-1 Accuracy definition. The key retrieval comparison reports discordant counts alongside its $p$-value.
-
-The internal test cases were excluded from retrieval and development decisions. Configurations selected before the main internal evaluation are treated as primary evidence. Later experiments, including matched TF--IDF, ordinary RAG, and additional HiED retrieval conditions, must be labeled as post-freeze supplementary analyses rather than retroactively described as part of the original confirmatory set.
-
-Under this design, the original evidence supplies the frozen RQ2, RQ4, and RQ5 analyses. The completed post-freeze supplement closes the specified RQ1 and RQ3 comparison cells, adds the joint $D_3/R/S$ analysis for RQ2, and tests the RQ4 finalization effect across all three retrieval configurations. Chapter~\ref{ch:results} reports those later results separately and does not retroactively classify them as frozen evidence.
 
 \chapter{In-Domain Results}
 \label{ch:results}
@@ -890,21 +954,21 @@ NtS-primary and NtS-single use identical primaries, but preserving the DA second
 \hline
 Intervention & Evidence form & Top-1 & $\Delta$ & Interpretation\\
 \hline
-DA reference & frozen internal-test run & 0.518 & --- & reference\\
+Direct-Answer (DA) & frozen internal-test run & 0.518 & --- & reference\\
 \hline
-Pairwise, full run & independent execution & 0.524 & +0.6 pp & not isolated\\
+Pairwise comparison---independent run & independent execution & 0.524 & +0.6 pp & not isolated\\
 \hline
-Pairwise, controlled replay & frozen DA outputs & 0.518 & 0.0 pp & no committed flips\\
+Pairwise comparison---controlled replay & frozen DA outputs & 0.518 & 0.0 pp & no committed flips\\
 \hline
-Pairwise, forced override & forced finalization & 0.443 & -7.5 pp & harmful\\
+Pairwise comparison---forced override & forced finalization & 0.443 & -7.5 pp & harmful\\
 \hline
-Debate & frozen internal-test run & 0.485 & -3.3 pp & negative\\
+Two-view debate & frozen internal-test run & 0.485 & -3.3 pp & negative\\
 \hline
-Deterministic fusion (E3) & pre-selected frozen rule & 0.514 & -0.4 pp & net flip $-4$\\
+Deterministic fusion & pre-selected frozen rule & 0.514 & -0.4 pp & net flip $-4$\\
 \hline
-SC $K=5$ & summary-level evidence & 0.514 & -0.4 pp & no gain\\
+Self-consistency (SC), $K=5$ & summary-level evidence & 0.514 & -0.4 pp & no gain\\
 \hline
-CISC $K=5$ & summary-level evidence & 0.517 & -0.1 pp & no gain\\
+Confidence-informed self-consistency (CISC), $K=5$ & summary-level evidence & 0.517 & -0.1 pp & no gain\\
 \hline
 \end{tabular}
 \end{adjustbox}
