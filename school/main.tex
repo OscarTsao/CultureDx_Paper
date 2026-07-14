@@ -1256,24 +1256,26 @@ Future work with patient data will require institutional approval, privacy contr
 
 \section{Summary of Findings}
 
-This thesis introduced HiED, a modular multi-stage LLM system that separates ranked candidate generation, an evidence-linked criterion audit, and the committed diagnosis. The main result is that these views can disagree. On the internal test set, the gold label appears in the Top-3 far more often than it is selected as primary, and the criterion layer retains many diagnoses at once. The central problem is therefore not only whether the system can name the correct diagnosis, but whether it can choose it over other plausible diagnoses.
+This thesis introduced HiED, a hybrid multi-agent framework that separates ranked differential generation, criterion-level evidence checking, deterministic compatibility aggregation, and primary-diagnosis commitment.
 
-The tested logic-based selector does not improve Top-1 over Direct-Answer, and the repair methods do not provide a clear and reproducible gain. The matched comparisons show that a conventional TF--IDF classifier is more accurate on the internal benchmark and that retrieval-policy changes do not produce a significant HiED gain. External synthetic evaluation shows that the ranking-to-selection gap remains under distribution shift, but it does not establish clinical validity. HiED's strongest contribution is an auditable system and an evaluation method that makes these differences visible rather than state-of-the-art benchmark accuracy.
+The matched lexical baseline achieved higher Top-1 performance than HiED on the internal benchmark. HiED nevertheless showed substantially higher ranked candidate coverage than committed Top-1 performance, and criterion checking frequently retained a gold diagnosis without determining which compatible diagnosis should be primary. Criterion-derived Nominate-then-Select finalization and the tested pairwise, debate, fusion, self-consistency, and similarity-based repair methods did not provide a clear and reproducible improvement in primary selection. Retrieval improved the Single system, but the results did not support an advantage for parent-balanced over global retrieval or a statistically supported retrieval gain for HiED. The ranking-to-commitment gap also remained visible on the external synthetic corpus.
+
+HiED's contribution is therefore not state-of-the-art benchmark accuracy, but an auditable architecture and evaluation framework that localizes disagreement across candidate generation, evidence verification, and final commitment. The results are limited to synthetic benchmark data and do not establish clinical validity or autonomous diagnostic safety.
 
 \section{Answers to the Research Questions}
 
 This section summarizes how the final experiments answer the five research questions introduced in Chapter~\ref{ch:related}. Each answer is limited to benchmark performance on synthetic Chinese psychiatric transcripts and should not be interpreted as evidence of clinical effectiveness.
 
 \begin{description}[style=nextline,leftmargin=3cm,labelwidth=2.5cm]
-\item[RQ1] HiED does not outperform the strongest matched baseline on the internal test set. TF--IDF with logistic regression reaches 0.632 Top-1, compared with 0.518 for HiED--DA with parent-balanced retrieval (Holm-adjusted $p=3.14\times10^{-9}$); HiED's contribution is therefore auditability and failure localization rather than benchmark accuracy leadership.
+\item[RQ1] HiED did not outperform the strongest matched baseline on the internal benchmark. The TF--IDF and logistic-regression classifier achieved higher Top-1 performance, and the paired difference remained significant after correction for multiple comparisons. HiED instead provided ranked differential diagnoses, criterion-level evidence records, and explicit finalization artifacts. Its value therefore lies in decomposing the diagnostic process rather than maximizing benchmark accuracy alone.
 
-\item[RQ2] Candidate generation and criterion retention are substantially stronger than final commitment. Among the checker-eligible cases, 272 have a gold parent in both the Top-3 and the rule-confirmed set but not in the committed diagnosis ($D_3=1,R=1,S=0$), although the model-generated criterion states have not been independently clinician validated.
+\item[RQ2] The main failure occurs between retaining a compatible diagnosis and committing to it as primary. Gold diagnoses were frequently present in the ranked differential and retained by criterion verification, yet another diagnosis was selected. This supports a ranking-to-commitment bottleneck under the tested benchmark protocol, while the model-generated criterion judgments remain unvalidated clinically.
 
-\item[RQ3] Retrieval improves the Single baseline, but parent-balanced retrieval does not outperform ordinary global Top-5 retrieval, and no tested retrieval strategy produces a significant gain for HiED--DA. Top-1 across no, global, and parent-balanced retrieval is 0.466/0.517/0.508 for Single and 0.510/0.524/0.518 for HiED--DA.
+\item[RQ3] Retrieval improved the Single system relative to no retrieval, but global and parent-balanced retrieval did not differ significantly. HiED showed no statistically supported retrieval gain across the tested strategies. Because the retrieval strategies also differed in the number and composition of examples supplied to the model, the results do not establish an independent benefit of class balancing.
 
-\item[RQ4] Criterion-derived primary re-selection does not improve Direct-Answer. NtS-primary lowers Top-1 by 0.028--0.029 under all three retrieval strategies (all Holm-adjusted $p<0.001$), while the tested pairwise, debate, fusion, and sampling-based repairs provide no clear and reproducible matched improvement; the interaction results do not establish equivalence among retrieval conditions.
+\item[RQ4] Criterion-derived NtS primary selection reduced Top-1 performance relative to Direct-Answer across the tested retrieval conditions. Preserving or removing the Direct-Answer secondary label changed set-level metrics but not the NtS primary diagnosis. The tested pairwise, debate, fusion, self-consistency, and similarity-based methods also did not provide a clear and repeatable improvement.
 
-\item[RQ5] The ranking-to-commitment gap and the lack of a simple selection repair persist across Qwen3 model sizes, MDD-5k cross-corpus evaluation, diagnostic-scope expansion, and the major error groups. These analyses support synthetic robustness within the tested configurations, not transfer to unrelated model families or real clinical populations.
+\item[RQ5] The ranking-to-commitment gap remained visible across the evaluated Qwen3 model sizes and on MDD-5k. However, all quantitative datasets were synthetic, and the model-family analysis did not include unrelated backbone families. The findings therefore support robustness within the tested experimental scope, not general clinical or cross-model validity.
 \end{description}
 
 \section{Future Work}
@@ -1294,9 +1296,8 @@ Some cases may remain ambiguous because the transcript does not establish durati
 
 After the target labels, criterion audit, and final system configuration have been validated, HiED should be evaluated prospectively on de-identified Taiwanese psychiatric consultation transcripts. The inclusion criteria, primary and secondary outcomes, system configuration, subgroup analyses, and statistical plan should be specified before outcome analysis and publicly registered when appropriate. The evaluation should distinguish the recorded clinical diagnosis, transcript-only clinician review, and fuller clinical adjudication. Subsequent studies should examine workflow value, subgroup performance, automation bias, privacy, monitoring, and patient safety before any deployment claim is made.
 
-\section{Closing Statement}
-
-A psychiatric LLM can include the gold label among its leading candidates and still choose another diagnosis as primary. Criterion checking makes this problem easier to inspect, but broad compatibility does not solve the final comparison. HiED provides an auditable architecture and an evaluation framework that separates these stages. It is not a clinically validated autonomous diagnostic system.
+\bigskip
+\noindent A psychiatric language model may recognize the correct diagnosis as plausible without selecting it as primary. HiED makes this distinction observable by separating ranking, criterion verification, and commitment. The next step is not simply to add more agents, but to validate the evidence representation, model comparative diagnostic relations more explicitly, and evaluate the resulting system on real Taiwanese clinical data.
 
 \appendix
 \titleformat{\chapter}[display]{\raggedright\bfseries\LARGE}{Appendix \thechapter}{0.5em}{}
