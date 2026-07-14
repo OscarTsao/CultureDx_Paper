@@ -1086,30 +1086,6 @@ Frequent-label attraction & Macro-F1 0.178 vs. weighted-F1 0.434; many errors en
 \end{adjustbox}
 \end{table}
 
-\begin{table}[htbp]
-\centering
-\caption{Failure-localization decision table for audit interpretation.}
-\label{tab:failure-localization}
-\small
-\begin{tabularx}{\textwidth}{|p{2.0cm}|p{1.7cm}|p{1.8cm}|p{2.0cm}|p{3.0cm}|X|}
-\hline
-Scope & Gold in Top-3 & Gold confirmed & Committed primary correct & Failure location & Appropriate remedy\\
-\hline
-Out of scope & No & Not applicable & No & Output scope & Expand and validate the diagnostic profile\\
-\hline
-In scope & No & No or yes & No & Candidate generation/retrieval & Improve ranking, retrieval, or transcript representation\\
-\hline
-In scope & Yes & No & No & Verification or missing evidence & Improve checker evidence use or collect missing facts\\
-\hline
-In scope & Yes & Yes & No & Final selection & Improve comparative selection among compatible diagnoses\\
-\hline
-In scope & Any & Any & Yes & No primary error & Use audit for review, not correction\\
-\hline
-\end{tabularx}
-\end{table}
-
-These rows are bounded output categories. They are not clinician-adjudicated causes and should not be read as proof that one mechanism caused every individual error.
-
 \section{Main Error Patterns}
 
 The largest confusion is F41$\rightarrow$F32 (178 cases), compared with only 24 in the reverse direction. Several other errors also end at F32, including F39, \emph{Others}, F51, and F98 cases. This suggests a frequent depression-label attractor when symptoms overlap or the transcript does not clearly establish duration, onset, autonomic symptoms, or the main source of impairment. The counts describe model--reference disagreement in a synthetic corpus; they do not adjudicate which label is clinically correct in every case.
