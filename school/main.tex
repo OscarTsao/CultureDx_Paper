@@ -767,9 +767,9 @@ Table~\ref{tab:rq-experiment-map} maps each research question to its experimenta
 \hline
 Research question & Experimental component & Design section & Results section\\
 \hline
-RQ1 & Same-split baseline comparison & \S5.2 & \S6.2--6.3\\
+RQ1 & Same-split baseline comparison & \S5.2 & \S6.1--6.3\\
 RQ2 & Candidate--compatibility--commitment decomposition & \S5.3 & \S6.4--6.5\\
-RQ3 & Retrieval comparisons and interaction analysis & \S5.4--5.5 & \S6.3 and 6.6\\
+RQ3 & Retrieval comparisons and interaction analysis & \S5.4--5.5 & \S6.1, 6.3, and 6.6\\
 RQ4 & Finalization and primary-selection repair & \S5.5--5.6 & \S6.6--6.7\\
 RQ5 & Model-size robustness and external transfer & \S5.7--5.8 & \S6.8 and Chapters~7--8\\
 \hline
@@ -942,11 +942,57 @@ A separate 58-case scope-expansion analysis changes the configured profile from 
 \chapter{In-Domain Evaluation on LingxiDiagBench}
 \label{ch:results}
 
-\section{Overview}
+This chapter presents the in-domain results as a stage-wise argument rather than an accuracy leaderboard. It begins with the public-validation evidence used to assess retrieval configurations, then reports the internal-test architecture ladder and same-split controls. The remaining sections localize disagreement across candidate coverage, criterion compatibility, and final commitment before evaluating selection repairs, model-size robustness, and diagnostic confusion structure. HiED is not the accuracy-leading system on this benchmark; its principal empirical contribution is the separation of ranking, compatibility, and commitment outputs.
 
-This chapter presents the in-domain results as a stage-wise argument rather than an accuracy leaderboard. It first positions the main system sequence and the same-split baselines, then localizes disagreement across candidate coverage, criterion compatibility, and final commitment. The final sections evaluate selection repairs, model-size robustness, and diagnostic confusion structure. HiED is not the accuracy-leading system on this benchmark; its principal empirical contribution is the separation of ranking, compatibility, and commitment outputs.
+The public validation split provides configuration and sensitivity evidence rather than an independent test estimate. Unless stated otherwise, the primary Single configuration uses global Top-5 retrieval and the primary HiED--DA configuration uses parent-balanced retrieval.
 
-The public validation split selects retrieval separately for Single and HiED before evaluation on the fixed 1,000-case internal test set. Validation results are configuration-selection evidence rather than an independent test estimate. Unless stated otherwise, the primary Single configuration uses global Top-5 retrieval and the primary HiED--DA configuration uses parent-balanced retrieval.
+\section{Public-Validation Results and Configuration Evidence}
+\label{sec:validation-retrieval-selection}
+
+\noindent\textit{Addresses RQ1 and RQ3: same-split system positioning and retrieval-strategy effects.}
+
+Table~\ref{tab:validation-configuration-matrix} reports all applicable metrics for the retained public-validation configurations. The Single rows do not report Top-3 because Single does not emit a genuine ordered differential. A matched HiED--DA no-retrieval validation result was not retained; the unavailable row is shown explicitly so that absence of evidence is not confused with an evaluated zero or with the internal-test no-retrieval control reported in Section~\ref{sec:matched-baselines-retrieval}.
+
+\begin{table}[htbp]
+\centering
+\caption{Public-validation retrieval results used as configuration evidence. Dashes in the Single Top-3 cells denote an undefined output view; dashes across the HiED--DA no-retrieval row denote an unavailable matched validation result.}
+\label{tab:validation-configuration-matrix}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{|l|l|c|c|c|c|c|}
+\hline
+Architecture & Retrieval & Top-1 & Top-3 & Exact Match & Macro-F1 & Weighted-F1\\
+\hline
+Single & None & 0.466 & --- & 0.016 & 0.174 & 0.429\\
+Single & Global Top-5 & 0.519 & --- & 0.030 & 0.209 & 0.456\\
+Single & Parent-balanced & 0.507 & --- & 0.016 & 0.195 & 0.437\\
+\hline
+HiED--DA & None & --- & --- & --- & --- & ---\\
+HiED--DA & Global Top-5 & 0.525 & 0.797 & 0.432 & 0.178 & 0.435\\
+HiED--DA & Parent-balanced & 0.523 & 0.800 & 0.428 & 0.181 & 0.440\\
+\hline
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+Global Top-5 improves every native reported endpoint for Single relative to parent-balanced retrieval and is used as the primary Single configuration. For HiED--DA, global Top-5 improves Top-1 Accuracy and Exact Match relative to parent-balanced retrieval, but reduces genuine Top-3 Accuracy, Macro-F1, and Weighted-F1. It therefore improves only two of the five predefined promotion metrics and does not satisfy the promotion rule; parent-balanced retrieval remains the primary HiED configuration. The HiED Top-1 difference is 0.002, with 29 global-only correct cases and 27 parent-balanced-only correct cases. Its paired 95\% confidence interval includes zero [$-0.013$, 0.017], and the exact McNemar test gives $p=0.894$.
+
+Table~\ref{tab:published-validation-context} places the selected HiED configuration beside the published GPT-5-Mini result from LingxiDiagBench Table~4~\citep{xu2026lingxidiagbench}. The benchmark's official multilabel implementation defines its 12-class \emph{Acc} as exact set equality, so that column is aligned here with Exact Match. The published row uses the same public validation cases but a different prompt, inference implementation, and output contract. It is descriptive same-split context, not a fully matched baseline or a paired comparison.
+
+\begin{table}[htbp]
+\centering
+\caption{Published same-split context on the LingxiDiag-16K public validation split. The GPT-5-Mini values are from LingxiDiagBench Table~4; the HiED row is this thesis's primary validation configuration.}
+\label{tab:published-validation-context}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{|p{5.3cm}|c|c|c|c|c|}
+\hline
+System & Top-1 & Top-3 & Exact Match & Macro-F1 & Weighted-F1\\
+\hline
+LingxiDiagBench GPT-5-Mini & 0.487 & 0.505 & 0.409 & 0.188 & 0.418\\
+\shortstack[l]{HiED--DA, parent-balanced\\retrieval} & 0.523 & 0.800 & 0.428 & 0.181 & 0.440\\
+\hline
+\end{tabular}
+\end{adjustbox}
+\end{table}
 
 \section{Architecture Ladder}
 
@@ -971,51 +1017,6 @@ HiED--DA, parent-balanced & 0.518 & 0.802 & 0.409 & 0.178 & 0.434\\
 The ladder summarizes the evaluated system sequence but does not attribute each difference to one component. Retrieval changes between the first two rows, while the transition to HiED also changes the ranked-output and audit architecture. The two HiED rows share the genuine ranking but use different finalization and emitted-set contracts; their controlled primary-selection comparison is reported in Section~\ref{sec:nts-factorial}. Same-split conventional baselines in the next section establish that this ladder does not make HiED the strongest benchmark predictor.
 
 \section{Matched Baselines and Retrieval Controls}
-\label{sec:validation-retrieval-selection}
-
-\subsection{Validation-Based Retrieval Selection}
-
-The public validation split determines the primary retrieval policy for each architecture before the internal test results are interpreted. Because this split is used for configuration selection, the results in this section are selection evidence rather than an independent test estimate.
-
-\paragraph{HiED retrieval selection.}
-\begin{table}[htbp]
-\centering
-\caption{HiED--DA retrieval selection on the public validation split. Differences are global Top-5 minus parent-balanced retrieval.}
-\label{tab:hied-validation-selection}
-\begin{tabular}{|l|c|c|c|}
-\hline
-Metric & Global Top-5 & Parent-balanced & Difference\\
-\hline
-Any-gold Top-1 & 0.525 & 0.523 & $+0.002$\\
-Genuine Top-3 & 0.797 & 0.800 & $-0.003$\\
-Exact Match & 0.432 & 0.428 & $+0.004$\\
-Macro-F1 & 0.177731 & 0.180983 & $-0.003252$\\
-Weighted-F1 & 0.435373 & 0.439657 & $-0.004284$\\
-\hline
-\end{tabular}
-\end{table}
-
-Global Top-5 improves HiED Top-1 Accuracy and Exact Match, but reduces genuine Top-3 Accuracy, Macro-F1, and Weighted-F1. It therefore improves only two of the five predefined selection metrics and does not satisfy the promotion rule. Parent-balanced retrieval is retained as the primary HiED configuration. The Top-1 difference is 0.002, with 29 global-only correct cases and 27 parent-balanced-only correct cases; the paired 95\% confidence interval includes zero [$-0.013$, 0.017], and the exact McNemar test gives $p=0.894$.
-
-\paragraph{Single retrieval selection.}
-\begin{table}[htbp]
-\centering
-\caption{Single retrieval selection on the public validation split. Single does not emit a genuine ordered differential, so Top-3 is not reported.}
-\label{tab:single-validation-selection}
-\begin{tabular}{|l|c|c|}
-\hline
-Metric & Global Top-5 & Parent-balanced\\
-\hline
-Top-1 & 0.519 & 0.507\\
-Exact Match & 0.030 & 0.016\\
-Macro-F1 & 0.209368 & 0.194514\\
-Weighted-F1 & 0.456454 & 0.436607\\
-Genuine Top-3 & --- & ---\\
-\hline
-\end{tabular}
-\end{table}
-
-Global Top-5 improves every native reported endpoint for Single and is therefore used as the primary Single configuration. The selected systems for the main test comparison are consequently Single with global Top-5 retrieval and HiED--DA with parent-balanced retrieval; the architectures are not forced to share a retrieval policy.
 
 \subsection{Same-Split Baseline Comparison}
 \label{sec:matched-baselines-retrieval}
@@ -1070,27 +1071,6 @@ HiED--DA & Parent-balanced & 0.518 & 0.802 & 0.409 & 0.178 & 0.434\\
 
 Global Top-5 produces the strongest test-set point estimates for Single across all reported native endpoints. For HiED--DA, global retrieval also yields the highest Top-1, Top-3, Exact Match, and Macro-F1, while its Weighted-F1 is nearly unchanged from no retrieval before rounding (0.4375 versus 0.4371). Both Single retrieval conditions improve Top-1 over no retrieval after within-family Holm adjustment ($p=9.42\times10^{-5}$ for global and $p=7.19\times10^{-4}$ for parent-balanced), but global and parent-balanced retrieval do not differ significantly (adjusted $p=0.362$). None of the paired HiED Top-1 retrieval comparisons is significant after adjustment. These test-set ablations do not revise the validation decision: global Top-5 remains the main Single configuration and parent-balanced retrieval remains the main HiED configuration. Because global and parent-balanced retrieval also differ in retrieved-example count, the results compare complete retrieval configurations and do not isolate parent balancing as the cause.
 
-\subsection{Published Same-Split Context}
-
-Table~\ref{tab:published-validation-context} reports selected results from the original LingxiDiagBench static evaluation on the public 1,000-case validation split~\citep{xu2026lingxidiagbench}. These published systems use the same validation cases but different prompts, inference procedures, and output contracts. They provide descriptive context after the matched internal-test comparison and are not substitutes for it, paired controls, or evidence that HiED outperforms the published systems.
-
-\begin{table}[htbp]
-\centering
-\caption{Selected published LingxiDiagBench results on the public validation split.}
-\label{tab:published-validation-context}
-\begin{tabular}{|p{4.2cm}|c|c|c|c|}
-\hline
-System & Top-1 & Top-3 & Macro-F1 & Weighted-F1\\
-\hline
-TF--IDF + logistic regression & 0.496 & 0.645 & 0.295 & 0.520\\
-Qwen3-32B & 0.470 & 0.566 & 0.188 & 0.431\\
-GPT-5-Mini & 0.487 & 0.505 & 0.188 & 0.418\\
-\hline
-\end{tabular}
-\end{table}
-
-The benchmark's separate \emph{Acc} column is omitted because it is not assumed to equal this thesis's Exact Match definition. These rows are not used to select retrieval policies and do not support paired significance tests.
-
 \section{Candidate Coverage and Recoverable Opportunity}
 
 HiED--DA achieves a genuine Top-3 Accuracy of 0.802 and a committed Top-1 Accuracy of 0.518 on the same 1,000 test cases. Under the DA contract, the emitted primary must be selected from the Diagnostician's genuine Top-3, so every Top-1-correct case is also Top-3 correct even though the two outputs are stored separately. The 0.284 difference corresponds to 284 cases in which a benchmark gold parent appears in the genuine Top-3 but is not selected as the committed primary. This difference quantifies selection headroom under benchmark scoring; it does not establish that every case is clinically resolvable or recoverable by a different finalization rule.
@@ -1104,24 +1084,28 @@ Across 77,998 recorded criterion states, 48.7\% are \texttt{met}, 23.7\% are \te
 
 Among the 915 cases with a non-\emph{Others} gold parent and a corresponding checker, the rule-confirmed set contains a gold parent in 857 cases (0.937; 95\% CI [0.919, 0.951]). The median confirmed set contains six of the fourteen configured diagnostic categories. This shows high gold-label retention but limited selectivity.
 
+Table~\ref{tab:d3rs-joint} reports the case-level joint distribution of candidate detection, compatibility retention, and committed selection. ``Yes'' means that at least one benchmark gold parent satisfies the stated condition; ``No'' means that none does. The table is restricted to the 915 checker-eligible cases for which all three indicators are defined, so cases without a corresponding checker are excluded rather than coded as $R=0$. The indicators are not strictly nested: all fourteen configured diagnostic categories are checked, so a gold parent may be retained in the rule-confirmed set even when it is absent from the Diagnostician's genuine Top-3.
+
 \begin{table}[htbp]
 \centering
 \caption{Joint distribution of candidate detection ($D_3$), gold-label retention under the configured compatibility rules ($R$), and committed selection ($S$) on the 915 checker-eligible cases.}
 \label{tab:d3rs-joint}
-\begin{tabular}{|c|c|c|r|l|}
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\textwidth}{|>{\centering\arraybackslash}p{2.0cm}|>{\centering\arraybackslash}p{2.5cm}|>{\centering\arraybackslash}p{2.1cm}|r|c|X|}
 \hline
-$D_3$ & $R$ & $S$ & Cases & Interpretation\\
+Gold in genuine Top-3 ($D_3$)? & Gold in rule-confirmed set ($R$)? & Committed primary correct ($S$)? & Cases & Proportion & Interpretation\\
 \hline
-0 & 0 & 0 & 34 & Not ranked, retained, or committed\\
-0 & 0 & 1 & 0 & Committed without ranking or retention\\
-0 & 1 & 0 & 79 & Retained but not ranked or committed\\
-0 & 1 & 1 & 0 & Committed after retention but not ranking\\
-1 & 0 & 0 & 12 & Ranked but neither retained nor committed\\
-1 & 0 & 1 & 12 & Ranked and committed without retention\\
-1 & 1 & 0 & 272 & Ranked and retained but not committed\\
-1 & 1 & 1 & 506 & Ranked, retained, and committed\\
+No & No & No & 34 & 0.037 & Neither detected nor retained; primary incorrect\\
+No & No & Yes & 0 & 0.000 & Not possible under the DA ranking contract\\
+No & Yes & No & 79 & 0.086 & Retained by full-scope checking but absent from Top-3\\
+No & Yes & Yes & 0 & 0.000 & Not possible under the DA ranking contract\\
+Yes & No & No & 12 & 0.013 & Detected but not retained; primary incorrect\\
+Yes & No & Yes & 12 & 0.013 & Correctly committed despite not being retained\\
+Yes & Yes & No & 272 & 0.297 & Detected and retained, but not selected\\
+Yes & Yes & Yes & 506 & 0.553 & Detected, retained, and correctly selected\\
 \hline
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 The joint analysis localizes the remaining gap on the same 915 cases. Among the 802 cases with a gold label in the Top-3, 778 also retain a gold label under the compatibility rules, giving $P(R\mid D_3)=0.9701$. Across all 857 retained cases, 506 commit a gold label, giving $P(S\mid R)=0.5904$. The largest selection-specific group contains 272 cases in which a gold parent is both ranked and retained but not committed; $P(S\mid D_3,R)=0.6504$. These are benchmark-condition quantities derived from algorithmic checker states, not clinician-validated probabilities.
@@ -1129,28 +1113,30 @@ The joint analysis localizes the remaining gap on the same 915 cases. Among the 
 \section{Finalization-by-Retrieval Factorial}
 \label{sec:nts-factorial}
 
+Table~\ref{tab:nts-factorial} should be read horizontally. Within each retrieval condition, it compares DA with NtS on the same 1,000 cases. It therefore estimates the change associated with finalization policy while holding retrieval fixed; it is not, by itself, a statistical comparison among retrieval strategies.
+
 \begin{table}[htbp]
 \centering
-\caption{DA versus NtS across retrieval strategies ($N=1000$ paired cases per row). W$\rightarrow$C and C$\rightarrow$W denote wrong-to-correct and correct-to-wrong primary changes.}
+\caption{Paired comparison of Direct-Answer (DA) and Nominate-then-Select (NtS) under three retrieval conditions on the internal test split ($N=1000$ per condition). Top-1 denotes any-gold agreement. Differences are NtS minus DA, so negative values favor DA. Reported $p$-values are from two-sided exact McNemar tests with Holm correction across the three planned comparisons; confidence intervals are paired-bootstrap intervals for the Top-1 difference. W$\rightarrow$C and C$\rightarrow$W denote wrong-to-correct and correct-to-wrong primary changes.}
 \label{tab:nts-factorial}
-\begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{|l|c|c|c|c|c|c|c|}
+\small
+\setlength{\tabcolsep}{1.7pt}
+\begin{tabularx}{\textwidth}{|p{2.15cm}|c|c|c|c|c|>{\centering\arraybackslash}X|>{\centering\arraybackslash}p{2.15cm}|}
 \hline
-Retrieval & DA & NtS & $\Delta$ & W$\rightarrow$C & C$\rightarrow$W & 95\% CI & Adjusted $p$\\
+Retrieval condition & \shortstack{DA\\Top-1} & \shortstack{NtS\\Top-1} & \shortstack{$\Delta$ Top-1\\(NtS$-$DA)} & W$\rightarrow$C & C$\rightarrow$W & 95\% paired-bootstrap CI for $\Delta$ & Holm-adjusted McNemar $p$\\
 \hline
-None & 0.510 & 0.482 & $-0.028$ & 9 & 37 & [$-0.041$, $-0.015$] & 0.000122\\
+No retrieval & 51.0\% & 48.2\% & $-2.8$ pp & 9 & 37 & [$-4.1$, $-1.5$] pp & $<0.001$\\
 \hline
-Global Top-5 & 0.524 & 0.495 & $-0.029$ & 15 & 44 & [$-0.044$, $-0.014$] & 0.000407\\
+Global Top-5 & 52.4\% & 49.5\% & $-2.9$ pp & 15 & 44 & [$-4.4$, $-1.4$] pp & $<0.001$\\
 \hline
-Parent-balanced & 0.518 & 0.490 & $-0.028$ & 17 & 45 & [$-0.043$, $-0.013$] & 0.000497\\
+Parent-balanced & 51.8\% & 49.0\% & $-2.8$ pp & 17 & 45 & [$-4.3$, $-1.3$] pp & $<0.001$\\
 \hline
-\end{tabular}
-\end{adjustbox}
+\end{tabularx}
 \end{table}
 
-Criterion-derived primary re-selection lowers Top-1 under every tested retrieval condition. The paired losses are 2.8--2.9 percentage points, and all three confidence intervals exclude zero after Holm correction. The direction is consistent across all three retrieval conditions.
+Under no retrieval, DA achieves 51.0\% Top-1 agreement and NtS achieves 48.2\%. The $-2.8$ percentage-point difference is defined as NtS minus DA; its paired-bootstrap confidence interval excludes zero, and harmful correct-to-wrong changes outnumber beneficial wrong-to-correct changes. The same direction holds across all three retrieval conditions: NtS lowers Top-1 by 2.8--2.9 percentage points, all paired-bootstrap intervals exclude zero, and all Holm-adjusted McNemar $p$-values are below 0.001.
 
-The interaction contrasts are small in point estimate: global minus balanced is $-0.001$ (95\% CI [$-0.013$, $0.010$]), none minus balanced is $0.000$ (95\% CI [$-0.012$, $0.012$]), and global minus none is $-0.001$ (95\% CI [$-0.011$, $0.009$]). The supported conclusion is that there is no evidence that retrieval strategy moderates the NtS primary-selection penalty. This is not an equivalence result.
+The similarity of the three point estimates does not itself establish the absence of a retrieval-by-finalization interaction. The prespecified interaction contrasts are small: global minus balanced is $-0.001$ (95\% CI [$-0.013$, $0.010$]), none minus balanced is $0.000$ (95\% CI [$-0.012$, $0.012$]), and global minus none is $-0.001$ (95\% CI [$-0.011$, $0.009$]). The supported conclusion is that there is no evidence that retrieval strategy moderates the NtS primary-selection penalty. This is not an equivalence result.
 
 Because NtS emits one diagnosis, its Exact Match, Macro-F1, and Weighted-F1 also reflect the single-label output contract and are not used to isolate primary re-selection. A separate checker-sensitivity analysis leaves DA Top-1 unchanged across the five full-size settings, as expected because DA does not allow the downstream audit to overwrite the diagnostician's primary.
 
@@ -1215,12 +1201,15 @@ The largest confusion is F41$\rightarrow$F32 (178 cases), compared with 24 in th
 The in-domain results support four conclusions. First, TF--IDF + logistic regression is the strongest same-split predictor, so HiED is not the most accurate system on this benchmark. Second, retrieval improves Single relative to no retrieval, but parent-balanced retrieval does not outperform global Top-5, and no retrieval contrast gives a significant HiED gain. Third, many cases retain a gold label through ranking and criterion compatibility but lose it at final commitment. Fourth, NtS consistently lowers Top-1, and no tested repair with retained case-level evidence gives a clear, attributable gain. The confusion analysis shows that remaining disagreements concentrate in a small number of asymmetric diagnostic pairs.
 
 
-\chapter{External Evaluation on MDD-5k}
+\chapter{External Synthetic Evaluation and Scope Transfer}
 \label{ch:external}
 
-\section{Evaluation Sets and Comparison Structure}
+\section{Overview and External Evaluation Views}
 
-MDD-5k provides a second Chinese synthetic corpus with different dialogue-generation procedures, label distributions, and diagnostic coverage. It is used to evaluate synthetic cross-corpus transfer rather than real-patient performance in Taiwan. The full external evaluation contains 925 matched patient-level cases. Under the configured output space, 878 cases are in scope and 47 are out of scope. Two supporting analyses use different samples from the same source corpus: a 185-case lexical-transfer holdout and a 58-case raw-dataset scope-expansion sample. These are not independent external cohorts.
+\noindent\textbf{Research question addressed (RQ5).}
+Does the in-domain ranking-to-commitment pattern persist under external synthetic distribution shift and changes in the configured diagnostic scope, and how do the tested selectors transfer?
+
+MDD-5k provides a second Chinese synthetic corpus with different dialogue-generation procedures, label distributions, and diagnostic coverage. It is used to evaluate synthetic cross-corpus transfer rather than real-patient performance in Taiwan. The primary multi-way analysis uses the checker-covered full set ($N=925$), of which 878 cases are in scope and 47 have no gold diagnosis represented by the configured parents. A separate restricted F32/F41 analysis contains 490 pure depression- or anxiety-coded cases and excludes F41.2 and F32--F41 comorbid presentations. Two supporting analyses use different samples from the same source corpus: a 185-case lexical-transfer holdout and a 58-case raw-dataset scope-expansion sample. These are not independent external cohorts.
 
 \begin{table}[htbp]
 \centering
@@ -1244,67 +1233,55 @@ Scope expansion & Newly representable diagnoses ($N=58$) & Original versus expan
 \end{adjustbox}
 \end{table}
 
-\section{Overall and In-Scope Diagnostic Performance}
+\section{Multi-way External Performance}
 
 \begin{table}[htbp]
 \centering
-\caption{Diagnostic performance derived from the common 925-case MDD-5k DA trace.}
+\caption{Multi-way external performance derived from the common 925-case MDD-5k DA trace. The in-scope row excludes cases for which no raw gold diagnosis maps to the configured scoring parents.}
 \label{tab:external-summary-rewrite}
-\begin{tabular}{|l|r|r|r|r|}
+\small
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabularx}{\textwidth}{|X|r|r|r|r|r|r|r|}
 \hline
-Set & $N$ & Top-1 & Majority baseline & Macro-F1\\
+Evaluation set & $N$ & Top-1 & Top-3 & Exact Match & Macro-F1 & Weighted-F1 & \shortstack{Majority\\Top-1}\\
 \hline
-MDD-5k full evaluation set & 925 & 0.5708 & 0.4432 & 0.2101\\
+MDD-5k full & 925 & 0.5708 & 0.8508 & 0.3881 & 0.2101 & 0.5188 & 0.4432\\
 \hline
-MDD-5k in scope & 878 & 0.6014 & 0.4670 & 0.2488\\
+MDD-5k in scope & 878 & 0.6014 & 0.8964 & 0.4089 & 0.2488 & 0.5609 & 0.4670\\
+\hline
+\end{tabularx}
+\end{table}
+
+The common DA trace transfers the transcript-processing prompt, diagnostic model, ontology, checker, and finalization procedure to MDD-5k without MDD-specific training. Excluding the 47 cases whose gold diagnoses are absent from the configured output space raises Top-1 from 0.5708 to 0.6014 and Top-3 from 0.8508 to 0.8964. Weighted-F1 is substantially higher than Macro-F1 on both sets, consistent with stronger performance on the more frequent labels. These rows, the ranking-to-commitment analysis, and downstream common-trace repairs all use the same ordered 925 predictions.
+
+The genuine Top-3 contains a gold parent in 0.8508 of full-set cases, whereas the committed primary matches a gold parent in 0.5708. The 0.2800 difference corresponds to 259 cases in which a gold parent is ranked but not committed. This reproduces ranking headroom under synthetic corpus shift. MDD-5k does not provide a matched criterion-retention analysis equivalent to the internal $D_3$--$R$--$S$ decomposition, so the external result does not localize the full compatibility-to-commitment pathway.
+
+\section{Restricted F32/F41 Binary Evaluation}
+
+\begin{table}[htbp]
+\centering
+\caption{Restricted F32/F41 binary evaluation on pure depression- and anxiety-coded MDD-5k cases. This task has a different label space from the multi-way evaluation in Table~\ref{tab:external-summary-rewrite}.}
+\label{tab:mdd-binary}
+\small
+\begin{tabular}{|l|r|r|r|r|r|r|r|}
+\hline
+Binary subset & $N$ & Accuracy & \shortstack{Majority\\accuracy} & Macro-F1 & Weighted-F1 & F32 F1 & F41 F1\\
+\hline
+MDD pure F32/F41 & 490 & 0.9082 & 0.7837 & 0.8814 & 0.9163 & 0.9429 & 0.8200\\
 \hline
 \end{tabular}
 \end{table}
 
-The common DA trace transfers the transcript-processing prompt, diagnostic model, ontology, checker, and finalization procedure to MDD-5k without MDD-specific training. Full-set Top-1 is 0.5708, and excluding the 47 cases whose gold diagnoses are absent from the configured output space raises it to 0.6014. Both exceed their majority baselines. These rows, the ranking-to-commitment analysis, and downstream common-trace repairs all use the same ordered 925 predictions.
+The restricted set contains 384 pure F32 cases and 106 pure F41 cases. Accuracy is 0.9082 against a 0.7837 majority baseline. The class-level F1 scores are 0.9429 for F32 and 0.8200 for F41, showing stronger performance for the majority depression class. This coarse two-class distinction is narrower than the multi-way diagnosis task and is not interpreted as overall external performance.
 
-\section{Transfer of Retrieval Strategies to MDD-5k}
-\label{sec:mdd-retrieval-transfer}
-
-The matched retrieval-transfer analysis evaluates Single and HiED--DA under no retrieval, global Top-5 retrieval, and parent-balanced retrieval on the same ordered MDD-5k cases. Within each architecture, the model, prompt family, diagnostic scope, decoding, output contract, and scoring implementation are held fixed. This comparison tests whether the internal retrieval pattern transfers to a second synthetic corpus; global and parent-balanced retrieval remain complete configurations that differ in both selection policy and possible context cardinality.
-
-The preregistered six-row MDD retrieval run had not produced a validated result bundle at the manuscript snapshot used for this revision. No values from older, unmatched external runs are substituted for the missing matrix. This section must be completed from the validated six-row bundle before the chapter is locked.
-
-\section{External Ranking-to-Commitment Gap}
-
-On the common MDD-5k DA trace, the Diagnostician's genuine Top-3 contains a gold parent in 0.8508 of cases, whereas the committed primary matches a gold parent in 0.5708. The 0.2800 difference corresponds to 259 cases in which a gold parent is ranked in the Top-3 but not committed. This reproduces the ranking-to-commitment gap under synthetic corpus shift. MDD-5k does not provide a matched criterion-retention analysis equivalent to the internal $D_3$--$R$--$S$ decomposition, so the external result localizes ranking headroom but not the full compatibility-to-commitment pathway.
-
-\section{Output-Space Expansion for Out-of-Scope Diagnoses}
+\section{Scope Coverage and Mechanical Expansion}
 \label{sec:scope-coverage}
 
 The 47 out-of-scope cases must be counted in full-corpus performance because a deployed system also fails when it cannot represent the diagnosis. The in-scope row answers a separate question: how well the system selects among diagnoses it is allowed to emit.
 
 A configuration-only scope-expansion experiment expands the configured diagnostic profile from fourteen categories to 33 categories representing 30 unique parent labels, without changing model weights. The expanded configuration contains the original fourteen subtype-aware categories plus nineteen new parent-level categories; the fourteen original categories are projected to eleven parents for scoring. This demonstrates that the architecture can execute with a broader configured profile. The 58 cases are selected because their raw gold parent is outside the original profile but included in the expanded one. Recovery means that the newly representable gold parent becomes the committed Top-1 diagnosis; recovery is 0/58. No paired in-scope control result is claimed for this sample.
 
-\section{Supporting Cross-Corpus Lexical Analysis}
-
-\begin{table}[htbp]
-\centering
-\caption{Within-corpus and cross-corpus TF--IDF classification performance. The LingxiDiag-to-LingxiDiag row uses the public validation/development split and is not the matched internal test-set baseline required for RQ1. The MDD evaluation cells use the same 185-case holdout.}
-\label{tab:lexical-transfer-rewrite}
-\begin{tabular}{|l|l|r|c|l|}
-\hline
-Training corpus & Evaluation corpus & $N$ & Top-1 & Interpretation\\
-\hline
-LingxiDiag & LingxiDiag & 1000 & 0.610 & within-corpus fit\\
-\hline
-LingxiDiag & MDD-5k & 185 & 0.049 & transfer collapse\\
-\hline
-MDD-5k & LingxiDiag & 1000 & 0.485 & reverse degradation\\
-\hline
-MDD-5k & MDD-5k & 185 & 0.692 & within-MDD fit\\
-\hline
-\end{tabular}
-\end{table}
-
-The LingxiDiag-to-LingxiDiag result is a within-corpus lexical probe and must not be compared directly with the matched 1,000-case HiED result. The same classifier family performs well within each training corpus but transfers poorly. These results show that lexical features can fit corpus-specific wording and label priors without learning a portable diagnostic boundary. The separate lexical-transfer experiment used a deterministic random 80/20 split with seed 42, producing 740 training cases and 185 evaluation cases from MDD-5k. The split was not stratified and is separate from the canonical 925-case evaluation. The 185 MDD evaluation cases are a holdout from the 925-case release, not a second external dataset.
-
-\section{Primary-Selection Repair Performance on MDD-5k}
+\section{External Selection-Repair Transfer}
 
 \begin{table}[htbp]
 \centering
@@ -1339,11 +1316,45 @@ Confidence-informed self-consistency ($K=5$) & 0.5816 & $+0.0108$ & 33 & 23 & $0
 \end{adjustbox}
 \end{table}
 
-The repair methods follow the execution contracts defined in Chapter~\ref{ch:experimental}. NtS and deterministic fusion operate on fixed upstream outputs, whereas debate and sampling-based methods require additional model generation. A conservative external pairwise gate produced no committed changes and reproduced DA, so it is reported only as an implementation check rather than a separate primary method. None of the tested methods provides a statistically supported improvement relative to its predefined comparator. Because NtS emits one diagnosis, its set-level metrics also reflect the single-label output contract. For methods that use additional generation, calls, or context, the result applies to the complete tested configuration rather than to an isolated selection component. The standalone BGE-M3 case-neighbor label-voting analysis is reported in the appendix rather than being mischaracterized as HiED candidate reranking.
+The repair methods follow the execution contracts defined in Chapter~\ref{ch:experimental}. NtS and deterministic fusion operate on fixed upstream outputs, whereas debate and sampling-based methods require additional model generation. A conservative external pairwise gate produced no committed changes and reproduced DA, so it is reported only as an implementation check rather than a separate primary method. None of the tested methods provides a statistically supported improvement relative to its predefined comparator. Because NtS emits one diagnosis, its set-level metrics also reflect the single-label output contract. For methods that use additional generation, calls, or context, the result applies to the complete tested configuration rather than to an isolated selection component.
 
-\section{Summary of External Findings}
+\section{Cross-Corpus Selector and Similarity Transfer}
 
-The available external results support four bounded conclusions. The common-trace DA result exceeds the MDD majority baseline; output-space coverage must be separated from within-scope selection; configuration expansion alone does not produce behavioral recovery; and a large Top-3-to-Top-1 gap remains while the tested repairs fail to give a clear gain. The six-row MDD retrieval-transfer matrix remains outstanding and must be integrated before this chapter is locked. The present findings concern synthetic cross-corpus transfer, not real-patient or Taiwan-specific clinical validity.
+\subsection{Retrieval-Strategy Transfer}
+\label{sec:mdd-retrieval-transfer}
+
+The matched retrieval-transfer design evaluates Single and HiED--DA under no retrieval, global Top-5 retrieval, and parent-balanced retrieval on the same ordered MDD-5k cases. The preregistered six-row run had not produced a validated result bundle at the manuscript snapshot used for this revision. No values from older, unmatched external runs are substituted for the missing matrix; this analysis must be completed before retrieval-policy transfer is interpreted.
+
+\subsection{Lexical Selector Transfer}
+
+\begin{table}[htbp]
+\centering
+\caption{Within-corpus and cross-corpus TF--IDF classification performance. The LingxiDiag-to-LingxiDiag row uses the public validation/development split and is not the matched internal test-set baseline required for RQ1. The MDD evaluation cells use the same 185-case holdout.}
+\label{tab:lexical-transfer-rewrite}
+\begin{tabular}{|l|l|r|c|l|}
+\hline
+Training corpus & Evaluation corpus & $N$ & Top-1 & Interpretation\\
+\hline
+LingxiDiag & LingxiDiag & 1000 & 0.610 & within-corpus fit\\
+\hline
+LingxiDiag & MDD-5k & 185 & 0.049 & transfer collapse\\
+\hline
+MDD-5k & LingxiDiag & 1000 & 0.485 & reverse degradation\\
+\hline
+MDD-5k & MDD-5k & 185 & 0.692 & within-MDD fit\\
+\hline
+\end{tabular}
+\end{table}
+
+The LingxiDiag-to-LingxiDiag result is a within-corpus lexical probe and must not be compared directly with the matched 1,000-case HiED result. The same classifier family performs well within each training corpus but transfers poorly. These results show that lexical features can fit corpus-specific wording and label priors without learning a portable diagnostic boundary. The separate lexical-transfer experiment used a deterministic random 80/20 split with seed 42, producing 740 training cases and 185 evaluation cases from MDD-5k. The split was not stratified and is separate from the canonical 925-case evaluation. The 185 MDD evaluation cases are a holdout from the 925-case release, not a second external dataset.
+
+\subsection{Case-Neighbor Label Voting and Fusion}
+
+Supporting BGE-M3 analyses test whether labels from semantically similar LingxiDiag cases transfer to MDD-5k. Standalone case-neighbor label voting and subsequent fusion with HiED scores are distinct methods and are reported separately in Appendix~\ref{app:supporting}; the standalone phase is not described as HiED candidate reranking.
+
+\section{Synthesis of External Evidence}
+
+The available external results support five bounded conclusions. First, common-trace DA performance exceeds the MDD majority baseline, but the Macro-F1 and Weighted-F1 difference shows that frequent labels contribute disproportionately. Second, the restricted F32/F41 contrast is substantially easier than the full multi-way task and remains stronger for F32 than F41. Third, output-space coverage must be separated from within-scope selection, and configuration expansion alone does not produce behavioral recovery. Fourth, the Top-3-to-Top-1 gap persists while the tested repairs fail to give a clear gain. Fifth, supporting lexical and case-neighbor analyses indicate corpus-specific selector signals rather than reliable cross-corpus transfer. The six-row MDD retrieval-transfer matrix remains outstanding and must be integrated before this chapter is locked. These findings concern synthetic cross-corpus transfer, not real-patient or Taiwan-specific clinical validity.
 
 
 \chapter{Error Analysis and Audit-Based Failure Localization}
