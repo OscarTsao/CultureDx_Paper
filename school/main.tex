@@ -757,11 +757,11 @@ All final comparison rows use the evaluation contract in Chapter~\ref{ch:data}. 
 
 \section{Baseline Systems and Same-Split Benchmark Comparison (RQ1)}
 
-RQ1 compares complete systems on the same case set under a common label mapping, evaluation implementation, and Top-1 endpoint. It is a same-split benchmark comparison, not a claim that the systems have matched training or inference components.
+RQ1 compares complete systems on the same internal test set under a common label mapping, evaluation implementation, and Top-1 endpoint. Retrieval configuration is selected separately for Single and HiED on the public validation split before test-set comparison. The resulting main configurations are Single with global Top-5 retrieval and HiED--DA with parent-balanced retrieval. This is a same-split benchmark comparison of complete systems, not a component-matched ablation.
 
 \begin{table}[htbp]
 \centering
-\caption{Systems included in the RQ1 same-split baseline comparison. The final retrieval setting is selected on the public validation split.}
+\caption{Systems included in the RQ1 same-split benchmark comparison. Retrieval configurations for Single and HiED were selected separately on the public validation split.}
 \label{tab:failure-ladder-rewrite}
 \small
 \begin{tabularx}{\textwidth}{|p{2.3cm}|X|p{3.2cm}|X|}
@@ -781,11 +781,11 @@ HiED--DA & Ranked Diagnostician plus criterion audit & Parent-balanced (validati
 
 \paragraph{Conventional baselines.} The Majority baseline always predicts the most frequent parent label in the 13,000-case training-source corpus. TF--IDF + LR is a supervised lexical baseline trained on the same 13,000 training cases. It represents transcripts using character $n$-gram TF--IDF features and trains one-vs-rest logistic-regression classifiers over the twelve scoring classes. Class probabilities define the ranked Top-3, while labels with probability at least 0.5 form the multilabel output; when no label reaches the threshold, the highest-probability class is retained. All settings were fixed before test-set evaluation. Exact hyperparameters are reported in Appendix~\ref{app:supporting}.
 
-\paragraph{Single-model baseline.} Single uses one LLM diagnostic call with the same configured label space and emits a primary diagnosis plus an optional secondary diagnosis. It does not invoke HiED's Criterion Checkers, deterministic rules, or ranked-differential contract. Its final validation-selected retrieval setting is used for the RQ1 comparison; the no-retrieval, global, and parent-balanced variants are analyzed under RQ3.
+\paragraph{Single-model baseline.} Single uses one LLM diagnostic call with the same configured label space and emits a primary diagnosis plus an optional secondary diagnosis. It does not invoke HiED's Criterion Checkers, deterministic rules, or ranked-differential contract. Global Top-5 retrieval is used in RQ1 because it was selected for Single on the validation split; the no-retrieval and parent-balanced variants are analyzed under RQ3. Because Single does not emit a genuine ordered differential, Top-3 Accuracy is not reported.
 
-\paragraph{HiED comparison.} HiED--DA uses the ranked Diagnostician, all Criterion Checkers, deterministic compatibility rules, and DA finalization. Its output includes a ranked Top-5, a committed primary, an optional secondary diagnosis, and the audit trace. Its final validation-selected retrieval setting is used in RQ1. Single and HiED are therefore compared as complete system packages, not as a one-component ablation.
+\paragraph{HiED comparison.} HiED--DA uses the ranked Diagnostician, all Criterion Checkers, deterministic compatibility rules, and DA finalization. Its output includes a ranked differential, a committed primary, an optional secondary diagnosis, and the audit trace. Parent-balanced retrieval is used in RQ1 because global Top-5 did not satisfy the predefined validation promotion criterion.
 
-The comparison uses the same 1,000 case IDs, case order, label mapping, and evaluation implementation. The baseline family compares each non-HiED system with the selected HiED--DA configuration; retrieval variants form separate Single and HiED families under RQ3.
+All systems are evaluated on the same 1,000 internal test cases using the same case order, parent-level label mapping, and scoring implementation. Because the systems differ in training procedure, number of model calls, retrieval context, and output contract, RQ1 compares complete system configurations rather than attributing differences to a single component. Retrieval variants form separate Single and HiED families under RQ3.
 
 \section{Failure Localization Across Ranking, Verification, and Commitment (RQ2)}
 
@@ -985,24 +985,26 @@ The strong lexical row is also a counterweight to an exclusively missing-informa
 
 \begin{table}[htbp]
 \centering
-\caption{Retrieval-strategy results on the fixed internal test set. Single has no genuine ranked output, so Top-3 is not reported.}
+\caption{Retrieval-strategy results on the fixed internal test set. Single has no genuine ranked output, so Top-3 is not reported. The table presents test-set ablations and does not alter the validation-selected main configurations.}
 \label{tab:retrieval-results}
-\begin{tabular}{|l|l|c|c|c|}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{|l|l|c|c|c|c|c|}
 \hline
-Architecture & Retrieval & Top-1 & Top-3 & Exact Match\\
+Architecture & Retrieval & Top-1 & Top-3 & Exact Match & Macro-F1 & Weighted-F1\\
 \hline
-Single & None & 0.466 & --- & 0.017\\
-Single & Global Top-5 & 0.517 & --- & 0.029\\
-Single & Parent-balanced & 0.508 & --- & 0.011\\
+Single & None & 0.466 & --- & 0.017 & 0.183 & 0.426\\
+Single & Global Top-5 & 0.517 & --- & 0.029 & 0.224 & 0.447\\
+Single & Parent-balanced & 0.508 & --- & 0.011 & 0.192 & 0.433\\
 \hline
-HiED--DA & None & 0.510 & 0.786 & 0.404\\
-HiED--DA & Global Top-5 & 0.524 & 0.815 & 0.435\\
-HiED--DA & Parent-balanced & 0.518 & 0.802 & 0.409\\
+HiED--DA & None & 0.510 & 0.786 & 0.404 & 0.174 & 0.437\\
+HiED--DA & Global Top-5 & 0.524 & 0.815 & 0.435 & 0.196 & 0.437\\
+HiED--DA & Parent-balanced & 0.518 & 0.802 & 0.409 & 0.178 & 0.434\\
 \hline
 \end{tabular}
+\end{adjustbox}
 \end{table}
 
-For the Single pipeline, global Top-5 and parent-balanced retrieval raise Top-1 agreement from 0.466 to 0.517 and 0.508. Both improve over no retrieval after within-family Holm adjustment ($p=9.42\times10^{-5}$ and $p=7.19\times10^{-4}$), but global and parent-balanced retrieval do not differ significantly (0.517 versus 0.508; adjusted $p=0.362$). For HiED--DA, no retrieval, global Top-5, and parent-balanced retrieval yield 0.510, 0.524, and 0.518; none of the three paired differences is significant after adjustment. Because global and parent-balanced retrieval also differ in retrieved-example count, these results compare complete retrieval configurations and do not isolate parent balancing as the cause.
+Global Top-5 produces the strongest test-set point estimates for Single across all reported native endpoints. For HiED--DA, global retrieval also yields the highest Top-1, Top-3, Exact Match, and Macro-F1, while its Weighted-F1 is nearly unchanged from no retrieval before rounding (0.4375 versus 0.4371). Both Single retrieval conditions improve Top-1 over no retrieval after within-family Holm adjustment ($p=9.42\times10^{-5}$ for global and $p=7.19\times10^{-4}$ for parent-balanced), but global and parent-balanced retrieval do not differ significantly (adjusted $p=0.362$). None of the paired HiED Top-1 retrieval comparisons is significant after adjustment. These test-set ablations do not revise the validation decision: global Top-5 remains the main Single configuration and parent-balanced retrieval remains the main HiED configuration. Because global and parent-balanced retrieval also differ in retrieved-example count, the results compare complete retrieval configurations and do not isolate parent balancing as the cause.
 
 \section{Ranking-to-Commitment Gap}
 
