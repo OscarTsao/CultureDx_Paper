@@ -498,16 +498,14 @@ Compatibility Auditor & F32 confirmed: 3 core criteria and 6 total criteria sati
 \hline
 Direct-Answer & Commits emitted F41.1 and preserves optional secondary F51 & Checker and rule outputs do not overwrite the emitted primary\\
 \hline
-NtS-primary & Commits F32, the first rule-confirmed diagnosis in the ranked list, and preserves secondary F51 & Primary re-selection is separated from secondary-label emission\\
-\hline
-NtS-single & Commits only F32 & The same re-selected primary is emitted without a secondary label\\
+Nominate-then-Select & Commits only F32, the first rule-confirmed diagnosis in the ranked list & Criterion-derived re-selection produces one primary diagnosis\\
 \hline
 Audit artifacts & Ranked list, criterion states, confirmed set, unresolved evidence, and finalization source & Competing evidence and missing information remain inspectable without being resolved clinically\\
 \hline
 \end{longtable}
 }
 
-The example separates compatibility from primacy and makes the finalization policies diverge. The Diagnostician emits F41.1, but the duration and other configured criteria for F41.1 remain unresolved, whereas F32 satisfies its configured rule. DA therefore preserves F41.1; both NtS contracts re-select F32, while only NtS-primary preserves the nonduplicating secondary label. The constructed outputs illustrate the policy contracts, not a claim that F32 is the clinically correct primary diagnosis.
+The example separates compatibility from primacy and makes the finalization policies diverge. The Diagnostician emits F41.1, but the duration and other configured criteria for F41.1 remain unresolved, whereas F32 satisfies its configured rule. DA therefore preserves F41.1 and optional secondary F51, while NtS re-selects and emits only F32. The constructed outputs illustrate the policy contracts, not a claim that F32 is the clinically correct primary diagnosis.
 
 \section{Global Top-5 and Parent-Balanced Case Retrieval}
 \label{sec:retrieval}
@@ -540,7 +538,7 @@ Checker states are model-generated and have not been validated as clinician grou
 
 \section{Direct-Answer and Nominate-then-Select Finalization}
 
-HiED defines two finalization policies over the same upstream ranked candidates, criterion states, and rule-confirmed set. Direct-Answer (DA) is the default policy and preserves the diagnostician's emitted decision. Nominate-then-Select (NtS) tests whether criterion-derived compatibility can improve the committed primary diagnosis. Two NtS output contracts separate primary re-selection from single-label emission.
+HiED defines two finalization policies over the same upstream ranked candidates, criterion states, and rule-confirmed set. Direct-Answer (DA) is the default policy and preserves the diagnostician's emitted decision. Nominate-then-Select (NtS) tests whether criterion-derived compatibility can improve the committed primary diagnosis and emits one selected diagnosis.
 
 Under Direct-Answer (DA), the diagnostician's primary field becomes the committed diagnosis; the first ranked diagnosis is used only when that field is missing. An optional comorbidity is retained when it differs from the primary. Outputs from the Criterion Checker and Compatibility Auditor do not replace the DA committed diagnosis.
 
@@ -550,9 +548,7 @@ Nominate-then-Select (NtS) uses criterion compatibility to choose the committed 
 \]
 The denominator is the required count stored in the configured rule, not the total number of listed criteria. NtS first selects the earliest rule-confirmed diagnosis in the five-diagnosis ranking. If none of those five is confirmed, it selects another rule-confirmed diagnosis by descending met ratio, with ties resolved by the predefined configured-category order. If no diagnosis is rule-confirmed, it falls back to the first ranked diagnosis.
 
-\emph{NtS-single} emits only the re-selected primary, so it changes both the primary-selection rule and the cardinality of the emitted diagnostic set. The controlled \emph{NtS-primary} contract applies the same primary-selection rule while preserving the DA comorbidity after parent projection, except when it duplicates the newly selected primary. NtS-primary is an analytic configuration that isolates primary re-selection from secondary-label suppression. NtS-primary and NtS-single consequently have identical committed primaries and Top-1 values, while their set-level metrics can differ.
-
-DA and NtS-single reuse the same ranked candidates and checker traces, but differ in both the primary-selection rule and secondary-label emission: DA preserves an optional secondary diagnosis, whereas NtS-single emits only the re-selected primary. The NtS-primary controlled output contract preserves the DA secondary output when isolating primary re-selection. Additional primary-selection repair methods are defined in Chapter~\ref{ch:experimental} and do not alter the core architecture described here.
+NtS emits only the re-selected primary. DA and NtS therefore reuse the same ranked candidates and checker traces but differ in both the primary-selection rule and secondary-label emission. The primary analysis consequently uses Top-1 Accuracy. Exact Match and classwise F1 for NtS also reflect its single-label output contract and are not interpreted as isolated effects of primary re-selection. Additional primary-selection repair methods are defined in Chapter~\ref{ch:experimental} and do not alter the core architecture described here.
 
 \section{Recorded Audit Outputs}
 
@@ -776,14 +772,14 @@ Majority & Most frequent training-corpus parent & None & One parent label\\
 \hline
 TF--IDF + LR & Supervised character $n$-gram classifier & None & Ranked scores and predicted label set\\
 \hline
-Single & One diagnostic LLM call & Selected on validation & Primary and optional secondary\\
+Single & One diagnostic LLM call & Global Top-5 (validation-selected) & Primary and optional secondary\\
 \hline
-HiED--DA & Ranked Diagnostician plus criterion audit & Selected on validation & Ranking, primary, optional secondary, and audit\\
+HiED--DA & Ranked Diagnostician plus criterion audit & Parent-balanced (validation-selected) & Ranking, primary, optional secondary, and audit\\
 \hline
 \end{tabularx}
 \end{table}
 
-\paragraph{Conventional baselines.} The Majority baseline always predicts the most frequent parent label in the 13,000-case training-source corpus. TF--IDF + LR uses character-boundary $1$--$2$-gram TF--IDF with at most 10,000 features, minimum document frequency 2, maximum document frequency 0.95, and sublinear term frequency. Twelve one-vs-rest logistic-regression models use $C=1.0$, the L-BFGS solver, balanced class weights, and a 2,000-iteration cap. These fixed settings are fitted on the 13,000 training cases. Class probabilities determine the ranked Top-3; labels with probability at least 0.5 form the multilabel output, with the top-ranked class used when none crosses the threshold.
+\paragraph{Conventional baselines.} The Majority baseline always predicts the most frequent parent label in the 13,000-case training-source corpus. TF--IDF + LR is a supervised lexical baseline trained on the same 13,000 training cases. It represents transcripts using character $n$-gram TF--IDF features and trains one-vs-rest logistic-regression classifiers over the twelve scoring classes. Class probabilities define the ranked Top-3, while labels with probability at least 0.5 form the multilabel output; when no label reaches the threshold, the highest-probability class is retained. All settings were fixed before test-set evaluation. Exact hyperparameters are reported in Appendix~\ref{app:supporting}.
 
 \paragraph{Single-model baseline.} Single uses one LLM diagnostic call with the same configured label space and emits a primary diagnosis plus an optional secondary diagnosis. It does not invoke HiED's Criterion Checkers, deterministic rules, or ranked-differential contract. Its final validation-selected retrieval setting is used for the RQ1 comparison; the no-retrieval, global, and parent-balanced variants are analyzed under RQ3.
 
@@ -825,15 +821,15 @@ Global versus parent-balanced & Global Top-5, parent-balanced & Selection policy
 
 The retrieval matrix includes no retrieval, global Top-5, and parent-balanced retrieval for both Single and HiED--DA. Because global Top-5 always returns five examples whereas parent-balanced retrieval may return one per configured parent label, the global-versus-balanced contrast tests complete retrieval configurations and does not isolate class balancing alone.
 
-\section{Finalization Policies and Output-Cardinality Controls (RQ4)}
+\section{Finalization Policies (RQ4)}
 
-The finalization analysis derives DA, NtS-primary, and NtS-single outputs within each of the three retrieval conditions using the same 1,000 ordered test cases. NtS outputs are deterministically derived from the recorded DA ranking, checker states, and rule-confirmed set without additional LLM calls. NtS-primary changes only the committed primary and preserves the DA secondary label unless it duplicates the new primary after parent projection. NtS-single uses the same re-selected primary but clears secondary labels.
+The finalization analysis derives DA and NtS outputs within each retrieval condition using the same 1,000 ordered test cases. NtS is derived deterministically from the recorded DA ranking, checker states, and rule-confirmed set without additional LLM calls. It re-selects and emits one primary diagnosis.
 
-Top-1 Accuracy is the primary outcome. Within each retrieval strategy, paired DA--NtS-primary outcomes are compared using exact McNemar tests, paired-bootstrap confidence intervals, and Holm correction across the three comparisons. Difference-in-differences bootstrap contrasts test whether the finalization effect varies across retrieval strategies. NtS-single is retained only as a secondary output-contract comparison that separates primary re-selection from secondary-label suppression.
+Top-1 Accuracy is the primary outcome. Within each retrieval strategy, paired DA--NtS outcomes are compared using exact McNemar tests, paired-bootstrap confidence intervals, and Holm correction across the three comparisons. Difference-in-differences bootstrap contrasts test whether the finalization effect varies across retrieval strategies. Because NtS emits one diagnosis, its set-level metrics also reflect output cardinality and are not used to isolate primary re-selection.
 
 \begin{table}[htbp]
 \centering
-\caption{Finalization output contracts applied within each retrieval condition. NtS-primary is an analytic control for primary re-selection rather than a complete clinical comorbidity policy.}
+\caption{Finalization policies applied within each retrieval condition.}
 \label{tab:rq4-finalization-factorial}
 \small
 \begin{adjustbox}{max width=\textwidth}
@@ -843,15 +839,13 @@ Policy & Primary-selection rule & Secondary-label rule & New LLM inference & Ana
 \hline
 Direct-Answer (DA) & Preserve Diagnostician primary & Preserve optional DA secondary & Original pipeline only & Default output policy\\
 \hline
-NtS-primary & Select using the rule-confirmed artifacts & Preserve DA secondary unless duplicate & No & Isolate primary re-selection\\
-\hline
-NtS-single & Same primary as NtS-primary & Remove all secondary labels & No & Isolate output-cardinality effect\\
+Nominate-then-Select (NtS) & Re-select from ranked and rule-confirmed artifacts & Emit no secondary label & No & Test criterion-derived primary selection\\
 \hline
 \end{tabular}
 \end{adjustbox}
 \end{table}
 
-\paragraph{Finalization contracts.} DA preserves the Diagnostician's emitted primary and optional comorbidity. NtS-primary re-selects the primary from the existing ranked and criterion-derived artifacts while preserving the DA comorbidity unless it duplicates the new primary after parent projection. NtS-single uses the same re-selected primary but clears secondary labels. The DA--NtS-primary contrast therefore tests primary selection, whereas the NtS-primary--NtS-single contrast tests output cardinality.
+\paragraph{Finalization contracts.} DA preserves the Diagnostician's emitted primary and optional secondary diagnosis. NtS re-selects one primary from the existing ranked and criterion-derived artifacts and emits only that diagnosis. The DA--NtS comparison therefore focuses on Top-1 Accuracy; differences in Exact Match, Macro-F1, and Weighted-F1 also incorporate the single-label NtS output contract.
 
 \section{Primary-Selection Repair Methods}
 
@@ -859,7 +853,7 @@ The repair analysis separates downstream selection on common recorded DA outputs
 
 \subsection{Downstream Selection on Common DA Outputs}
 
-NtS-primary, pairwise controlled application, forced pairwise override, and deterministic fusion reuse recorded upstream DA artifacts. They do not regenerate the Diagnostician ranking or checker states.
+NtS and deterministic fusion reuse recorded upstream DA artifacts. A conservative application of recorded pairwise preferences accepted no replacement and reproduced DA exactly; it is retained only as an implementation check rather than a primary method.
 
 \subsection{New Inference Configurations}
 
@@ -876,9 +870,7 @@ Method & Execution basis & Fixed DA trace & Output change & Purpose\\
 \hline
 Pairwise comparison---independent run & New upstream generation and checker calls, then pairwise comparison & No & Primary may change; secondary follows the new-run contract & Raw intervention performance; not an isolated finalizer\\
 \hline
-Pairwise comparison---controlled application & Pairwise comparison on recorded upstream artifacts; no new checker calls & Yes & Primary only; secondary preserved & Isolate the pairwise downstream decision\\
-\hline
-Pairwise comparison---forced override & Recorded pairwise preference applied mandatorily; no new checker calls & Yes & Primary replacement mandatory; secondary preserved & Stress-test mandatory pairwise replacement\\
+Forced pairwise override & Full pairwise-commit pipeline with mandatory promotion of a valid in-cluster preference & No & Primary and genuine ranking may change & Safety stress test of acting on pairwise preferences\\
 \hline
 Two-view debate & New upstream run followed by advocate and judge calls & No & Primary may change; secondary cleared & Test additional comparative reasoning\\
 \hline
@@ -891,13 +883,13 @@ Confidence-informed self-consistency (CISC) & Same samples, weighted by verbaliz
 \end{tabularx}
 \end{table}
 
-\paragraph{Pairwise comparison.} The gate considers ranked diagnoses with met ratio at least 0.50, sorts them by support, and links adjacent alternatives separated by less than 0.10. When several adjacent pairs qualify, their union forms one comparison cluster; the cluster need not contain the current DA primary. The pairwise prompt receives the deterministically budgeted transcript and criterion states, evidence spans, confidence fields, and support counts for every diagnosis in that cluster. A returned diagnosis is accepted only if it belongs to the cluster; otherwise the recorded ranking is unchanged. The independent run regenerates the upstream pipeline and promotes the accepted preference to the first ranking position before its normal output contract is applied. The controlled application holds the DA ranking, checker trace, rule-confirmed set, and secondary label fixed and changes only the primary when its predefined acceptance rule permits. Forced override adopts every valid recorded preference and serves as a safety stress test. Cases without an eligible cluster or a valid in-cluster preference retain DA.
+\paragraph{Pairwise comparison.} The gate considers ranked diagnoses with met ratio at least 0.50, sorts them by support, and links adjacent alternatives separated by less than 0.10. When several adjacent pairs qualify, their union forms one comparison cluster; the cluster need not contain the current DA primary. The pairwise prompt receives the deterministically budgeted transcript and criterion states, evidence spans, confidence fields, and support counts for every diagnosis in that cluster. A returned diagnosis is valid only if it belongs to the cluster. The forced-override configuration mandatorily promotes a valid preference and serves as a safety stress test. Its retained artifact is a full pairwise-commit pipeline whose genuine ranking differs from the DA trace, so the paired outcome comparison evaluates the complete configuration rather than an isolated common-upstream finalizer. A conservative gate applied to recorded DA outputs produced no committed changes and is reported only as a supporting implementation check. Cases without an eligible cluster or valid preference retain the existing output.
 
 \paragraph{Two-view debate.} Debate is a ranking reconciliation rather than a pro-versus-con argument about one diagnosis. The candidate set is the union of the Diagnostician Top-5 and the rule-confirmed diagnoses. Advocate-D receives the ranking, rationale, and retrieved-case gist. Advocate-C receives the same candidates and criterion-evidence table, but not the Diagnostician rationale or retrieved cases. Each receives the deterministically budgeted transcript and produces a ranked Top-3 for at most two rounds. Agreement on the first candidate ends the debate; otherwise a neutral judge selects from the shared candidate set. This is an independently generated pipeline run, and the debate contract emits one primary rather than preserving the DA secondary label. Because the advocate and judge prompts combine the transcript, candidate set, and intermediate arguments, debate uses a 24,576-token context window, compared with 8,192 tokens for DA. Its result is therefore a complete cross-budget configuration comparison, not a matched-budget component ablation.
 
 \paragraph{Deterministic fusion.} The fusion rule combines the recorded DA rank, rule-confirmation status, and criterion met ratio without additional LLM inference. It was selected on the public validation split before internal-test evaluation. It keeps DA unless the DA primary is unconfirmed and a confirmed Top-3 alternative exceeds its met ratio by at least 0.20.
 
-\paragraph{Self-consistency and CISC.} Self-consistency samples the Diagnostician $K=3$ or $K=5$ times at temperature 0.7 under fixed seed schedules and selects the primary by vote. CISC uses the same samples but weights votes by the Diagnostician's verbalized primary confidence, clipped to $[0,1]$; a missing confidence receives weight 1. Ties are resolved by unweighted vote count, then earliest occurrence in the ordered samples, then diagnosis code. These confidences are neither model logits nor calibrated probabilities. Criterion Checkers, deterministic logic, and finalization are not rerun. The internal rows lack retained case-level sampling records and are therefore descriptive supporting evidence, excluded from core paired repair claims. The external MDD-5k matrix retains sample predictions, seeds, and aggregation records for audit.
+\paragraph{Self-consistency and CISC.} Self-consistency samples the Diagnostician $K=3$ or $K=5$ times at temperature 0.7 under fixed seed schedules and selects the primary by vote. Ties in vote count are resolved by selecting the diagnosis that first appears in the fixed sequence of sampled outputs. CISC uses the same samples but weights votes by the Diagnostician's verbalized primary confidence, clipped to $[0,1]$; a missing confidence receives weight 1. Ties in confidence-weighted scores are first resolved by unweighted vote count and then by first appearance in the fixed sample sequence. These confidences are neither model logits nor calibrated probabilities. Criterion Checkers, deterministic logic, and finalization are not rerun. The internal rows lack retained case-level sampling records and are therefore descriptive supporting evidence, excluded from core paired repair claims. The external MDD-5k matrix retains sample predictions, seeds, and aggregation records for audit.
 
 Parent-projected Top-1 Accuracy is the common repair endpoint. Top-3, Exact Match, Macro-F1, and Weighted-F1 are reported only when a method produces the corresponding genuine ranked or multilabel output. Methods on identical cases report wrong-to-correct and correct-to-wrong flips; the core repair family applies Holm correction to the predefined DA comparisons reported together in the result table.
 
@@ -907,36 +899,79 @@ RQ5 first evaluates Qwen3-4B, 8B, 14B, and 32B under the same internal cases, pr
 
 \section{External Evaluation and Scope-Expansion Design}
 
-MDD-5k provides 925 patient-level synthetic cases, including 878 in-scope cases, 47 out-of-scope cases, and a prespecified 490-case F32/F41 subset. The external design evaluates full-set and in-scope performance, the no-retrieval/global/parent-balanced matrix for Single and HiED--DA, and DA versus NtS-primary on common upstream artifacts. The deterministic transcript-budget rule is applied to long MDD transcripts. Full-set Top-1 is the primary transfer endpoint; in-scope and F32/F41 results are secondary views that separate output-space coverage from within-scope selection.
+MDD-5k provides 925 patient-level synthetic cases, including 878 in-scope cases, 47 out-of-scope cases, and a prespecified 490-case F32/F41 subset. The external design evaluates full-set and in-scope performance, the no-retrieval/global/parent-balanced matrix for Single and HiED--DA, and DA versus NtS on common upstream artifacts. The deterministic transcript-budget rule is applied to long MDD transcripts. Full-set Top-1 is the primary transfer endpoint; in-scope and F32/F41 results are secondary views that separate output-space coverage from within-scope selection.
 
 A separate 58-case scope-expansion analysis changes the configured profile from fourteen categories representing eleven scoring parents to 33 categories representing 30 parents without updating model weights. It tests whether making previously unavailable diagnoses representable is sufficient for selection; it does not test learned clinical competence. Cross-corpus TF--IDF and BGE-M3 neighbor-label analyses are supporting selector studies reported separately from the main HiED transfer design. Diagnostic confusion and audit-pattern analyses are defined in Chapter~8 as error characterization rather than robustness conditions.
 
 \chapter{In-Domain Evaluation on LingxiDiagBench}
 \label{ch:results}
 
-\section{Evaluation Overview}
+This chapter first reports retrieval-configuration selection on the public validation split and then evaluates the selected systems on the fixed 1,000-case internal test set. Single and HiED use retrieval policies selected separately for each architecture. The remaining sections analyze test-set retrieval effects, the ranking-to-commitment gap, criterion compatibility, finalization policies, selection-repair methods, and model-size robustness.
 
-This chapter reports the final in-domain evaluation on the fixed 1,000-case internal test set. It first compares the conventional baselines, Single-model retrieval variants, and HiED configurations, and then examines the ranking-to-commitment gap, criterion verification, finalization policies, selection-repair methods, and model-size robustness. Criterion-checker sensitivity and Qwen3 model-size robustness are reported in separate subsections because they evaluate component behavior and robustness rather than the primary matched comparison between systems.
+\section{Validation-Based Retrieval Selection}
+\label{sec:validation-retrieval-selection}
 
-\section{Same-Split Baseline Comparison}
+The public validation split determines the primary retrieval policy for each architecture before the internal test results are interpreted. Because this split is used for configuration selection, the results in this section are selection evidence rather than an independent test estimate.
+
+\paragraph{HiED retrieval selection.}
+\begin{table}[htbp]
+\centering
+\caption{HiED--DA retrieval selection on the public validation split. Differences are global Top-5 minus parent-balanced retrieval.}
+\label{tab:hied-validation-selection}
+\begin{tabular}{|l|c|c|c|}
+\hline
+Metric & Global Top-5 & Parent-balanced & Difference\\
+\hline
+Any-gold Top-1 & 0.525 & 0.523 & $+0.002$\\
+Genuine Top-3 & 0.797 & 0.800 & $-0.003$\\
+Exact Match & 0.432 & 0.428 & $+0.004$\\
+Macro-F1 & 0.177731 & 0.180983 & $-0.003252$\\
+Weighted-F1 & 0.435373 & 0.439657 & $-0.004284$\\
+\hline
+\end{tabular}
+\end{table}
+
+Global Top-5 improves HiED Top-1 Accuracy and Exact Match, but reduces genuine Top-3 Accuracy, Macro-F1, and Weighted-F1. It therefore improves only two of the five predefined selection metrics and does not satisfy the promotion rule. Parent-balanced retrieval is retained as the primary HiED configuration. The Top-1 difference is 0.002, with 29 global-only correct cases and 27 parent-balanced-only correct cases; the paired 95\% confidence interval includes zero [$-0.013$, 0.017], and the exact McNemar test gives $p=0.894$.
+
+\paragraph{Single retrieval selection.}
+\begin{table}[htbp]
+\centering
+\caption{Single retrieval selection on the public validation split. Single does not emit a genuine ordered differential, so Top-3 is not reported.}
+\label{tab:single-validation-selection}
+\begin{tabular}{|l|c|c|}
+\hline
+Metric & Global Top-5 & Parent-balanced\\
+\hline
+Top-1 & 0.519 & 0.507\\
+Exact Match & 0.030 & 0.016\\
+Macro-F1 & 0.209368 & 0.194514\\
+Weighted-F1 & 0.456454 & 0.436607\\
+Genuine Top-3 & --- & ---\\
+\hline
+\end{tabular}
+\end{table}
+
+Global Top-5 improves every native reported endpoint for Single and is therefore used as the primary Single configuration. The selected systems for the main test comparison are consequently Single with global Top-5 retrieval and HiED--DA with parent-balanced retrieval; the architectures are not forced to share a retrieval policy.
+
+\section{Main Test-Set Benchmark Results}
 \label{sec:matched-baselines-retrieval}
 
 \begin{table}[htbp]
 \centering
-\caption{Same-split baseline results on the fixed 1,000-case internal test set under a common evaluation contract. Top-1 denotes any-gold agreement; Top-3 is reported only for systems that produce a genuine ranked output.}
+\caption{Selected-system benchmark results on the fixed 1,000-case internal test set. Single and HiED use retrieval configurations selected separately for each architecture on the public validation split. Top-1 denotes any-gold agreement; Top-3 is reported only for genuine ranked outputs.}
 \label{tab:matched-baselines-retrieval}
 \begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{|l|c|c|c|c|c|}
+\begin{tabular}{|l|c|c|c|c|}
 \hline
-System & Top-1 & Top-3 & Exact Match & Macro-F1 & Weighted-F1\\
+System & Top-1 & Top-3 & Exact Match & Macro-F1\\
 \hline
-Majority & 0.398 & --- & 0.327 & 0.047 & 0.207\\
+Majority & 0.398 & --- & 0.327 & 0.047\\
 \hline
-TF--IDF + LR & 0.632 & 0.923 & 0.321 & 0.393 & 0.601\\
+TF--IDF + LR & 0.632 & 0.923 & 0.321 & 0.393\\
 \hline
-Single, no retrieval & 0.466 & --- & 0.017 & 0.183 & 0.426\\
+Single, global Top-5 retrieval & 0.517 & --- & 0.029 & 0.224\\
 \hline
-HiED--DA, parent-balanced retrieval & 0.518 & 0.802 & 0.409 & 0.178 & 0.434\\
+HiED--DA, parent-balanced retrieval & 0.518 & 0.802 & 0.409 & 0.178\\
 \hline
 \end{tabular}
 \end{adjustbox}
@@ -946,7 +981,7 @@ The conventional baselines materially change the RQ1 comparison. Majority agreem
 
 The strong lexical row is also a counterweight to an exclusively missing-information interpretation. At least some benchmark labels are recoverable from transcript surface regularities more effectively than the evaluated LLM pipeline recovers them. This does not establish clinical or cross-corpus superiority for TF--IDF: synthetic generation may create lexical shortcuts, and transfer must be evaluated separately. It does show that residual HiED errors cannot, by themselves, prove that the transcripts contain no usable primary-diagnosis signal. HiED's contribution is instead the ranked differential, criterion-level audit, and stage-wise failure localization that a flat lexical classifier does not provide.
 
-\section{Retrieval Strategy Results}
+\section{Test-Set Retrieval Comparisons}
 
 \begin{table}[htbp]
 \centering
@@ -971,7 +1006,7 @@ For the Single pipeline, global Top-5 and parent-balanced retrieval raise Top-1 
 
 \section{Ranking-to-Commitment Gap}
 
-HiED--DA reaches 0.802 Top-3 Accuracy and 0.518 Top-1 Accuracy. Under the DA contract, the emitted primary must be selected from the Diagnostician's genuine Top-3, so every Top-1-correct case is also Top-3 correct even though the two outputs are stored separately. The 0.284 difference therefore represents 284 cases in which a gold parent is in the Top-3 but another diagnosis is committed. This gap measures benchmark-label opportunity, not clinical recoverability without additional information.
+HiED--DA achieves a genuine Top-3 Accuracy of 0.802 and a committed Top-1 Accuracy of 0.518 on the same 1,000 test cases. Under the DA contract, the emitted primary must be selected from the Diagnostician's genuine Top-3, so every Top-1-correct case is also Top-3 correct even though the two outputs are stored separately. The 0.284 difference corresponds to 284 cases in which a benchmark gold parent appears in the genuine Top-3 but is not selected as the committed primary. This difference quantifies selection headroom under benchmark scoring; it does not establish that every case is clinically resolvable or recoverable by a different finalization rule.
 
 \section{Criterion Compatibility and Gold-Label Retention}
 \label{sec:criterion-verification}
@@ -1007,12 +1042,12 @@ The category-level criterion-state distribution and its interpretation are repor
 
 \begin{table}[htbp]
 \centering
-\caption{DA versus NtS-primary across retrieval strategies ($N=1000$ paired cases per row). W$\rightarrow$C and C$\rightarrow$W denote wrong-to-correct and correct-to-wrong primary changes.}
+\caption{DA versus NtS across retrieval strategies ($N=1000$ paired cases per row). W$\rightarrow$C and C$\rightarrow$W denote wrong-to-correct and correct-to-wrong primary changes.}
 \label{tab:nts-factorial}
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{|l|c|c|c|c|c|c|c|}
 \hline
-Retrieval & DA & NtS-primary & $\Delta$ & W$\rightarrow$C & C$\rightarrow$W & 95\% CI & Adjusted $p$\\
+Retrieval & DA & NtS & $\Delta$ & W$\rightarrow$C & C$\rightarrow$W & 95\% CI & Adjusted $p$\\
 \hline
 None & 0.510 & 0.482 & $-0.028$ & 9 & 37 & [$-0.041$, $-0.015$] & 0.000122\\
 \hline
@@ -1028,33 +1063,13 @@ Criterion-derived primary re-selection lowers Top-1 under every tested retrieval
 
 The interaction contrasts are small in point estimate: global minus balanced is $-0.001$ (95\% CI [$-0.013$, $0.010$]), none minus balanced is $0.000$ (95\% CI [$-0.012$, $0.012$]), and global minus none is $-0.001$ (95\% CI [$-0.011$, $0.009$]). The supported conclusion is that there is no evidence that retrieval strategy moderates the NtS primary-selection penalty. This is not an equivalence result.
 
-\begin{table}[htbp]
-\centering
-\caption{Set-level effects of preserving or suppressing the DA secondary label after NtS primary re-selection.}
-\label{tab:nts-cardinality}
-\begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{|l|l|c|c|c|c|}
-\hline
-Retrieval & Contract & Exact Match & Macro-F1 & Weighted-F1 & Mean cardinality\\
-\hline
-None & NtS-primary & 0.382 & 0.174 & 0.424 & 1.148\\
-None & NtS-single & 0.427 & 0.171 & 0.400 & 1.000\\
-Global Top-5 & NtS-primary & 0.416 & 0.198 & 0.423 & 1.100\\
-Global Top-5 & NtS-single & 0.442 & 0.188 & 0.413 & 1.000\\
-Parent-balanced & NtS-primary & 0.390 & 0.190 & 0.422 & 1.127\\
-Parent-balanced & NtS-single & 0.437 & 0.181 & 0.408 & 1.000\\
-\hline
-\end{tabular}
-\end{adjustbox}
-\end{table}
-
-NtS-primary and NtS-single use identical primaries, but preserving the DA secondary output raises mean cardinality and changes set metrics. The single-label NtS Exact Match behavior is therefore an output-cardinality trade-off; it is not evidence that compatibility-derived primary re-selection improves primary selection or set calibration by itself. A separate checker-sensitivity analysis leaves DA Top-1 unchanged across the five full-size settings, as expected because DA does not allow the downstream audit to overwrite the diagnostician's primary.
+Because NtS emits one diagnosis, its Exact Match, Macro-F1, and Weighted-F1 also reflect the single-label output contract and are not used to isolate primary re-selection. A separate checker-sensitivity analysis leaves DA Top-1 unchanged across the five full-size settings, as expected because DA does not allow the downstream audit to overwrite the diagnostician's primary.
 
 \section{Primary-Selection Repair Results}
 
 \begin{table}[htbp]
 \centering
-\caption{Primary-selection repair results with retained case-level predictions. Pairwise independent and debate are complete new-inference configurations; their paired statistics compare complete systems rather than isolated selector components. Debate uses a 24,576-token context window, compared with 8,192 tokens for DA.}
+\caption{Primary-selection repair results with retained case-level predictions. NtS reuses common DA outputs. Forced pairwise override, independent pairwise, and debate are complete configurations; their paired statistics do not isolate a selector component. Debate uses a 24,576-token context window, compared with 8,192 tokens for DA.}
 \label{tab:internal-repair-results}
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{|l|l|c|c|c|c|c|}
@@ -1062,9 +1077,9 @@ NtS-primary and NtS-single use identical primaries, but preserving the DA second
 Method & Comparison contract & Top-1 & $\Delta$ vs DA & W$\rightarrow$C & C$\rightarrow$W & 95\% CI; exact $p$\\
 \hline
 DA & Reference output & 0.518 & --- & --- & --- & ---\\
-NtS-primary & Common DA outputs & 0.490 & $-0.028$ & 17 & 45 & [$-0.043$, $-0.013$]; 0.000497\\
-Pairwise controlled & Common DA outputs & 0.518 & 0.000 & 0 & 0 & not applicable; 1.000\\
+NtS & Common DA outputs & 0.490 & $-0.028$ & 17 & 45 & [$-0.043$, $-0.013$]; 0.000497\\
 \hline
+Forced pairwise override & Complete pairwise-commit configuration & 0.443 & $-0.075$ & 32 & 107 & [$-0.098$, $-0.053$]; $1.21\times10^{-10}$\\
 Pairwise independent & New inference & 0.524 & $+0.006$ & 36 & 30 & [$-0.010$, 0.022]; 0.539\\
 Two-view debate & New inference & 0.485 & $-0.033$ & 16 & 49 & [$-0.049$, $-0.018$]; $5.08\times10^{-5}$\\
 \hline
@@ -1072,7 +1087,7 @@ Two-view debate & New inference & 0.485 & $-0.033$ & 16 & 49 & [$-0.049$, $-0.01
 \end{adjustbox}
 \end{table}
 
-The independent pairwise configuration is slightly above DA, but it regenerates upstream outputs and the difference is not statistically supported. Applying the pairwise decision to common recorded DA outputs produces no committed flips. Debate is lower under its larger context budget and additional advocate and judge calls. Internal self-consistency and confidence-informed self-consistency are excluded from the core table because only summary-level evidence is retained; they are treated as descriptive supporting analyses rather than paired evidence. Overall, none of the case-level-supported implementations gives a clear and attributable Top-1 improvement.
+The forced pairwise-override configuration lowers Top-1 by 7.5 percentage points. Its retained artifact is a complete pairwise-commit run whose genuine ranking can differ from DA, so this result is a safety stress test of the complete configuration rather than an isolated finalizer effect. A conservative gate applied to the recorded DA trace accepted no replacement and reproduced DA exactly; it is not treated as a separate primary result. The independent pairwise configuration is slightly above DA, but it regenerates upstream outputs and the difference is not statistically supported. Debate is lower under its larger context budget and additional advocate and judge calls. Internal self-consistency and confidence-informed self-consistency are excluded from the core table because only summary-level evidence is retained. Overall, none of the case-level-supported implementations gives a clear and attributable Top-1 improvement.
 
 \section{Qwen3 Size Robustness}
 
@@ -1097,30 +1112,6 @@ Size & Single Top-1 & HiED--DA Top-1 & HiED Top-3 & Recorded output issue\\
 \end{table}
 
 Single Top-1 increases monotonically from 0.143 to 0.465, a range of 0.322. HiED--DA ranges from 0.497 to 0.538, a range of 0.041, while Top-3 remains between 0.803 and 0.818. This is scale sensitivity within the Qwen3 AWQ family, not evidence of robustness across unrelated model families. The 4B health events also show that the configurations differ in parsing and abstention behavior despite sharing the evaluation set and endpoint.
-
-\section{Descriptive Context from the Public Validation Split}
-
-To provide same-dataset context, Table~\ref{tab:published-validation-context} reports selected results from the original LingxiDiagBench static evaluation on the public 1,000-case validation split~\citep{xu2026lingxidiagbench}. The published systems and HiED use the same evaluation cases but different prompts, inference procedures, output contracts, and experimental roles. In particular, this thesis uses the public split for configuration validation rather than as its main held-out evaluation. The values are therefore descriptive references, not matched experimental controls, and no paired significance test or system-ranking claim is made.
-
-\begin{table}[htbp]
-\centering
-\caption{Descriptive comparison with selected published LingxiDiagBench results on the public validation split. Published rows and HiED use the same evaluation cases but different prompts, system configurations, and validation roles.}
-\label{tab:published-validation-context}
-\begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{|p{4.0cm}|p{5.0cm}|c|c|c|c|}
-\hline
-System & Source and evaluation role & Top-1 & Top-3 & Macro-F1 & Weighted-F1\\
-\hline
-TF--IDF + logistic regression & Published LingxiDiagBench baseline & 0.496 & 0.645 & 0.295 & 0.520\\
-Qwen3-32B & Published zero-shot LLM & 0.470 & 0.566 & 0.188 & 0.431\\
-GPT-5-Mini & Published zero-shot proprietary LLM & 0.487 & 0.505 & 0.188 & 0.418\\
-HiED--DA validation run & This thesis; configuration-validation result & 0.522 & 0.795 & 0.182 & 0.434\\
-\hline
-\end{tabular}
-\end{adjustbox}
-\end{table}
-
-The original benchmark reports Top-1 values of 0.496 for TF--IDF with logistic regression, 0.470 for zero-shot Qwen3-32B, and 0.487 for GPT-5-Mini. HiED--DA records a descriptive Top-1 value of 0.522 and Top-3 value of 0.795 on the same public cases. These values provide useful context, but they do not establish that HiED outperforms any published system because the protocols are not matched and the validation split contributes to configuration selection in this thesis. The benchmark's separate \emph{Acc} column is not shown because it is not assumed to be identical to the Exact Match definition used here.
 
 \section{Summary of In-Domain Findings}
 
@@ -1231,9 +1222,7 @@ Method & Top-1 & $\Delta$ vs DA & W$\rightarrow$C & C$\rightarrow$W & Exact $p$\
 \hline
 Direct-Answer & 0.5708 & --- & --- & --- & ---\\
 \hline
-NtS-primary & 0.4065 & $-0.1643$ & 38 & 190 & $1.7\times10^{-25}$\\
-\hline
-Pairwise controlled application & 0.5708 & $0.0000$ & 0 & 0 & $1.00$\\
+Nominate-then-Select (NtS) & 0.4065 & $-0.1643$ & 38 & 190 & $1.7\times10^{-25}$\\
 \hline
 Deterministic fusion & 0.4714 & $-0.0995$ & 30 & 122 & $2.3\times10^{-14}$\\
 \hline
@@ -1253,7 +1242,7 @@ Confidence-informed self-consistency ($K=5$) & 0.5816 & $+0.0108$ & 33 & 23 & $0
 \end{adjustbox}
 \end{table}
 
-The repair methods follow the execution contracts defined in Chapter~\ref{ch:experimental}. NtS-primary, pairwise controlled application, and deterministic fusion operate on fixed upstream outputs, whereas debate and sampling-based methods require additional model generation. NtS-primary denotes the primary re-selection rule; its Top-1 is independent of whether the DA secondary label is preserved. None of the tested methods provides a statistically supported improvement relative to its predefined comparator. For methods that use additional generation, calls, or context, the result applies to the complete tested configuration rather than to an isolated selection component. The standalone BGE-M3 case-neighbor label-voting analysis is reported in the appendix rather than being mischaracterized as HiED candidate reranking.
+The repair methods follow the execution contracts defined in Chapter~\ref{ch:experimental}. NtS and deterministic fusion operate on fixed upstream outputs, whereas debate and sampling-based methods require additional model generation. A conservative external pairwise gate produced no committed changes and reproduced DA, so it is reported only as an implementation check rather than a separate primary method. None of the tested methods provides a statistically supported improvement relative to its predefined comparator. Because NtS emits one diagnosis, its set-level metrics also reflect the single-label output contract. For methods that use additional generation, calls, or context, the result applies to the complete tested configuration rather than to an isolated selection component. The standalone BGE-M3 case-neighbor label-voting analysis is reported in the appendix rather than being mischaracterized as HiED candidate reranking.
 
 \section{Summary of External Findings}
 
@@ -1340,7 +1329,7 @@ Criterion compatibility retains a gold parent in 857 of 915 eligible cases. The 
 
 The internal reference run has 518 correct primaries but only 409 exact predicted sets. Thus, 109 cases match a gold primary while retaining an output-set mismatch; 57 include an extra predicted label and 54 omit at least one gold label, with two cases exhibiting both conditions. This is distinct from primary-selection error.
 
-NtS-primary and NtS-single use the same re-selected primary. Under parent-balanced retrieval, preserving the DA secondary output gives mean cardinality 1.127, Exact Match 0.390, Macro-F1 0.190, and Weighted-F1 0.422; suppressing it gives cardinality 1.000, Exact Match 0.437, Macro-F1 0.181, and Weighted-F1 0.408. The Exact Match difference therefore reflects output cardinality rather than improved primary selection.
+NtS emits one diagnosis, whereas DA may emit a primary and a secondary diagnosis. Set-level differences between them therefore reflect both primary re-selection and output cardinality and are not interpreted as isolated selector effects.
 
 \section{Diagnostic-Scope Errors}
 
@@ -1385,7 +1374,7 @@ The Criterion Checker evaluates each diagnosis separately. It asks whether the t
 
 The internal parent-balanced trace illustrates this difference. HiED--DA reaches 0.802 Top-3 Accuracy and 0.518 Top-1 Accuracy. A gold parent is retained in the rule-confirmed set in 857 of 915 checker-eligible cases, while the median confirmed set contains six categories. These quantities use different denominators and are not a strict funnel, but the joint analysis identifies 272 cases in which a gold parent is ranked and retained without being committed.
 
-NtS provides a controlled test of whether the recorded criterion-compatibility signals improve primary selection when the upstream ranking and checker outputs are held fixed. Under this controlled output comparison, NtS-primary reduces rather than improves Top-1 Accuracy by 2.8--2.9 percentage points across no retrieval, global Top-5 retrieval, and parent-balanced retrieval. Preserving or suppressing the DA secondary label changes set-level metrics but not the re-selected primary. The similar negative effects indicate that the NtS penalty is not confined to one retrieval configuration; because the interaction confidence intervals include zero, they show no detected moderation rather than equivalence among the effects.
+NtS provides a controlled test of whether the recorded criterion-compatibility signals improve primary selection when the upstream ranking and checker outputs are held fixed. Under this comparison, NtS reduces rather than improves Top-1 Accuracy by 2.8--2.9 percentage points across no retrieval, global Top-5 retrieval, and parent-balanced retrieval. Because NtS emits only one diagnosis, its set-level metrics cannot isolate primary re-selection from output-cardinality effects. The similar negative Top-1 effects indicate that the NtS penalty is not confined to one retrieval configuration; because the interaction confidence intervals include zero, they show no detected moderation rather than equivalence among the effects.
 
 The stage-wise analysis changes how errors are interpreted. Absence of a gold parent from the genuine Top-3 identifies a candidate-generation miss. Ranking a gold parent without retaining it under the configured rules identifies a compatibility-retention miss. Ranking and retaining a gold parent while committing another diagnosis identifies a comparative-selection error. Endpoint accuracy alone cannot distinguish these failure locations.
 
@@ -1405,9 +1394,9 @@ On the unified 925-case MDD-5k trace, the genuine Top-3 reaches 0.8508 while the
 
 \section{Why the Tested Repair Methods Did Not Improve Selection}
 
-The repair experiments test distinct explanations under different execution contracts. Common-upstream methods such as NtS-primary, controlled pairwise selection, forced override, and deterministic fusion ask whether recorded ranking and criterion signals can improve commitment. Independent pairwise reasoning, debate, and self-consistency instead evaluate complete new-inference configurations. Supporting case-neighbor analyses ask whether labels from semantically similar training cases provide a transferable diagnostic signal; the standalone voting and fusion phases are kept separate.
+The repair experiments test distinct explanations under different execution contracts. NtS and deterministic fusion reuse recorded upstream outputs. The forced pairwise-override artifact, independent pairwise reasoning, debate, and self-consistency instead evaluate complete configurations that may change ranking, generation, sampling, calls, or context. Supporting case-neighbor analyses ask whether labels from semantically similar training cases provide a transferable diagnostic signal; the standalone voting and fusion phases are kept separate.
 
-None of the tested methods provides a clear, statistically supported, and attributable improvement under its predefined comparator. Controlled pairwise selection produces no committed flips, mandatory override and deterministic fusion are harmful, and the larger-context debate configuration is lower than DA. The available internal self-consistency evidence is summary-level and therefore does not support the same paired conclusion. These results do not establish that the broader method families cannot work; they show that the tested thresholds, votes, overrides, and additional reasoning calls do not combine the available signals well enough.
+None of the tested methods provides a clear, statistically supported, and attributable improvement under its predefined comparator. A conservative pairwise gate produces no committed flips, while the complete forced pairwise-override configuration and deterministic fusion are harmful; the larger-context debate configuration is also lower than DA. The available internal self-consistency evidence is summary-level and therefore does not support the same paired conclusion. These results do not establish that the broader method families cannot work; they show that the tested thresholds, votes, overrides, and additional reasoning calls do not combine the available signals well enough.
 
 \section{Model Error Versus Missing Diagnostic Information}
 
@@ -1484,7 +1473,7 @@ Criterion states are produced by an LLM checker rather than clinicians. Errors i
 
 The official LingxiDiagBench test split was unavailable, so the main in-domain result uses a 1,000-case held-out split from the original training-source corpus. The cases were excluded from retrieval and development, but the split still shares templates and source distribution with the training data. The thesis does not report a full template-level or embedding near-duplicate audit, and foundation-model exposure to the public corpus cannot be ruled out.
 
-The public validation split is used repeatedly for prompt, rule, sensitivity, and retrieval-configuration selection. Its results are descriptive configuration-selection evidence rather than an independent test estimate. The separate internal split reduces direct selection bias in the main estimate, but repeated use of one public split may still favor choices adapted to its corpus-specific patterns.
+The public validation split is used repeatedly for prompt, rule, sensitivity, and retrieval-configuration selection. Its results are configuration-selection evidence rather than an independent test estimate. The separate internal split reduces direct selection bias in the main estimate, but repeated use of one public split may still favor choices adapted to its corpus-specific patterns.
 
 Not every comparison isolates one component. Single versus HiED changes several modules and measures a package effect. Common-upstream finalization methods hold recorded DA outputs fixed more closely, whereas independent pairwise reasoning, debate, self-consistency, and case-neighbor methods change calls, sampling, context, or input signals. Their results compare the tested configurations rather than establish a causal ranking of method families.
 
@@ -1492,7 +1481,7 @@ The debate comparison also differs in inference budget. The reference Direct-Ans
 
 Several analyses are exploratory or use small samples. Rare classes have wide uncertainty, and a non-significant difference does not prove equivalence. Holm correction is applied within the predefined families in Chapter~\ref{ch:experimental}, not across every analysis in the thesis. Oracle, lexical, BGE-M3, scope, and repair probes therefore remain supporting or exploratory evidence even when an isolated result is favorable.
 
-NtS-primary is derived deterministically from the recorded DA ranking, criterion states, and rule-confirmed set without additional LLM calls. This isolates the specified primary-selection rule more closely than a newly generated pipeline run, but it remains an offline benchmark analysis and does not establish prospective behavior or clinical benefit. NtS-single additionally removes secondary labels and therefore is not a pure primary-selection intervention.
+NtS is derived deterministically from the recorded DA ranking, criterion states, and rule-confirmed set without additional LLM calls. This isolates the specified primary-selection rule more closely than a newly generated pipeline run, but NtS emits only one label. Its Top-1 supports a paired primary-selection analysis, while Exact Match and classwise F1 conflate re-selection with output cardinality. The comparison remains an offline benchmark analysis and does not establish prospective behavior or clinical benefit.
 
 Complete internal case-level sampling traces were not retained for SC and CISC. Those results provide weaker auditability than methods with case-level predictions and are treated as descriptive supporting evidence rather than paired repair evidence.
 
@@ -1538,7 +1527,7 @@ This section summarizes how the final experiments answer the five research quest
 
 \item[RQ3] Retrieval improved the Single system relative to no retrieval, but global and parent-balanced retrieval did not differ significantly. HiED showed no statistically supported retrieval gain across the tested strategies. Because the strategies also differed in the number and composition of examples supplied to the model, the results do not establish an independent benefit of parent balancing.
 
-\item[RQ4] Criterion-derived NtS primary selection reduced Top-1 Accuracy relative to Direct-Answer across all three retrieval conditions. Preserving or suppressing the Direct-Answer secondary label changed set-level metrics but not the NtS primary. Neither the tested common-upstream selectors nor the alternative new-inference configurations produced a clear, statistically supported, and attributable improvement under their respective evaluation contracts.
+\item[RQ4] NtS reduced Top-1 Accuracy relative to Direct-Answer across all three retrieval conditions, and the complete forced pairwise-override configuration was harmful. The tested selection rules did not improve primary commitment under their respective evaluation contracts. Because NtS emits one diagnosis, its set-level metrics also reflect output cardinality.
 
 \item[RQ5] The ranking-to-commitment gap remained visible across the evaluated Qwen3 sizes and on MDD-5k, so the pattern was not confined to one model size or synthetic corpus. Expanding the configured diagnostic scope made additional diagnoses representable but recovered none of the tested newly representable cases. Errors also concentrated in a small number of diagnostic pairs, especially depression--anxiety confusions. These findings support robustness only within the tested synthetic datasets, Qwen3 family, and configured analyses; they do not establish cross-model or clinical generality.
 \end{description}
@@ -1626,7 +1615,7 @@ Subtype-level predictions under F41 and F43 are projected to their corresponding
 
 \section{Detailed Reproducibility Configuration}
 
-This section records implementation settings needed to reproduce the experiments but not required for understanding the conceptual architecture in Chapter~\ref{ch:architecture}. The retrieval setting used for the primary HiED row is selected on the public validation split and identified in Chapter~\ref{ch:results}; the retrieval ablations retain all three conditions below.
+This section records implementation settings needed to reproduce the experiments but not required for understanding the conceptual architecture in Chapter~\ref{ch:architecture}. The public validation split selects global Top-5 retrieval for the primary Single row and parent-balanced retrieval for the primary HiED row; the retrieval ablations retain all three conditions below.
 
 \begingroup
 \small
@@ -1653,6 +1642,8 @@ Context and output limits & 8,192-token context window and 1,536-token maximum g
 \hline
 Diagnostic scope & Fourteen configured diagnostic categories projected to eleven scoring parents; \emph{Others} exists only as an evaluation label\\
 \hline
+TF--IDF + LR baseline & Character-boundary $1$--$2$-grams; maximum 10,000 features; \texttt{min\_df=2}; \texttt{max\_df=0.95}; sublinear term frequency; one-vs-rest logistic regression with $C=1.0$, L-BFGS, balanced class weights, and a 2,000-iteration limit\\
+\hline
 Structured output & JSON-schema validation, guided decoding where supported, and checker-record recovery that preserves valid records while removing invalid or duplicate entries\\
 \hline
 Embedding model & BGE-M3 multilingual embeddings with normalized transcript vectors\\
@@ -1660,6 +1651,8 @@ Embedding model & BGE-M3 multilingual embeddings with normalized transcript vect
 Retrieval index & FAISS inner-product search over normalized embeddings from the 13,000-case training-source corpus, equivalent to cosine-similarity ranking\\
 \hline
 Retrieval conditions & No retrieval; global Top-5 nearest-neighbor retrieval; and parent-balanced retrieval with at most one example per configured scoring parent\\
+\hline
+Selected retrieval policies & Global Top-5 for the primary Single configuration and parent-balanced retrieval for the primary HiED--DA configuration, selected on the public validation split\\
 \hline
 Retrieval exposure & Retrieved examples are supplied only to the Diagnostician and are not used as direct Criterion Checker or finalization evidence\\
 \hline
@@ -1689,13 +1682,9 @@ Analysis & Configuration & Interpretation boundary\\
 Analysis & Configuration & Interpretation boundary\\
 \hline
 \endhead
-NtS-primary & Deterministic primary re-selection from the recorded ranking, Criterion Checker outputs, and rule-confirmed set; the DA secondary label is preserved unless it duplicates the new primary after parent projection & No additional LLM calls; isolates the specified primary-selection rule\\
+Nominate-then-Select (NtS) & Deterministic primary re-selection from the recorded ranking, Criterion Checker outputs, and rule-confirmed set; emits only the selected diagnosis & No additional LLM calls; Top-1 tests re-selection, while set metrics also reflect the one-label contract\\
 \hline
-NtS-single & Same re-selected primary as NtS-primary, with all secondary labels removed & Tests output cardinality rather than a different primary-selection rule\\
-\hline
-Pairwise controlled application & Applies a valid in-cluster pairwise preference to fixed DA ranking, checker, and rule outputs; otherwise retains DA & Selector-level comparison on common upstream artifacts\\
-\hline
-Pairwise forced override & Applies every valid recorded in-cluster preference as a mandatory primary replacement & Safety stress test, not a deployable fallback policy\\
+Forced pairwise override & Full pairwise-commit pipeline with mandatory promotion of a valid in-cluster preference; genuine ranking may differ from DA & Complete-configuration safety stress test, not an isolated finalizer or deployable fallback policy\\
 \hline
 Two-view debate & At most two advocate rounds followed by a judge when required; 24,576-token context window & Uses additional calls and a larger context budget than DA\\
 \hline
@@ -1710,7 +1699,28 @@ Deterministic fusion & Validation-selected rule combining Diagnostician rank, co
 
 \section{Supporting Cross-Corpus and Similarity Analyses}
 
-The analyses in this section examine whether corpus-specific case-similarity signals transfer across LingxiDiagBench and MDD-5k. They are supporting analyses rather than components of the main HiED architecture.
+The analyses in this section provide published same-split context and examine whether corpus-specific case-similarity signals transfer across LingxiDiagBench and MDD-5k. They are supporting analyses rather than components of the main HiED architecture.
+
+\subsection{Published Same-Split Context}
+
+Table~\ref{tab:published-validation-context} reports selected results from the original LingxiDiagBench static evaluation on the public 1,000-case validation split~\citep{xu2026lingxidiagbench}. These published systems use the same cases as the configuration-selection analysis in Chapter~\ref{ch:results}, but different prompts, inference procedures, and output contracts. The values are descriptive references rather than matched controls, and the benchmark's separate \emph{Acc} column is omitted because it is not assumed to equal this thesis's Exact Match definition.
+
+\begin{table}[htbp]
+\centering
+\caption{Selected published LingxiDiagBench results on the public validation split.}
+\label{tab:published-validation-context}
+\begin{tabular}{|p{4.2cm}|c|c|c|c|}
+\hline
+System & Top-1 & Top-3 & Macro-F1 & Weighted-F1\\
+\hline
+TF--IDF + logistic regression & 0.496 & 0.645 & 0.295 & 0.520\\
+Qwen3-32B & 0.470 & 0.566 & 0.188 & 0.431\\
+GPT-5-Mini & 0.487 & 0.505 & 0.188 & 0.418\\
+\hline
+\end{tabular}
+\end{table}
+
+These rows provide same-split context only. They are not used to select the retrieval policies and do not support paired significance tests or claims that HiED outperforms the published systems.
 
 \subsection{BGE-M3 Case-Neighbor Label Voting}
 
