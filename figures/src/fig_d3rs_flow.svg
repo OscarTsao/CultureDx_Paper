@@ -10,7 +10,7 @@
     .box { stroke-width: 2.5; rx: 8; }
   </style>
 
-  <text x="700" y="48" text-anchor="middle" class="title">Detection-retention-selection profiles</text>
+  <text x="700" y="48" text-anchor="middle" class="title">Detection-verification-selection profiles</text>
 
   <rect x="45" y="275" width="205" height="120" class="box" fill="#eef3f7" stroke="#607889"/>
   <text x="147" y="315" text-anchor="middle" class="head">Eligible cases</text>
@@ -20,12 +20,12 @@
 
   <rect x="365" y="105" width="230" height="135" class="box" fill="#e8f2fb" stroke="#3d78a8"/>
   <text x="480" y="145" text-anchor="middle" class="head">Reference ranked</text>
-  <text x="480" y="180" text-anchor="middle" class="body">D₃ = Yes</text>
+  <text x="480" y="180" text-anchor="middle" class="body">D3 = Yes</text>
   <text x="480" y="215" text-anchor="middle" class="count">802</text>
 
   <rect x="365" y="438" width="230" height="135" class="box" fill="#f6f7f8" stroke="#7b8791"/>
   <text x="480" y="478" text-anchor="middle" class="head">Not in Top-3</text>
-  <text x="480" y="513" text-anchor="middle" class="body">D₃ = No</text>
+  <text x="480" y="513" text-anchor="middle" class="body">D3 = No</text>
   <text x="480" y="548" text-anchor="middle" class="count">113</text>
 
   <path d="M595 172 H655 M655 172 V115 H705 M655 172 V267 H705" class="line"/>
@@ -55,16 +55,16 @@
   <path d="M940 267 H1045" class="line"/>
 
   <rect x="1045" y="35" width="305" height="95" class="box" fill="#e9f4e7" stroke="#4d8d48"/>
-  <text x="1197" y="70" text-anchor="middle" class="head">Committed correctly</text>
+  <text x="1197" y="70" text-anchor="middle" class="head">Primary selected correctly</text>
   <text x="1197" y="104" text-anchor="middle" class="count">506</text>
 
   <rect x="1045" y="145" width="305" height="105" class="box" fill="#fcebea" stroke="#b6534c"/>
-  <text x="1197" y="180" text-anchor="middle" class="head">Not committed</text>
+  <text x="1197" y="180" text-anchor="middle" class="head">Primary not selected</text>
   <text x="1197" y="214" text-anchor="middle" class="count">272</text>
 
   <rect x="1045" y="265" width="305" height="105" class="box" fill="#f5efe8" stroke="#9b7246"/>
   <text x="1197" y="300" text-anchor="middle" class="head">R = No outcomes</text>
   <text x="1197" y="334" text-anchor="middle" class="body">12 correct; 12 incorrect</text>
 
-  <text x="700" y="692" text-anchor="middle" class="note">R is evaluated over the configured checker scope, not only the Top-3; the diagram summarizes joint profiles rather than a strict runtime funnel.</text>
+  <text x="700" y="692" text-anchor="middle" class="note">R records retention after verification over the configured checker scope; the diagram summarizes joint profiles rather than a strict runtime funnel.</text>
 </svg>

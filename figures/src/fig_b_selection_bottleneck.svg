@@ -10,7 +10,7 @@
     .small { font-size: 18px; }
   </style>
 
-  <text x="430" y="38" text-anchor="middle" class="label">Committed selection and genuine candidate coverage</text>
+  <text x="430" y="38" text-anchor="middle" class="label">Candidate coverage and the Top-1 selection gap</text>
   <line x1="80" y1="455" x2="690" y2="455" class="axis"/>
   <line x1="80" y1="75" x2="80" y2="455" class="axis"/>
 
@@ -39,7 +39,7 @@
   <line x1="320" y1="196" x2="320" y2="212" stroke="#b83280" stroke-width="3"/>
   <line x1="440" y1="196" x2="440" y2="212" stroke="#b83280" stroke-width="3"/>
   <text x="380" y="188" text-anchor="middle" class="value" fill="#8e2464">284 cases</text>
-  <text x="380" y="224" text-anchor="middle" class="small">ranked but not committed</text>
+  <text x="380" y="224" text-anchor="middle" class="small">ranked but not selected</text>
 
   <rect x="720" y="104" width="250" height="278" rx="6" fill="#f5f7fa" stroke="#829ab1" stroke-width="2"/>
   <text x="845" y="132" text-anchor="middle" class="label">Supporting oracle</text>
