@@ -757,37 +757,37 @@ This chapter organizes the empirical design around the five research questions. 
 
 Figure~\ref{fig:evidence-framework} summarizes the evidence sequence. Predictive comparisons establish benchmark positioning; stage-wise analysis separates candidate detection, criterion verification, and primary selection; retrieval and finalization experiments test specific mechanisms; robustness and external analyses examine the limits of transfer.
 
-\ThesisFigure[0.98\textwidth]{fig_evidence_framework.pdf}{Research-question-driven empirical evidence framework for analyses executed in this thesis.}{fig:evidence-framework}
+\ThesisFigure[0.98\textwidth]{fig_evidence_framework.pdf}{Research-question-driven empirical evidence framework, including the ongoing psychiatrist case-review study.}{fig:evidence-framework}
 
-Table~\ref{tab:rq-experiment-map} maps each research question to its experimental comparison, primary endpoint, and result chapter. No outcome values are used to define the design.
+Table~\ref{tab:rq-experiment-map} maps each research question to its experimental comparison and result location. The ongoing psychiatrist case-review study is listed separately because it provides clinical interpretation rather than another quantitative benchmark comparison. Metric definitions remain in Chapter~\ref{ch:data}, and the main evaluation measure for each comparison is stated in the corresponding section below.
 
 \begin{table}[htbp]
 \centering
-\caption{Research questions, experimental comparisons, primary endpoints, and result locations.}
+\caption{Research questions and the ongoing psychiatrist case-review study, with their experimental comparisons and result locations.}
 \label{tab:rq-experiment-map}
 \small
-\begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{|p{1.7cm}|p{6.0cm}|p{5.2cm}|p{3.1cm}|}
+\begin{tabularx}{\textwidth}{|p{3.0cm}|X|p{4.1cm}|}
 \hline
-Research question & Experimental comparison & Primary endpoint & Result location\\
+Research question or study & Experimental comparison & Result location\\
 \hline
-RQ1 & Majority, TF--IDF + LR, Single, and HiED configurations & Top-1 and applicable label-level metrics & Chapter~6\\
+RQ1 & Same-split comparison of Majority, TF--IDF + LR, Single, and HiED & Sections~\ref{sec:validation-retrieval-selection}--\ref{sec:matched-baselines-retrieval}\\
 \hline
-RQ2 & Genuine ranked output, criterion-compatible set, and committed primary & $D_3$, $R$, $S$, and their joint distribution & Chapter~6\\
+RQ2 & Candidate detection, criterion verification, and primary-selection analysis & Section~\ref{sec:stage-wise-failure-results}\\
 \hline
-RQ3 & No retrieval, global Top-5 retrieval, and parent-balanced retrieval & Within-architecture paired differences & Chapter~6\\
+RQ3 & No retrieval, global Top-5 retrieval, and parent-balanced retrieval & Section~\ref{sec:retrieval-results}\\
 \hline
-RQ4 & DA, NtS, and additional primary-selection methods & Paired Top-1 change under the declared contract & Chapters~6--7\\
+RQ4 & DA--NtS comparison and additional primary-selection methods & Sections~\ref{sec:nts-factorial}--\ref{sec:additional-selection-results}\\
 \hline
-RQ5 & Model scale, MDD-5k, diagnostic scope, selector transfer, and stage-wise error patterns & Robustness, transfer, scope, and error-characterization endpoints & Chapters~6--8\\
+RQ5 & Model-scale analysis, external synthetic evaluation, scope expansion, and selector transfer & Section~\ref{sec:robustness-error-distribution} and Chapter~\ref{ch:external}\\
 \hline
-\end{tabular}
-\end{adjustbox}
+Psychiatrist case review & Review of selected primary-selection-gap cases & Chapter~\ref{ch:error} after completion\\
+\hline
+\end{tabularx}
 \end{table}
 
 \section{Predictive Performance Comparisons}
 
-RQ1 asks how HiED compares with conventional and LLM-based systems under a common split, parent-label mapping, and scoring implementation. Configuration selection and held-out evaluation are kept separate.
+RQ1 asks how HiED compares with conventional and LLM-based systems under a common split, parent-label mapping, and scoring implementation. Top-1 Accuracy is the main measure for predictive comparison; other metrics characterize ranked and multilabel outputs when the corresponding output views are available. This comparison changes the complete prediction system while keeping the internal evaluation cases, label projection, and scoring implementation fixed. It positions HiED against conventional and single-model baselines but does not isolate one architectural component. Configuration selection and held-out evaluation are kept separate.
 
 \subsection{Public-Validation Configuration Selection}
 
@@ -801,11 +801,11 @@ The held-out comparison includes Single without retrieval, the validation-select
 
 The Majority baseline predicts the most frequent training-corpus parent. TF--IDF + LR is trained on the 13,000 training cases using character $n$-gram features and twelve one-vs-rest logistic-regression classifiers. Class probabilities define its Top-3; labels with probability at least 0.5 form the multilabel output, with the highest-probability class retained when no label reaches the threshold. Single uses one diagnostic LLM call and emits a primary with an optional secondary diagnosis; because it does not emit a genuine ordered differential, Top-3 is undefined. Exact lexical hyperparameters are reported in Appendix~\ref{app:supporting}.
 
-All systems use the same held-out cases, order, parent projection, and scoring code. The comparison positions complete systems and does not attribute differences to one component.
+All systems use the same held-out cases, order, parent projection, and scoring code.
 
 \section{Stage-Wise Failure Localization}
 
-RQ2 asks whether benchmark disagreement occurs during candidate detection, criterion verification, or primary selection. It uses the output views and indicators defined in Chapter~\ref{ch:data}.
+RQ2 asks whether benchmark disagreement occurs during candidate detection, criterion verification, or primary selection. The main analysis is the joint distribution of candidate detection, reference-label retention after criterion verification, and primary selection. This analysis uses one recorded HiED--DA output trace and compares the three views on the same eligible cases. It uses the indicators defined in Chapter~\ref{ch:data}.
 
 \subsection{Candidate Detection}
 
@@ -829,7 +829,7 @@ The oracle considers diagnoses in a broader window formed from the ranking and c
 
 \section{Retrieval Configuration Comparisons}
 
-RQ3 compares complete retrieval configurations separately within Single and HiED--DA.
+RQ3 compares complete retrieval configurations separately within Single and HiED--DA. Retrieval is varied within each architecture while the model, prompt family, diagnostic scope, decoding settings, and output contract remain fixed. Retrieval configurations are compared primarily by paired Top-1 differences within each architecture, with other native output metrics reported descriptively.
 
 \subsection{Retrieval Conditions}
 
@@ -845,7 +845,7 @@ Validation results determine the selected retrieval policy for each architecture
 
 \section{Evaluation of Primary-Selection Strategies}
 
-RQ4 first evaluates a controlled change between finalization policies and then evaluates additional primary-selection methods under explicitly weaker attribution contracts. Finalization is treated as an implementation mechanism for primary selection, not as a separate diagnostic capability.
+RQ4 first evaluates a controlled change between finalization policies and then evaluates additional primary-selection methods under explicitly weaker attribution contracts. Methods that reuse recorded DA outputs are separated from methods that require new inference; only the former permit relatively direct attribution to the final selection rule. Committed Top-1 agreement is the main measure for comparing primary-selection strategies. Finalization is treated as an implementation mechanism for primary selection, not as a separate diagnostic capability.
 
 \subsection{Controlled Comparison of Finalization Policies}
 
@@ -863,43 +863,37 @@ DA and NtS are compared within each of the three retrieval conditions on identic
 
 Additional methods are grouped by execution contract. Common-output interventions, including deterministic fusion, reuse recorded DA artifacts and permit selector-level attribution within the stated rule. Complete new-inference configurations, including independent pairwise comparison, forced pairwise application, and debate, may change upstream outputs, calls, or context budget and are interpreted only as full-configuration comparisons. Sampling-based aggregation and learned selectors are supporting analyses when their case-level records or execution contracts do not match the primary controlled evidence. Detailed prompts, thresholds, sampling schedules, and tie-breaking rules are reported in Appendix~\ref{app:supporting}.
 
-\subsection{Comparison Contracts and Evidence Levels}
+\subsection{Comparison Contracts for Primary-Selection Strategies}
 
-Table~\ref{tab:comparison-contracts} summarizes the attribution boundary for the main comparison families. Top-1 is the common primary-selection endpoint; ranked and multilabel metrics are reported only when the method produces the corresponding output view.
+Table~\ref{tab:comparison-contracts} summarizes the attribution boundary for the evaluated primary-selection strategies. The table is local to RQ4 and is not a consolidated matrix of all experiments in this chapter.
 
 \begin{table}[htbp]
 \centering
-\caption{Comparison contracts and evidence interpretation for the principal experiment families.}
+\caption{Comparison contracts for the evaluated primary-selection strategies.}
 \label{tab:comparison-contracts}
-\scriptsize
-\begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{|p{3.5cm}|p{3.3cm}|p{2.2cm}|p{3.1cm}|p{5.5cm}|}
+\small
+\begin{tabularx}{\textwidth}{|p{3.4cm}|>{\centering\arraybackslash}p{3.2cm}|>{\centering\arraybackslash}p{2.3cm}|X|}
 \hline
-Comparison family & Shared basis & New inference & Primary endpoint & Evidence interpretation\\
+Method & Reuses recorded DA outputs & New inference & Interpretation\\
 \hline
-Predictive system comparison & Same cases and scorer & Varies by system & Top-1 & Complete-system benchmark positioning\\
+NtS & Yes & No & Controlled finalization-policy comparison\\
 \hline
-Retrieval within architecture & Same architecture and cases & Yes & Paired Top-1 and applicable set metrics & Complete retrieval-configuration effect\\
+Deterministic fusion & Yes & No & Fixed-signal selection intervention\\
 \hline
-DA versus NtS & Recorded DA ranking and criterion artifacts & No & Paired Top-1 & Controlled finalization comparison\\
+Independent pairwise & No & Yes & Complete-configuration comparison\\
 \hline
-Deterministic fusion & Recorded DA outputs and criterion signals & No & Paired Top-1 & Fixed-signal selection intervention\\
+Forced pairwise & No & Yes & Mandatory-application sensitivity analysis\\
 \hline
-Independent and forced pairwise & Same evaluation cases; upstream outputs may differ & Yes & Paired Top-1 & Complete or sensitivity configuration\\
+Debate & No & Yes & Complete new-inference comparison\\
 \hline
-Two-view debate & Same evaluation cases; larger call and context budget & Yes & Paired Top-1 & Complete cross-budget configuration\\
+SC/CISC & No & Yes & Sampling-based supporting analysis\\
 \hline
-SC and CISC & Sampled Diagnostician outputs & Yes & Top-1 vote aggregation & Supporting aggregation analysis\\
-\hline
-Model-scale and external analyses & Common endpoint within each analysis & Yes & Robustness or transfer endpoint & Supporting robustness and transfer evidence\\
-\hline
-\end{tabular}
-\end{adjustbox}
+\end{tabularx}
 \end{table}
 
 \section{Robustness and External Synthetic Transfer}
 
-RQ5 examines whether the main benchmark patterns depend on model scale or corpus, how configured scope constrains performance, and which stage-wise error patterns characterize the remaining cases.
+RQ5 examines whether the main benchmark patterns depend on model scale or corpus, how configured scope constrains performance, and which stage-wise error patterns characterize the remaining cases. These analyses change model scale, evaluation corpus, diagnostic scope, or selector training corpus and are interpreted as robustness or transfer evidence rather than component ablations. Because they address distinct questions, each uses the endpoint declared in its subsection rather than a pooled composite measure.
 
 \subsection{Model-Scale Sensitivity}
 
@@ -921,19 +915,43 @@ The scope-expansion analysis changes the configured diagnostic profile without u
 
 Cross-corpus analyses include TF--IDF classification, standalone BGE-M3 case-neighbor label voting, and score fusion where the required records are available. Same-split predictive baselines, within-corpus fitting, and cross-corpus transfer are reported separately because they answer different questions.
 
-\subsection{Stage-Wise Error Patterns}
+\section{Psychiatrist Case-Review Study}
+\label{sec:psychiatrist-case-review}
 
-Chapter~\ref{ch:error} uses prespecified stage-wise error patterns: candidate-detection miss, candidate present but not selected, verification-retention miss, ranked and retained but not selected, diagnostic-set mismatch, diagnostic-scope limitation, unresolved criterion states, and first-listed-label confusion. These patterns may overlap and locate benchmark disagreement; they do not assign a clinically verified cause.
+At the time of this manuscript revision, the psychiatrist case review was ongoing. This section reports the prespecified case-sampling strategy, review procedure, outcome measures, and analysis plan. The main review outcome is the proportion of reviewed ranked-and-retained nonselection cases for which psychiatrist consensus prefers a benchmark reference diagnosis as the primary diagnosis. Preliminary or partially completed review results are not used in the quantitative conclusions of Chapters~6 and~7. The final review results will be reported in Chapter~8 after all planned case assessments and agreement analyses are complete.
 
-\section{Evidence Classification and Reproducibility Controls}
+\subsection{Case Sampling}
 
-The primary evidence comprises the held-out same-split comparison, the internal $D_3$--$R$--$S$ analysis, the paired DA--NtS finalization comparisons, and validated common-trace external analyses. Supporting evidence includes the reference-informed oracle, complete new-inference configurations, model-size comparisons, lexical and case-neighbor transfer, scope expansion, and sampling analyses without complete internal case-level records.
+The primary review population is sampled from checker-eligible internal cases satisfying $D_3=1$, $R=1$, and $S=0$. In this operational pattern, a benchmark reference diagnosis is present in the genuine ranked Top-3 and retained after criterion verification but is not selected as the committed primary diagnosis. Cases are selected without using preliminary reviewer judgments. Any secondary comparison strata are sampled and reported separately so that they do not alter the denominator of the primary outcome.
 
-The statistical procedures are defined in Chapter~\ref{ch:data} and are not repeated here. Reproducibility controls require that internal test cases are excluded from configuration selection, paired comparisons have identical case IDs and order, external results are not used for tuning, and each reported result is tied to its split, retrieval policy, finalization contract, endpoint, and retained artifact. A missing analysis is reported as unavailable rather than replaced with an unmatched historical run.
+The completed report will state the planned and completed sample sizes, sampling fractions, exclusions, replacement rules, number of participating psychiatrists, reviewer qualifications and clinical experience, language competence, and prior exposure to the benchmark or system. These characteristics are not inferred from partial review data.
+
+\subsection{Transcript-Only Review}
+
+Reviewers first receive only the transcript and the diagnostic scope available to the system. The benchmark reference labels, system outputs, $D_3$--$R$--$S$ pattern, and other reviewers' judgments remain concealed. For each case, reviewers record a preferred primary diagnosis, clinically plausible alternatives, whether the transcript supports a unique primary diagnosis, whether additional clinical information is required, and the information needed to resolve the differential. Transcript-only ratings are locked before system outputs are shown.
+
+\subsection{Review of System Outputs}
+
+After the transcript-only ratings are locked, reviewers inspect the system's ranked differential, criterion states, linked evidence spans, criterion-compatible candidates, and committed primary diagnosis while the benchmark reference remains concealed. They assess whether the system-selected diagnosis remains clinically plausible and whether the audit trace accurately identifies supporting, contradictory, and unresolved information. Audit-trace usefulness is evaluated separately from agreement with the committed diagnosis.
+
+After these ratings are locked, the benchmark reference is revealed for a final review of the model--reference disagreement. Reviewers classify whether the case is most consistent with a primary-selection error, insufficient transcript information, multiple clinically plausible diagnoses, ambiguity in the benchmark reference label, criterion-verification error, or diagnostic-scope limitation. Categories may overlap, and unresolved cases remain explicitly unresolved.
+
+\subsection{Outcome Measures and Agreement Analysis}
+
+The primary outcome is the \emph{clinician-confirmed primary-selection error rate}: the proportion of reviewed ranked-and-retained nonselection cases for which the prespecified reviewer-consensus rule identifies a benchmark reference diagnosis as the preferred primary diagnosis. In compact form,
+\[
+\widehat{\pi}_{\mathrm{clinical}}
+=
+\frac{n_{\mathrm{reference\ preferred}}}
+{n_{D_3=1,\,R=1,\,S=0\ \mathrm{reviewed}}}.
+\]
+The term \emph{clinician-confirmed} refers only to reviewer consensus under this transcript-review contract; it does not convert benchmark labels into clinical ground truth or constitute clinical validation.
+
+Secondary outcomes include reference-diagnosis plausibility within the differential, unique-primary determinability, transcript-information sufficiency, required additional information, plausibility of the committed diagnosis, presence of multiple plausible diagnoses, benchmark-reference ambiguity, disagreement classification, and audit-trace usefulness. Inter-rater agreement is reported separately for preferred-primary selection, transcript sufficiency, and disagreement classification. The reviewer-consensus rule, panel composition, raw agreement, and prespecified chance-corrected agreement statistic will be reported before any substantive interpretation of the completed outcomes.
 
 \section{Chapter Summary}
 
-This chapter has defined how each research question is evaluated, distinguished controlled interventions from complete-configuration comparisons, and classified the resulting evidence as primary or supporting. Chapter~6 reports the in-domain results, Chapter~7 examines external synthetic transfer, and Chapter~8 characterizes the stage-wise error patterns.
+This chapter has defined how each research question is evaluated and distinguished controlled interventions from complete-configuration comparisons. It has also documented the prespecified methods for the ongoing psychiatrist case-review study without using partial judgments as thesis evidence. Chapter~6 reports the in-domain results, Chapter~7 examines external synthetic transfer, and Chapter~8 reports the error analysis and will report the completed psychiatrist review.
 
 \chapter{In-Domain Evaluation Results}
 \label{ch:results}
@@ -1043,6 +1061,7 @@ HiED--DA & Parent-balanced & 0.518 & 0.802 & 0.409 & 0.178 & 0.434\\
 Global Top-5 produces the strongest test-set point estimates for Single across all reported native endpoints. For HiED--DA, global retrieval also yields the highest Top-1, Top-3, Exact Match, and Macro-F1, while its Weighted-F1 is nearly unchanged from no retrieval before rounding (0.4375 versus 0.4371). Both Single retrieval conditions improve Top-1 over no retrieval after within-family Holm adjustment ($p=9.42\times10^{-5}$ for global and $p=7.19\times10^{-4}$ for parent-balanced), but global and parent-balanced retrieval do not differ significantly (adjusted $p=0.362$). None of the paired HiED Top-1 retrieval comparisons is significant after adjustment. These test-set ablations do not revise the validation decision: global Top-5 remains the main Single configuration and parent-balanced retrieval remains the main HiED configuration. Because global and parent-balanced retrieval also differ in retrieved-example count, the results compare complete retrieval configurations and do not isolate parent balancing as the cause.
 
 \section{Stage-Wise Failure Localization}
+\label{sec:stage-wise-failure-results}
 
 \subsection{Candidate Detection and Primary Selection}
 
@@ -1150,6 +1169,7 @@ The similarity of the three point estimates does not itself establish the absenc
 DA may emit a secondary diagnosis, whereas NtS emits one diagnosis. NtS Exact Match, Macro-F1, and Weighted-F1 therefore reflect both primary re-selection and output cardinality. Their differences cannot be interpreted as evidence of better primary selection or probabilistic calibration. A separate checker-sensitivity analysis leaves DA Top-1 unchanged across the five full-size settings, as expected because DA does not allow the downstream audit to overwrite the Diagnostician's primary.
 
 \section{Evaluation of Additional Primary-Selection Methods}
+\label{sec:additional-selection-results}
 
 \subsection{Common-Output Interventions}
 
@@ -1183,6 +1203,7 @@ The forced pairwise-override configuration lowers Top-1 by 7.5 percentage points
 Internal self-consistency and confidence-informed self-consistency are excluded from the core table because only summary-level evidence is retained. Their available results are treated as descriptive aggregation analyses and their evidentiary boundary is reported in Appendix~\ref{app:supporting}.
 
 \section{Robustness and Diagnostic Error Distribution}
+\label{sec:robustness-error-distribution}
 
 \subsection{Robustness Across Model Scales}
 
@@ -1442,7 +1463,7 @@ The external results support five bounded conclusions. First, HiED exceeds the M
 
 This chapter analyzes disagreements between model outputs and benchmark reference labels. As defined in Chapter~\ref{ch:data}, these labels are dataset annotations rather than independently reviewed clinical diagnoses. The primary analysis uses the parent-balanced HiED--DA trace on the fixed 1,000-case internal test set because the complete ranking, checker, and finalization artifacts are available for that run. External diagnostic-scope findings use MDD-5k and are labeled separately. The stage-wise error patterns below can overlap; their purpose is to locate disagreement in the recorded pipeline, not to assign a clinical cause to every case. These patterns are defined from benchmark reference labels and recorded system outputs and should not be interpreted as psychiatrist-confirmed diagnostic errors.
 
-\section{Overview of Stage-Wise Error Patterns}
+\section{Overview of Error Patterns}
 
 \begin{table}[htbp]
 \centering
@@ -1454,9 +1475,9 @@ This chapter analyzes disagreements between model outputs and benchmark referenc
 Error pattern & Operational condition & Population & What it localizes\\
 \hline
 Candidate-detection miss & $D_3=0$ & All internal cases & No reference parent in the genuine Top-3\\
-Candidate-present but not selected & $D_3=1, S=0$ & All internal cases & Reference parent ranked but not selected as the committed primary\\
-Verification-retention miss & $D_3=1, R=0$ & Checker-eligible cases & Ranked reference parent not retained after criterion verification\\
-Ranked-and-retained but not selected & $D_3=1, R=1, S=0$ & Checker-eligible cases & Reference parent ranked and retained but not selected as the committed primary\\
+Candidate present but not selected & $D_3=1, S=0$ & All internal cases & Reference parent ranked but not selected as the committed primary\\
+Reference not retained after verification & $D_3=1, R=0$ & Checker-eligible cases & Ranked reference parent not retained after criterion verification\\
+Ranked and retained but not selected & $D_3=1, R=1, S=0$ & Checker-eligible cases & Reference parent ranked and retained but not selected as the committed primary\\
 Diagnostic-set mismatch & $S=1$ and $M(x)\neq G(x)$ & Correct-primary cases & Primary correct but full predicted set incorrect\\
 Diagnostic-scope limitation & $G_{\mathrm{in}}(x)=\varnothing$ & Full external set & No reference diagnosis represented in the configured output space\\
 \hline
@@ -1538,6 +1559,11 @@ Ranked and retained, not selected & F32 & F20, F32, F41 & F20, F32, F39, F41, F4
 \end{table}
 
 In offline research, reference labels allow an analyst to trace whether a diagnosis was in scope, ranked, retained, and selected. In prospective review without a reference label, a clinician can inspect the final primary, leading alternatives, evidence spans, unresolved discriminative criteria, and finalization source. A clinician may use unresolved criteria to formulate follow-up questions, but the trace does not itself ask those questions or determine the correct diagnosis.
+
+\section{Psychiatrist Case-Review Results}
+\label{sec:psychiatrist-review-results}
+
+The psychiatrist case review is ongoing. To avoid selective reporting, this manuscript draft does not report preliminary case-level judgments or partial agreement estimates. This section will be replaced with the completed reviewer characteristics, primary and secondary outcomes, inter-rater agreement, and case-review findings after all prespecified reviews are complete.
 
 \section{Summary of Error Analysis}
 
@@ -1640,7 +1666,7 @@ Larger context budget for debate & Comparison with Direct-Answer & Context size 
 \hline
 Heterogeneous selection-intervention configurations & Interpretation of selection-method comparisons & Common-upstream methods and new-inference configurations are reported separately & Results compare tested configurations, not causal rankings of method families; internal SC/CISC evidence is summary-level\\
 \hline
-No transcript-only psychiatrist comparator & Interpretation of model error and task ambiguity & Operational disagreement strata and unresolved evidence are reported separately & The study cannot determine whether clinicians could resolve the same cases under the same constraints\\
+Ongoing psychiatrist case review & Interpretation of model error and task ambiguity & Prespecified blinded review and outcome definitions are reported; partial judgments are excluded & Complete reviewer outcomes and agreement estimates are not yet available\\
 \hline
 Configured diagnostic scope & Full-corpus external accuracy & Full-set and in-scope results are reported separately & Out-of-scope diagnoses cannot be emitted, and a broader legal output set does not teach selection\\
 \hline
@@ -1671,9 +1697,9 @@ The primary analysis system also depends on one model family, prompt set, quanti
 
 Both quantitative corpora are synthetic. They support controlled and reproducible experiments, but may contain generator-specific language, simplified ambiguity, limited comorbidity, and less noise than real practice. MDD-5k provides a useful distribution shift, but it is still synthetic and does not provide the same verification analysis as the internal set.
 
-No psychiatrist comparator is available under the same transcript-only, configured-scope, and no-follow-up-question constraints. The study therefore cannot determine whether a unique primary is recoverable by clinicians from each transcript or whether some model--reference-label disagreements reflect task ambiguity.
+An ongoing psychiatrist case-review study uses transcript-only review under the configured diagnostic scope before revealing system outputs or benchmark references. Because the planned assessments and agreement analyses are incomplete, no partial comparator estimate is used in this manuscript. The present version therefore cannot determine whether a unique primary is recoverable by psychiatrists from each transcript or whether some model--reference-label disagreements reflect task ambiguity.
 
-The benchmark reference labels and model-generated criterion states were not independently reviewed by psychiatrists. The present analysis therefore identifies computational failure locations rather than clinically verified diagnostic errors, and it provides no evidence that clinician inspection is improved by the recorded audit trace. A future psychiatrist case review would need to report reviewer selection, panel size, blinding adherence, retrospective-review bias, agreement, and the applicable institutional ethics determination.
+The benchmark reference labels and model-generated criterion states have not yet received a completed independent psychiatrist review. The computational analysis therefore identifies failure locations rather than clinically verified diagnostic errors, and it provides no completed evidence that clinician inspection is improved by the recorded audit trace. Final reporting of the ongoing review must include reviewer selection, panel size, blinding adherence, retrospective-review bias, agreement, unresolved cases, and the applicable institutional ethics determination.
 
 The intended setting is Taiwanese outpatient psychiatry, yet the study does not evaluate real Taiwanese patients, Traditional-Chinese clinical speech, mixed Mandarin--Taiwanese language, local coding practice, or hospital workflow. The configured diagnostic scope also maps unsupported diagnoses to \texttt{Others}. Expanding the list of legal outputs does not by itself teach the model when to use new labels, as shown by the scope-expansion analysis.
 
@@ -1716,9 +1742,9 @@ This section summarizes how the final experiments answer the five research quest
 
 \section{Future Work}
 
-\subsection{Psychiatrist Case Review of Selection-Gap Cases}
+\subsection{Completion and Reporting of the Psychiatrist Case-Review Study}
 
-A blinded psychiatrist case review should examine whether model--reference disagreements reflect primary-selection errors, insufficient transcript evidence, multiple clinically plausible diagnoses, ambiguity in benchmark reference labels, or criterion-verification errors. Reviewers should first assess transcripts without system outputs or reference labels, then assess the audit trace, and only afterward receive the benchmark reference. Reviewer characteristics, blinding, agreement, unresolved cases, and the applicable ethics determination should be reported prospectively. This would be expert review of synthetic transcripts, not clinical validation or a prospective workflow study.
+The ongoing psychiatrist case-review study described in Section~\ref{sec:psychiatrist-case-review} should be completed before its findings are incorporated into the substantive interpretation of the selection gap. No preliminary outcome or partial agreement estimate is used in the present conclusions. After all prespecified reviews are complete, Chapter~8 should report reviewer characteristics, the clinician-confirmed primary-selection error rate, secondary outcomes, agreement estimates, disagreement categories, and unresolved cases. The study remains an expert review of synthetic transcripts rather than clinical validation or a prospective workflow evaluation.
 
 \subsection{Comparative Selection with Structured Diagnostic Knowledge}
 

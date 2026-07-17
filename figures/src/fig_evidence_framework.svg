@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="500" viewBox="0 0 1200 500">
-  <rect width="1200" height="500" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620">
+  <rect width="1200" height="620" fill="#ffffff"/>
   <style>
     text { font-family: Verdana; fill: #1f2933; }
     .title { font-size: 27px; font-weight: 700; }
@@ -48,6 +48,15 @@
   <text x="1027" y="263" text-anchor="middle" class="detail">Model scale, MDD-5k,</text>
   <text x="1027" y="287" text-anchor="middle" class="detail">scope, and error patterns</text>
 
-  <line x1="455" y1="390" x2="515" y2="390" stroke="#52606d" stroke-width="3"/>
-  <text x="530" y="396" class="detail">Analyses executed in this thesis</text>
+  <path d="M 450 330 L 450 375" class="arrow"/>
+  <path d="M 441 365 L 450 375 L 459 365" class="arrow"/>
+
+  <rect x="330" y="375" width="540" height="150" rx="6" fill="#f7f8fa" stroke="#52606d" stroke-width="2" stroke-dasharray="10 7"/>
+  <text x="600" y="407" text-anchor="middle" class="rq">ONGOING STUDY</text>
+  <text x="600" y="445" text-anchor="middle" class="heading">Psychiatrist case review</text>
+  <text x="600" y="479" text-anchor="middle" class="detail">Selected primary-selection-gap cases</text>
+  <text x="600" y="503" text-anchor="middle" class="detail">Partial results excluded until completion</text>
+
+  <line x1="290" y1="575" x2="350" y2="575" stroke="#52606d" stroke-width="3" stroke-dasharray="10 7"/>
+  <text x="365" y="581" class="detail">Ongoing study; not included in Chapters 6 and 7 quantitative conclusions</text>
 </svg>
