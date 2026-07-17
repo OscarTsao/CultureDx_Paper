@@ -1458,85 +1458,102 @@ Supporting BGE-M3 analyses test whether labels from semantically similar LingxiD
 The external results support five bounded conclusions. First, HiED exceeds the MDD majority baseline, but class imbalance and configured scope materially affect the multi-way metrics. Second, genuine Top-3 remains substantially above committed Top-1, with 259 cases in which a reference label is ranked but not selected as the committed primary. Third, the missing criterion-retention trace prevents a complete external detection--verification--selection analysis. Fourth, NtS and deterministic fusion produce significant decreases, while sampling-based aggregation produces small positive but unsupported point estimates; no method provides a clear reliable external gain. Fifth, configuration expansion increases representability without recovery, and lexical and case-neighbor analyses indicate corpus-specific selector limitations. External retrieval-policy transfer remains unavailable rather than being inferred from unmatched runs. Chapter~\ref{ch:error} examines the resulting stage-wise error patterns without assigning clinical causes.
 
 
-\chapter{Error Analysis and Stage-Wise Failure Localization}
+\chapter{Stage-Wise Failure Analysis}
 \label{ch:error}
 
-This chapter analyzes disagreements between model outputs and benchmark reference labels. As defined in Chapter~\ref{ch:data}, these labels are dataset annotations rather than independently reviewed clinical diagnoses. The primary analysis uses the parent-balanced HiED--DA trace on the fixed 1,000-case internal test set because the complete ranking, checker, and finalization artifacts are available for that run. External diagnostic-scope findings use MDD-5k and are labeled separately. The stage-wise error patterns below can overlap; their purpose is to locate disagreement in the recorded pipeline, not to assign a clinical cause to every case. These patterns are defined from benchmark reference labels and recorded system outputs and should not be interpreted as psychiatrist-confirmed diagnostic errors.
+\section{Analysis Scope and Interpretation Boundary}
 
-\section{Overview of Error Patterns}
+This chapter analyzes disagreements between model outputs and benchmark reference labels. The primary analysis uses the parent-balanced HiED--DA trace on the fixed 1,000-case internal test set because complete ranking, checker, compatibility, and finalization artifacts are available for that run. Candidate-detection and diagnostic-set analyses use all 1,000 cases. Analyses involving reference-label retention use the 915 checker-eligible cases, and external diagnostic-scope findings use separately identified MDD-5k populations.
 
-\begin{table}[htbp]
-\centering
-\caption{Stage-wise error patterns used for audit-based failure localization.}
-\label{tab:stage-wise-error-patterns}
-\begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{|p{3.4cm}|p{4.2cm}|p{3.6cm}|p{6.2cm}|}
-\hline
-Error pattern & Operational condition & Population & What it localizes\\
-\hline
-Candidate-detection miss & $D_3=0$ & All internal cases & No reference parent in the genuine Top-3\\
-Candidate present but not selected & $D_3=1, S=0$ & All internal cases & Reference parent ranked but not selected as the committed primary\\
-Reference not retained after verification & $D_3=1, R=0$ & Checker-eligible cases & Ranked reference parent not retained after criterion verification\\
-Ranked and retained but not selected & $D_3=1, R=1, S=0$ & Checker-eligible cases & Reference parent ranked and retained but not selected as the committed primary\\
-Diagnostic-set mismatch & $S=1$ and $M(x)\neq G(x)$ & Correct-primary cases & Primary correct but full predicted set incorrect\\
-Diagnostic-scope limitation & $G_{\mathrm{in}}(x)=\varnothing$ & Full external set & No reference diagnosis represented in the configured output space\\
-\hline
-\end{tabular}
-\end{adjustbox}
-\end{table}
+The term \emph{failure} denotes an operational benchmark disagreement at a recorded system stage. It does not establish a psychiatrist-confirmed diagnostic error or its clinical cause. The stages are also not a strict runtime funnel because criterion verification covers all configured diagnostic categories rather than only the genuine Top-3. Denominators and operational conditions are therefore stated in each section.
 
-These patterns separate failure locations that endpoint accuracy merges. The internal run contains 284 cases in which a reference label is present but not selected, of which 272 are also ranked and retained after verification but not selected on the checker-eligible population. The two counts use different eligibility conditions and should not be treated as interchangeable.
+\section{Candidate-Detection Failures}
 
-\section{Unresolved Criterion Evidence}
+A candidate-detection failure occurs when no benchmark reference parent appears in the genuine Top-3, or $D_3=0$. This condition occurs in 198 of the 1,000 internal cases. Eighty-five of these cases use the \emph{Others} reference and are not eligible for reference-label retention analysis, leaving 113 checker-eligible candidate-detection failures.
 
-Across 77,998 recorded criterion states, 48.7\% are \texttt{met}, 23.7\% are \texttt{not\_met}, and 27.6\% are \texttt{insufficient\_\allowbreak{}evidence}. Table~\ref{tab:criterion-state-breakdown} shows that unresolved rates vary substantially by configured category.
+The full-scope checker retains a reference parent in 79 of these 113 cases despite its absence from the Diagnostician's Top-3; the remaining 34 cases neither rank nor retain a reference parent. This non-nested profile shows that candidate generation and criterion verification expose different recorded signals. Across all 198 candidate-detection failures, the committed primary is concentrated in F32 (109 cases) and F41 (56 cases), but these benchmark counts do not determine whether the omitted reference was clinically preferable.
+
+\section{Criterion-Verification Failures}
+
+A criterion-verification failure occurs when a reference parent appears in the genuine Top-3 but is not retained in the criterion-compatible set, or $D_3=1$ and $R=0$. Twenty-four of the 915 checker-eligible cases meet this condition. The committed primary nevertheless matches a reference parent in twelve cases; the other twelve have an incorrect committed primary and form the criterion-verification failure group used in the mutually exclusive comparison in Section~\ref{sec:ch8-criterion-evidence}.
+
+Across the 36 reference-associated checker outputs in these 24 cases, 286 criterion states are recorded: 17.1\% are \texttt{met}, 23.4\% are \texttt{not\_met}, and 59.4\% are \texttt{insufficient\_\allowbreak{}evidence}. These are criterion states rather than case counts. The high unresolved share describes the model-generated rule inputs associated with non-retention, but it does not establish that the clinical information was absent or that the checker judgment was correct.
+
+\section{Primary-Selection Failures}
+
+The strict primary-selection failure condition is $D_3=1$, $R=1$, and $S=0$: a reference parent is ranked and retained after criterion verification but another diagnosis is selected as the committed primary. This condition occurs in 272 of the 915 checker-eligible cases. It is narrower than the 284-case Top-3--Top-1 gap reported over all internal cases.
+
+\ThesisFigure[0.72\textwidth]{fig_ch8_reference_rank.pdf}{Rank of the nearest benchmark reference parent among the 272 ranked-and-retained cases in which a different primary diagnosis is selected.}{fig:ch8-reference-rank}
+
+The nearest ranked reference is second in 171 cases (62.9\%) and third in 101 (37.1\%). Table~\ref{tab:ch8-selection-pairs} reports the most frequent nearest-reference-to-selected-primary pairs. Each case contributes one pair, based on the highest-ranked reference parent.
 
 \begin{table}[htbp]
 \centering
-\caption{Criterion-state counts by configured diagnostic category on the internal test set.}
-\label{tab:criterion-state-breakdown}
-\scriptsize
-\begin{tabular}{|l|r|r|r|r|}
+\caption{Most frequent nearest-reference-to-selected-primary pairs in the 272 strict primary-selection failures.}
+\label{tab:ch8-selection-pairs}
+\small
+\begin{tabular}{|l|l|r|r|}
 \hline
-Category & States & \texttt{met} & \texttt{not\_met} & \texttt{insufficient\_evidence}\\
+Nearest reference parent & Selected primary & Cases & Share of subset\\
 \hline
-F20 & 8,000 & 488 & 1,128 & 6,384\\
-F31 & 8,000 & 2,791 & 4,405 & 804\\
-F32 & 10,998 & 6,775 & 1,341 & 2,882\\
-F39 & 6,000 & 4,758 & 194 & 1,048\\
-F41.0 & 5,000 & 667 & 2,407 & 1,926\\
-F41.1 & 5,000 & 2,996 & 951 & 1,053\\
-F41.2 & 4,000 & 3,251 & 329 & 420\\
-F42 & 4,000 & 1,868 & 1,246 & 886\\
-F43.1 & 4,000 & 898 & 997 & 2,105\\
-F43.2 & 5,000 & 4,029 & 166 & 805\\
-F45 & 5,000 & 246 & 3,520 & 1,234\\
-F51 & 4,000 & 3,305 & 203 & 492\\
-F98 & 6,000 & 4,354 & 720 & 926\\
-Z71 & 3,000 & 1,561 & 844 & 595\\
+F41 & F32 & 158 & 58.1\%\\
+F39 & F32 & 35 & 12.9\%\\
+F32 & F41 & 11 & 4.0\%\\
+F41 & F42 & 9 & 3.3\%\\
+F51 & F32 & 9 & 3.3\%\\
 \hline
 \end{tabular}
 \end{table}
 
-An \texttt{insufficient\_evidence} state means that the checker did not resolve a criterion from the transcript. It may reflect absent information, ambiguous wording, conflicting evidence, or checker error; it is not direct proof that the clinical fact was unavailable. The counts therefore characterize model-generated audit behavior, not clinician-validated missingness.
+The criterion-compatible set has a median size of six categories (interquartile range, five to six) in this subset. The same median and interquartile range occur among cases with a correct committed primary. Compatible-set size alone therefore does not distinguish correct primary selection from ranked-and-retained nonselection.
 
-\section{Detection, Verification, and Selection Patterns}
+\section{Diagnostic-Set Errors}
 
-Among the 284 cases with a reference parent in Top-3 but not selected as the committed primary, the nearest reference parent appears at rank 2 in 179 cases and rank 3 in 105. The most frequent reference-to-selected-primary pairs in this subset are F41$\rightarrow$F32 (162), F39$\rightarrow$F32 (35), and F32$\rightarrow$F41 (14). These counts target primary-selection disagreements more directly than the full confusion matrix.
+Diagnostic-set errors are separated from primary-selection failures. The internal run has 518 cases with a correct committed primary and 409 cases with exact predicted-set agreement. Consequently, 109 cases have a correct primary but an incorrect full diagnostic set. Fifty-seven contain at least one extra predicted label, 54 omit at least one reference label, and two exhibit both conditions.
 
-Criterion compatibility retains a reference parent in 857 of 915 eligible cases. The compatible-set median is six categories with an interquartile range of five to six. The same median and interquartile range occur when the committed primary is correct, when it is incorrect, and when a reference label is ranked and retained but not selected. Thus, compatible-set size alone does not separate correct from incorrect primary selection; the rule layer is high-retention but weakly selective under this summary.
+This distinction is also required when interpreting finalization policies. DA may emit a primary and an optional secondary diagnosis, whereas NtS emits one diagnosis. Differences in Exact Match, Macro-F1, or Weighted-F1 between these policies therefore reflect both primary re-selection and output cardinality rather than an isolated change in primary-selection quality.
 
-\section{Diagnostic-Set Finalization and Cardinality Disagreements}
+\section{Diagnostic-Scope Failures}
 
-The internal primary-analysis run has 518 correct primaries but only 409 exact predicted sets. Thus, 109 cases match a reference primary while retaining an output-set mismatch; 57 include an extra predicted label and 54 omit at least one reference label, with two cases exhibiting both conditions. This is distinct from primary-selection error.
+A diagnostic-scope failure occurs when the benchmark reference diagnosis is unavailable in the configured output space. The full 925-case MDD-5k evaluation contains 47 such cases. They remain part of the full external performance estimate because a system cannot select a diagnosis that it is not configured to emit.
 
-NtS emits one diagnosis, whereas DA may emit a primary and a secondary diagnosis. Set-level differences between them therefore reflect both primary re-selection and output cardinality and are not interpreted as isolated selector effects.
+The separate configuration-expansion experiment increases the profile from fourteen to 33 configured categories and makes 58 sampled reference diagnoses representable. None becomes the committed Top-1 diagnosis (0/58), as reported in Table~\ref{tab:scope-expansion-results}. The result distinguishes successful output-space expansion from behavioral recovery; it does not show that label-space expansion is ineffective in general.
 
-\section{Diagnostic-Scope Limitations}
+\section{Criterion-Evidence Patterns across Failure Types}
+\label{sec:ch8-criterion-evidence}
 
-The internal benchmark and MDD-5k both contain cases whose reference diagnoses are outside the configured parent set. MDD-5k contains 47 such cases in its full 925-case evaluation. A separate scope-expansion analysis evaluates 58 raw cases whose reference parent becomes representable when the profile is expanded from fourteen to 33 configured categories. Recovery is defined as the newly representable reference parent becoming the committed Top-1 diagnosis; the expanded profile recovers 0 of 58 cases. This demonstrates that output availability and learned selection are different problems.
+Across all 77,998 recorded criterion states, 48.7\% are \texttt{met}, 23.7\% are \texttt{not\_met}, and 27.6\% are \texttt{insufficient\_\allowbreak{}evidence}. These percentages describe diagnosis-by-criterion judgments, not cases. Detailed raw counts by configured category are reported in Appendix Table~\ref{tab:criterion-state-breakdown}.
 
-\section{Illustrative Audit Traces and Review Boundaries}
+For stage-wise comparison, the 915 checker-eligible cases are partitioned into four mutually exclusive groups: correct primary selection ($S=1$); candidate-detection failure ($D_3=0,S=0$); criterion-verification failure with an incorrect primary ($D_3=1,R=0,S=0$); and primary-selection failure ($D_3=1,R=1,S=0$). Figure~\ref{fig:ch8-criterion-composition} reports the mean per-case composition of criterion states. Table~\ref{tab:ch8-criterion-ratios} reports medians and interquartile ranges, preserving the case as the statistical unit.
+
+\ThesisFigure[0.98\textwidth]{fig_ch8_criterion_state_composition.pdf}{Mean per-case criterion-state composition across mutually exclusive groups on the 915 checker-eligible internal cases. Percentages are within-case state ratios averaged within each group; \texttt{met}, \texttt{not\_met}, and \texttt{insufficient\_evidence} retain the recorded output schema names.}{fig:ch8-criterion-composition}
+
+\begin{table}[htbp]
+\centering
+\caption{Per-case criterion-state ratios by stage-wise group. Values are median percentages with interquartile ranges in brackets.}
+\label{tab:ch8-criterion-ratios}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{|X|r|c|c|c|}
+\hline
+Group & $N$ & \texttt{met} & \texttt{not\_met} & \texttt{insufficient\_evidence}\\
+\hline
+Correct primary selection & 518 & 50.0 [46.2, 52.6] & 23.1 [19.2, 26.9] & 26.9 [23.1, 30.8]\\
+Candidate-detection failure & 113 & 48.7 [43.6, 52.6] & 21.8 [17.9, 26.9] & 28.2 [23.1, 35.9]\\
+Criterion-verification failure & 12 & 41.0 [33.0, 47.4] & 27.6 [21.5, 33.0] & 27.6 [22.8, 37.2]\\
+Primary-selection failure & 272 & 50.0 [46.2, 53.8] & 21.8 [19.2, 26.9] & 26.9 [21.8, 32.1]\\
+\hline
+\end{tabularx}
+\end{table}
+
+The primary-selection failure group has a criterion-state composition close to the correct-selection group: their mean \texttt{met} shares are 49.9\% and 49.0\%, respectively, and their mean \texttt{insufficient\_\allowbreak{}evidence} shares are 27.1\% and 27.3\%. Aggregate criterion-state composition therefore does not provide a clear separator for these cases. The criterion-verification failure group has a lower mean \texttt{met} share and higher unresolved share, but it contains only twelve cases; this comparison is descriptive and is not treated as an inferential group effect.
+
+\section{Psychiatrist Case-Review Results}
+\label{sec:psychiatrist-review-results}
+
+The psychiatrist case review is ongoing. To avoid selective reporting, this manuscript draft does not report preliminary case-level judgments or partial agreement estimates. This section will be replaced with the completed reviewer characteristics, primary and secondary outcomes, inter-rater agreement, and case-review findings after all prespecified reviews are complete.
+
+\section{Illustrative Cases}
 
 Table~\ref{tab:audit-trace-examples} gives three de-identified summaries from the internal evaluation artifacts. The examples show recorded outputs only; they were not reviewed by psychiatrists and include no transcript text.
 
@@ -1548,85 +1565,94 @@ Table~\ref{tab:audit-trace-examples} gives three de-identified summaries from th
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{|l|l|l|l|l|l|}
 \hline
-Failure pattern & Reference parent & Diagnostician Top-3 & Criterion-compatible set & Committed primary & Unresolved reference criteria\\
+Failure type & Reference parent & Diagnostician Top-3 & Criterion-compatible set & Committed primary & Unresolved reference criteria\\
 \hline
-Candidate miss & F31 & F32, F39, F41 & F32, F39, F41, F43, F51, F98 & F32 & None recorded\\
-Retention miss & F32 & F39, F32, F41 & F51, F98, Z71 & F39 & B1, C2, C5\\
-Ranked and retained, not selected & F32 & F20, F32, F41 & F20, F32, F39, F41, F43 & F20 & C2, C7\\
+Candidate-detection failure & F31 & F32, F39, F41 & F32, F39, F41, F43, F51, F98 & F32 & None recorded\\
+Criterion-verification failure & F32 & F39, F32, F41 & F51, F98, Z71 & F39 & B1, C2, C5\\
+Primary-selection failure & F32 & F20, F32, F41 & F20, F32, F39, F41, F43 & F20 & C2, C7\\
 \hline
 \end{tabular}
 \end{adjustbox}
 \end{table}
 
-In offline research, reference labels allow an analyst to trace whether a diagnosis was in scope, ranked, retained, and selected. In prospective review without a reference label, a clinician can inspect the final primary, leading alternatives, evidence spans, unresolved discriminative criteria, and finalization source. A clinician may use unresolved criteria to formulate follow-up questions, but the trace does not itself ask those questions or determine the correct diagnosis.
+In offline research, reference labels permit tracing whether a diagnosis was in scope, ranked, retained, and selected. Without a revealed reference label, a reviewer can inspect the committed primary, leading alternatives, evidence spans, unresolved discriminative criteria, and finalization source. The trace may help formulate follow-up questions, but it does not determine the clinically correct diagnosis.
 
-\section{Psychiatrist Case-Review Results}
-\label{sec:psychiatrist-review-results}
+\section{Chapter Summary}
 
-The psychiatrist case review is ongoing. To avoid selective reporting, this manuscript draft does not report preliminary case-level judgments or partial agreement estimates. This section will be replaced with the completed reviewer characteristics, primary and secondary outcomes, inter-rater agreement, and case-review findings after all prespecified reviews are complete.
-
-\section{Summary of Error Analysis}
-
-Four computational findings emerge. Benchmark disagreements concentrate in a small number of asymmetric diagnostic pairs, especially F41$\rightarrow$F32. Unresolved checker states are common but cannot be equated directly with missing clinical facts. A substantial subset contains a reference diagnosis in both the ranking and criterion-compatible outputs but does not select it as the committed primary. Finally, diagnostic-set mismatches and diagnostic-scope limitations are distinct from primary-selection disagreements and require separate endpoints.
+The stage-wise analysis identifies distinct benchmark failure locations. Candidate detection fails in 198 internal cases, while full-scope checking still retains a reference parent in 79 of the 113 checker-eligible cases in this group. Twenty-four ranked references are not retained after verification, and twelve of those cases also have an incorrect primary. The largest strict subset contains 272 ranked-and-retained cases in which another diagnosis is selected, with F41-to-F32 disagreements predominating. Criterion-state composition in this subset closely resembles that of correctly selected cases, indicating that aggregate checker-state ratios alone do not resolve primacy. Diagnostic-set mismatches and diagnostic-scope failures remain separate problems, and clinical causes await completion of the psychiatrist case review.
 
 \chapter{Discussion}
 \label{ch:discussion}
 
-This chapter interprets the results around one central distinction: a diagnosis may be generated and retained as compatible without being selected as primary. The discussion first examines this distinction, then considers how the lexical baseline, retrieval comparisons, selection methods, and external analyses modify its interpretation.
-
 \section{Summary of Principal Findings}
 
-The Criterion Checker evaluates each diagnosis separately. It asks whether the transcript is compatible with that diagnosis, not whether it is a better primary explanation than the alternatives. Common findings such as poor sleep, fatigue, low mood, worry, avoidance, and reduced concentration can therefore support several categories. Primary selection often depends on comparative facts such as onset, duration, previous episodes, exclusionary causes, and whether one syndrome better explains the remaining symptoms.
+The internal results first establish predictive position: TF--IDF + logistic regression is the strongest same-split predictor, while HiED provides ranked differentials, criterion-level audit artifacts, and stage-wise observability rather than benchmark accuracy leadership. Within HiED, genuine Top-3 reference coverage reaches 0.802 and committed Top-1 agreement reaches 0.518. A reference parent is retained in 857 of 915 checker-eligible cases, and 272 cases rank and retain a reference parent without selecting it as the committed primary.
 
-The internal parent-balanced trace illustrates this difference. HiED--DA reaches 0.802 Top-3 Accuracy and 0.518 Top-1 Accuracy. A reference parent is retained in the criterion-compatible set in 857 of 915 checker-eligible cases, while the median compatible set contains six categories. These quantities use different denominators and are not a strict funnel, but the joint analysis identifies 272 cases in which a reference parent is ranked and retained without being committed.
+The controlled finalization-policy comparison does not convert this gap into a gain. NtS decreases Top-1 by 2.8--2.9 percentage points across all three internal retrieval conditions, and no evaluated additional primary-selection configuration provides a clear and attributable improvement over DA. On MDD-5k, Top-3 also remains above Top-1, but the missing external criterion-retention trace prevents a complete external detection--verification--selection analysis.
 
-NtS provides a controlled test of whether the recorded criterion-compatibility signals improve primary selection when the upstream ranking and checker outputs are held fixed. Under this comparison, NtS reduces rather than improves Top-1 Accuracy by 2.8--2.9 percentage points across no retrieval, global Top-5 retrieval, and parent-balanced retrieval. Because NtS emits only one diagnosis, its set-level metrics cannot isolate primary re-selection from output-cardinality effects. The similar Top-1 decreases indicate that the NtS penalty is not confined to one retrieval configuration; because the interaction confidence intervals include zero, they show no detected moderation rather than equivalence among the effects.
+These findings support a benchmark-local primary-selection bottleneck in the evaluated system. They do not establish that every disagreement is a clinically verified selection error, that transcript-only diagnosis is intrinsically underdetermined, or that the pattern generalizes to patients. The ongoing psychiatrist case review is not used in the substantive conclusions until its prespecified assessments are complete.
 
-The stage-wise analysis changes how errors are interpreted. Absence of a reference parent from the genuine Top-3 identifies a candidate-generation miss. Ranking a reference parent without retaining it under the configured rules identifies a compatibility-retention miss. Ranking and retaining a reference parent while committing another diagnosis identifies a comparative-selection error. Endpoint accuracy alone cannot distinguish these failure locations.
+\section{Candidate Detection Is Necessary but Not Sufficient}
 
-\section{Implications of Lexical Baseline Performance}
+Candidate generation remains necessary because a selector cannot choose a diagnosis that is absent from the ranked differential. The 198 internal candidate-detection failures therefore identify a direct target for improved ranking. Retrieval supports this stage in the Single architecture: both retrieval configurations improve Single relative to no retrieval. However, the corresponding Top-1 changes are smaller and not statistically supported in the full HiED pipeline.
 
-The TF--IDF result prevents the Top-3--Top-1 selection gap from being read as proof of intrinsic transcript underdetermination. A supervised lexical model reaches 0.632 Top-1 on the same internal synthetic split, above the evaluated HiED--DA trace. The benchmark therefore contains lexical signal that the tested LLM pipeline does not fully exploit. The gap remains a valid description of where HiED fails, but it is a system-level empirical finding rather than a universal ceiling on transcript-only prediction.
+The 284-case Top-3--Top-1 difference shows why candidate coverage is insufficient. In these cases, a reference parent has already entered the genuine ranked differential but is not selected as primary. The strong TF--IDF baseline reinforces this limitation of a candidate-only explanation: the same synthetic transcripts contain predictive benchmark signal that the evaluated HiED configuration does not fully use. At the same time, corpus-specific lexical cues may contribute to TF--IDF performance, so this result does not establish that every case contains clinically sufficient information.
 
-The lexical result has its own boundary. Synthetic corpora may contain generator-specific wording and label cues, and the cross-corpus classifier results show that fitted lexical signals do not transfer reliably. Transcript-only clinician evaluation and real-patient data are needed to distinguish model limitation, corpus shortcut, and genuine information insufficiency.
+\section{Criterion Verification Does Not Determine the Primary Diagnosis}
 
-\section{Retrieval, Model Scale, and External Transfer}
+Criterion verification asks whether each configured diagnosis is compatible with the transcript under study-specific rules. It does not compare which compatible diagnosis best explains the presentation. Common features such as sleep disturbance, fatigue, low mood, worry, avoidance, and reduced concentration can therefore support several categories simultaneously. Compatibility is not comparative diagnosis.
 
-On the internal test set, retrieval improves Single relative to no retrieval but does not produce a statistically supported gain for HiED. One possible explanation is architectural: retrieved demonstrations affect the Diagnostician, while the Criterion Checkers and finalization rules remain unchanged. Better demonstrations may improve direct diagnosis without resolving the later comparison among several compatible candidates. Global and parent-balanced retrieval also differ in example count, label composition, ordering, and prompt length, so their contrast compares complete retrieval configurations rather than isolating a balancing effect.
+This distinction explains the high-retention, low-selectivity pattern. A reference parent is retained in 0.937 of checker-eligible cases, while the median criterion-compatible set contains six of fourteen configured categories. The criterion-state composition of strict primary-selection failures is also close to that of correctly selected cases. Criterion verification remains useful for exposing support, contradiction, unresolved evidence, and rule application, but neither compatible-set size nor aggregate state ratios determine primacy.
 
-The Top-3--Top-1 selection gap also persists across the evaluated Qwen3 sizes. Increasing scale within this family substantially changes Single performance, while the HiED Top-1 and Top-3 ranges are narrower. This is evidence about scale sensitivity within Qwen3, not robustness across unrelated model families.
+\section{Primary Selection Remains the Main Bottleneck}
 
-On the unified 925-case MDD-5k trace, the genuine Top-3 reaches 0.8508 while the committed Top-1 reaches 0.5708. This reproduces ranking headroom under synthetic corpus shift, but MDD-5k does not provide the same criterion-retention decomposition. Supporting lexical and BGE-M3 case-neighbor label-voting analyses also transfer poorly across corpora. The planned six-condition MDD retrieval matrix remains necessary before retrieval-policy transfer can be interpreted directly.
+The strict computational evidence consists of 272 cases satisfying $D_3=1$, $R=1$, and $S=0$. The nearest reference parent is second in 171 cases and third in 101, and F41-to-F32 is the dominant nearest-reference-to-selected pair. These cases have passed both the ranked-candidate and criterion-retention conditions used in the analysis, leaving primary selection as the recorded location of disagreement.
 
-\section{Interpretation of Selection-Intervention Results}
+This is a system-level benchmark claim rather than a clinical judgment. Some cases may reflect an incorrect primary-selection decision; others may contain insufficient transcript information, multiple plausible diagnoses, an ambiguous reference label, or an erroneous checker state. The ongoing psychiatrist case review is designed to estimate this composition. Until it is complete, the 272 cases should not be described as uniformly recoverable or clinically erroneous.
 
-The selection-intervention experiments test distinct explanations under different execution contracts. NtS and deterministic fusion reuse recorded upstream outputs. The forced pairwise-override configuration, independent pairwise reasoning, debate, and self-consistency instead evaluate complete configurations that may change ranking, generation, sampling, calls, or context. Supporting case-neighbor analyses ask whether labels from semantically similar training cases provide a transferable diagnostic signal; the standalone voting and fusion phases are kept separate.
+\section{Why the Evaluated Selection Strategies Did Not Close the Gap}
 
-None of the tested methods provides a clear, statistically supported, and attributable improvement under its predefined comparator. A conservative pairwise gate produces no committed flips, while the complete forced pairwise-override configuration and deterministic fusion reduce Top-1; the larger-context debate configuration is also lower than DA. The available internal self-consistency evidence is summary-level and therefore does not support the same paired conclusion. These results do not establish that the broader method families cannot work; they show that the tested thresholds, votes, overrides, and additional reasoning calls do not combine the available signals well enough.
+The evaluated strategies mostly recombine existing signals. NtS promotes diagnoses from the criterion-compatible artifacts, while deterministic fusion combines rank, compatibility, and criterion support. Pairwise comparison and debate add new inference but still operate over the same fixed transcript, and self-consistency measures repeated model preference rather than acquiring new discriminating evidence.
 
-\section{Methodological Limitations and Transcript Information Constraints}
+The results suggest that support counts and repeated preferences do not encode the comparative relations required for primacy. Relevant distinctions may include onset, temporal course, syndrome dominance, exclusions, causal direction, and whether one diagnosis better explains symptoms assigned to another. NtS and deterministic fusion reduce performance, forced pairwise override and debate are lower than DA, and the small sampling-based point estimates lack statistical support. These findings apply to the tested configurations; they do not establish that every pairwise, debate, fusion, or sampling method must fail.
 
-The experiments cannot fully separate two causes of error. The transcript may contain sufficient information that the model uses poorly, or it may omit facts needed for a unique primary diagnosis. The 284 internal cases in which a reference parent is in the Top-3 but not selected show that useful candidate generation has already occurred in many errors. Broad compatible sets and frequent \texttt{insufficient\_\allowbreak{}evidence} states are consistent with unresolved discrimination, but they do not prove that clinical information was absent; ambiguity, conflicting evidence, and checker error are also possible. The stronger TF--IDF baseline is an important counterexample to a universal missing-information account, although synthetic lexical shortcuts may contribute.
+\section{Primary-Diagnosis and Diagnostic-Set Errors Are \texorpdfstring{\mbox{Distinct}}{Distinct}}
 
-A transcript-only clinician study is needed to separate these causes. Chapter~\ref{ch:experimental} specifies a prospective blinded and staged review, but the review was not completed for this thesis version. If clinicians also disagree or judge the evidence insufficient, the task definition or benchmark label may be the main limit. If clinicians consistently resolve cases that HiED misses, the method is the more likely source of error.
+Primary selection and multilabel set construction use different output contracts. A system may select a benchmark-consistent primary while adding an unsupported secondary diagnosis or omitting a reference comorbidity. This occurs in 109 internal cases with correct primaries but non-exact diagnostic sets.
 
-\section{Relation to Prior Psychiatric and Multi-Agent Systems}
+The distinction is essential for DA--NtS interpretation. DA may emit an optional secondary diagnosis, whereas NtS emits a single diagnosis. A change in Exact Match or label-level F1 can therefore arise from output cardinality even when primary-selection accuracy decreases. Set-level agreement should not be described as calibration, and it cannot substitute for the committed Top-1 comparison.
 
-Interactive systems such as MIND, WiseMind/ProAI, MAGI, and DSM5AgentFlow can ask additional questions and therefore address evidence acquisition as well as diagnosis~\citep{li2026mind,wu2026wisemind,bi2025magi,ozgun2025dsm5agentflow}. HiED instead fixes the transcript so that candidate detection, criterion verification, and primary selection can be compared under identical available evidence. This controlled setting improves failure localization but cannot resolve evidence that the transcript never provides.
+\section{Diagnostic Scope Expansion Does Not Ensure Diagnostic Recovery}
 
-Fixed-record systems such as MentalSeek-Dx and MoodAngels demonstrate diagnosis and structured reasoning from available records~\citep{sun2026mentalseek,xiao2025moodangels}. HiED's narrower contribution is to expose and evaluate candidate detection, criterion verification, and primary selection on the same cases. Its audit trace has demonstrated analytical value for failure localization even without a Top-1 gain. Whether the trace improves clinician review, efficiency, or decision quality remains an empirical clinical question.
+Configured scope determines whether a diagnosis can be emitted at all. The 47 out-of-scope MDD-5k cases therefore represent a distinct limitation from selecting among available labels. Expanding the profile successfully increases representability, but none of the 58 newly representable reference parents becomes the committed primary.
 
-Structured-knowledge systems such as MedKGI and DKEC motivate richer relations among symptoms, diagnoses, and missing information~\citep{wang2025medkgi,ge2024dkec}. HiED's independent criterion rules behave as a high-retention compatibility audit but not as an effective primary selector. This result supports studying relational representations that compare temporal course, exclusions, causal direction, and unresolved conflicts rather than independently counting support for each candidate.
+Availability in the output space is thus necessary but insufficient for behavioral adaptation. A broader profile may also require diagnostic examples, criterion definitions, comparative training, prompt adaptation, or a selector that has learned when the new categories should displace existing ones. The 0/58 result concerns the tested configuration-only expansion and is not evidence against ontology expansion as a general method.
 
-\section{Implications for System Design and Clinical Use}
+\section{External Synthetic Transfer and Corpus-Specific Signals}
 
-HiED records ranked candidates, criterion states, linked evidence, criterion-compatible diagnoses, and finalization source. These artifacts make disagreements inspectable, but they neither reveal hidden reasoning nor establish that the checker is clinically correct. The demonstrated contribution is analytical traceability, not clinical benefit or calibrated trust.
+On the common 925-case MDD-5k trace, genuine Top-3 reaches 0.8508 while committed Top-1 reaches 0.5708, leaving 259 ranked-but-not-selected cases. NtS and deterministic fusion again decrease Top-1, while sampling-based aggregation yields small positive but unsupported point estimates. These findings are consistent with transfer of the ranking-to-selection gap and the limitations of the evaluated selection strategies.
 
-One possible next step is a structured diagnostic graph whose nodes represent diagnoses, symptoms, episodes, and findings, and whose edges represent temporal order, support, contradiction, exclusion, explanatory dependence, and comorbidity. Its purpose would be to compare which candidate explains the overall presentation with fewer unresolved conflicts, not merely to add another knowledge source. This remains a proposed direction and is not evaluated in the present thesis.
+The external evidence is incomplete. MDD-5k lacks a criterion-retention trace matched to the internal analysis, so it cannot reproduce $R$, $P(R\mid D_3)$, or $P(S\mid D_3,R)$. The restricted F32/F41 task is easier than the full multi-way task, and both corpora are synthetic. Cross-corpus TF--IDF and case-neighbor results also degrade substantially relative to within-corpus evaluation, indicating that fitted lexical and similarity signals are corpus dependent. The external results are therefore consistent with, but do not fully confirm, the internal stage-wise interpretation.
 
-Some cases may instead require new evidence. When duration, course, substance use, exclusion, or episode history remains unresolved, a future system should identify the discriminating fact, ask a focused follow-up question when interaction is possible, or abstain. Comparative selection is relevant when evidence is sufficient; targeted evidence acquisition is needed when it is not.
+\section{Clinical Interpretation of Benchmark Disagreements}
 
-Finally, Taiwan is the intended setting, not a validated population. All quantitative evidence comes from synthetic Chinese corpora. The thesis does not test real Taiwanese patients, local language use, hospital workflow, clinician behavior, or patient outcomes. HiED should therefore be treated as a research framework for auditable analysis, not an autonomous diagnostic tool.
+The computational strata cannot determine whether the system, the transcript, or the benchmark reference is clinically responsible for a disagreement. The psychiatrist case-review study addresses this boundary by separating transcript-only primary choice, reference plausibility, information sufficiency, multiple plausible diagnoses, and review of recorded system outputs.
+
+At the time of this manuscript revision, the study is ongoing. Partial judgments and agreement estimates are excluded to avoid selective reporting. Once complete, the review can estimate what proportion of ranked-and-retained nonselection cases are judged to be primary-selection errors and what proportion instead reflect insufficient evidence or reference ambiguity. It remains an expert review of synthetic transcripts rather than clinical validation.
+
+\section{Implications for Auditable Psychiatric Diagnostic \texorpdfstring{\mbox{Systems}}{Systems}}
+
+Audit and selection should remain conceptually separate. HiED records ranked candidates, criterion states, linked evidence, criterion-compatible diagnoses, and finalization source. These artifacts make disagreements inspectable, but they neither reveal hidden reasoning nor establish clinical correctness. The demonstrated contribution is analytical traceability.
+
+Future selectors require comparative evidence rather than another independent compatibility score. Structured-knowledge systems such as MedKGI and DKEC motivate relations among symptoms, diagnoses, temporal course, exclusions, and missing information~\citep{wang2025medkgi,ge2024dkec}. A diagnostic graph could represent support, contradiction, causal direction, explanatory dependence, and comorbidity, then compare which candidate explains the overall presentation with fewer unresolved conflicts. This direction remains unevaluated.
+
+Fixed transcripts also impose an evidence boundary. Interactive systems such as MIND, WiseMind/ProAI, MAGI, and DSM5AgentFlow can ask additional questions~\citep{li2026mind,wu2026wisemind,bi2025magi,ozgun2025dsm5agentflow}, whereas fixed-record systems such as MentalSeek-Dx and MoodAngels operate on available records~\citep{sun2026mentalseek,xiao2025moodangels}. When duration, course, substance use, exclusion, or episode history is unresolved, a future system should identify the discriminating fact, request targeted follow-up information when interaction is possible, or abstain.
+
+Finally, Taiwan is the intended setting rather than a validated population. All quantitative evidence comes from synthetic Chinese corpora. The thesis does not evaluate real Taiwanese patients, local language use, hospital workflow, clinician behavior, or patient outcomes. HiED should therefore remain a research framework for auditable analysis rather than an autonomous diagnostic tool.
+
+\section{Chapter Summary}
+
+Candidate detection is necessary but does not explain the large Top-3--Top-1 gap. Criterion verification retains reference labels at a high rate but evaluates compatibility rather than comparative primacy. The largest strict computational subset is consequently located at primary selection, yet its clinical composition remains unresolved until psychiatrist review is complete. The tested finalization and selection strategies do not supply a clear improvement, and diagnostic-set construction, configured scope, and corpus-specific transfer remain separate limitations. These findings support audit-oriented system design with explicit comparative evidence and bounded claims, not clinical deployment.
 
 \chapter{Limitations and Threats to Validity}
 \label{ch:limitations}
@@ -1909,6 +1935,37 @@ Size & Single Top-1 & HiED--DA Top-1 & HiED Top-3 & Recorded output issue\\
 \hline
 \end{tabular}
 \end{adjustbox}
+\end{table}
+
+\section{Criterion-State Counts by Configured Diagnostic Category}
+
+Table~\ref{tab:criterion-state-breakdown} reports the raw criterion-state counts used for the descriptive overall distribution in Chapter~\ref{ch:error}. Each case contributes multiple diagnosis-by-criterion judgments, so these counts are not independent case-level observations. The main stage-wise comparison therefore uses per-case state ratios.
+
+\begin{table}[htbp]
+\centering
+\caption{Criterion-state counts by configured diagnostic category on the internal test set.}
+\label{tab:criterion-state-breakdown}
+\scriptsize
+\begin{tabular}{|l|r|r|r|r|}
+\hline
+Category & States & \texttt{met} & \texttt{not\_met} & \texttt{insufficient\_evidence}\\
+\hline
+F20 & 8,000 & 488 & 1,128 & 6,384\\
+F31 & 8,000 & 2,791 & 4,405 & 804\\
+F32 & 10,998 & 6,775 & 1,341 & 2,882\\
+F39 & 6,000 & 4,758 & 194 & 1,048\\
+F41.0 & 5,000 & 667 & 2,407 & 1,926\\
+F41.1 & 5,000 & 2,996 & 951 & 1,053\\
+F41.2 & 4,000 & 3,251 & 329 & 420\\
+F42 & 4,000 & 1,868 & 1,246 & 886\\
+F43.1 & 4,000 & 898 & 997 & 2,105\\
+F43.2 & 5,000 & 4,029 & 166 & 805\\
+F45 & 5,000 & 246 & 3,520 & 1,234\\
+F51 & 4,000 & 3,305 & 203 & 492\\
+F98 & 6,000 & 4,354 & 720 & 926\\
+Z71 & 3,000 & 1,561 & 844 & 595\\
+\hline
+\end{tabular}
 \end{table}
 
 \section{Implementation Details of Evaluated Selection Interventions}
