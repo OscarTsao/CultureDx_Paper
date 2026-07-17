@@ -9,7 +9,7 @@
     .grid { stroke: #d7dde2; stroke-width: 1.5; }
   </style>
 
-  <text x="600" y="48" text-anchor="middle" class="title">Internal and external ranking-to-commitment gaps</text>
+  <text x="600" y="48" text-anchor="middle" class="title">Internal and external Top-3-Top-1 selection gaps</text>
 
   <line x1="130" y1="590" x2="1100" y2="590" stroke="#64717d" stroke-width="2"/>
   <line x1="130" y1="110" x2="130" y2="590" stroke="#64717d" stroke-width="2"/>
@@ -34,14 +34,14 @@
   <text x="312" y="326" text-anchor="middle" class="value">0.518</text>
   <text x="457" y="190" text-anchor="middle" class="value">0.802</text>
   <text x="385" y="640" text-anchor="middle" class="group">Internal</text>
-  <text x="385" y="671" text-anchor="middle" class="note">284 / 1,000 ranked but not committed</text>
+  <text x="385" y="671" text-anchor="middle" class="note">284 / 1,000 ranked but not selected</text>
 
   <rect x="680" y="316.0" width="125" height="274.0" fill="#477da8"/>
   <rect x="825" y="181.6" width="125" height="408.4" fill="#5aa58d"/>
   <text x="742" y="301" text-anchor="middle" class="value">0.5708</text>
   <text x="887" y="167" text-anchor="middle" class="value">0.8508</text>
   <text x="815" y="640" text-anchor="middle" class="group">MDD-5k</text>
-  <text x="815" y="671" text-anchor="middle" class="note">259 / 925 ranked but not committed</text>
+  <text x="815" y="671" text-anchor="middle" class="note">259 / 925 ranked but not selected</text>
 
   <rect x="430" y="75" width="22" height="22" fill="#477da8"/>
   <text x="462" y="93" class="axis">Committed Top-1</text>
