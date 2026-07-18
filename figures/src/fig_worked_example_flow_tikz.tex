@@ -1,0 +1,114 @@
+\documentclass[tikz,border=5pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,positioning}
+
+\definecolor{canvas}{RGB}{246,247,248}
+\definecolor{textgray}{RGB}{54,60,66}
+\definecolor{muted}{RGB}{92,100,108}
+\definecolor{evidencefill}{RGB}{236,244,253}
+\definecolor{evidencedraw}{RGB}{44,111,176}
+\definecolor{rankfill}{RGB}{252,244,226}
+\definecolor{rankdraw}{RGB}{190,119,16}
+\definecolor{rejectfill}{RGB}{252,238,238}
+\definecolor{rejectdraw}{RGB}{181,62,62}
+\definecolor{acceptfill}{RGB}{234,248,244}
+\definecolor{acceptdraw}{RGB}{0,118,88}
+\definecolor{setfill}{RGB}{244,238,252}
+\definecolor{setdraw}{RGB}{125,76,181}
+\definecolor{dafill}{RGB}{238,240,242}
+\definecolor{dadraw}{RGB}{88,96,104}
+
+\newcommand{\CardTitle}[1]{{\fontsize{12.2}{13.5}\selectfont\bfseries #1}}
+\newcommand{\CardText}[1]{{\fontsize{8.9}{10.4}\selectfont #1}}
+\newcommand{\SmallText}[1]{{\fontsize{8.1}{9.4}\selectfont #1}}
+
+\begin{document}
+\begin{tikzpicture}[
+  font=\sffamily,
+  >={Latex[length=2.2mm]},
+  flow/.style={draw=textgray, line width=0.75pt, -{Latex[length=2.3mm]}},
+  policyflow/.style={draw=evidencedraw, line width=0.85pt, -{Latex[length=2.4mm]}},
+  card/.style={rounded corners=3pt, line width=0.85pt, align=left, inner sep=6pt},
+  stage/.style={font=\sffamily\fontsize{8.2}{9.2}\selectfont\bfseries, text=muted, align=center},
+  arrowlabel/.style={font=\sffamily\fontsize{8.2}{9.2}\selectfont, text=muted, fill=canvas, inner sep=2pt}
+]
+
+\fill[canvas] (-0.2,-4.15) rectangle (20.1,4.15);
+
+\node[stage] at (2.15,3.72) {TRANSCRIPT EVIDENCE};
+\node[stage] at (6.55,3.72) {RANKED DIFFERENTIAL};
+\node[stage] at (11.15,3.72) {CRITERION VERIFICATION};
+\node[stage] at (15.05,3.72) {COMPATIBLE SET};
+\node[stage] at (18.35,3.72) {FINALIZATION};
+
+\node[card, draw=evidencedraw, fill=evidencefill, text=textgray,
+      text width=3.75cm, minimum height=5.45cm] (evidence) at (2.15,0)
+{\CardTitle{Observed evidence}\\[3pt]
+ \CardText{\textbullet\ Depressed mood for about two weeks\par
+ \textbullet\ Loss of interest\par
+ \textbullet\ Early awakening and fatigue\par
+ \textbullet\ Poor concentration\par
+ \textbullet\ Persistent worry}\\[6pt]
+ \textcolor{evidencedraw}{\CardTitle{Unresolved\\evidence}}\\[3pt]
+ \CardText{\textbullet\ Anxiety duration and chronology\par
+ \textbullet\ Motor or autonomic symptoms\par
+ \textbullet\ Relation between mood\par
+ and anxiety syndromes}};
+
+\node[card, draw=rankdraw, fill=rankfill, text=textgray,
+      text width=3.25cm, minimum height=4.55cm] (ranking) at (6.55,0)
+{\CardTitle{Diagnostician ranking}\\[5pt]
+ \CardText{\textbf{1}\quad F41.1 Generalized\par
+ anxiety disorder\par
+ \textbf{2}\quad F32 Depressive episode\par
+ \textbf{3}\quad F41.2 Mixed\par
+ anxiety and depressive\par
+ disorder}\\[7pt]
+ \textcolor{rankdraw}{\SmallText{Other candidates: F51, F39}}};
+
+\node[card, draw=rejectdraw, fill=rejectfill, text=textgray,
+      text width=4.05cm, minimum height=2.65cm] (f411) at (11.15,1.65)
+{\CardTitle{F41.1 verification}\\[3pt]
+ \SmallText{\textbf{Support:} worry, concentration, and sleep disturbance\par
+ \textbf{Missing:} six-month duration and broader anxiety features}\\[4pt]
+ \textcolor{rejectdraw}{\CardText{\textbf{Not retained}}}};
+
+\node[card, draw=acceptdraw, fill=acceptfill, text=textgray,
+      text width=4.05cm, minimum height=2.65cm] (f32) at (11.15,-1.65)
+{\CardTitle{F32 verification}\\[3pt]
+ \SmallText{\textbf{Support:} mood, anhedonia, duration, fatigue, poor focus, and sleep\par
+ \textbf{Unresolved:} several associated symptoms}\\[4pt]
+ \textcolor{acceptdraw}{\CardText{\textbf{Criterion-compatible}}}};
+
+\node[card, draw=setdraw, fill=setfill, text=textgray,
+      text width=2.45cm, minimum height=1.55cm, align=center] (compatible) at (15.05,-1.65)
+{\CardTitle{Compatible set}\\[4pt]
+ \textcolor{setdraw}{\CardTitle{F32}}};
+
+\node[card, draw=dadraw, fill=dafill, text=textgray,
+      text width=3.0cm, minimum height=2.05cm, align=center] (da) at (18.35,1.65)
+{\CardTitle{Direct-Answer}\\[4pt]
+ \SmallText{Keeps rank 1}\\[4pt]
+ \textcolor{dadraw}{\CardTitle{$\rightarrow$ F41.1}}};
+
+\node[card, draw=acceptdraw, fill=acceptfill, text=textgray,
+      text width=3.0cm, minimum height=2.05cm, align=center] (nts) at (18.35,-1.95)
+{\CardTitle{Nominate-then-\\Select}\\[4pt]
+ \SmallText{Chooses highest-ranked compatible diagnosis}\\[4pt]
+ \textcolor{acceptdraw}{\CardTitle{$\rightarrow$ F32}}};
+
+\draw[flow] (evidence.east) -- (ranking.west);
+\draw[flow] (ranking.east) -- ++(0.40,0) |- (f411.west);
+\draw[flow] (ranking.east) -- ++(0.40,0) |- (f32.west);
+\draw[flow] (f32.east) -- (compatible.west);
+\draw[policyflow] (compatible.east) -- (nts.west);
+
+\draw[policyflow] ($(ranking.north)+(0,0.04)$) -- ++(0,0.55)
+  -| node[pos=0.62, above=2pt, arrowlabel] {Preserve emitted primary} (da.north);
+
+\node[font=\sffamily\fontsize{8.5}{9.5}\selectfont\bfseries,
+      text=evidencedraw, align=center] at (16.70,0.35)
+{Same upstream evidence,\\different finalization policy};
+
+\end{tikzpicture}
+\end{document}
