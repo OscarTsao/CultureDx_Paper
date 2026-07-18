@@ -454,60 +454,36 @@ Audit Artifacts & Candidates, checker states, rules, and finalization source & R
 
 In this thesis, an \emph{agent} means an LLM call with a distinct prompt and task. The checker agents run independently; they do not have autonomous memory, planning, or free-form negotiation. HiED is therefore a modular multi-stage LLM orchestration with role-specific agents and deterministic rule aggregation.
 
-\section{Worked Example of Ranking, Criterion Checking, and Finalization}
+\section{Worked Example of Ranking, Criterion Verification, and Primary Selection}
 \label{sec:running-example}
 
-A short worked example makes the roles of these outputs easier to distinguish. The constructed transcript is schema-faithful and rule-faithful, but it is neither a patient record nor an exported model trace.
+A short worked example shows how the same upstream artifacts can produce different committed primary diagnoses under the two finalization policies. The example is schema-faithful and rule-faithful, but it is neither a patient record nor an exported model trace.
 
 \begin{quote}
 \small
-\noindent\textbf{Clinician:} What has been bothering you, and how long has it been happening?\\
-\textbf{Patient:} For about two weeks I have felt down almost every day, and I no longer enjoy the things I usually do.\\
-\textbf{Clinician:} How have you been sleeping and functioning at work?\\
-\textbf{Patient:} I wake very early, feel tired all day, and cannot concentrate.\\
-\textbf{Clinician:} Have you also been worrying?\\
-\textbf{Patient:} Yes. I worry about work and my family, and it is difficult to stop.\\
-\textbf{Clinician:} How long has the worry been present, and did it begin before the low mood?\\
-\textbf{Patient:} I cannot say clearly. It became much worse recently.\\
-\textbf{Clinician:} When you are worrying, does it affect your concentration or sleep?\\
-\textbf{Patient:} Yes. My mind goes blank, and I have trouble falling asleep.\\
-\textbf{Clinician:} Have you had periods of unusually elevated mood or needed very little sleep?\\
-\textbf{Patient:} No.\\
-\textbf{Clinician:} Have you had thoughts of harming yourself?\\
-\textbf{Patient:} No.
+The patient reports approximately two weeks of depressed mood, loss of interest, early awakening, fatigue, and poor concentration. Persistent worry is also described, but its duration and onset relative to the low mood remain unclear. Motor tension, autonomic symptoms, and the relationship between the mood and anxiety syndromes are not established. Manic symptoms and suicidal thoughts are denied.
 \end{quote}
 
-{\small
-\setlength{\LTcapwidth}{\textwidth}
-\begin{longtable}{|p{3.0cm}|p{5.8cm}|p{4.6cm}|}
-\caption{Worked example linking one constructed transcript to intermediate artifacts and finalization policies. The outputs are derived from the configured study rules, not from psychiatrist case review.}
-\label{tab:running-example}\\
-\hline
-\textbf{Pipeline artifact} & \textbf{Constructed output} & \textbf{Evidence visible to the reader}\\
-\hline
-\endfirsthead
-\hline
-\textbf{Pipeline artifact} & \textbf{Constructed output} & \textbf{Evidence visible to the reader}\\
-\hline
-\endhead
-Ranked candidates & F41.1, F32, F41.2, F51, F39; emitted primary: F41.1; optional secondary: F51 & Anxiety is ranked first, while the two-week depressive syndrome and sleep disturbance remain explicit alternatives\\
-\hline
-F32 checker states & A, B1--B3, C4, and C6: \texttt{met}; C3: \texttt{not\_met}; C1, C2, C5, and C7: \texttt{insufficient\_\allowbreak{}evidence} & Duration, mood, anhedonia, fatigue, concentration, and sleep are stated; suicidality is denied; self-esteem, guilt, psychomotor change, and appetite are not discussed\\
-\hline
-F41.1 checker states & B3 and B4: \texttt{met}; A, B1, and B2: \texttt{insufficient\_\allowbreak{}evidence} & Anxiety-related concentration and sleep problems are stated, but six-month duration, motor tension, and autonomic overactivity are not established\\
-\hline
-Compatibility Auditor & F32 compatible: 3 core criteria and 6 total criteria satisfy the configured 2-core/4-total rule; F41.1 not compatible: 2 of 4 required criteria are met & F41.1 remains in the ranked differential and audit, but not in the criterion-compatible set\\
-\hline
-Direct-Answer & Commits emitted F41.1 and preserves optional secondary F51 & Checker and rule outputs do not overwrite the emitted primary\\
-\hline
-Nominate-then-Select & Commits only F32, the first criterion-compatible diagnosis in the ranked list & Criterion-derived re-selection produces one primary diagnosis\\
-\hline
-Audit artifacts & Ranked list, criterion states, compatible set, unresolved evidence, and finalization source & Competing evidence and missing information remain inspectable without being resolved clinically\\
-\hline
-\end{longtable}
-}
+\ThesisFigure[1.0\textwidth]{fig_worked_example_flow.pdf}{Worked example of ranking, criterion verification, and primary selection. Direct-Answer preserves the Diagnostician's emitted primary diagnosis, whereas Nominate-then-Select chooses the highest-ranked diagnosis in the criterion-compatible set. Both policies use the same upstream evidence. The example illustrates the system contract and does not constitute clinical review of the preferred diagnosis.}{fig:worked-example-flow}
 
-The example separates compatibility from primacy and makes the finalization policies diverge. The Diagnostician emits F41.1, but the duration and other configured criteria for F41.1 remain unresolved, whereas F32 satisfies its configured rule. DA therefore preserves F41.1 and optional secondary F51, while NtS re-selects and emits only F32. The constructed outputs illustrate the policy contracts, not a claim that F32 is the clinically correct primary diagnosis.
+\begin{table}[htbp]
+\centering
+\caption{Criterion-verification summary for the worked example. Precise criterion identifiers and deterministic rule counts are reported in Appendix~\ref{app:worked-example-details}.}
+\label{tab:running-example}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.2cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Output} & \textbf{F41.1 Generalized anxiety disorder} & \textbf{F32 Depressive episode}\\
+\midrule
+Diagnostician rank & 1 & 2\\
+Main supporting evidence & Worry, concentration difficulty, and sleep disturbance & Depressed mood, anhedonia, two-week duration, fatigue, concentration difficulty, and sleep disturbance\\
+Main unresolved evidence & Six-month duration and broader anxiety features & Several additional associated symptoms are not discussed\\
+Criterion-verification result & \textbf{Not retained} & \textbf{Criterion-compatible}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Figure~\ref{fig:worked-example-flow} makes the policy divergence explicit. The Diagnostician ranks F41.1 first and F32 second. Criterion verification retains F32 but not F41.1 because key anxiety-duration and associated-feature evidence remains unresolved. DA preserves the emitted F41.1 primary, whereas NtS selects F32 as the highest-ranked criterion-compatible diagnosis. The complete constructed dialogue and rule-level details are provided in Appendix~\ref{app:worked-example-details}. These outputs illustrate the policy contracts, not a claim that F32 is the clinically correct primary diagnosis.
 
 \section{Global Top-5 and Parent-Balanced Case Retrieval}
 \label{sec:retrieval}
@@ -1846,6 +1822,59 @@ Subtype-level predictions under F41 and F43 are projected to their corresponding
 
 \chapter{Reproducibility Configuration and Supporting Analyses}
 \label{app:supporting}
+
+\section{Full Constructed Transcript and Criterion Details for the Worked Example}
+\label{app:worked-example-details}
+
+This section provides the complete constructed dialogue and rule-level details summarized in Figure~\ref{fig:worked-example-flow} and Table~\ref{tab:running-example}. The example is designed to demonstrate the system contract; it is not a patient record, exported model trace, or psychiatrist-reviewed case.
+
+\begin{quote}
+\small
+\noindent\textbf{Clinician:} What has been bothering you, and how long has it been happening?\\
+\textbf{Patient:} For about two weeks I have felt down almost every day, and I no longer enjoy the things I usually do.\\
+\textbf{Clinician:} How have you been sleeping and functioning at work?\\
+\textbf{Patient:} I wake very early, feel tired all day, and cannot concentrate.\\
+\textbf{Clinician:} Have you also been worrying?\\
+\textbf{Patient:} Yes. I worry about work and my family, and it is difficult to stop.\\
+\textbf{Clinician:} How long has the worry been present, and did it begin before the low mood?\\
+\textbf{Patient:} I cannot say clearly. It became much worse recently.\\
+\textbf{Clinician:} When you are worrying, does it affect your concentration or sleep?\\
+\textbf{Patient:} Yes. My mind goes blank, and I have trouble falling asleep.\\
+\textbf{Clinician:} Have you had periods of unusually elevated mood or needed very little sleep?\\
+\textbf{Patient:} No.\\
+\textbf{Clinician:} Have you had thoughts of harming yourself?\\
+\textbf{Patient:} No.
+\end{quote}
+
+\begingroup
+\small
+\begin{longtable}{|>{\raggedright\arraybackslash}p{3.7cm}|>{\raggedright\arraybackslash}p{10.9cm}|}
+\caption{Detailed criterion states and finalization outputs for the constructed worked example.}
+\label{tab:running-example-details}\\
+\hline
+\textbf{Artifact} & \textbf{Detailed constructed output}\\
+\hline
+\endfirsthead
+\hline
+\textbf{Artifact} & \textbf{Detailed constructed output}\\
+\hline
+\endhead
+Ranked candidates & F41.1, F32, F41.2, F51, and F39; emitted primary: F41.1; optional secondary: F51\\
+\hline
+F32 criterion states & A, B1--B3, C4, and C6: \texttt{met}; C3: \texttt{not\_met}; C1, C2, C5, and C7: \texttt{insufficient\_\allowbreak{}evidence}\\
+\hline
+F41.1 criterion states & B3 and B4: \texttt{met}; A, B1, and B2: \texttt{insufficient\_\allowbreak{}evidence}\\
+\hline
+Deterministic compatibility result & F32 is criterion-compatible because three core criteria and six total criteria satisfy the configured two-core/four-total rule. F41.1 is not retained because only two of four required criteria are met.\\
+\hline
+Direct-Answer & Commits emitted F41.1 and preserves optional secondary F51; checker and deterministic rule outputs do not overwrite the emitted primary.\\
+\hline
+Nominate-then-Select & Commits only F32, the first criterion-compatible diagnosis in the ranked list.\\
+\hline
+Audit artifacts & Ranked list, criterion states, criterion-compatible set, unresolved evidence, and finalization source\\
+\hline
+\end{longtable}
+\endgroup
 
 \section{Detailed Reproducibility Configuration}
 
