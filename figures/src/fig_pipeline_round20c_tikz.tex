@@ -34,43 +34,43 @@
 ]
 
 % background
-\fill[bggray] (-0.2,-2.95) rectangle (19.8,1.45);
+\fill[bggray] (-0.2,-2.95) rectangle (21.8,1.45);
 
 % top row
 \node[module, draw=boxgraydraw, fill=boxgrayfill, text=black, minimum width=2.15cm] (transcript) at (1.35,0.4)
 {\TitleText{Transcript}};
 
-\node[module, draw=retrdraw, fill=retrfill, text=retrdraw, minimum width=3.35cm] (retriever) at (5.55,0.4)
+\node[module, draw=retrdraw, fill=retrfill, text=retrdraw, minimum width=3.35cm] (retriever) at (5.65,0.4)
 {\TitleText{Similar-Case Retriever}\\[-1pt]
  \textcolor{retrdraw}{\SubText{Retrieved similar cases}}\\[-1pt]
  \textcolor{retrdraw}{\SubText{at most 1 / parent}}};
 
-\node[module, draw=diagdraw, fill=diagfill, text=diagdraw, minimum width=3.9cm] (diagnostician) at (10.25,0.4)
+\node[module, draw=diagdraw, fill=diagfill, text=diagdraw, minimum width=3.9cm] (diagnostician) at (11.05,0.4)
 {\TitleText{Diagnostician}\\[-1pt]
  \textcolor{diagdraw}{\SubText{Ranked candidate diagnoses}}\\[-1pt]
  \textcolor{diagdraw}{\SubText{Emitted primary diagnosis}}};
 
-\node[module, draw=commitdraw, fill=commitfill, text=commitdraw, minimum width=4.15cm] (commit) at (16.15,0.4)
+\node[module, draw=commitdraw, fill=commitfill, text=commitdraw, minimum width=4.15cm] (commit) at (18.0,0.4)
 {\TitleText{Committed diagnosis}\\[-1pt]
  \textcolor{commitdraw}{\SubText{primary + optional comorbidity}}};
 
 % bottom row
-\node[module, draw=checkdraw, fill=checkfill, text=checkdraw, minimum width=4.0cm] (checker) at (6.4,-1.95)
+\node[module, draw=checkdraw, fill=checkfill, text=checkdraw, minimum width=4.0cm] (checker) at (6.7,-1.95)
 {\TitleText{Criterion Checker}\\[-1pt]
  \textcolor{checkdraw}{\SubText{Criterion states}}};
 
-\node[module, draw=logicdraw, fill=logicfill, text=logicdraw, minimum width=4.2cm] (logic) at (11.9,-1.95)
+\node[module, draw=logicdraw, fill=logicfill, text=logicdraw, minimum width=4.2cm] (logic) at (12.8,-1.95)
 {\TitleText{Compatibility Auditor}\\[-1pt]
  \textcolor{logicdraw}{\SubText{Logic-confirmed diagnoses}}};
 
-\node[module, draw=auditdraw, fill=auditfill, text=auditdraw, minimum width=4.65cm] (audit) at (17.3,-1.95)
+\node[module, draw=auditdraw, fill=auditfill, text=auditdraw, minimum width=4.65cm] (audit) at (18.65,-1.95)
 {\TitleText{Audit artifacts}\\[-1pt]
  \textcolor{auditdraw}{\SubText{Criterion states, evidence, and rules}}};
 
 % arrows top
 \draw[mainarrow] (transcript.east) -- (retriever.west);
 \draw[mainarrow] (retriever.east) -- (diagnostician.west);
-\draw[mainarrow] (diagnostician.east) -- node[above=2pt, flowlabel] {Direct-Answer} (commit.west);
+\draw[mainarrow] (diagnostician.east) -- node[above=3pt, flowlabel] {Direct-Answer} (commit.west);
 
 % arrows down and bottom
 \draw[mainarrow] (diagnostician.south) -- ++(0,-0.55) -| (checker.north);
@@ -79,7 +79,7 @@
 
 % NtS path to committed output without output-output arrow
 \draw[altarrow] ($(logic.north)+(0.2,0)$) -- ++(0,0.55) -| ($(commit.south)+(0.0,-0.03)$);
-\node[altlabel] at (15.5,-0.90) {Nominate-then-Select};
+\node[altlabel] at (16.55,-0.90) {Nominate-then-Select};
 
 \end{tikzpicture}
 \end{document}
