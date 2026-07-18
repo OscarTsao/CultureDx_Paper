@@ -605,13 +605,16 @@ The 490-case F32-versus-F41 subset tests coarse depression--anxiety discriminati
 
 \begin{table}[htbp]
 \centering
-\caption{Distribution of first-listed projected reference parent labels in the internal and external synthetic evaluation sets.}
+\caption{Distribution of first-listed projected reference labels across the evaluation sets.}
 \label{tab:class-distribution}
 \small
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{|l|l|r|r|r|}
 \hline
-Code & Plain-language diagnosis & Internal test & MDD-5k in scope & MDD-5k out of scope\\
+Scoring label & Label description &
+\shortstack{Internal test\\($N=1000$)} &
+\shortstack{MDD-5k in-scope\\($N=878$)} &
+\shortstack{MDD-5k out-of-scope\\($N=47$)}\\
 \hline
 F20 & Schizophrenia & 5 & 3 & 0\\
 \hline
@@ -635,7 +638,7 @@ F98 & Other behavioral and emotional disorders & 30 & 24 & 0\\
 \hline
 Z71 & Counseling without a specific disorder & 8 & 8 & 0\\
 \hline
-Others & No reference diagnosis in the configured label set & 85 & 0 & 47\\
+Others & Reference diagnosis outside the configured output space & 85 & 0 & 47\\
 \hline
  & Total & 1000 & 878 & 47\\
 \hline
@@ -643,7 +646,7 @@ Others & No reference diagnosis in the configured label set & 85 & 0 & 47\\
 \end{adjustbox}
 \end{table}
 
-\noindent\textit{Note:} Cases may contain additional reference parent labels. For descriptive class distribution, each case is assigned to its first-listed projected parent, so each column sums to its case count; the table is not a multilabel-prevalence table.
+\noindent\textit{Note:} Cases may contain more than one projected reference label. For this descriptive distribution, each case is assigned to its first-listed projected reference label so that each column sums to the corresponding number of cases. The table therefore does not report multilabel prevalence. \emph{Others} is an evaluation category for cases with no reference diagnosis represented in the configured output space; it is not a diagnosis that HiED can emit.
 
 \section{Prediction Views and Metrics}
 
