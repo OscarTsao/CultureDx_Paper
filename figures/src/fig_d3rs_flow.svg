@@ -52,7 +52,7 @@
   <text x="905" y="612" text-anchor="middle" class="count">34</text>
 
   <path d="M940 117 H1000 M1000 117 V82 H1045 M1000 117 V187 H1045" class="line"/>
-  <path d="M940 267 H1045" class="line"/>
+  <path d="M940 267 H990 V318 H1045" class="line"/>
 
   <rect x="1045" y="35" width="305" height="95" class="box" fill="#e9f4e7" stroke="#4d8d48"/>
   <text x="1197" y="70" text-anchor="middle" class="head">Primary selected correctly</text>
@@ -63,7 +63,7 @@
   <text x="1197" y="214" text-anchor="middle" class="count">272</text>
 
   <rect x="1045" y="265" width="305" height="105" class="box" fill="#f5efe8" stroke="#9b7246"/>
-  <text x="1197" y="300" text-anchor="middle" class="head">R = No outcomes</text>
+  <text x="1197" y="300" text-anchor="middle" class="head">Outcomes when R = No</text>
   <text x="1197" y="334" text-anchor="middle" class="body">12 correct; 12 incorrect</text>
 
   <text x="700" y="692" text-anchor="middle" class="note">R records retention after verification over the configured checker scope; the diagram summarizes joint profiles rather than a strict runtime funnel.</text>
