@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="850" viewBox="0 0 1400 850">
+  <rect width="1400" height="850" fill="#ffffff"/>
+  <defs>
+    <marker id="arrow-solid" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#52606d"/>
+    </marker>
+    <marker id="arrow-dashed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#697784"/>
+    </marker>
+    <marker id="arrow-step" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3f8f88"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: Verdana, Arial, sans-serif; fill: #1f2933; }
+    .title { font-size: 29px; font-weight: 700; }
+    .heading { font-size: 22px; font-weight: 700; }
+    .detail { font-size: 16px; }
+    .study { font-size: 14px; font-weight: 700; fill: #52606d; }
+    .connector-label { font-size: 14px; fill: #52606d; }
+    .flow { stroke: #52606d; stroke-width: 3; fill: none; marker-end: url(#arrow-solid); }
+    .stage-link { stroke: #3f8f88; stroke-width: 2.2; fill: none; marker-end: url(#arrow-step); }
+    .review-link { stroke: #697784; stroke-width: 2.5; fill: none; stroke-dasharray: 9 7; marker-end: url(#arrow-dashed); }
+  </style>
+
+  <text x="700" y="43" text-anchor="middle" class="title">Empirical evidence sequence</text>
+
+  <rect x="60" y="75" width="680" height="150" rx="7" fill="#e9f2fb" stroke="#3f6f9f" stroke-width="2.5"/>
+  <text x="400" y="113" text-anchor="middle" class="heading">1. Benchmark positioning</text>
+  <text x="400" y="155" text-anchor="middle" class="detail">RQ1: Majority, TF-IDF + LR, Single, and HiED</text>
+  <text x="400" y="187" text-anchor="middle" class="detail">RQ3: No retrieval, global Top-5, and parent-balanced retrieval</text>
+
+  <path d="M400 225 V260" class="flow"/>
+
+  <rect x="60" y="270" width="680" height="150" rx="7" fill="#e7f4f2" stroke="#3f8f88" stroke-width="2.5"/>
+  <text x="400" y="308" text-anchor="middle" class="heading">2. Stage-wise failure localization</text>
+  <text x="400" y="342" text-anchor="middle" class="detail">RQ2</text>
+  <text x="165" y="382" text-anchor="middle" class="detail">Candidate detection</text>
+  <path d="M250 377 H292" class="stage-link"/>
+  <text x="400" y="382" text-anchor="middle" class="detail">Criterion verification</text>
+  <path d="M500 377 H542" class="stage-link"/>
+  <text x="635" y="382" text-anchor="middle" class="detail">Primary selection</text>
+
+  <path d="M400 420 V455" class="flow"/>
+
+  <rect x="60" y="465" width="680" height="150" rx="7" fill="#f7f1df" stroke="#a57c24" stroke-width="2.5"/>
+  <text x="400" y="503" text-anchor="middle" class="heading">3. Primary-selection interventions</text>
+  <text x="400" y="545" text-anchor="middle" class="detail">RQ4: DA, NtS, fusion, pairwise, debate,</text>
+  <text x="400" y="577" text-anchor="middle" class="detail">and SC/CISC</text>
+
+  <path d="M400 615 V650" class="flow"/>
+
+  <rect x="60" y="660" width="680" height="150" rx="7" fill="#f3eaf5" stroke="#80558c" stroke-width="2.5"/>
+  <text x="400" y="698" text-anchor="middle" class="heading">4. Robustness and transfer</text>
+  <text x="400" y="740" text-anchor="middle" class="detail">RQ5: Model scale, MDD-5k, diagnostic scope,</text>
+  <text x="400" y="772" text-anchor="middle" class="detail">and cross-corpus transfer</text>
+
+  <path d="M740 377 H910" class="review-link"/>
+  <rect x="747" y="323" width="156" height="43" fill="#ffffff"/>
+  <text x="825" y="340" text-anchor="middle" class="connector-label">Selected disagreement</text>
+  <text x="825" y="359" text-anchor="middle" class="connector-label">cases</text>
+
+  <rect x="910" y="270" width="430" height="215" rx="7" fill="#f7f8fa" stroke="#52606d" stroke-width="2.5" stroke-dasharray="10 7"/>
+  <text x="1125" y="308" text-anchor="middle" class="study">ONGOING COMPLEMENTARY STUDY</text>
+  <text x="1125" y="352" text-anchor="middle" class="heading">Psychiatrist case review</text>
+  <text x="1125" y="397" text-anchor="middle" class="detail">Clinical interpretation of selected</text>
+  <text x="1125" y="429" text-anchor="middle" class="detail">benchmark disagreement cases</text>
+</svg>

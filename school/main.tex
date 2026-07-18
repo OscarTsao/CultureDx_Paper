@@ -733,31 +733,11 @@ This chapter organizes the empirical design around the five research questions. 
 \section{Evaluation Overview}
 \label{sec:experimental-overview}
 
-The evaluation first positions HiED against same-split baselines, then localizes disagreement across candidate detection, criterion verification, and primary selection. Retrieval and primary-selection strategies test specific alternatives, while model-scale and external analyses examine robustness and transfer. Table~\ref{tab:rq-experiment-map} maps these comparisons to the result chapters. The ongoing psychiatrist case review is listed separately because it provides complementary interpretation rather than another completed computational research question.
+The evaluation first positions HiED against same-split baselines, then localizes disagreement across candidate detection, criterion verification, and primary selection. Primary-selection interventions test possible remedies, while model-scale and external analyses examine robustness and transfer. Figure~\ref{fig:evidence-sequence} summarizes this argument. The ongoing psychiatrist case review is shown separately because it provides complementary interpretation rather than another completed computational research question.
 
-\begin{table}[htbp]
-\centering
-\caption{Mapping from research questions and the ongoing psychiatrist case review to experiments and result chapters.}
-\label{tab:rq-experiment-map}
-\small
-\begin{tabularx}{\textwidth}{|p{3.0cm}|X|p{3.2cm}|}
-\hline
-RQ or study & Comparison & Results\\
-\hline
-RQ1 & Same-split system comparison & Chapter~\ref{ch:results}\\
-\hline
-RQ2 & Stage-wise failure analysis & Chapter~\ref{ch:results}\\
-\hline
-RQ3 & Retrieval comparison & Chapter~\ref{ch:results}\\
-\hline
-RQ4 & Primary-selection strategies & Chapters~\ref{ch:results}--\ref{ch:external}\\
-\hline
-RQ5 & Model scale and external synthetic transfer & Chapters~\ref{ch:results}--\ref{ch:external}\\
-\hline
-Psychiatrist review & Selected primary-selection-gap cases & Chapter~\ref{ch:error}\\
-\hline
-\end{tabularx}
-\end{table}
+\ThesisFigure[0.98\textwidth]{fig_evidence_sequence.pdf}{Overview of the empirical evidence sequence. Benchmark comparisons establish predictive positioning, stage-wise analysis localizes disagreement, selection interventions test possible remedies, and robustness analyses examine transfer across model scales and synthetic corpora. The psychiatrist case review is an ongoing complementary study based on selected disagreement cases.}{fig:evidence-sequence}
+
+Chapters~\ref{ch:results} and~\ref{ch:external} report the internal and external computational results, respectively, while Chapter~\ref{ch:error} reports the detailed failure analysis and the psychiatrist case-review results when complete.
 
 \section{Internal Benchmark and Retrieval Comparisons}
 
@@ -811,7 +791,7 @@ The primary outcome is the proportion of reviewed ranked-and-retained nonselecti
 \]
 Secondary measures include gold-diagnosis plausibility, transcript sufficiency, plausibility of the committed diagnosis, disagreement classification, audit-trace usefulness, and inter-rater agreement for the principal review judgments.
 
-Chapter~\ref{ch:results} reports the in-domain evidence, Chapter~\ref{ch:external} examines external synthetic transfer, and Chapter~\ref{ch:error} presents the stage-wise error analysis and completed psychiatrist review when available.
+Together, these designs distinguish benchmark positioning, stage-wise localization, intervention evidence, transfer, and complementary clinical interpretation without treating them as equivalent claims.
 
 \chapter{In-Domain Evaluation Results}
 \label{ch:results}
@@ -822,16 +802,19 @@ This chapter first establishes the predictive position of HiED on the internal e
 \label{sec:validation-retrieval-selection}
 \label{sec:matched-baselines-retrieval}
 
-Table~\ref{tab:validation-configuration-matrix} reports all applicable metrics for the retained public-validation configurations. The Single rows do not report Top-3 because Single does not emit a genuine ordered differential. A matched HiED--DA no-retrieval validation result was not retained; the unavailable row is shown explicitly so that absence of evidence is not confused with an evaluated zero or with the internal-test no-retrieval control reported in Section~\ref{sec:retrieval-results}.
+Table~\ref{tab:validation-configuration-matrix} reports all applicable metrics for the retained public-validation configurations together with three representative results from the original LingxiDiagBench static evaluation. The Single rows do not report Top-3 because Single does not emit a genuine ordered differential. A matched HiED--DA no-retrieval validation result was not retained; the unavailable row is shown explicitly so that absence of evidence is not confused with an evaluated zero or with the internal-test no-retrieval control reported in Section~\ref{sec:retrieval-results}. The published rows provide benchmark context rather than matched comparisons.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
-\caption{Public-validation retrieval results used as configuration evidence. Dashes in the Single Top-3 cells denote an undefined output view; dashes across the HiED--DA no-retrieval row denote an unavailable matched validation result.}
+\caption{Public-validation configuration results and published LingxiDiagBench context for the 12-category diagnostic task. Published rows are included for descriptive context only because their prompts, inference procedures, and output contracts differ from those used in this thesis~\citep{xu2026lingxidiagbench}.}
 \label{tab:validation-configuration-matrix}
+\small
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{|l|l|c|c|c|c|c|}
 \hline
-Architecture & Retrieval & Top-1 & Top-3 & Exact Match & Macro-F1 & Weighted-F1\\
+Method & Retrieval or source & Top-1 & Top-3 & Exact Match & Macro-F1 & Weighted-F1\\
+\hline
+\multicolumn{7}{|c|}{\textbf{Thesis validation configurations}}\\
 \hline
 Single & None & 0.466 & --- & 0.016 & 0.174 & 0.429\\
 Single & Global Top-5 & 0.519 & --- & 0.030 & 0.209 & 0.456\\
@@ -841,17 +824,24 @@ HiED--DA & None & --- & --- & --- & --- & ---\\
 HiED--DA & Global Top-5 & 0.525 & 0.797 & 0.432 & 0.178 & 0.435\\
 HiED--DA & Parent-balanced & 0.523 & 0.800 & 0.428 & 0.181 & 0.440\\
 \hline
+\multicolumn{7}{|c|}{\textbf{Published LingxiDiagBench static results}}\\
+\hline
+TF--IDF + LR & Published benchmark & 0.496 & 0.645 & 0.268 & 0.295 & 0.520\\
+GPT-5-Mini & Published benchmark & 0.487 & 0.505 & 0.409 & 0.188 & 0.418\\
+Qwen3-32B & Published benchmark & 0.470 & 0.566 & 0.241 & 0.188 & 0.431\\
+\hline
 \end{tabular}
 \end{adjustbox}
+\parbox{0.96\textwidth}{\footnotesize \textit{Note:} Dashes in the Single Top-3 cells denote an undefined output view; dashes across the HiED--DA no-retrieval row denote an unavailable matched validation result. The published rows use the original benchmark prompts and evaluation pipeline and are not treated as matched system comparisons. Their reported 12-category accuracy is shown as Exact Match because it requires agreement with the complete gold-label set under the original multilabel evaluator.}
 \end{table}
 
 Global Top-5 improves every native reported endpoint for Single relative to parent-balanced retrieval and is used as the primary Single configuration. For HiED--DA, global Top-5 improves Top-1 Accuracy and Exact Match relative to parent-balanced retrieval, but reduces genuine Top-3 Accuracy, Macro-F1, and Weighted-F1. It therefore improves only two of the five predefined promotion metrics and does not satisfy the promotion rule; parent-balanced retrieval remains the primary HiED configuration. The HiED Top-1 difference is 0.002 (95\% CI [$-0.013$, 0.017]), so the interval includes zero. Detailed discordant counts and the exact test are reported in Appendix~\ref{app:supporting}, Table~\ref{tab:internal-paired-tests}.
 
-The published GPT-5-Mini result uses the same public validation cases but a different prompt, inference implementation, and output contract. It is retained as descriptive context in Appendix~\ref{app:supporting}, Table~\ref{tab:published-validation-context}, rather than as a primary matched comparison.
+The published rows provide benchmark context rather than matched baselines. Under the original LingxiDiagBench evaluation contract, TF--IDF + LR achieved the strongest Top-3 and label-level F1 results among these representative rows, whereas GPT-5-Mini achieved the highest 12-category Exact Match. Qwen3-32B provides context for the backbone used in the primary HiED configuration. No direct statistical comparison is made because the published systems use different prompts, output structures, retrieval conditions, and scoring procedures. The published results nevertheless show that ranked candidate coverage exceeded primary prediction in the source benchmark; the present thesis extends that observation by separating candidate detection, criterion verification, and primary selection.
 
 Table~\ref{tab:matched-baselines-retrieval} reports the main comparison on the held-out internal cases.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Main same-split system comparison on the fixed 1,000-case internal test set. Single and HiED use retrieval configurations selected separately on the public validation split. Top-3 is reported only for systems with a genuine ranked output.}
 \label{tab:matched-baselines-retrieval}
@@ -1451,7 +1441,7 @@ These limitations bound the thesis to reproducible synthetic benchmark evidence.
 
 This thesis introduced HiED, a hybrid multi-agent framework that separates candidate detection, criterion verification, deterministic compatibility aggregation, and primary selection while recording the resulting committed primary diagnosis.
 
-The same-split lexical baseline achieved higher Top-1 performance than HiED on the internal benchmark. HiED nevertheless showed substantially higher ranked candidate coverage than committed Top-1 performance, and criterion checking frequently retained a gold diagnosis without determining which compatible diagnosis should be primary. Criterion-derived Nominate-then-Select finalization and the tested pairwise, debate, fusion, and sampling-based selection-intervention configurations did not provide a clear and reproducible improvement in primary selection; supporting case-neighbor analyses likewise transferred poorly. Retrieval improved the Single system, but the results did not support an advantage for parent-balanced over global retrieval or a statistically supported retrieval gain for HiED. The Top-3--Top-1 selection gap also remained visible on the external synthetic corpus.
+The same-split lexical baseline achieved higher Top-1 performance than HiED on the internal benchmark, showing that the synthetic corpus contains strong predictive lexical regularities. However, the lexical classifier degraded sharply under cross-corpus transfer, so its internal advantage is interpreted as corpus-local benchmark fit rather than evidence of broadly transferable diagnostic reasoning. HiED showed substantially higher ranked candidate coverage than committed Top-1 performance, and criterion checking frequently retained a gold diagnosis without determining which compatible diagnosis should be primary. Criterion-derived Nominate-then-Select finalization and the tested pairwise, debate, fusion, and sampling-based selection-intervention configurations did not provide a clear and reproducible improvement in primary selection; supporting case-neighbor analyses likewise transferred poorly. Retrieval improved the Single system, but the results did not support an advantage for parent-balanced over global retrieval or a statistically supported retrieval gain for HiED. The Top-3--Top-1 selection gap also remained visible on the external synthetic corpus.
 
 HiED's contribution is therefore not state-of-the-art benchmark accuracy, but an auditable architecture and evaluation framework that localizes disagreement across candidate detection, criterion verification, and primary selection. The results are limited to synthetic benchmark data and do not establish clinical validity or autonomous diagnostic safety.
 
@@ -1460,7 +1450,7 @@ HiED's contribution is therefore not state-of-the-art benchmark accuracy, but an
 This section summarizes how the final experiments answer the five research questions introduced in Chapter~\ref{ch:related}. Each answer is limited to benchmark performance on synthetic Chinese psychiatric transcripts and should not be interpreted as evidence of clinical effectiveness.
 
 \begin{description}[style=nextline,leftmargin=3cm,labelwidth=2.5cm]
-\item[RQ1] HiED did not outperform the strongest same-split baseline under the common evaluation contract. The TF--IDF and logistic-regression classifier achieved higher Top-1 Accuracy, and the paired difference remained significant after correction for multiple comparisons. HiED instead provided ranked differential diagnoses, criterion-level evidence records, and explicit finalization artifacts. Its value therefore lies in decomposing the diagnostic process rather than maximizing benchmark accuracy alone.
+\item[RQ1] Under the matched internal evaluation contract, HiED did not outperform the strongest same-split baseline: TF--IDF + logistic regression achieved higher Top-1 Accuracy. This result shows that the synthetic LingxiDiag transcripts contain strong corpus-local lexical signals, but it should not be interpreted as evidence that the lexical classifier provides more transferable or clinically valid diagnostic reasoning. Its performance degraded substantially in the cross-corpus transfer experiments. HiED instead provides a ranked differential, criterion-linked evidence records, and explicit finalization artifacts, enabling candidate detection, criterion verification, and primary selection to be evaluated separately.
 
 \item[RQ2] The largest observed discrepancy lies at primary selection after candidate detection and criterion verification. Gold diagnoses were frequently present in the genuine ranked output and retained under the configured compatibility rules, yet another diagnosis was selected as the committed primary. This supports a primary-selection bottleneck in HiED under the benchmark protocol, but it does not establish the clinically correct primary diagnosis or a universal causal bottleneck in transcript-based diagnosis.
 
@@ -1468,7 +1458,7 @@ This section summarizes how the final experiments answer the five research quest
 
 \item[RQ4] NtS reduced Top-1 Accuracy relative to Direct-Answer across all three retrieval conditions, and the complete forced pairwise-override configuration produced a substantial decrease. The tested selection rules did not improve primary selection under their respective evaluation contracts. Because NtS emits one diagnosis, its set-level metrics also reflect output cardinality.
 
-\item[RQ5] The Top-3--Top-1 selection gap remained visible across the evaluated Qwen3 sizes and on MDD-5k, so the pattern was not confined to one model size or synthetic corpus. Expanding the configured diagnostic scope made additional diagnoses representable but recovered none of the tested newly representable cases. Benchmark disagreements also concentrated in a small number of diagnostic pairs, especially depression--anxiety confusions. These findings support robustness only within the tested synthetic datasets, Qwen3 family, and configured analyses; they do not establish cross-model or clinical generality.
+\item[RQ5] The Top-3--Top-1 selection gap remained visible across the evaluated Qwen3 sizes and on MDD-5k, so the pattern was not confined to one model size or synthetic corpus. Lexical and case-neighbor selectors transferred poorly across corpora, and expanding the configured diagnostic scope made additional diagnoses representable but recovered none of the tested newly representable cases. Benchmark disagreements also concentrated in a small number of diagnostic pairs, especially depression--anxiety confusions. These findings support robustness only within the tested synthetic datasets, Qwen3 family, and configured analyses; they do not establish cross-model or clinical generality.
 \end{description}
 
 \section{Future Work}
@@ -1657,25 +1647,7 @@ Main finalization & Direct-Answer preserves the Diagnostician's emitted primary 
 \end{longtable}
 \endgroup
 
-\section{Supporting Validation Context and Model-Scale Results}
-
-Table~\ref{tab:published-validation-context} retains the published GPT-5-Mini row as descriptive public-validation context. The row uses the same public validation cases but a different prompt, inference implementation, and output contract and is not a matched or paired baseline comparison.
-
-\begin{table}[htbp]
-\centering
-\caption{Published same-split context on the LingxiDiag-16K public validation split. The GPT-5-Mini values are from LingxiDiagBench Table~4~\citep{xu2026lingxidiagbench}; the HiED row is this thesis's selected validation configuration.}
-\label{tab:published-validation-context}
-\begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{|p{5.3cm}|c|c|c|c|c|}
-\hline
-System & Top-1 & Top-3 & Exact Match & Macro-F1 & Weighted-F1\\
-\hline
-LingxiDiagBench GPT-5-Mini & 0.487 & 0.505 & 0.409 & 0.188 & 0.418\\
-\shortstack[l]{HiED--DA, parent-balanced\\retrieval} & 0.523 & 0.800 & 0.428 & 0.181 & 0.440\\
-\hline
-\end{tabular}
-\end{adjustbox}
-\end{table}
+\section{Model-Scale Results}
 
 \begin{table}[htbp]
 \centering
