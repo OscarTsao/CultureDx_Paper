@@ -926,20 +926,19 @@ Table~\ref{tab:d3rs-joint} reports the case-level joint distribution of candidat
 \label{tab:d3rs-joint}
 \small
 \setlength{\tabcolsep}{3pt}
-\begin{tabularx}{\textwidth}{|>{\centering\arraybackslash}p{2.0cm}|>{\centering\arraybackslash}p{2.5cm}|>{\centering\arraybackslash}p{2.1cm}|r|c|X|}
+\begin{tabularx}{\textwidth}{|>{\centering\arraybackslash}p{2.3cm}|>{\centering\arraybackslash}p{2.9cm}|>{\centering\arraybackslash}p{2.5cm}|>{\centering\arraybackslash}p{2.1cm}|X|}
 \hline
-Gold label in genuine Top-3 ($D_3$)? & Gold label in criterion-compatible set ($R$)? & Committed primary correct ($S$)? & Cases & Proportion & Interpretation\\
+Gold label in genuine Top-3 ($D_3$)? & Gold label in criterion-compatible set ($R$)? & Committed primary correct ($S$)? & Cases, $n$ (\%) & Interpretation\\
 \hline
-No & No & No & 34 & 0.037 & Neither detected nor retained; primary incorrect\\
-No & No & Yes & 0 & 0.000 & Not possible under the DA ranking contract\\
-No & Yes & No & 79 & 0.086 & Retained by full-scope checking but absent from Top-3\\
-No & Yes & Yes & 0 & 0.000 & Not possible under the DA ranking contract\\
-Yes & No & No & 12 & 0.013 & Detected but not retained; primary incorrect\\
-Yes & No & Yes & 12 & 0.013 & Correctly committed despite not being retained\\
-Yes & Yes & No & 272 & 0.297 & Detected and retained, but not selected\\
-Yes & Yes & Yes & 506 & 0.553 & Detected, retained, and correctly selected\\
+No & No & No & 34 (3.7\%) & Neither detected nor retained; primary incorrect\\
+No & Yes & No & 79 (8.6\%) & Retained by full-scope checking but absent from Top-3\\
+Yes & No & No & 12 (1.3\%) & Detected but not retained; primary incorrect\\
+Yes & No & Yes & 12 (1.3\%) & Correctly selected despite non-retention\\
+Yes & Yes & No & 272 (29.7\%) & Ranked and retained but not selected\\
+Yes & Yes & Yes & 506 (55.3\%) & Ranked, retained, and correctly selected\\
 \hline
 \end{tabularx}
+\parbox{0.96\textwidth}{\footnotesize \textit{Note:} Profiles with $D_3=0$ and $S=1$ are impossible under the DA ranking contract and are omitted. Percentages are shares of the 915 checker-eligible cases and may not sum to exactly 100\% because of rounding.}
 \end{table}
 
 \ThesisFigure[0.98\textwidth]{fig_d3rs_flow.pdf}{Joint detection--verification--selection profiles on the 915 checker-eligible internal cases. The criterion-compatible set is evaluated over the configured checker scope rather than only the Top-3, so the paths summarize joint case profiles rather than a strictly nested runtime funnel.}{fig:d3rs-flow}
