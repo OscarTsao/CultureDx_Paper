@@ -19,7 +19,7 @@
   <path d="M250 335 H315 M315 335 V175 H365 M315 335 V505 H365" class="line"/>
 
   <rect x="365" y="105" width="230" height="135" class="box" fill="#e8f2fb" stroke="#3d78a8"/>
-  <text x="480" y="145" text-anchor="middle" class="head">Reference ranked</text>
+  <text x="480" y="145" text-anchor="middle" class="head">Gold label ranked</text>
   <text x="480" y="180" text-anchor="middle" class="body">D3 = Yes</text>
   <text x="480" y="215" text-anchor="middle" class="count">802</text>
 

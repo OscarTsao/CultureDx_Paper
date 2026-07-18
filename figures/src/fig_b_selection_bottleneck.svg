@@ -41,16 +41,16 @@
   <text x="380" y="188" text-anchor="middle" class="value" fill="#8e2464">284 cases</text>
   <text x="380" y="224" text-anchor="middle" class="small">ranked but not selected</text>
 
-  <rect x="720" y="104" width="250" height="278" rx="6" fill="#f5f7fa" stroke="#829ab1" stroke-width="2"/>
+  <rect x="720" y="104" width="250" height="305" rx="6" fill="#f5f7fa" stroke="#829ab1" stroke-width="2"/>
   <text x="845" y="132" text-anchor="middle" class="label">Supporting oracle</text>
   <text x="845" y="158" text-anchor="middle" class="label">analysis</text>
   <text x="845" y="198" text-anchor="middle" class="value">349 cases</text>
-  <text x="845" y="230" text-anchor="middle" class="small">reference label appears in a</text>
+  <text x="845" y="230" text-anchor="middle" class="small">gold label appears in a</text>
   <text x="845" y="256" text-anchor="middle" class="small">broader supported cluster</text>
   <text x="845" y="295" text-anchor="middle" class="value">0.867</text>
   <text x="845" y="324" text-anchor="middle" class="small">optimistic upper bound</text>
   <line x1="752" y1="343" x2="938" y2="343" stroke="#bcccdc" stroke-width="1"/>
-  <text x="845" y="369" text-anchor="middle" class="small">Reference-informed</text>
+  <text x="845" y="369" text-anchor="middle" class="small">Gold-informed</text>
   <text x="845" y="394" text-anchor="middle" class="small">Non-deployable</text>
 
   <text x="500" y="535" text-anchor="middle" class="small">The oracle uses a broader candidate window and is not a third directly comparable system output.</text>
