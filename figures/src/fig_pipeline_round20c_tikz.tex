@@ -54,7 +54,7 @@
  \ModuleTitle{Input}};
 
 % Candidate-generation path
-\node[deterministic, minimum width=3.20cm] (retriever) at (4.55,2.15)
+\node[deterministic, minimum width=3.20cm] (retriever) at (4.40,2.15)
 {\ModuleTitle{Similar-Case}\\[-1pt]
  \ModuleTitle{Retriever}\\[-1pt]
  \ModuleSub{Fixed retrieval}};
@@ -63,42 +63,44 @@
 {\ArtifactTitle{Retrieved}\\[-1pt]
  \ArtifactTitle{examples}};
 
-\node[llm, minimum width=2.95cm] (diagnostician) at (10.05,2.15)
+\node[llm, minimum width=2.95cm] (diagnostician) at (10.15,2.15)
 {\ModuleTitle{Diagnostician}\\[-1pt]
  \ModuleTitle{Agent}\\[-1pt]
  \ModuleSub{LLM}};
 
-\node[artifact, minimum width=3.45cm] (ranked) at (13.45,2.15)
+\node[artifact, minimum width=3.45cm] (ranked) at (13.60,2.15)
 {\ArtifactTitle{Ranked Top-5}\\[-1pt]
  \ArtifactSub{Emitted primary}\\[-1pt]
  \ArtifactSub{Optional comorbidity}};
 
 % Criterion-verification path
-\node[llm, minimum width=3.40cm] (checker) at (4.60,-2.15)
+\node[llm, minimum width=3.40cm] (checker) at (4.30,-2.15)
 {\ModuleTitle{Criterion Checker}\\[-1pt]
  \ModuleTitle{Agents}\\[-1pt]
  \ModuleSub{LLM, all categories}};
 
-\node[artifact, minimum width=3.60cm] (states) at (8.25,-2.15)
+\node[artifact, minimum width=3.60cm, minimum height=1.34cm] (states) at (8.15,-2.15)
 {\ArtifactTitle{Criterion states}\\[-1pt]
  \ArtifactSub{\texttt{met} / \texttt{not\_met}}\\[-1pt]
- \ArtifactSub{\texttt{insufficient\_evidence}}};
+ \ArtifactSub{\texttt{insufficient\_evidence}}\\[-1pt]
+ \ArtifactSub{+ supporting text}};
 
 \node[deterministic, minimum width=3.20cm] (auditor) at (11.95,-2.15)
 {\ModuleTitle{Compatibility}\\[-1pt]
  \ModuleTitle{Auditor}\\[-1pt]
  \ModuleSub{Rule aggregation}};
 
-\node[artifact, minimum width=3.05cm] (compatible) at (15.30,-2.15)
+\node[artifact, minimum width=3.35cm, minimum height=1.24cm] (compatible) at (15.70,-2.15)
 {\ArtifactTitle{Criterion-compatible}\\[-1pt]
- \ArtifactTitle{set}};
+ \ArtifactTitle{set}\\[-1pt]
+ \ArtifactSub{Compatibility-rule trace}};
 
 % Finalization and observed output
-\node[deterministic, minimum width=2.90cm] (finalization) at (17.85,0)
+\node[deterministic, minimum width=2.90cm] (finalization) at (18.00,0)
 {\ModuleTitle{Finalization}\\[-1pt]
  \ModuleSub{DA / NtS policy}};
 
-\node[output, minimum width=3.10cm] (committed) at (21.05,0)
+\node[output, minimum width=3.10cm] (committed) at (21.35,0)
 {\ArtifactTitle{Committed primary}\\[-1pt]
  \ArtifactSub{diagnosis}};
 
@@ -117,7 +119,7 @@
 \draw[mainarrow] (checker.east) -- (states.west);
 \draw[mainarrow] (states.east) -- (auditor.west);
 \draw[mainarrow] (auditor.east) -- (compatible.west);
-\node[inputlabel] (criteria) at (4.60,-3.32) {Configured criteria for all categories};
+\node[inputlabel] (criteria) at (4.30,-3.32) {Configured criteria for all categories};
 \draw[mainarrow] (criteria.north) -- (checker.south);
 
 % Both recorded output views are available to finalization.
