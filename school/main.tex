@@ -497,6 +497,8 @@ The patient reports approximately two weeks of depressed mood, loss of interest,
 
 \ThesisFigure[1.0\textwidth]{fig_worked_example_flow.pdf}{Worked example of the recorded outputs produced by the Diagnostician, Criterion Checker, Compatibility Auditor, and finalization policies. Direct-Answer preserves the Diagnostician's emitted primary diagnosis, whereas Nominate-then-Select chooses the highest-ranked diagnosis in the criterion-compatible set. Both policies operate on the same recorded upstream outputs. The example illustrates the system contract and does not establish which diagnosis is clinically preferable.}{fig:worked-example-flow}
 
+Figure~\ref{fig:worked-example-flow} shows how the example moves through the system, while Table~\ref{tab:running-example} summarizes the candidate-specific transcript information and compatibility decisions that produce the finalization difference.
+
 \begin{table}[H]
 \centering
 \caption{Selected ranking and criterion-verification outputs in the constructed example.}
@@ -518,11 +520,41 @@ The Diagnostician ranks F41.1 first and emits it as the primary diagnosis, while
 
 \section{Implementation Configuration}
 
-The Diagnostician and Criterion Checker calls use Qwen3-32B with 4-bit Activation-aware Weight Quantization (AWQ). AWQ reduces model-memory requirements and allows the 32-billion-parameter backbone to be served locally without changing the prompt, diagnostic scope, or finalization logic. No main-system component fine-tunes model weights. vLLM is the inference and serving backend for loading the model and generating outputs; it is not a diagnostic component and does not alter prompts, criteria, rules, or finalization. The system uses greedy decoding, an 8,192-token context window, a 1,536-token output cap, structured JSON output, guided decoding where supported, schema validation, and checker-output recovery for duplicate or invalid criterion items.
+Table~\ref{tab:implementation-configuration} summarizes the main implementation settings. These settings define the evaluated execution environment but do not change the diagnostic roles or output contracts described above.
 
-Retrieval uses BGE-M3 to encode the query transcript and eligible training transcripts as normalized dense vectors~\citep{chen2024bgem3}. FAISS provides the vector index and inner-product search~\citep{douze2024faiss}; because the vectors are normalized, this ranking is equivalent to cosine-similarity ranking.
+\begin{table}[H]
+\centering
+\caption{Main implementation configuration of the evaluated HiED system.}
+\label{tab:implementation-configuration}
+\small
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{3.3cm}|>{\raggedright\arraybackslash}p{4.0cm}|>{\raggedright\arraybackslash}X|}
+\hline
+Component & Setting & Role\\
+\hline
+LLM backbone & Qwen3-32B with 4-bit AWQ & Used by the Diagnostician and Criterion Checker agents\\
+\hline
+Inference backend & vLLM & Loads the local model and serves generation requests\\
+\hline
+Decoding & Greedy decoding & Produces deterministic outputs under the evaluated configuration\\
+\hline
+Context and output limits & 8,192-token context; 1,536-token output cap & Defines the prompt and generation budgets\\
+\hline
+Output handling & Structured JSON, guided decoding where supported, and schema validation & Enforces the recorded output contracts\\
+\hline
+Checker recovery & Removal of duplicate or invalid criterion items while retaining valid records & Handles recoverable schema-adherence errors\\
+\hline
+Retrieval encoder & BGE-M3 normalized dense embeddings~\citep{chen2024bgem3} & Encodes query and training-source transcripts\\
+\hline
+Vector search & FAISS inner-product search~\citep{douze2024faiss} & Retrieves examples; equivalent to cosine ranking for normalized vectors\\
+\hline
+Weight updates & None & No main-system component fine-tunes model parameters\\
+\hline
+\end{tabularx}
+\end{table}
 
-Runs are checked for case count, valid outputs, parse failures, ranked-output availability, and candidate validity. A checker-output recovery occurs when an LLM response can be parsed but contains duplicate or invalid criterion items. The parser removes those items and retains the valid criterion records. This is a structured-output schema-adherence warning rather than a hard parse failure.
+AWQ and vLLM are quantization and serving choices rather than diagnostic modules; they do not alter the prompts, diagnostic scope, criteria, compatibility rules, or finalization policies. Runs are checked for case count, valid outputs, parse failures, ranked-output availability, and candidate validity.
+
+Checker-output recovery is applied only when an LLM response can be parsed but contains duplicate or invalid criterion items. The parser removes those items and retains the valid criterion records. This event is recorded as a structured-output schema-adherence warning rather than a hard parse failure.
 
 \chapter{Datasets, Label Projection, and Evaluation Protocol}
 \label{ch:data}
