@@ -221,7 +221,7 @@ This distinction matters because different errors need different remedies. Missi
 
 This thesis makes two main contributions.
 
-First, it presents an auditable hybrid architecture that combines LLM diagnosis, explicit ICD-10 criterion checking, and deterministic rules. The system records criterion states and supporting evidence instead of relying only on a free-form rationale. The trace can be inspected and replayed, but it does not prove that the LLM's hidden reasoning is faithful or that the checker judgments are clinically correct~\citep{turpin2023unfaithful}.
+First, it presents an auditable hybrid architecture that combines LLM-based diagnosis, structured criterion-level checking against operationalized ICD-10-informed criteria, and deterministic compatibility rules. The system records criterion states and supporting evidence instead of relying only on a free-form rationale. The trace can be inspected and replayed, but it does not prove that the LLM's hidden reasoning is faithful or that the checker judgments are clinically correct~\citep{turpin2023unfaithful}.
 
 Second, it presents a stage-wise failure-localization and empirical evaluation framework that separates candidate detection, criterion verification, and primary selection, quantifies the primary-selection bottleneck, and tests whether criterion-based finalization and several primary-selection methods close the observed gap. The absence of improvement under the evaluated selection interventions narrows several simple explanations under the tested settings, but it does not show that better selectors or additional clinical information can never help.
 
