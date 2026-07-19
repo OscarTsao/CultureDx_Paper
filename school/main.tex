@@ -552,40 +552,41 @@ In the running example from Chapter~\ref{ch:architecture}, F41.1 is scored as F4
 
 \section{Datasets, Case Construction, and Split Roles}
 
-The study uses two synthetic Chinese psychiatric dialogue datasets. LingxiDiagBench provides the in-domain training, development, and internal test data. MDD-5k provides an external synthetic test set.
+The study uses two synthetic Chinese psychiatric dialogue datasets. LingxiDiagBench is the source corpus for the in-domain experiments. MDD-5k provides an external synthetic test set.
 
 \subsection{LingxiDiagBench}
 
-LingxiDiagBench contains synthetic Chinese psychiatric consultations aligned with electronic medical records~\citep{xu2026lingxidiagbench}. The benchmark includes binary, four-class, and twelve-class tasks and is used here because it provides a fixed label space and enough cases for training, development, and internal evaluation. The published benchmark shows that fine-grained diagnosis is harder than broad depression--anxiety classification.
+LingxiDiagBench contains synthetic Chinese psychiatric consultations generated for static diagnostic classification and interactive consultation tasks~\citep{xu2026lingxidiagbench}. It is used as the source corpus for the in-domain experiments because it provides a fixed diagnostic label space and sufficient cases for training, configuration selection, and held-out evaluation. Its published results also show that fine-grained disorder-level diagnosis is substantially more difficult than broad depression--anxiety classification.
 
-The accessible data contained 14,000 training cases and 1,000 public validation cases. The official test file was unavailable when the experiments were designed. Before the main internal evaluation, 1,000 cases were set aside from the training source. The carve was stratified by first-listed projected parent to reproduce the public-validation distribution, using largest-remainder allocation and sampling without replacement with NumPy seed 42. The ordered case-ID fingerprint is \texttt{317a7633a339ae9a}. Exact case-ID uniqueness and overlap checks were applied, including exclusion from the final retrieval index; no separate semantic near-duplicate screen was applied. The carved cases were not used for prompt, rule, or final retrieval-configuration selection.
+The accessible release used in this study contained 14,000 training-source cases and 1,000 public-validation cases. The official test file was not available in the accessible release used when the experiments were designed. To obtain a held-out internal evaluation set, 1,000 cases were separated from the 14,000-case training source before the main experiments. The remaining 13,000 cases were used to train conventional baselines and build the retrieval index.
+
+The internal held-out set was stratified to approximate the public-validation distribution using the first-listed projected parent label and a fixed random seed. The first-listed label was used only as a sampling variable and was not treated as a psychiatrist-validated clinical primary diagnosis. Exact case-ID checks confirmed that held-out cases were excluded from the training and retrieval pools. No separate semantic near-duplicate screen was performed. The held-out cases were excluded from all reported configuration-selection procedures.
 
 \begin{table}[htbp]
 \centering
 \caption{LingxiDiag data splits and their roles in this thesis.}
 \label{tab:data-roles-rewrite}
-\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{4.0cm}|r|>{\raggedright\arraybackslash}X|}
+\small
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{3.7cm}|r|>{\raggedright\arraybackslash}X|}
 \hline
-Split & $N$ & Use\\
+Split & $N$ & Role\\
 \hline
-Training-source retrieval corpus & 13,000 & Builds the training-set retrieval index and trains conventional baselines; not used as a scored test set\\
+Training source & 13,000 & Trains conventional baselines and builds the retrieval index; not used for final performance reporting\\
 \hline
-Public validation split & 1,000 & Selects prompts, rules, sensitivity settings, and the final retrieval configuration; also provides descriptive same-split context\\
+Public validation & 1,000 & Supports prompt, rule, sensitivity, and retrieval-configuration selection; reported only as descriptive development-set context\\
 \hline
-Internal held-out split & 1,000 & Reports the main in-domain evaluation after configuration selection\\
+Internal held-out set & 1,000 & Provides the main in-domain performance estimate after configuration selection\\
 \hline
 \end{tabularx}
 \end{table}
 
-All internal methods are evaluated on the same fixed set of 1,000 test cases. Because the public validation split contributes to configuration selection, its results are not treated as an independent test estimate.
+All internal methods are evaluated on the same fixed 1,000-case held-out set. Because the public-validation split was used during system development, its results are not interpreted as an independent test estimate.
 
 \subsection{MDD-5k}
 
-MDD-5k was generated from anonymized psychiatric cases through a neuro-symbolic multi-agent process~\citep{yin2024mdd5k}. Each patient file may contain several dialogue rounds. The adapter joins those rounds and treats the patient file as one case.
+MDD-5k is a synthetic Chinese psychiatric dialogue dataset generated from anonymized psychiatric case information through a neuro-symbolic multi-agent process~\citep{yin2024mdd5k}. Some patient files contain multiple dialogue rounds. The study adapter concatenates these rounds in their recorded order while preserving doctor and patient turns, and each patient file is treated as one evaluation case.
 
-MDD-5k contains 925 matched patient-level cases. Under the configured parent-label set defined in Section~\ref{sec:gold-label-conventions}, 878 cases are in scope and 47 are out of scope. Additional checker definitions are used only in the later scope-expansion experiment and are not enabled in the primary analysis configuration.
-
-The 490-case F32-versus-F41 subset tests coarse depression--anxiety discrimination; this subset excludes F41.2 and records containing both F32 and F41. MDD transcripts are substantially longer, and the deterministic prompt-budget truncation rule is applied in the primary external evaluation. Both datasets are synthetic and are used for controlled benchmark evaluation rather than clinical validation.
+The evaluated release contains 925 patient-level cases. Under HiED's main configured output space defined in Section~\ref{sec:gold-label-conventions}, a case is defined as \emph{in scope} when at least one projected benchmark gold diagnosis can be emitted by the system and as \emph{out of scope} when none of its projected gold diagnoses is represented in that output space. Among the 925 external cases, 878 are in scope and the remaining 47 are out of scope. Because MDD-5k transcripts are generally longer than the internal LingxiDiag transcripts, the same predefined prompt-budget rule described in Chapter~\ref{ch:architecture} is applied during external evaluation. MDD-5k is used as an external synthetic benchmark and does not constitute validation on real patient transcripts.
 
 \subsection{Evaluation-Set Label Distributions}
 
@@ -636,12 +637,13 @@ Others & Out-of-scope gold diagnosis & 85 & 0 & 47\\
 
 \section{Prediction Views and Metrics}
 
-The evaluator keeps three outputs separate:
+The evaluator keeps four recorded output views separate:
 
 \begin{enumerate}[label=(\arabic*)]
-\item The \emph{primary view}, $p_1(x)$, is the final primary diagnosis.
-\item The \emph{ranked view}, $R_3(x)$, contains the first three distinct parent labels in the method's genuine ranked output. For HiED, it comes from the recorded Diagnostician ranking and is independent of any later DA or NtS finalization decision.
-\item The \emph{multilabel view}, $M(x)$, contains the primary and any emitted comorbid parent.
+\item The \emph{primary view}, $p_1(x)$, is the committed primary diagnosis.
+\item The \emph{ranked view}, $R_3(x)$, contains the first three distinct parent labels in the method's genuine ranked output. For HiED, it is taken from the recorded Diagnostician ranking and is independent of later DA or NtS finalization.
+\item The \emph{compatibility view}, $L(x)$, is the set of scoring parent labels retained as criterion-compatible by the Compatibility Auditor under the configured operational rules.
+\item The \emph{multilabel view}, $M(x)$, contains the committed primary diagnosis and any emitted comorbid parent label.
 \end{enumerate}
 
 TF--IDF + logistic regression obtains its Top-3 from ranked class scores. HiED obtains it from the Diagnostician ranking. A Single system without a genuine ranked output is not assigned an artificial Top-3.
@@ -650,26 +652,26 @@ Because a case may contain more than one gold label, Top-$k$ Accuracy counts a c
 
 DA may emit a committed primary diagnosis and one optional comorbid diagnosis, whereas NtS emits one committed primary diagnosis. Their Top-1 comparison therefore evaluates the committed primary directly, but differences in Exact Match, Macro-F1, or Weighted-F1 also reflect output cardinality and cannot be interpreted as isolated effects of primary re-selection.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
-\caption{Metric contract for the main output views.}
+\caption{Definitions of the main evaluation measures by output view.}
 \label{tab:metric-contract}
 \small
-\begin{tabularx}{\textwidth}{|p{2.4cm}|p{3.0cm}|p{4.0cm}|X|}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{3.0cm}|>{\raggedright\arraybackslash}p{3.6cm}|>{\raggedright\arraybackslash}X|}
 \hline
-Measure & Output view & Correct when & Question answered\\
+Measure & Evaluated output & Definition\\
 \hline
-Top-1 Accuracy & Committed primary & Primary is in the gold-label set & Did the committed primary match any gold parent label?\\
+Top-1 Accuracy & Committed primary, $p_1(x)$ & $p_1(x)\in G(x)$\\
 \hline
-Top-3 Accuracy & Genuine ranked Top-3 & Any top-three candidate is in the gold-label set & Did the genuine ranked Top-3 contain any gold parent label?\\
+Top-3 Accuracy & Genuine ranked Top-3, $R_3(x)$ & $R_3(x)\cap G(x)\neq\varnothing$\\
 \hline
-Gold-label retention & Criterion-compatible set & Any gold parent is criterion-compatible & Was any gold parent retained as compatible under the configured rules?\\
+Gold-label retention & Criterion-compatible set, $L(x)$ & $L(x)\cap G(x)\neq\varnothing$\\
 \hline
-Exact Match & Multilabel output & Predicted set equals gold-label set & Did the complete set match?\\
+Exact Match & Multilabel output, $M(x)$ & $M(x)=G(x)$\\
 \hline
-Macro-F1 & Multilabel output & Mean one-vs-rest label F1, equal class weight & How does label-level performance average across classes?\\
+Macro-F1 & Multilabel output, $M(x)$ & Unweighted mean of label-level one-vs-rest F1 scores\\
 \hline
-Weighted-F1 & Multilabel output & Mean one-vs-rest label F1, weighted by gold-label support & How does label-level performance reflect the observed class distribution?\\
+Weighted-F1 & Multilabel output, $M(x)$ & Label-level F1 scores weighted by gold-label support\\
 \hline
 \end{tabularx}
 \end{table}
@@ -692,7 +694,9 @@ First-listed-label agreement compares the committed diagnosis only with the firs
 
 \section{Failure-Localization Indicators}
 
-For each case, the thesis records three indicators:
+The thesis defines three failure-localization indicators. Candidate detection and primary agreement are defined for all evaluation cases, whereas criterion retention is defined only for checker-eligible cases.
+
+For case $x$,
 \[
 D_3(x)=\mathbb{1}[R_3(x)\cap G(x)\neq\varnothing],
 \]
@@ -702,31 +706,38 @@ R(x)=\mathbb{1}[L(x)\cap G(x)\neq\varnothing],
 \[
 S(x)=\mathbb{1}[p_1(x)\in G(x)],
 \]
-where $L(x)$ is the criterion-compatible parent set. $D_3$ and $S$ use all cases. Gold-label retention, $R$, is calculated only for cases whose gold-label set contains at least one non-\emph{Others} parent represented by a corresponding Criterion Checker. This checker-eligible subset contains 915 of the 1,000 test cases, whereas Top-1 and Top-3 use all 1,000 cases. The rates therefore have different denominators and should not be interpreted as consecutive stages of one case-level funnel.
+where $L(x)$ is the set of scoring parent labels retained as criterion-compatible by the Compatibility Auditor. $D_3(x)$ indicates whether at least one benchmark gold parent appears in the genuine ranked Top-3, $R(x)$ indicates whether at least one benchmark gold parent is retained in the criterion-compatible set, and $S(x)$ indicates whether the committed primary diagnosis matches at least one benchmark gold parent.
 
-These indicators ask three simple questions: Was a gold label in the genuine ranked Top-3? Was it retained as compatible under the configured rules? Was it selected as primary? They are analysis views of one recorded output, not a claim that every finalization policy executes the steps in that order.
+$D_3$ and $S$ are computed over all 1,000 internal evaluation cases. $R$ is computed only for the 915 checker-eligible cases whose gold-label set contains at least one non-\emph{Others} parent represented by a corresponding Criterion Checker. The resulting rates therefore use different denominators and should not be interpreted as consecutive stages of a single case-level funnel.
+
+These indicators provide complementary views of the recorded outputs for the same case. They ask whether a benchmark gold parent was ranked, retained as criterion-compatible, and selected as the committed primary diagnosis; they do not imply that every finalization policy executes these operations in that chronological order.
 
 \section{Statistical Analysis}
 
-The case is the unit of analysis, and the two-sided significance level is $\alpha=0.05$. Single-system binary proportions are summarized with 95\% Wilson confidence intervals. Pairwise comparisons require identical case IDs and endpoint definitions. For binary correctness outcomes, the point estimate is the paired difference in correctness proportions, and the exact McNemar test is computed from the two discordant counts: cases correct only under the first system and cases correct only under the second. Main paired comparisons report the effect and confidence interval; detailed discordant counts and $p$-values are retained in the supporting appendix.
+The case is the unit of analysis, and all statistical tests are two-sided with a significance level of $\alpha=0.05$. When confidence intervals are reported for a single binary proportion, 95\% Wilson intervals are used. Paired comparisons require identical case IDs and endpoint definitions. For binary correctness outcomes, the effect estimate is the paired difference in correctness proportions, and the exact McNemar test is computed from the two discordant counts: cases correct only under the first configuration and cases correct only under the second. Main paired comparisons report the effect estimate and its confidence interval; detailed discordant counts and $p$-values are reported in Appendix~\ref{app:supporting}.
 
-For paired accuracy differences and finalization interaction contrasts, case IDs are resampled with replacement using 10,000 paired bootstrap replicates and seed 42. The 2.5th and 97.5th percentiles form the reported 95\% confidence interval. Reported $p$-values are interpreted together with discordant counts, confidence intervals, and effect direction rather than as standalone evidence.
+Confidence intervals for paired accuracy differences and finalization difference-in-differences contrasts are estimated by resampling case IDs with replacement using 10,000 paired bootstrap replicates and seed 42. The 2.5th and 97.5th percentiles define the reported 95\% confidence interval. Reported $p$-values are interpreted together with effect direction, confidence intervals, and discordant counts rather than as standalone evidence.
 
-Holm correction is applied separately within the comparison families defined in Chapter~\ref{ch:experimental}; unrelated research questions are not pooled into one family. A non-significant result indicates insufficient evidence of a difference and is not treated as proof of equivalence. Paired tests require identical cases and endpoint definitions. When systems also differ in context budget, number of model calls, or other execution settings, the paired result is interpreted as a comparison between complete configurations rather than as an isolated component effect.
+Holm correction is applied when multiple prespecified tests belong to the same comparison family defined in Chapter~\ref{ch:experimental}; unrelated or isolated comparisons are not pooled into an artificial family. A non-significant result indicates insufficient evidence of a difference and is not interpreted as evidence of equivalence. When compared configurations also differ in context length, number of model calls, output contract, or other execution settings, the paired result is interpreted as a comparison of complete configurations rather than as the isolated effect of one component.
 
 \chapter{Experimental Design}
 \label{ch:experimental}
 
-This chapter organizes the empirical design around the five research questions. Statistical definitions are given in Chapter~\ref{ch:data}; auxiliary selection configurations, detailed paired statistics, and exact model-scale values are reported in Appendix~\ref{app:supporting}.
+This chapter organizes the empirical design around the five research questions.
 
 \section{Evaluation Overview}
 \label{sec:experimental-overview}
 
-The evaluation first positions HiED against same-split baselines, then localizes disagreement across candidate detection, criterion verification, and primary selection. Primary-selection interventions test possible remedies, while model-scale and external analyses examine robustness and transfer. Figure~\ref{fig:evidence-sequence} summarizes this argument. The ongoing psychiatrist case review is shown separately because it provides complementary interpretation rather than another completed computational research question.
+The evaluation is organized around the five research questions. First, same-split baseline and retrieval comparisons establish the predictive performance of HiED and evaluate the effect of retrieval configurations (RQ1 and RQ3). Second, stage-wise analysis separates candidate detection, criterion verification, and primary selection to identify where benchmark disagreement occurs (RQ2). Third, criterion-based finalization and additional primary-selection strategies test whether the observed Top-3--Top-1 gap can be reduced using the available system outputs (RQ4). Finally, model-scale, external-corpus, diagnostic-scope, and error analyses examine the robustness and transferability of the main findings (RQ5).
 
-\ThesisFigure[0.98\textwidth]{fig_evidence_sequence.pdf}{Overview of the empirical evidence sequence. Benchmark comparisons establish predictive positioning, stage-wise analysis localizes disagreement, selection interventions test possible remedies, and robustness analyses examine transfer across model scales and synthetic corpora. The psychiatrist case review is an ongoing complementary study based on selected disagreement cases.}{fig:evidence-sequence}
+Figure~\ref{fig:evidence-sequence} summarizes this evaluation sequence. The ongoing psychiatrist case review is presented separately as a complementary analysis because it examines the clinical interpretation of selected disagreement cases rather than constituting another completed computational research question.
 
-Chapters~\ref{ch:results} and~\ref{ch:external} report the internal and external computational results, respectively, while Chapter~\ref{ch:error} reports the detailed failure analysis and the psychiatrist case-review results when complete.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth]{fig_evidence_sequence.pdf}
+\caption{Overview of the evaluation sequence. Same-split comparisons establish predictive performance, stage-wise analysis localizes disagreement, selection interventions test alternative finalization strategies, and robustness analyses examine transfer across model scales, diagnostic scopes, and synthetic corpora. The psychiatrist case review is an ongoing complementary analysis.}
+\label{fig:evidence-sequence}
+\end{figure}
 
 \section{Internal Benchmark and Retrieval Comparisons}
 
@@ -756,9 +767,9 @@ Recorded-output methods such as NtS and deterministic fusion reuse DA artifacts 
 
 Model-scale sensitivity is evaluated across Qwen3-4B, 8B, 14B, and 32B on the same internal cases with a common prompt family, scope, retrieval policy, decoding contract, and endpoint. Parsing and abstention events are recorded separately; the comparison addresses within-family scale sensitivity.
 
-External evaluation uses the MDD-5k checker-covered full set, active-profile in-scope subset, and restricted F32/F41 subset. The common DA trace supports multi-way performance, the external Top-3--Top-1 selection gap, and common-output primary-selection comparisons. A matched external criterion-retention trace is unavailable, so the full internal $D_3$--$R$--$S$ analysis is not repeated.
+External evaluation uses the 925-case MDD-5k evaluation set and the 878-case active-profile in-scope subset. A secondary binary analysis uses a study-defined 490-case subset containing either F32 or F41, excluding F41.2 and cases containing both F32 and F41. The common DA trace supports multi-way performance, the external Top-3--Top-1 selection gap, and common-output primary-selection comparisons. A matched external criterion-retention trace is unavailable, so the full internal $D_3$--$R$--$S$ analysis is not repeated.
 
-Additional transfer analyses expand the configured diagnostic scope without changing model weights and evaluate lexical classification, BGE-M3 case-neighbor label voting, and score fusion across corpora. These experiments distinguish output-space representability from behavioral recovery and same-corpus fit from selector portability.
+A separate diagnostic-scope configuration expands the profile from fourteen to 33 configured categories by adding category-specific checker definitions without changing model weights; these definitions are not enabled in the main external evaluation. Additional transfer analyses evaluate lexical classification, BGE-M3 case-neighbor label voting, and score fusion across corpora. These experiments distinguish output-space representability from behavioral recovery and same-corpus fit from selector portability.
 
 \section{Psychiatrist Case Review}
 \label{sec:psychiatrist-case-review}
@@ -1101,7 +1112,7 @@ The planned six-row external retrieval comparison was not available as a validat
 
 \begin{table}[htbp]
 \centering
-\caption{External primary-selection strategies relative to DA on 925 matched cases. Differences and paired-bootstrap confidence intervals are in percentage points.}
+\caption{External primary-selection strategies relative to DA on the common 925-case MDD-5k trace. Differences and paired-bootstrap confidence intervals are in percentage points.}
 \label{tab:mdd-finalization-results}
 \small
 \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{4.2cm}|>{\raggedright\arraybackslash}p{2.8cm}|c|X|}
@@ -1529,6 +1540,8 @@ Subtype-level predictions under F41 and F43 are projected to their corresponding
 
 \chapter{Detailed Experimental Statistics and Auxiliary Configurations}
 \label{app:supporting}
+
+The study-specific internal held-out set was generated by largest-remainder allocation and sampling without replacement using NumPy seed 42. Its ordered case-ID fingerprint is \texttt{317a7633a339ae9a}.
 
 \section{Auxiliary Primary-Selection Configurations}
 
