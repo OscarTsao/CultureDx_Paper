@@ -843,7 +843,7 @@ This chapter first establishes the predictive position of HiED on the internal e
 
 This section reports the same-split benchmark comparison used to answer RQ1.
 
-Table~\ref{tab:validation-configuration-matrix} reports all applicable metrics for the retained public-validation configurations together with three representative results from the original LingxiDiagBench static evaluation. The Single rows do not report Top-3 because Single does not emit a genuine ordered differential. A matched HiED--DA no-retrieval validation result was not retained; the unavailable row is shown explicitly so that absence of evidence is not confused with an evaluated zero or with the internal-test no-retrieval control reported in Section~\ref{sec:retrieval-results}. The published rows provide benchmark context rather than matched comparisons.
+Table~\ref{tab:validation-configuration-matrix} reports all applicable metrics for the retained public-validation configurations together with three representative results from the original LingxiDiagBench static evaluation. The Single rows do not report Top-3 because Single does not emit a genuine ordered differential. The published rows provide benchmark context rather than matched comparisons.
 
 \begin{table}[H]
 \centering
@@ -861,7 +861,7 @@ Single & None & 0.466 & --- & 0.016 & 0.174 & 0.429\\
 Single & Global Top-5 & 0.519 & --- & 0.030 & 0.209 & 0.456\\
 Single & Parent-balanced & 0.507 & --- & 0.016 & 0.195 & 0.437\\
 \hline
-HiED--DA & None & --- & --- & --- & --- & ---\\
+HiED--DA & None & 0.509 & 0.792 & 0.456 & 0.173 & 0.428\\
 HiED--DA & Global Top-5 & 0.525 & 0.797 & 0.432 & 0.178 & 0.435\\
 HiED--DA & Parent-balanced & 0.523 & 0.800 & 0.428 & 0.181 & 0.440\\
 \hline
@@ -873,10 +873,10 @@ Qwen3-32B & Published benchmark & 0.470 & 0.566 & 0.241 & 0.188 & 0.431\\
 \hline
 \end{tabular}
 \end{adjustbox}
-\parbox{0.96\textwidth}{\footnotesize \textit{Note:} Dashes in the Single Top-3 cells denote an undefined output view; dashes across the HiED--DA no-retrieval row denote an unavailable matched validation result. The published rows use the original benchmark prompts and evaluation pipeline and are not treated as matched system comparisons. Their reported 12-category accuracy is shown as Exact Match because it requires agreement with the complete gold-label set under the original multilabel evaluator.}
+\parbox{0.96\textwidth}{\footnotesize \textit{Note:} Dashes in the Single Top-3 cells denote an undefined output view. The published rows use the original benchmark prompts and evaluation pipeline and are not treated as matched system comparisons. Their reported 12-category accuracy is shown as Exact Match because it requires agreement with the complete gold-label set under the original multilabel evaluator.}
 \end{table}
 
-Global Top-5 improves every native reported endpoint for Single relative to parent-balanced retrieval and is used as the primary Single configuration. For HiED--DA, global Top-5 improves Top-1 Accuracy and Exact Match relative to parent-balanced retrieval, but reduces genuine Top-3 Accuracy, Macro-F1, and Weighted-F1. It therefore improves only two of the five predefined promotion metrics and does not satisfy the promotion rule; parent-balanced retrieval remains the primary HiED configuration. The HiED Top-1 difference is 0.002 (95\% CI [$-0.013$, 0.017]), so the interval includes zero. Detailed discordant counts and the exact test are reported in Appendix~\ref{app:supporting}, Table~\ref{tab:internal-paired-tests}.
+Global Top-5 improves every native reported endpoint for Single relative to parent-balanced retrieval and is used as the primary Single configuration. For HiED--DA, both retrieval configurations exceed no retrieval in Top-1, Top-3, Macro-F1, and Weighted-F1, whereas no retrieval has the highest Exact Match. Global Top-5 improves Top-1 Accuracy and Exact Match relative to parent-balanced retrieval, but reduces genuine Top-3 Accuracy, Macro-F1, and Weighted-F1. It therefore improves only two of the five predefined promotion metrics and does not satisfy the promotion rule; parent-balanced retrieval remains the primary HiED configuration. The global-versus-parent-balanced HiED Top-1 difference is 0.002 (95\% CI [$-0.013$, 0.017]), so the interval includes zero. Detailed discordant counts and the exact test are reported in Appendix~\ref{app:supporting}, Table~\ref{tab:internal-paired-tests}.
 
 The published rows provide benchmark context rather than matched baselines. Under the original LingxiDiagBench evaluation contract, TF--IDF + LR achieved the strongest Top-3 and label-level F1 results among these representative rows, whereas GPT-5-Mini achieved the highest 12-category Exact Match. Qwen3-32B provides context for the backbone used in the primary HiED configuration. No direct statistical comparison is made because the published systems use different prompts, output structures, retrieval conditions, and scoring procedures. The published results nevertheless show that ranked candidate coverage exceeded primary prediction in the source benchmark; the present thesis extends that observation by separating candidate detection, criterion verification, and primary selection.
 
