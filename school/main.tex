@@ -728,9 +728,9 @@ This chapter organizes the empirical design around the five research questions.
 \section{Evaluation Overview}
 \label{sec:experimental-overview}
 
-The evaluation is organized around the five research questions. First, same-split baseline and retrieval comparisons establish the predictive performance of HiED and evaluate the effect of retrieval configurations (RQ1 and RQ3). Second, stage-wise analysis separates candidate detection, criterion verification, and primary selection to identify where benchmark disagreement occurs (RQ2). Third, criterion-based finalization and additional primary-selection strategies test whether the observed Top-3--Top-1 gap can be reduced using the available system outputs (RQ4). Finally, model-scale, external-corpus, diagnostic-scope, and error analyses examine the robustness and transferability of the main findings (RQ5).
+The evaluation is organized around the five research questions. Same-split benchmark comparisons establish the predictive position of HiED (RQ1), while matched retrieval comparisons examine the effects of the evaluated retrieval configurations (RQ3). Stage-wise analysis separates candidate detection, criterion verification, and primary selection (RQ2). Criterion-based finalization and additional selection strategies test whether the observed selection gap can be reduced (RQ4). Finally, model-scale, external-corpus, diagnostic-scope, and error analyses examine whether the main findings persist across evaluation conditions (RQ5).
 
-Figure~\ref{fig:evidence-sequence} summarizes this evaluation sequence. The ongoing psychiatrist case review is presented separately as a complementary analysis because it examines the clinical interpretation of selected disagreement cases rather than constituting another completed computational research question.
+Figure~\ref{fig:evidence-sequence} summarizes this evaluation sequence. The ongoing psychiatrist case review is treated as a complementary analysis rather than another completed computational research question.
 
 \begin{figure}[H]
 \centering
@@ -801,6 +801,8 @@ This chapter first establishes the predictive position of HiED on the internal e
 \section{Configuration Selection and Main Internal Performance}
 \label{sec:validation-retrieval-selection}
 \label{sec:matched-baselines-retrieval}
+
+This section reports the same-split benchmark comparison used to answer RQ1.
 
 Table~\ref{tab:validation-configuration-matrix} reports all applicable metrics for the retained public-validation configurations together with three representative results from the original LingxiDiagBench static evaluation. The Single rows do not report Top-3 because Single does not emit a genuine ordered differential. A matched HiED--DA no-retrieval validation result was not retained; the unavailable row is shown explicitly so that absence of evidence is not confused with an evaluated zero or with the internal-test no-retrieval control reported in Section~\ref{sec:retrieval-results}. The published rows provide benchmark context rather than matched comparisons.
 
@@ -873,6 +875,8 @@ The lexical result also counters an exclusively missing-information explanation:
 \section{Retrieval Results}
 \label{sec:retrieval-results}
 
+This section reports the matched retrieval comparisons used to answer RQ3.
+
 \begin{table}[htbp]
 \centering
 \caption{Retrieval-strategy results on the fixed internal test set. Single has no genuine ranked output, so Top-3 is not reported. The table presents test-set ablations and does not alter the validation-selected main configurations.}
@@ -900,6 +904,8 @@ For HiED--DA, global retrieval has the highest Top-1, Top-3, Exact Match, and Ma
 
 \section{Stage-Wise Failure Analysis}
 \label{sec:stage-wise-failure-results}
+
+This section reports the candidate-detection, criterion-retention, and primary-selection analysis used to answer RQ2.
 
 \paragraph{Candidate coverage.}
 
@@ -973,6 +979,8 @@ This analysis is not used as primary evidence for the selection bottleneck. A br
 \label{sec:nts-factorial}
 \label{sec:additional-selection-results}
 
+This section evaluates the criterion-based and additional primary-selection strategies specified in RQ4.
+
 Table~\ref{tab:nts-factorial} compares DA and NtS on the same 1,000 cases within each retrieval condition. Differences are NtS minus DA.
 
 \begin{table}[htbp]
@@ -1021,6 +1029,8 @@ Forced pairwise override and debate reduce Top-1, with intervals excluding zero.
 \section{Model-Scale and Diagnostic Error Analysis}
 \label{sec:robustness-error-distribution}
 
+This section provides the in-domain model-scale and diagnostic-confusion evidence for RQ5.
+
 \paragraph{Model scale.}
 
 \ThesisFigure{fig_a_size_robustness.pdf}{Held-out Top-1 across Qwen3 model sizes for the Single baseline and HiED.}{fig:size-robustness}
@@ -1041,7 +1051,7 @@ Overall, TF--IDF + logistic regression is the strongest same-split predictor, wh
 \chapter{External Synthetic Evaluation}
 \label{ch:external}
 
-This chapter tests which in-domain findings remain observable on MDD-5k, a second Chinese synthetic corpus with different generation procedures, label distributions, and diagnostic coverage. Its analysis populations are subsets of one source corpus rather than independent cohorts, and the results do not constitute real-patient or Taiwanese clinical validation.
+This chapter addresses the external-corpus component of RQ5 by testing whether the selection gap identified under RQ2 and the primary-selection findings from RQ4 remain observable on MDD-5k, a second Chinese synthetic corpus with different generation procedures, label distributions, and diagnostic coverage. Its analysis populations are subsets of one source corpus rather than independent cohorts, and the results do not constitute real-patient or Taiwanese clinical validation.
 
 \section{External Performance and Selection Gap}
 \label{sec:mdd-multiway}
