@@ -771,45 +771,64 @@ A supplementary oracle analysis examines a broader candidate window formed from 
 
 This section defines the primary-selection experiments used to answer RQ4 and corresponds to the third evaluation block in Figure~\ref{fig:evidence-sequence}. Direct-Answer (DA) is the reference policy, and committed Top-1 agreement is the primary endpoint. The experiments test whether alternative uses of the available diagnostic outputs improve the committed primary diagnosis; they do not assume that any intervention is necessarily better than DA.
 
-\paragraph{Recorded-output interventions.}
-Nominate-then-Select (NtS) and deterministic fusion reuse outputs already recorded in a DA run and do not introduce an additional diagnostic LLM call. NtS applies the deterministic finalization rule defined in Chapter~\ref{ch:architecture} to the ranked candidates and criterion-compatible set. Deterministic fusion combines recorded ranking and criterion-support signals using a predefined scoring rule.
+\paragraph{Evaluated intervention families.}
+The evaluated methods represent three approaches to primary re-selection. First, \emph{recorded-output methods} reuse an existing HiED trace without additional LLM inference. NtS selects from the criterion-compatible set using the deterministic policy defined in Chapter~\ref{ch:architecture}, whereas deterministic fusion combines recorded candidate rank, compatibility status, and criterion-support strength before deciding whether to replace the DA primary.
 
-DA and NtS are first compared on the same 1,000 internal cases under no retrieval, global Top-5 retrieval, and parent-balanced retrieval. Paired differences estimate the effect of replacing DA finalization with NtS within each retrieval condition. Difference-in-differences bootstrap contrasts then test whether the effect of NtS changes across retrieval conditions. Because the upstream run artifacts are shared, these comparisons permit relatively direct attribution to the tested finalization rule.
+Second, \emph{pairwise and debate methods} introduce new inference to compare plausible alternatives more directly. The pairwise configurations ask the model to choose between closely supported candidates. The independent configuration produces a separate committed prediction, whereas the forced-override configuration promotes a valid in-cluster preference when the predefined eligibility conditions are satisfied. Two-view debate generates competing diagnostic arguments and uses a judge call to select the final primary diagnosis.
 
-Additional internal intervention results use the validation-selected parent-balanced DA configuration as the reported reference. Paired effects and confidence intervals are reported when case-level paired records are available. Although DA may retain an optional comorbid diagnosis whereas NtS emits one diagnosis, committed Top-1 remains directly comparable. Set-level metrics are not interpreted as isolated effects of primary re-selection because they also reflect output cardinality.
+Third, \emph{sampling-based methods} test whether repeated Diagnostician outputs yield a more stable decision. Self-consistency (SC) selects the diagnosis receiving the most primary votes across repeated samples. Confidence-informed self-consistency (CISC) uses the same samples but weights each vote by the confidence stated in its output.
 
-\paragraph{New-inference and sampling interventions.}
-The remaining methods add model inference or repeated sampling. Independent and forced pairwise configurations regenerate upstream outputs and use pairwise preferences differently. Two-view debate adds role-specific inference before finalization. Self-consistency (SC) and confidence-informed self-consistency (CISC) aggregate repeated samples.
+These families test whether criterion-derived signals, direct comparison among candidates, or repeated sampling can reduce the observed primary-selection gap.
 
-These methods may differ from DA in prompt structure, context length, number of model calls, decoding behavior, or aggregation procedure. Their results are therefore interpreted as comparisons between complete configurations rather than as estimates of the isolated effect of pairwise comparison, debate, or sampling. Exact execution settings and supporting paired statistics are reported in Appendix~\ref{app:supporting}.
+\paragraph{Comparison design.}
+DA and NtS are compared on the same 1,000 cases under three retrieval settings: none, global Top-5, and parent-balanced. Paired differences estimate the effect of substituting NtS for DA, and bootstrap difference-in-differences contrasts test whether that effect varies by retrieval. Shared upstream artifacts permit relatively direct attribution to finalization.
 
-\section{Robustness and External Synthetic Evaluation}
+Additional internal intervention results use the validation-selected parent-balanced DA configuration as the reported reference. Paired effects and confidence intervals are reported when case-level paired records are available. Methods that introduce new inference or sampling may also differ from DA in prompt structure, context length, number of model calls, decoding behavior, or aggregation procedure. Their results are therefore interpreted as comparisons between complete configurations rather than as isolated effects of pairwise comparison, debate, or sampling.
 
-Model-scale sensitivity is evaluated across Qwen3-4B, 8B, 14B, and 32B on the same internal cases with a common prompt family, scope, retrieval policy, decoding contract, and endpoint. Parsing and abstention events are recorded separately; the comparison addresses within-family scale sensitivity.
+Although DA may retain an optional comorbid diagnosis whereas NtS emits one diagnosis, committed Top-1 remains directly comparable. Set-level metrics are not interpreted as isolated effects of primary re-selection because they also reflect output cardinality. Exact eligibility rules, thresholds, inference budgets, sampling settings, and supporting paired statistics are reported in Appendix~\ref{app:supporting}.
 
-External evaluation uses the 925-case MDD-5k evaluation set and the 878-case active-profile in-scope subset. A secondary binary analysis uses a study-defined 490-case subset containing either F32 or F41, excluding F41.2 and cases containing both F32 and F41. The common DA trace supports multi-way performance, the external Top-3--Top-1 selection gap, and common-output primary-selection comparisons. A matched external criterion-retention trace is unavailable, so the full internal $D_3$--$R$--$S$ analysis is not repeated.
+\section{Robustness and Transfer Analyses}
 
-A separate diagnostic-scope configuration expands the profile from fourteen to 33 configured categories by adding category-specific checker definitions without changing model weights; these definitions are not enabled in the main external evaluation. Additional transfer analyses evaluate lexical classification, BGE-M3 case-neighbor label voting, and score fusion across corpora. These experiments distinguish output-space representability from behavioral recovery and same-corpus fit from selector portability.
+This section defines the analyses used to answer RQ5 and corresponds to the fourth evaluation block in Figure~\ref{fig:evidence-sequence}. The analyses examine whether the main in-domain findings remain observable across model sizes, a second synthetic corpus, changes in the configured diagnostic scope, and cross-corpus selectors. They evaluate persistence under the tested conditions rather than establishing general robustness or clinical transferability.
 
-\section{Psychiatrist Case Review}
+\paragraph{Model-scale sensitivity.}
+Within-family scale sensitivity is evaluated using Qwen3-4B, 8B, 14B, and 32B on the same 1,000 internal cases. The prompt family, configured diagnostic scope, retrieval policy, decoding contract, and evaluation endpoints are held constant across sizes. Top-1, genuine Top-3, structured-output issues, and abstention events are recorded. This comparison tests whether the candidate-coverage and primary-selection pattern depends strongly on one Qwen3 model size; it does not establish robustness across unrelated model families.
+
+\paragraph{External synthetic evaluation.}
+MDD-5k is used to test whether the main in-domain patterns remain observable under a second synthetic data-generation process and different label distributions. The primary external analyses use the full 925-case evaluation set and the 878-case subset for which at least one benchmark gold diagnosis is represented in HiED's main configured output space. A separate 490-case F32-versus-F41 subset is treated as a secondary binary task rather than as the main external evaluation.
+
+The common external DA trace supports multi-way performance, genuine Top-3 coverage, the Top-3--Top-1 gap, and same-trace primary-selection comparisons, but not criterion retention. Without retention, the external test of the full $D_3$--$R$--$S$ analysis is necessarily partial.
+
+\paragraph{Diagnostic-scope expansion.}
+A configuration-only scope experiment expands the diagnostic profile from fourteen to 33 configured categories by adding category-specific checker definitions without changing the model weights. The added categories are not enabled in the primary external evaluation. This experiment separates output-space representability from behavioral recovery: it asks whether making a benchmark diagnosis available to the system is sufficient for that diagnosis to become the committed primary output.
+
+\paragraph{Cross-corpus selector transfer.}
+Cross-corpus analyses test whether corpus-derived selection signals remain useful outside the corpus from which they were obtained. TF--IDF classifiers are trained on one corpus and evaluated both within that corpus and on the other corpus to measure the portability of lexical label signals. BGE-M3 case-neighbor voting predicts from the labels of semantically similar source-corpus cases, while score fusion combines case-similarity signals with recorded HiED outputs. These analyses test lexical and representation-level selector portability rather than the clinical validity of either representation.
+
+\paragraph{Error-pattern analysis.}
+Remaining benchmark disagreements are examined through first-listed-label confusion patterns, frequent gold-to-predicted diagnosis pairs, and the stage-wise case profiles defined by $D_3$, $R$, and $S$. The confusion matrix is descriptive and uses one first-listed projected gold label per case; it is not the main multilabel endpoint. Criterion-state and audit-trace analyses further characterize recorded differences among candidate-detection, criterion-verification, and ranked-and-retained nonselection cases without assigning clinical causes to those disagreements.
+
+\section{Complementary Psychiatrist Case-Review Protocol}
 \label{sec:psychiatrist-case-review}
 
-At the time of this manuscript revision, the psychiatrist case review was ongoing. Preliminary judgments are excluded from Chapters~\ref{ch:results} and~\ref{ch:external}; completed reviewer characteristics, outcomes, and agreement estimates will be reported in Chapter~\ref{ch:error}.
+This section describes the ongoing complementary study shown by the dashed branch in Figure~\ref{fig:evidence-sequence}. The review is not treated as another completed computational research question. Its purpose is to examine how psychiatrists interpret selected benchmark disagreements identified by the stage-wise analysis for RQ2. Because the review is ongoing, no preliminary judgments, outcome estimates, or agreement statistics are included in the present thesis.
 
-The primary review population is sampled from checker-eligible internal cases satisfying $D_3=1$, $R=1$, and $S=0$. Sampling does not use preliminary judgments, and secondary comparison strata are reported separately. The completed report will state sample sizes, exclusions, replacement rules, reviewer qualifications, clinical experience, language competence, and prior exposure to the benchmark or system.
+The primary review sample is drawn from the validation-selected parent-balanced HiED--DA trace. Eligible cases belong to the checker-eligible internal subset and satisfy $D_3=1$, $R=1$, and $S=0$: at least one benchmark gold parent is ranked and retained as criterion-compatible, but another diagnosis is selected as the committed primary. Sampling does not use preliminary judgments; secondary comparison strata are reported separately.
 
-Reviewers first receive only the transcript and configured diagnostic scope. Gold labels, system outputs, the $D_3$--$R$--$S$ pattern, and other reviewers' judgments remain concealed while reviewers record a preferred primary diagnosis, plausible alternatives, unique-primary determinability, and missing information. These ratings are locked before system outputs are shown.
+The review uses a staged disclosure procedure. In the first stage, reviewers receive only the transcript and the configured diagnostic scope. The benchmark gold labels, system outputs, $D_3$--$R$--$S$ profile, and other reviewers' judgments remain concealed. Reviewers record a preferred primary diagnosis, plausible alternative diagnoses, whether a unique primary diagnosis can be determined from the transcript, and which additional information would be needed. These judgments are locked before system outputs are disclosed.
 
-Reviewers then inspect the ranked differential, criterion states, checker-generated supporting text, criterion-compatible candidates, and committed primary while the gold label remains concealed. After these ratings are locked, the gold label is revealed and reviewers classify the disagreement as a primary-selection error, insufficient transcript information, multiple plausible diagnoses, gold-label ambiguity, criterion-verification error, diagnostic-scope limitation, or unresolved.
+In the second stage, reviewers inspect the ranked differential, criterion states, checker-generated supporting text, criterion-compatible diagnoses, and committed primary diagnosis while the benchmark gold labels remain concealed. Reviewers then assess the plausibility of the system outputs and the usefulness of the recorded audit artifacts. These judgments are also locked before the benchmark labels are revealed.
 
-The primary outcome is the proportion of reviewed ranked-and-retained nonselection cases for which the prespecified psychiatrist-consensus rule identifies a gold diagnosis as the preferred primary:
+In the final stage, the benchmark gold labels are disclosed. Reviewers classify the disagreement as a primary-selection error, insufficient transcript information, multiple plausible diagnoses, benchmark-label ambiguity, criterion-verification error, diagnostic-scope limitation, or unresolved.
+
+The planned primary outcome is the proportion of reviewed ranked-and-retained nonselection cases for which the finalized psychiatrist-consensus rule identifies at least one benchmark gold parent as the preferred primary diagnosis:
 \[
-\widehat{\pi}_{\mathrm{clinical}}
+\widehat{\pi}_{\mathrm{gold\text{-}preferred}}
 =
-\frac{n_{\mathrm{gold\ preferred}}}
+\frac{n_{\mathrm{cases\ with\ a\ gold\ parent\ preferred}}}
 {n_{D_3=1,\,R=1,\,S=0\ \mathrm{reviewed}}}.
 \]
-Secondary measures include gold-diagnosis plausibility, transcript sufficiency, plausibility of the committed diagnosis, disagreement classification, audit-trace usefulness, and inter-rater agreement for the principal review judgments.
+For a case with multiple benchmark gold parents, preference for any one of them satisfies the numerator condition. Before outcome analysis, the review protocol must lock the consensus procedure and specify whether cases judged not to support a unique primary diagnosis remain in the denominator; the completed report must state both decisions explicitly. Secondary outcomes include benchmark-gold plausibility, transcript sufficiency, plausibility of the committed diagnosis, disagreement category, audit-trace usefulness, and inter-rater agreement. Because the reviewed cases are synthetic benchmark transcripts selected for a specific disagreement pattern, the study provides expert interpretation of benchmark failures rather than real-patient clinical validation.
 
 Together, these designs distinguish benchmark positioning, stage-wise localization, intervention evidence, transfer, and complementary clinical interpretation without treating them as equivalent claims.
 
