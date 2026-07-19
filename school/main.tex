@@ -189,7 +189,7 @@ Psychiatric outpatient care in Taiwan is widely accessible, but this access also
 
 The evidence may also be indirect. In Chinese-speaking settings, patients often describe distress through insomnia, fatigue, dizziness, chest tightness, or gastrointestinal symptoms before using explicit mood or anxiety terms~\citep{kleinman1982neurasthenia,ryder2008somatic}. Taiwanese consultations may also mix Mandarin, Taiwanese expressions, and local clinical wording. The same condition can therefore be described in several ways within one visit.
 
-Differential diagnosis remains difficult because common psychiatric disorders share many symptoms. Depression, anxiety, stress-related disorders, obsessive-compulsive disorder, somatic symptom disorders, and sleep disorders may all involve insomnia, fatigue, poor concentration, and impaired daily function. In diagnostic assessment, these symptoms are interpreted through disorder-specific criteria that also consider their number, duration, functional impact, clinical course, and exclusion conditions~\citep{who2019icd10}. A diagnosis may therefore share several symptoms with the transcript without satisfying all of the information required to distinguish it from competing diagnoses. Even when diagnostic criteria are applied, several disorders may remain compatible with the same transcript. Evidence for both depression and anxiety, for example, may reflect comorbidity or overlapping symptoms from one primary condition~\citep{brown2001comorbidity}. Even structured diagnostic studies report limited agreement for some common disorders~\citep{regier2013dsm5}.
+Differential diagnosis remains difficult because common psychiatric disorders share many symptoms. Depression, anxiety, stress-related disorders, obsessive-compulsive disorder, somatic symptom disorders, and sleep disorders may all involve insomnia, fatigue, poor concentration, and impaired daily function. In diagnostic assessment, these symptoms are interpreted through disorder-specific criteria. These criteria do not treat every symptom independently or equally: depending on the disorder, a diagnosis may require particular core symptoms, a minimum number of additional symptoms, a specified duration, functional impairment, and the absence of exclusionary causes~\citep{who2019icd10}. Diagnostic assessment therefore involves matching the available evidence to a disorder-specific combination of requirements, rather than assigning a diagnosis from the presence of one symptom alone. Even when diagnostic criteria are applied, several disorders may remain compatible with the same transcript. Evidence for both depression and anxiety, for example, may reflect comorbidity or overlapping symptoms from one primary condition~\citep{brown2001comorbidity}. Even structured diagnostic studies report limited agreement for some common disorders~\citep{regier2013dsm5}.
 
 These features make first-visit psychiatric diagnosis a problem of comparative bookkeeping under incomplete evidence. The clinician must document a best-supported working diagnosis, keep plausible alternatives visible, and identify which missing information should be collected at follow-up. Time pressure can increase the risk of anchoring or premature closure when several disorders share the same symptoms~\citep{croskerry2003cognitive}.
 \section{Problem Definition and Challenges}
@@ -271,89 +271,77 @@ Knowledge-based diagnosis methods represent relations among symptoms, disorders,
 HiED does not implement a full knowledge-graph selector. Instead, this literature motivates future work if simple criterion counts and local re-ranking are not enough. A stronger selector may need to compare which diagnosis best explains the full presentation, not only how many criteria each diagnosis satisfies.
 
 \clearpage
-Table~\ref{tab:related-work-matrix} does not compare overall system quality. It compares whether each study exposes the intermediate outputs needed to distinguish candidate-generation, criterion-verification, and primary-selection errors.
+Table~\ref{tab:related-work-matrix} compares only the intermediate outputs reported by each study; it does not rank overall system quality or clinical capability.
 
 \begin{table}[htbp]
 \centering
-\caption{Comparison of representative psychiatric diagnostic systems by the outputs available for stage-wise failure localization.}
+\caption{Representative psychiatric diagnostic systems and the outputs available for stage-wise failure analysis.}
 \label{tab:related-work-matrix}
-\scriptsize
-\begingroup
-\setlength{\tabcolsep}{2pt}
+\small
 \begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{|p{2.2cm}|p{1.9cm}|p{1.35cm}|p{2.35cm}|p{3.2cm}|p{3.7cm}|}
+\begin{tabular}{|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{2.7cm}|>{\raggedright\arraybackslash}p{3.1cm}|>{\raggedright\arraybackslash}p{4.3cm}|>{\centering\arraybackslash}p{2.0cm}|}
 \hline
 Study or system &
 Evidence setting &
-Follow-up questioning &
-Ranked differential &
-Criterion or evidence audit &
-Separate evaluation of candidate detection, criterion verification, and primary selection\\
+Ranked candidates &
+Criterion or evidence representation &
+Stage-wise evaluation\\
 \hline
 MIND~\citep{li2026mind} &
-Interactive psychiatric consultation &
-Yes &
-Not reported as a ranked output &
+Interactive consultation &
+No ranked evaluation reported &
 Criteria-grounded rationales and process rewards &
-No---final diagnosis and dialogue/process metrics\\
+No\\
 \hline
-WiseMind/ProAI\newline\citep{wu2026wisemind} &
-Interactive simulated and real-user dialogue &
-Yes &
-Not reported as a ranked output &
-DSM-guided action states for met criteria, unmet criteria, missing details, and contradictions &
-Partial---critical-node recall and final diagnostic accuracy, without candidate-detection-to-primary-selection decomposition\\
+WiseMind/\allowbreak ProAI~\citep{wu2026wisemind} &
+Interactive consultation &
+No ranked evaluation reported &
+Structured DSM-guided action states &
+Partial\\
 \hline
 MAGI~\citep{bi2025magi} &
 Interactive MINI-guided interview &
-Yes &
-Not reported as a ranked output &
-PsyCoT maps symptoms and dialogue evidence to diagnostic criteria &
-Partial---interview, PsyCoT, and final diagnosis metrics, without a ranked-candidate stage\\
+No ranked evaluation reported &
+Symptom and dialogue evidence mapped to criteria &
+Partial\\
 \hline
-DSM5AgentFlow\newline\citep{ozgun2025dsm5agentflow} &
-Simulated interactive questionnaire &
-Yes &
-Not reported as a ranked output &
-Rationale links utterances to supporting or contradictory DSM-5 criteria &
-Partial---diagnostic and explanation metrics, without candidate-stage evaluation\\
+DSM5Agent\allowbreak Flow~\citep{ozgun2025dsm5agentflow} &
+Interactive questionnaire &
+No ranked evaluation reported &
+Utterance-level supporting and contradictory criteria &
+Partial\\
 \hline
-MentalSeek-Dx\newline\citep{sun2026mentalseek} &
-Fixed de-identified clinical record &
-No &
-Hypothesis list generated; ranking not separately reported as a test metric &
-Criteria-guided staged reasoning, without case-level criterion states linked to evidence &
-Partial---category, disorder, and joint accuracy, without criterion-retention analysis\\
+MentalSeek-Dx~\citep{sun2026mentalseek} &
+Fixed clinical record &
+Hypotheses generated; ranking not evaluated &
+Criteria-guided staged reasoning &
+Partial\\
 \hline
-MoodAngels~\citep{xiao2025moodangels} &
+Mood\allowbreak Angels~\citep{xiao2025moodangels} &
 Fixed records and assessment scales &
-No &
-Not reported as a ranked output &
-DSM-5 criterion retrieval and granular symptom matching &
-Partial---agent and component results, without candidate--verification--selection evaluation\\
+No ranked evaluation reported &
+DSM-5 retrieval and symptom matching &
+Partial\\
 \hline
 Constraint-logic CDSS~\citep{kim2025clp} &
 Structured patient facts &
-No &
-No &
-Inspectable, expert-corrected Datalog diagnostic rules &
-No---program fidelity and final diagnosis accuracy\\
+None &
+Inspectable diagnostic rules &
+No\\
 \hline
 Ours &
 Fixed transcript &
-No &
 Ranked Top-5; Top-3 evaluated &
-Criterion states linked to transcript evidence &
-Yes---candidate detection, retention of the benchmark diagnosis after verification, and primary selection evaluated on the same cases\\
+Criterion states and deterministic rule trace &
+Yes\\
 \hline
 \end{tabular}
 \end{adjustbox}
-\endgroup
 \end{table}
 
-\noindent\textit{Note:} ``Not reported'' indicates that the output or evaluation was not described in the reviewed publication; it does not establish that the underlying implementation lacks the capability.
+\noindent\textit{Note:} ``Partial'' indicates that a study reports intermediate diagnostic or criterion-related outputs but does not separately evaluate candidate detection, criterion verification, and primary selection on the same cases. ``Not reported'' refers only to the published evaluation and does not establish that the implementation lacks the capability.
 
-The comparison shows that prior systems address complementary parts of the diagnostic process. Interactive systems can collect missing information, whereas fixed-input systems permit controlled evaluation under identical evidence. Some methods expose candidate hypotheses or criterion-related outputs, but the reviewed studies do not jointly evaluate candidate detection, criterion verification with retention of the benchmark diagnosis, and primary selection on the same fixed cases. HiED is designed to make these three output views separately measurable rather than to claim superiority across all clinical or conversational capabilities.
+The reviewed studies expose different parts of the diagnostic process, including candidate hypotheses, criterion-related reasoning, and final diagnoses. However, none of the reviewed evaluations jointly measures ranked candidate coverage, retention after criterion verification, and primary selection on the same fixed cases. HiED is designed to make these three output views separately measurable.
 
 \section{Research Gap and Research Questions}
 
