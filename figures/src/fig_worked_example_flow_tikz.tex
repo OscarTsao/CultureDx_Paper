@@ -33,23 +33,24 @@
   arrowlabel/.style={font=\sffamily\fontsize{8.2}{9.2}\selectfont, text=muted, fill=canvas, inner sep=2pt}
 ]
 
-\fill[canvas] (-0.2,-4.15) rectangle (20.1,4.15);
+\fill[canvas] (-0.2,-4.15) rectangle (20.1,4.75);
 
-\node[stage] at (2.15,3.72) {TRANSCRIPT EVIDENCE};
-\node[stage] at (6.55,3.72) {RANKED DIFFERENTIAL};
-\node[stage] at (11.15,3.72) {CRITERION VERIFICATION};
-\node[stage] at (15.05,3.72) {COMPATIBLE SET};
-\node[stage] at (18.35,3.72) {FINALIZATION};
+\node[stage] at (2.15,4.30) {TRANSCRIPT};
+\node[stage] at (6.55,4.30) {RANKED DIFFERENTIAL};
+\node[stage] at (11.15,4.30) {CRITERION VERIFICATION};
+\node[stage] at (15.05,4.30) {COMPATIBLE SET};
+\node[stage] at (18.35,4.30) {FINALIZATION};
 
 \node[card, draw=evidencedraw, fill=evidencefill, text=textgray,
       text width=3.75cm, minimum height=5.45cm] (evidence) at (2.15,0)
-{\CardTitle{Observed evidence}\\[3pt]
+{\CardTitle{Selected transcript information}\\[3pt]
+ \textcolor{evidencedraw}{\SmallText{\textbf{Reported information}}}\\[2pt]
  \CardText{\textbullet\ Depressed mood for about two weeks\par
  \textbullet\ Loss of interest\par
  \textbullet\ Early awakening and fatigue\par
  \textbullet\ Poor concentration\par
  \textbullet\ Persistent worry}\\[6pt]
- \textcolor{evidencedraw}{\CardTitle{Unresolved\\evidence}}\\[3pt]
+ \textcolor{evidencedraw}{\CardTitle{Unresolved\\information}}\\[3pt]
  \CardText{\textbullet\ Anxiety duration and chronology\par
  \textbullet\ Motor or autonomic symptoms\par
  \textbullet\ Relation between mood\par
@@ -69,19 +70,19 @@
 \node[card, draw=rejectdraw, fill=rejectfill, text=textgray,
       text width=4.05cm, minimum height=2.65cm] (f411) at (11.15,1.65)
 {\CardTitle{F41.1 verification}\\[3pt]
- \SmallText{\textbf{Support:} worry, concentration, and sleep disturbance\par
- \textbf{Missing:} six-month duration and broader anxiety features}\\[4pt]
+ \SmallText{\textbf{Supporting information:}\par worry, concentration, and sleep disturbance\par
+ \textbf{Unresolved information:}\par six-month duration and broader anxiety features}\\[4pt]
  \textcolor{rejectdraw}{\CardText{\textbf{Not retained}}}};
 
 \node[card, draw=acceptdraw, fill=acceptfill, text=textgray,
-      text width=4.05cm, minimum height=2.65cm] (f32) at (11.15,-1.65)
+      text width=4.05cm, minimum height=2.65cm] (f32) at (11.15,-1.90)
 {\CardTitle{F32 verification}\\[3pt]
- \SmallText{\textbf{Support:} mood, anhedonia, duration, fatigue, poor focus, and sleep\par
- \textbf{Unresolved:} several associated symptoms}\\[4pt]
+ \SmallText{\textbf{Supporting information:}\par mood, anhedonia, duration, fatigue, poor focus, and sleep\par
+ \textbf{Unresolved information:}\par several associated symptoms}\\[4pt]
  \textcolor{acceptdraw}{\CardText{\textbf{Criterion-compatible}}}};
 
 \node[card, draw=setdraw, fill=setfill, text=textgray,
-      text width=2.45cm, minimum height=1.55cm, align=center] (compatible) at (15.05,-1.65)
+      text width=2.45cm, minimum height=1.55cm, align=center] (compatible) at (15.05,-1.90)
 {\CardTitle{Compatible set}\\[4pt]
  \textcolor{setdraw}{\CardTitle{F32}}};
 
@@ -92,7 +93,7 @@
  \textcolor{dadraw}{\CardTitle{$\rightarrow$ F41.1}}};
 
 \node[card, draw=acceptdraw, fill=acceptfill, text=textgray,
-      text width=3.0cm, minimum height=2.05cm, align=center] (nts) at (18.35,-1.95)
+      text width=3.0cm, minimum height=2.05cm, align=center] (nts) at (18.35,-1.90)
 {\CardTitle{Nominate-then-\\Select}\\[4pt]
  \SmallText{Chooses highest-ranked compatible diagnosis}\\[4pt]
  \textcolor{acceptdraw}{\CardTitle{$\rightarrow$ F32}}};
@@ -103,12 +104,12 @@
 \draw[flow] (f32.east) -- (compatible.west);
 \draw[policyflow] (compatible.east) -- (nts.west);
 
-\draw[policyflow] ($(ranking.north)+(0,0.04)$) -- ++(0,0.55)
+\draw[policyflow] ($(ranking.north)+(0,0.04)$) -- ++(0,1.35)
   -| node[pos=0.62, above=2pt, arrowlabel] {Preserve emitted primary} (da.north);
 
-\node[font=\sffamily\fontsize{8.5}{9.5}\selectfont\bfseries,
-      text=evidencedraw, align=center] at (16.70,0.35)
-{Same upstream evidence,\\different finalization policy};
+\node[font=\sffamily\fontsize{8.1}{9.0}\selectfont\bfseries,
+      text=evidencedraw, text width=5.8cm, align=center] at (16.70,0.10)
+{Same transcript and recorded outputs,\\different finalization policies};
 
 \end{tikzpicture}
 \end{document}

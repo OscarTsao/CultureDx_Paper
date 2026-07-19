@@ -221,7 +221,7 @@ This distinction matters because different errors need different remedies. Missi
 
 This thesis makes two main contributions.
 
-First, it presents an auditable hybrid architecture that combines LLM-based diagnosis, structured criterion-level checking against operationalized ICD-10-informed criteria, and deterministic compatibility rules. The system records criterion states and supporting evidence instead of relying only on a free-form rationale. The trace can be inspected and replayed, but it does not prove that the LLM's hidden reasoning is faithful or that the checker judgments are clinically correct~\citep{turpin2023unfaithful}.
+First, it presents an auditable hybrid architecture that combines LLM-based diagnosis, structured criterion-level checking against operationalized ICD-10-informed criteria, and deterministic compatibility rules. The system records criterion states, checker-generated supporting text, and compatibility-rule outcomes instead of relying only on a free-form rationale. The trace can be inspected and replayed, but it does not prove that the LLM's hidden reasoning is faithful or that the checker judgments are clinically correct~\citep{turpin2023unfaithful}.
 
 Second, it presents a stage-wise failure-localization and empirical evaluation framework that separates candidate detection, criterion verification, and primary selection, quantifies the primary-selection bottleneck, and tests whether criterion-based finalization and several primary-selection methods close the observed gap. The absence of improvement under the evaluated selection interventions narrows several simple explanations under the tested settings, but it does not show that better selectors or additional clinical information can never help.
 
@@ -364,6 +364,7 @@ RQ1 and RQ3 use matched comparisons on the same fixed internal test set, with co
 \label{ch:architecture}
 
 \section{Input and Diagnostic Scope}
+\label{sec:input-diagnostic-scope}
 
 HiED processes one Chinese psychiatric consultation transcript at a time. The input is an ordered sequence of turns, each marked as \texttt{Clinician} or \texttt{Patient}; speaker labels and turn order are preserved in the prompt. Transcripts longer than the available prompt budget are deterministically truncated by retaining complete turns from the beginning and end, with an explicit marker for the omitted middle. The system does not summarize or invent missing text. This is a fixed-input study: the system cannot ask the patient a follow-up question during inference.\ct{Is this about input and transcript format?}
 
@@ -419,68 +420,86 @@ The diagnostician prompt contains four readable parts: the task and the fixed li
 
 \ThesisFigure[1.0\textwidth]{fig_pipeline_round20c.pdf}{HiED components and recorded intermediate artifacts. Colors and border styles distinguish input and final-output elements, LLM-based components, deterministic components, and recorded artifacts. The Diagnostician and Criterion Checker receive the transcript independently; the Checker evaluates all configured categories rather than only the ranked Top-5.}{fig:pipeline-thesis-rewrite}
 
-Retrieved examples are supplied only to the Diagnostician. Finalization receives the ranked output under both policies and the criterion-compatible set under NtS: DA preserves the emitted primary diagnosis and optional comorbidity, whereas NtS produces one re-selected committed primary diagnosis. The recorded ranking, criterion states, compatible set, and committed primary provide the output views used for stage-wise failure localization.
+Retrieved examples are supplied only to the Diagnostician. Finalization receives the ranked output under both policies and the criterion-compatible set under NtS: DA preserves the emitted primary diagnosis and optional comorbidity, whereas NtS produces one re-selected committed primary diagnosis. The recorded ranking, criterion states and supporting text, criterion-compatible set and compatibility-rule trace, and committed primary provide the output views used for stage-wise failure localization.
+
+The retained audit artifacts comprise the emitted diagnosis set, ranked differential, criterion states, checker-generated supporting text, criterion-compatible diagnoses, compatibility-rule trace, finalization source, and execution failures. Because these records are stored separately, a reviewer can inspect the candidate ranking, an individual criterion judgment, an applied compatibility rule, or the final selection. This record follows the definition of auditability in Section~\ref{sec:auditability-definition}: it supports inspection and replay but does not expose the LLM's hidden reasoning, establish clinical correctness, or replace real-patient validation.
 
 In this thesis, an \emph{agent} means an LLM call with a distinct prompt and task. The checker agents run independently; they do not have autonomous memory, planning, or free-form negotiation. HiED is therefore a modular multi-stage LLM orchestration with role-specific agents and deterministic rule aggregation.
 
 \section{Candidate Generation and Retrieval}
 \label{sec:retrieval}
 
-The primary diagnostician configuration uses Qwen3-32B with 4-bit Activation-aware Weight Quantization (AWQ). Its input contains the transcript, the configured diagnostic profile, and optional retrieved examples. Its prompt requests a ranked candidate list containing five ordered diagnoses from that profile, a short reason for each, one primary field chosen from the first three, and at most one separate comorbid field. In clinical prose this is a ranked differential diagnosis; as a formal artifact it is the ranked candidate list. The primary field and the ranked list are stored separately. In the running example, F41.1 can therefore remain in the Top-3 even though F32 is emitted as primary.
+This section describes the two candidate-generation components shown in Figure~\ref{fig:pipeline-thesis-rewrite}: the Similar-Case Retriever and the Diagnostician.
 
-The main diagnostician configuration is a system specification, not an ablation. It uses greedy decoding and does not request a calibrated probability or an abstention decision. Confidence-based sampling, calibration, and selective-output approaches are evaluated only as additional selection analyses or future-work directions.\ct{Is this an ablation study? If so, why in Appendix?}
+\paragraph{Similar-Case Retriever.}
 
-The Similar-Case Retriever adds relevant training examples to the diagnostician prompt. It follows the retrieval-augmented generation pattern~\citep{lewis2020rag}: BGE-M3 is the multilingual text-embedding model used to convert the query transcript and training transcripts into normalized dense vectors~\citep{chen2024bgem3}. FAISS is the vector similarity-search library and index used for retrieval, not a standalone data store~\citep{douze2024faiss}. FAISS inner-product search over normalized vectors corresponds to cosine-similarity ranking. The study evaluates no retrieval, global Top-5 retrieval, and parent-balanced retrieval; the final retrieval setting is selected using the public validation split.
+The Similar-Case Retriever optionally selects training-source cases that are similar to the current transcript and supplies them to the Diagnostician as prompt-side demonstrations, following the retrieval-augmented generation pattern~\citep{lewis2020rag}. The study evaluates three conditions: no retrieval, global Top-5 retrieval, and parent-balanced retrieval. Global Top-5 returns the five most similar eligible cases. Parent-balanced retrieval selects at most one example for each of the eleven configured scoring parents and can therefore return up to eleven examples.
 
-The retrieval classes are fixed by the configured diagnostic profile and are identical for every patient.\ct{Are the candidate classes pre-determined, or patient-specific?} Only the example selected within each class depends on the current transcript. Subtypes that share a parent code, such as F41.0, F41.1, and F41.2, share one retrieval class. Global Top-5 always returns the five nearest eligible index entries. Parent-balanced retrieval attempts to return at most one high-similarity example for each of the eleven scoring parents and can therefore supply up to eleven examples. This policy is intended to reduce domination by frequent classes, but it also changes example count, label composition, ordering, prompt length, and possibly the available transcript budget. Retrieved cases are included only in the Diagnostician prompt; they do not enter checker prompts or directly choose the final output.
+The parent groups used for retrieval are fixed by the configured diagnostic profile rather than generated separately for each patient. Only the selected example within each group depends on the current transcript. Subtypes that share a scoring parent, such as F41.0, F41.1, and F41.2, also share one retrieval group. Parent-balanced retrieval may reduce repeated examples from frequent labels, but it also changes the number, label composition, ordering, and total token length of the demonstrations. The retrieval comparison therefore evaluates complete retrieval configurations rather than isolating balancing as a single causal factor.
 
-The three conditions use the same training-set retrieval index and embedding model. Their comparison therefore evaluates complete retrieval configurations rather than isolating parent balancing as a single causal factor.
+Retrieved cases are provided only to the Diagnostician. They are not included in the Criterion Checker prompts, do not constitute evidence about the current patient, and do not directly determine the committed diagnosis.
+
+\paragraph{Diagnostician.}
+
+The Diagnostician receives the speaker-labeled transcript, the configured diagnostic profile, and any retrieved examples. It produces three separately recorded outputs: a ranked list of five candidate diagnoses, one emitted primary diagnosis selected from the three highest-ranked candidates, and at most one optional comorbid diagnosis. The ranked list represents the model's differential diagnosis, whereas the primary field records the diagnosis that becomes committed under the Direct-Answer policy.
+
+The ranked candidates, emitted primary diagnosis, and optional comorbidity are stored separately. A diagnosis may therefore remain present among the leading candidates even when another diagnosis is emitted as primary. This distinction allows candidate coverage and primary selection to be evaluated independently.
 
 \section{Criterion Verification and Compatibility Aggregation}
 
-Each of the fourteen configured diagnostic categories has a corresponding criterion checker based on the study's operational rule set.\ct{Is this ICD 10?} The rules are linked to ICD-10 disorder descriptions~\citep{who2019icd10}, but several thresholds are simplified study rules. Appendix~\ref{app:configured-profile} lists the diagnostic codes and configured thresholds so readers can distinguish the study implementation from official clinical guidance.
+This section describes the two criterion-processing components shown in Figure~\ref{fig:pipeline-thesis-rewrite}: the Criterion Checker and the Compatibility Auditor.
 
-For each criterion, the checker returns \texttt{met} when the transcript supports the criterion, \texttt{not\_met} when the transcript contains evidence against it, and \texttt{insufficient\_\allowbreak{}evidence} when the available transcript does not resolve it.\ct{What 3 states?} It may also return a short transcript span linked to the judgment. Each configured diagnostic category is checked as an independent task using the transcript and its category-specific operational criteria. Retrieved examples do not enter checker prompts, and checkers do not communicate with one another. All fourteen configured categories are checked for every case, yielding one category-level audit record for each.
+\paragraph{Criterion Checker.}
 
-Missing information is not negative evidence. A criterion is \texttt{not\_met} only when the transcript contains evidence against it; otherwise unresolved evidence remains \texttt{insufficient\_\allowbreak{}evidence}.
+Each of the fourteen configured diagnostic categories has a corresponding Criterion Checker based on the study's operationalized ICD-10-informed criteria~\citep{who2019icd10}. Every checker receives the same speaker-labeled transcript together with the criteria defined for one diagnostic category. Retrieved examples are not included in checker prompts, and the checkers do not communicate with one another.
 
-The Compatibility Auditor is a deterministic rule-based module. For each configured diagnostic category, it reads the Criterion Checker states, applies the predefined compatibility rule, adds the diagnosis to the criterion-compatible set when that rule is satisfied, and retains the rule application in the audit trace. A rule may require all criteria, a minimum number of core and total criteria, a symptom count, or particular criterion groups. The same checker trace always produces the same compatible set. Compatibility with a configured study rule is not primacy and does not mean that the diagnosis is clinically correct or should be primary. Several diagnoses may be designated compatible in the same case.
+For each criterion, the checker assigns one of the three criterion states defined in Section~\ref{sec:input-diagnostic-scope}: \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_\allowbreak{}evidence}. It also returns a short supporting-text field, which may be \texttt{null} when no explicit supporting text is identified. Missing information is not negative evidence: an unresolved criterion remains \texttt{insufficient\_\allowbreak{}evidence} rather than \texttt{not\_met}. All fourteen configured categories are checked for every case, so criterion verification is not limited to diagnoses in the ranked Top-5.
 
-Checker states are model-generated and have not been validated as clinician ground truth. They create an evidence-linked record that can be inspected and replayed, but they do not prove that the criterion judgments or evidence spans are correct.
+\paragraph{Compatibility Auditor.}
+
+The Compatibility Auditor is a deterministic module that converts criterion-level states into diagnosis-level compatibility decisions. For each configured diagnostic category, it applies the predefined operational rule associated with that category. Depending on the diagnosis, a rule may require particular core criteria, a minimum number of total criteria, specified criterion groups, or all listed requirements. A diagnosis is added to the \emph{criterion-compatible set} only when its configured rule is satisfied.
+
+The auditor records the applied rule, the relevant criterion counts, and the resulting compatibility decision in the compatibility-rule trace. Because the aggregation is deterministic, the same checker states always produce the same criterion-compatible set. The complete category-specific rules are listed in Appendix~\ref{app:configured-profile}.
+
+\paragraph{Interpretation boundary.}
+
+Criterion states and supporting text are model-generated and have not been validated as clinician ground truth. The supporting text is retained for inspection but is not guaranteed to be a verbatim or span-aligned extract or a clinically validated evidence annotation. Criterion compatibility is an operational property under the study configuration; it does not establish that a diagnosis is clinically correct, uniquely supported, or the most appropriate primary diagnosis. Several diagnoses may therefore be retained in the criterion-compatible set for the same transcript.
 
 \section{Primary Selection and Finalization}
 
-HiED defines two finalization policies over the same upstream ranked candidates, criterion states, and criterion-compatible set. Direct-Answer (DA) is the default policy and preserves the diagnostician's emitted decision. Nominate-then-Select (NtS) tests whether criterion-derived compatibility can improve the committed primary diagnosis and emits one selected diagnosis.
+This section describes the finalization policies and the Committed Diagnosis output shown in Figure~\ref{fig:pipeline-thesis-rewrite}. Both policies are evaluated from the same recorded Diagnostician and criterion-processing outputs, but they use these outputs differently. Finalization does not introduce an additional LLM call.
 
-Under Direct-Answer (DA), the diagnostician's primary field becomes the committed diagnosis; the first ranked diagnosis is used only when that field is missing. An optional comorbidity is retained when it differs from the primary. Outputs from the Criterion Checker and Compatibility Auditor do not replace the DA committed diagnosis.
+\paragraph{Direct-Answer.}
 
-Nominate-then-Select (NtS) uses criterion compatibility to choose the committed diagnosis. For configured category $d$, its criterion-support ratio is
+Direct-Answer (DA) preserves the Diagnostician's emitted decision. The emitted primary field becomes the committed primary diagnosis; if this field is missing, the first-ranked candidate is used as a fallback. DA also retains at most one optional comorbid diagnosis when it differs from the primary. Criterion Checker states and Compatibility Auditor outputs remain available as audit artifacts but do not overwrite the DA committed diagnosis.
+
+\paragraph{Nominate-then-Select.}
+
+Nominate-then-Select (NtS) is a deterministic alternative that uses the recorded candidate ranking and criterion-compatible set to choose one committed primary diagnosis. For configured diagnostic category $d$, the criterion-support ratio is
 \[
 \operatorname{met\_ratio}(d)=\min\!\left(1,\frac{\text{number of \texttt{met} criteria for }d}{\text{required criterion count for }d}\right).
 \]
-The denominator is the required count stored in the configured rule, not the total number of listed criteria. NtS first selects the earliest criterion-compatible diagnosis in the five-diagnosis ranking. If none of those five is criterion-compatible, it selects another criterion-compatible diagnosis by descending met ratio, with ties resolved by the predefined configured-category order. If no diagnosis is criterion-compatible, it falls back to the first ranked diagnosis.
+The denominator is the minimum satisfying count defined by the configured operational rule rather than the total number of listed criteria. NtS first selects the highest-ranked criterion-compatible diagnosis within the ranked Top-5. If none of the ranked candidates is criterion-compatible, it selects from the remaining criterion-compatible diagnoses by descending $\operatorname{met\_ratio}$, with ties resolved by the predefined configured-category order. If the criterion-compatible set is empty, NtS falls back to the first-ranked diagnosis.
 
-NtS emits only the re-selected primary. DA and NtS therefore reuse the same ranked candidates and checker traces but differ in both the primary-selection rule and secondary-label emission. The primary analysis consequently uses Top-1 Accuracy. Exact Match and classwise F1 for NtS also reflect its single-label output contract and are not interpreted as isolated effects of primary re-selection. Additional primary-selection methods are defined in Chapter~\ref{ch:experimental} and do not alter the core architecture described here.
+\paragraph{Output contracts.}
 
-The audit artifacts include the predicted diagnosis set, ranked differential, criterion states, short evidence spans, criterion-compatible diagnoses, finalization source, and execution failures. A reviewer can therefore challenge the candidate ranking, an individual criterion judgment, a study rule, or the final selection separately.
-
-This record follows the definition of auditability in Section~\ref{sec:auditability-definition}. It makes the system easier to inspect, but it does not expose the LLM's hidden reasoning, prove clinical correctness, or replace real-patient validation.
+DA produces one committed primary diagnosis and may retain one optional comorbid diagnosis. NtS produces one re-selected committed primary diagnosis and does not emit a comorbid diagnosis. Thus, the two policies differ in both their primary-selection rule and final output cardinality. Additional primary-selection methods are defined in Chapter~\ref{ch:experimental} and do not alter the core architecture described here.
 
 \section{Worked Example}
 \label{sec:running-example}
 
-A short worked example shows how the same upstream artifacts can produce different committed primary diagnoses under the two finalization policies. The example is schema-faithful and rule-faithful, but it is neither a patient record nor an exported model trace.
+This constructed example illustrates how the Diagnostician, Criterion Checker, Compatibility Auditor, and finalization policies shown in Figure~\ref{fig:pipeline-thesis-rewrite} operate on one transcript. The example follows the system's output schema and configured compatibility rules, but it is neither a patient record nor an exported model trace.
 
 \begin{quote}
 \small
-The patient reports approximately two weeks of depressed mood, loss of interest, early awakening, fatigue, and poor concentration. Persistent worry is also described, but its duration and onset relative to the low mood remain unclear. Motor tension, autonomic symptoms, and the relationship between the mood and anxiety syndromes are not established. Manic symptoms and suicidal thoughts are denied.
+The patient reports approximately two weeks of depressed mood, loss of interest, early awakening, fatigue, and poor concentration. Persistent worry is also described, but its duration and onset relative to the low mood remain unclear. Motor tension, autonomic symptoms, and the relationship between the mood and anxiety presentations are not established. Manic symptoms and suicidal thoughts are denied.
 \end{quote}
 
-\ThesisFigure[1.0\textwidth]{fig_worked_example_flow.pdf}{Worked example of ranking, criterion verification, and primary selection. Direct-Answer preserves the Diagnostician's emitted primary diagnosis, whereas Nominate-then-Select chooses the highest-ranked diagnosis in the criterion-compatible set. Both policies use the same upstream evidence. The example illustrates the system contract and does not constitute clinical review of the preferred diagnosis.}{fig:worked-example-flow}
+\ThesisFigure[1.0\textwidth]{fig_worked_example_flow.pdf}{Worked example of the recorded outputs produced by the Diagnostician, Criterion Checker, Compatibility Auditor, and finalization policies. Direct-Answer preserves the Diagnostician's emitted primary diagnosis, whereas Nominate-then-Select chooses the highest-ranked diagnosis in the criterion-compatible set. Both policies operate on the same recorded upstream outputs. The example illustrates the system contract and does not establish which diagnosis is clinically preferable.}{fig:worked-example-flow}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
-\caption{Criterion-verification summary for the worked example.}
+\caption{Selected ranking and criterion-verification outputs in the constructed example.}
 \label{tab:running-example}
 \small
 \begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.2cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
@@ -488,18 +507,20 @@ The patient reports approximately two weeks of depressed mood, loss of interest,
 \textbf{Output} & \textbf{F41.1 Generalized anxiety disorder} & \textbf{F32 Depressive episode}\\
 \midrule
 Diagnostician rank & 1 & 2\\
-Main supporting evidence & Worry, concentration difficulty, and sleep disturbance & Depressed mood, anhedonia, two-week duration, fatigue, concentration difficulty, and sleep disturbance\\
-Main unresolved evidence & Six-month duration and broader anxiety features & Several additional associated symptoms are not discussed\\
+Relevant transcript information & Persistent worry, concentration difficulty, and sleep disturbance & Depressed mood, loss of interest, two-week duration, fatigue, concentration difficulty, and early awakening\\
+Main unresolved information & Six-month duration and broader anxiety features & Several additional associated symptoms are not discussed\\
 Criterion-verification result & \textbf{Not retained} & \textbf{Criterion-compatible}\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-Figure~\ref{fig:worked-example-flow} makes the policy divergence explicit. The Diagnostician ranks F41.1 first and F32 second. Criterion verification retains F32 but not F41.1 because key anxiety-duration and associated-feature evidence remains unresolved. DA preserves the emitted F41.1 primary, whereas NtS selects F32 as the highest-ranked criterion-compatible diagnosis. These outputs illustrate the policy contracts, not a claim that F32 is the clinically correct primary diagnosis.
+The Diagnostician ranks F41.1 first and emits it as the primary diagnosis, while F32 remains second in the ranked differential. The Criterion Checker records unresolved duration and associated-feature information for F41.1, whereas the configured F32 rule is satisfied. The Compatibility Auditor therefore retains F32 but not F41.1 in the criterion-compatible set. DA preserves the emitted F41.1 primary diagnosis, whereas NtS selects F32 as the highest-ranked compatible diagnosis. This divergence demonstrates the difference between the Diagnostician's emitted decision and criterion-based re-selection; it does not show that F32 is the clinically correct primary diagnosis.
 
 \section{Implementation Configuration}
 
-The main system uses Qwen3-32B with 4-bit Activation-aware Weight Quantization (AWQ). AWQ reduces model-memory requirements and allows the 32-billion-parameter backbone to be served locally without changing the prompt, diagnostic scope, or finalization logic. No main-system component fine-tunes model weights. vLLM is the inference and serving backend for loading the model and generating outputs; it is not a diagnostic component and does not alter prompts, criteria, rules, or finalization. The system uses greedy decoding, an 8,192-token context window, a 1,536-token output cap, structured JSON output, guided decoding where supported, schema validation, and checker-output recovery for duplicate or invalid criterion items.
+The Diagnostician and Criterion Checker calls use Qwen3-32B with 4-bit Activation-aware Weight Quantization (AWQ). AWQ reduces model-memory requirements and allows the 32-billion-parameter backbone to be served locally without changing the prompt, diagnostic scope, or finalization logic. No main-system component fine-tunes model weights. vLLM is the inference and serving backend for loading the model and generating outputs; it is not a diagnostic component and does not alter prompts, criteria, rules, or finalization. The system uses greedy decoding, an 8,192-token context window, a 1,536-token output cap, structured JSON output, guided decoding where supported, schema validation, and checker-output recovery for duplicate or invalid criterion items.
+
+Retrieval uses BGE-M3 to encode the query transcript and eligible training transcripts as normalized dense vectors~\citep{chen2024bgem3}. FAISS provides the vector index and inner-product search~\citep{douze2024faiss}; because the vectors are normalized, this ranking is equivalent to cosine-similarity ranking.
 
 Runs are checked for case count, valid outputs, parse failures, ranked-output availability, and candidate validity. A checker-output recovery occurs when an LLM response can be parsed but contains duplicate or invalid criterion items. The parser removes those items and retains the valid criterion records. This is a structured-output schema-adherence warning rather than a hard parse failure.
 
@@ -627,6 +648,8 @@ TF--IDF + logistic regression obtains its Top-3 from ranked class scores. HiED o
 
 Because a case may contain more than one gold label, Top-$k$ Accuracy counts a case as correct when at least one gold label appears among the first $k$ predictions. Exact Match, also called subset accuracy, requires the complete predicted label set to equal the complete gold-label set. These are benchmark-agreement measures, not independent measures of the patient's true clinical diagnosis.
 
+DA may emit a committed primary diagnosis and one optional comorbid diagnosis, whereas NtS emits one committed primary diagnosis. Their Top-1 comparison therefore evaluates the committed primary directly, but differences in Exact Match, Macro-F1, or Weighted-F1 also reflect output cardinality and cannot be interpreted as isolated effects of primary re-selection.
+
 \begin{table}[htbp]
 \centering
 \caption{Metric contract for the main output views.}
@@ -746,7 +769,7 @@ The primary review population is sampled from checker-eligible internal cases sa
 
 Reviewers first receive only the transcript and configured diagnostic scope. Gold labels, system outputs, the $D_3$--$R$--$S$ pattern, and other reviewers' judgments remain concealed while reviewers record a preferred primary diagnosis, plausible alternatives, unique-primary determinability, and missing information. These ratings are locked before system outputs are shown.
 
-Reviewers then inspect the ranked differential, criterion states, evidence spans, criterion-compatible candidates, and committed primary while the gold label remains concealed. After these ratings are locked, the gold label is revealed and reviewers classify the disagreement as a primary-selection error, insufficient transcript information, multiple plausible diagnoses, gold-label ambiguity, criterion-verification error, diagnostic-scope limitation, or unresolved.
+Reviewers then inspect the ranked differential, criterion states, checker-generated supporting text, criterion-compatible candidates, and committed primary while the gold label remains concealed. After these ratings are locked, the gold label is revealed and reviewers classify the disagreement as a primary-selection error, insufficient transcript information, multiple plausible diagnoses, gold-label ambiguity, criterion-verification error, diagnostic-scope limitation, or unresolved.
 
 The primary outcome is the proportion of reviewed ranked-and-retained nonselection cases for which the prespecified psychiatrist-consensus rule identifies a gold diagnosis as the preferred primary:
 \[
@@ -1260,7 +1283,7 @@ Primary-selection failure & F32 & F20, F32, F41 & F20, F32, F39, F41, F43 & F20 
 \end{adjustbox}
 \end{table}
 
-In offline research, gold labels permit tracing whether a diagnosis was in scope, ranked, retained, and selected. Without a revealed gold label, a reviewer can inspect the committed primary, leading alternatives, evidence spans, unresolved discriminative criteria, and finalization source. The trace may help formulate follow-up questions, but it does not determine the clinically correct diagnosis.
+In offline research, gold labels permit tracing whether a diagnosis was in scope, ranked, retained, and selected. Without a revealed gold label, a reviewer can inspect the committed primary, leading alternatives, checker-generated supporting text, unresolved discriminative criteria, and finalization source. The trace may help formulate follow-up questions, but it does not determine the clinically correct diagnosis.
 
 \section{Psychiatrist Case-Review Results}
 \label{sec:psychiatrist-review-results}
@@ -1334,7 +1357,7 @@ At the time of this manuscript revision, the study is ongoing. Partial judgments
 
 \paragraph{System-design implications.}
 
-Audit and selection should remain conceptually separate. HiED records ranked candidates, criterion states, linked evidence, criterion-compatible diagnoses, and finalization source. These artifacts make disagreements inspectable, but they neither reveal hidden reasoning nor establish clinical correctness. The demonstrated contribution is analytical traceability.
+Audit and selection should remain conceptually separate. HiED records ranked candidates, criterion states, checker-generated supporting text, criterion-compatible diagnoses, compatibility-rule traces, and finalization source. These artifacts make disagreements inspectable, but they neither reveal hidden reasoning nor establish clinical correctness. The demonstrated contribution is analytical traceability.
 
 Future selectors require comparative evidence rather than another independent compatibility score. Structured-knowledge systems such as MedKGI and DKEC motivate relations among symptoms, diagnoses, temporal course, exclusions, and missing information~\citep{wang2025medkgi,ge2024dkec}. A diagnostic graph could represent support, contradiction, causal direction, explanatory dependence, and comorbidity, then compare which candidate explains the overall presentation with fewer unresolved conflicts. This direction remains unevaluated.
 
@@ -1415,7 +1438,7 @@ HiED's contribution is therefore not state-of-the-art benchmark accuracy, but an
 This section summarizes how the final experiments answer the five research questions introduced in Chapter~\ref{ch:related}. Each answer is limited to benchmark performance on synthetic Chinese psychiatric transcripts and should not be interpreted as evidence of clinical effectiveness.
 
 \begin{description}[style=nextline,leftmargin=3cm,labelwidth=2.5cm]
-\item[RQ1] Under the matched internal evaluation contract, HiED did not outperform the strongest same-split baseline: TF--IDF + logistic regression achieved higher Top-1 Accuracy. This result shows that the synthetic LingxiDiag transcripts contain strong corpus-local lexical signals, but it should not be interpreted as evidence that the lexical classifier provides more transferable or clinically valid diagnostic reasoning. Its performance degraded substantially in the cross-corpus transfer experiments. HiED instead provides a ranked differential, criterion-linked evidence records, and explicit finalization artifacts, enabling candidate detection, criterion verification, and primary selection to be evaluated separately.
+\item[RQ1] Under the matched internal evaluation contract, HiED did not outperform the strongest same-split baseline: TF--IDF + logistic regression achieved higher Top-1 Accuracy. This result shows that the synthetic LingxiDiag transcripts contain strong corpus-local lexical signals, but it should not be interpreted as evidence that the lexical classifier provides more transferable or clinically valid diagnostic reasoning. Its performance degraded substantially in the cross-corpus transfer experiments. HiED instead provides a ranked differential, criterion states with checker-generated supporting text, and explicit finalization artifacts, enabling candidate detection, criterion verification, and primary selection to be evaluated separately.
 
 \item[RQ2] The largest observed discrepancy lies at primary selection after candidate detection and criterion verification. Gold diagnoses were frequently present in the genuine ranked output and retained under the configured compatibility rules, yet another diagnosis was selected as the committed primary. This supports a primary-selection bottleneck in HiED under the benchmark protocol, but it does not establish the clinically correct primary diagnosis or a universal causal bottleneck in transcript-based diagnosis.
 
