@@ -55,14 +55,23 @@
   <text x="400" y="740" text-anchor="middle" class="detail">RQ5: Model scale, MDD-5k, diagnostic scope,</text>
   <text x="400" y="772" text-anchor="middle" class="detail">and cross-corpus transfer</text>
 
-  <path d="M740 377 H910" class="review-link"/>
-  <rect x="747" y="323" width="156" height="43" fill="#ffffff"/>
-  <text x="825" y="340" text-anchor="middle" class="connector-label">Selected disagreement</text>
-  <text x="825" y="359" text-anchor="middle" class="connector-label">cases</text>
+  <path d="M740 377 H890" class="review-link"/>
+  <rect x="748" y="323" width="135" height="43" fill="#ffffff"/>
+  <text x="815" y="340" text-anchor="middle" class="connector-label">Separate cohorts</text>
+  <text x="815" y="359" text-anchor="middle" class="connector-label">Separate outcomes</text>
 
-  <rect x="910" y="270" width="430" height="215" rx="7" fill="#f7f8fa" stroke="#52606d" stroke-width="2.5" stroke-dasharray="10 7"/>
-  <text x="1125" y="308" text-anchor="middle" class="study">ONGOING COMPLEMENTARY STUDY</text>
-  <text x="1125" y="352" text-anchor="middle" class="heading">Psychiatrist case review</text>
-  <text x="1125" y="397" text-anchor="middle" class="detail">Clinical interpretation of selected</text>
-  <text x="1125" y="429" text-anchor="middle" class="detail">benchmark disagreement cases</text>
+  <rect x="890" y="235" width="450" height="540" rx="7" fill="#f7f8fa" stroke="#52606d" stroke-width="2.5" stroke-dasharray="10 7"/>
+  <text x="1115" y="272" text-anchor="middle" class="study">COMPLEMENTARY CLINICAL EVALUATION</text>
+
+  <rect x="920" y="300" width="390" height="190" rx="6" fill="#eef4f7" stroke="#697784" stroke-width="1.8"/>
+  <text x="1115" y="340" text-anchor="middle" class="heading">LingxiDiag pilot</text>
+  <text x="1115" y="379" text-anchor="middle" class="detail">20 synthetic disagreement cases</text>
+  <text x="1115" y="411" text-anchor="middle" class="detail">Pilot expert characterization</text>
+  <text x="1115" y="454" text-anchor="middle" class="study">ONGOING</text>
+
+  <rect x="920" y="525" width="390" height="190" rx="6" fill="#f2f3f8" stroke="#697784" stroke-width="1.8"/>
+  <text x="1115" y="565" text-anchor="middle" class="heading">CGMH validation</text>
+  <text x="1115" y="604" text-anchor="middle" class="detail">Prespecified real-world cohort</text>
+  <text x="1115" y="636" text-anchor="middle" class="detail">System-physician agreement</text>
+  <text x="1115" y="679" text-anchor="middle" class="study">ONGOING</text>
 </svg>
