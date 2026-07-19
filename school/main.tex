@@ -744,7 +744,7 @@ Figure~\ref{fig:evidence-sequence} summarizes this evaluation sequence. The ongo
 This section defines the first evaluation block shown in Figure~\ref{fig:evidence-sequence}. The same-split system comparison addresses RQ1, while the matched retrieval comparison addresses RQ3. Both analyses use the parent-label projection and evaluation measures defined in Chapter~\ref{ch:data}.
 
 \paragraph{Same-split benchmark comparison (RQ1).}
-The main held-out comparison includes Majority, TF--IDF + LR, Single without retrieval, the validation-selected Single configuration, HiED--DA, and HiED--NtS. All methods are evaluated on the same fixed 1,000-case internal set using the same parent-label projection and scoring implementation. Top-1 Accuracy is the primary predictive endpoint. Genuine Top-3 and multilabel measures are reported only when the corresponding output view is available.
+The main held-out comparison includes Majority, TF--IDF + LR, the validation-selected Single configuration, and the validation-selected HiED--DA configuration. All methods are evaluated on the same fixed 1,000-case internal set using the same parent-label projection and scoring implementation. Top-1 Accuracy is the primary predictive endpoint. Genuine Top-3 and multilabel measures are reported only when the corresponding output view is available.
 
 The Majority baseline always predicts the most frequent scoring parent in the training source. TF--IDF + LR is trained on the 13,000 training-source cases using character-boundary 1--2-grams, at most 10,000 features, \texttt{min\_df=2}, \texttt{max\_df=0.95}, and sublinear term frequency. Twelve one-vs-rest logistic-regression classifiers use $C=1.0$, the L-BFGS solver, balanced class weights, and a 2,000-iteration limit; their probabilities define the ranking and thresholded multilabel prediction. Single uses one diagnostic LLM call and emits a primary diagnosis with at most one optional secondary diagnosis; because it does not produce a genuine ranked differential, Top-3 is not assigned.
 
@@ -837,17 +837,17 @@ Together, these designs distinguish benchmark positioning, stage-wise localizati
 
 This chapter first establishes the predictive position of HiED on the internal evaluation set, then localizes disagreements across candidate detection, criterion verification, and primary selection. Retrieval, primary-selection strategies, model scale, and diagnostic confusions are examined afterward as alternative explanations and supporting analyses.
 
-\section{Configuration Selection and Main Internal Performance}
+\section{Benchmark Positioning and Main Internal Performance}
 \label{sec:validation-retrieval-selection}
 \label{sec:matched-baselines-retrieval}
 
-This section reports the same-split benchmark comparison used to answer RQ1.
+This section addresses RQ1 in two steps. First, the validation-selected thesis configurations are positioned against representative results from the original LingxiDiagBench static evaluation. Second, the selected complete systems are compared on the same fixed internal held-out set. The full three-way retrieval comparison used for configuration selection is reported separately in Section~\ref{sec:retrieval-results}; the validation rows shown here identify only the configurations carried forward to the main evaluation.
 
-Table~\ref{tab:validation-configuration-matrix} reports all applicable metrics for the retained public-validation configurations together with three representative results from the original LingxiDiagBench static evaluation. The Single rows do not report Top-3 because Single does not emit a genuine ordered differential. The published rows provide benchmark context rather than matched comparisons.
+Table~\ref{tab:validation-configuration-matrix} presents the selected Single and HiED--DA validation configurations together with representative published LingxiDiagBench results. Global Top-5 was selected for Single because it achieved the strongest validation values across all endpoints defined for the Single output contract. Parent-balanced retrieval was retained for HiED--DA under the predefined promotion rule: it achieved higher validation Top-3 Accuracy, Macro-F1, and Weighted-F1, whereas global Top-5 was higher in Top-1 Accuracy and Exact Match. The complete validation evidence and the corresponding held-out sensitivity results are reported in Table~\ref{tab:retrieval-results}.
 
 \begin{table}[H]
 \centering
-\caption{Public-validation configuration results and published LingxiDiagBench context for the 12-category diagnostic task. Published rows are included for descriptive context only because their prompts, inference procedures, and output contracts differ from those used in this thesis~\citep{xu2026lingxidiagbench}.}
+\caption{Validation-selected thesis configurations and published LingxiDiagBench context for the 12-category diagnostic task. Published rows are included for descriptive context only because their prompts, inference procedures, output contracts, and scoring implementations differ from those used in this thesis~\citep{xu2026lingxidiagbench}.}
 \label{tab:validation-configuration-matrix}
 \small
 \begin{adjustbox}{max width=\textwidth}
@@ -855,14 +855,9 @@ Table~\ref{tab:validation-configuration-matrix} reports all applicable metrics f
 \hline
 Method & Retrieval or source & Top-1 & Top-3 & Exact Match & Macro-F1 & Weighted-F1\\
 \hline
-\multicolumn{7}{|c|}{\textbf{Thesis validation configurations}}\\
+\multicolumn{7}{|c|}{\textbf{Validation-selected thesis configurations}}\\
 \hline
-Single & None & 0.466 & --- & 0.016 & 0.174 & 0.429\\
-Single & Global Top-5 & 0.519 & --- & 0.030 & 0.209 & 0.456\\
-Single & Parent-balanced & 0.507 & --- & 0.016 & 0.195 & 0.437\\
-\hline
-HiED--DA & None & 0.509 & 0.792 & 0.456 & 0.173 & 0.428\\
-HiED--DA & Global Top-5 & 0.525 & 0.797 & 0.432 & 0.178 & 0.435\\
+Single & Global Top-5 & 0.519 & N/A & 0.030 & 0.209 & 0.456\\
 HiED--DA & Parent-balanced & 0.523 & 0.800 & 0.428 & 0.181 & 0.440\\
 \hline
 \multicolumn{7}{|c|}{\textbf{Published LingxiDiagBench static results}}\\
@@ -873,73 +868,117 @@ Qwen3-32B & Published benchmark & 0.470 & 0.566 & 0.241 & 0.188 & 0.431\\
 \hline
 \end{tabular}
 \end{adjustbox}
-\parbox{0.96\textwidth}{\footnotesize \textit{Note:} Dashes in the Single Top-3 cells denote an undefined output view. The published rows use the original benchmark prompts and evaluation pipeline and are not treated as matched system comparisons. Their reported 12-category accuracy is shown as Exact Match because it requires agreement with the complete gold-label set under the original multilabel evaluator.}
+\parbox{0.96\textwidth}{\footnotesize
+\textit{Note:} N/A denotes an output view that is not defined for the configuration. Single produces a committed primary diagnosis and optional comorbid diagnoses but does not produce an ordered differential. The published rows retain the original LingxiDiagBench metric contract and are not used for direct statistical comparison with the thesis configurations.
+}
 \end{table}
 
-Global Top-5 improves every native reported endpoint for Single relative to parent-balanced retrieval and is used as the primary Single configuration. For HiED--DA, both retrieval configurations exceed no retrieval in Top-1, Top-3, Macro-F1, and Weighted-F1, whereas no retrieval has the highest Exact Match. Global Top-5 improves Top-1 Accuracy and Exact Match relative to parent-balanced retrieval, but reduces genuine Top-3 Accuracy, Macro-F1, and Weighted-F1. It therefore improves only two of the five predefined promotion metrics and does not satisfy the promotion rule; parent-balanced retrieval remains the primary HiED configuration. The global-versus-parent-balanced HiED Top-1 difference is 0.002 (95\% CI [$-0.013$, 0.017]), so the interval includes zero. Detailed discordant counts and the exact test are reported in Appendix~\ref{app:supporting}, Table~\ref{tab:internal-paired-tests}.
+The published LingxiDiagBench rows provide descriptive benchmark context rather than matched baselines. In particular, the published Qwen3-32B result provides same-backbone context for the primary HiED configuration, but it was obtained using a different prompt, inference procedure, output contract, retrieval setting, and evaluation pipeline. No direct statistical comparison is therefore made between the published rows and the thesis configurations. Single Top-3 is not reported because its optional comorbid outputs are not elicited as an ordered differential diagnosis list.
 
-The published rows provide benchmark context rather than matched baselines. Under the original LingxiDiagBench evaluation contract, TF--IDF + LR achieved the strongest Top-3 and label-level F1 results among these representative rows, whereas GPT-5-Mini achieved the highest 12-category Exact Match. Qwen3-32B provides context for the backbone used in the primary HiED configuration. No direct statistical comparison is made because the published systems use different prompts, output structures, retrieval conditions, and scoring procedures. The published results nevertheless show that ranked candidate coverage exceeded primary prediction in the source benchmark; the present thesis extends that observation by separating candidate detection, criterion verification, and primary selection.
-
-Table~\ref{tab:matched-baselines-retrieval} reports the main comparison on the held-out internal cases.
+Table~\ref{tab:matched-baselines-retrieval} reports the main same-split comparison on the fixed 1,000-case internal test set. Each thesis system uses the retrieval configuration selected independently for that architecture on the public-validation split: global Top-5 for Single and parent-balanced retrieval for HiED--DA. The comparison therefore evaluates complete validation-selected systems rather than a retrieval-matched architecture ablation. Matched comparisons under no retrieval, global Top-5 retrieval, and parent-balanced retrieval are presented separately in Table~\ref{tab:retrieval-results}.
 
 \begin{table}[H]
 \centering
-\caption{Main same-split system comparison on the fixed 1,000-case internal test set. Single and HiED use retrieval configurations selected separately on the public validation split. Top-3 is reported only for systems with a genuine ranked output.}
+\caption{Main same-split comparison on the fixed 1,000-case internal test set using independently validation-selected configurations. Top-1 Accuracy is the common primary endpoint. Top-3 is omitted because an ordered differential is not defined for every configuration.}
 \label{tab:matched-baselines-retrieval}
-\scriptsize
+\small
 \begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{|l|l|p{4.0cm}|c|c|c|c|c|}
+\begin{tabular}{|l|l|>{\raggedright\arraybackslash}p{4.2cm}|c|c|c|c|}
 \hline
-System & Retrieval & Finalization or output contract & Top-1 & Top-3 & Exact Match & Macro-F1 & Weighted-F1\\
+System & Retrieval & Output role & Top-1 & Exact Match & Macro-F1 & Weighted-F1\\
 \hline
-Majority & None & Single label & 0.398 & --- & 0.327 & 0.047 & 0.207\\
+Majority & None & Frequency baseline with one emitted label & 0.398 & 0.327 & 0.047 & 0.207\\
 \hline
-TF--IDF + LR & None & Ranked classifier output & 0.632 & 0.923 & 0.321 & 0.393 & 0.601\\
+TF--IDF + LR & None & Same-split lexical classifier & 0.632 & 0.321 & 0.393 & 0.601\\
 \hline
-Single & Global Top-5 & Primary and optional secondary & 0.517 & --- & 0.029 & 0.224 & 0.447\\
+Single & Global Top-5 & Validation-selected single-call LLM baseline & 0.517 & 0.029 & 0.224 & 0.447\\
 \hline
-HiED--DA & Parent-balanced & Ranked output and audit trace & 0.518 & 0.802 & 0.409 & 0.178 & 0.434\\
-\hline
-HiED--NtS$^{\dagger}$ & Parent-balanced & Single-label re-selection & 0.490 & 0.802 & 0.437 & 0.181 & 0.408\\
+HiED--DA & Parent-balanced & Validation-selected proposed system & 0.518 & 0.409 & 0.178 & 0.434\\
 \hline
 \end{tabular}
 \end{adjustbox}
-\parbox{0.96\textwidth}{\footnotesize $^{\dagger}$NtS differs from DA in finalization and emitted-set cardinality. It is included for system-level context but is not treated as a component-matched architecture comparison.}
+\parbox{0.96\textwidth}{\footnotesize
+\textit{Note:} All rows use the same internal test cases, parent-label projection, and scoring implementation. The systems nevertheless differ in training procedure, retrieval exposure, number of model calls, and output contract. Exact Match and label-level F1 values are affected by emitted-set cardinality and should not be interpreted as isolated effects of the multi-agent architecture.
+}
 \end{table}
 
-All rows use the same cases, parent-label projection, and scoring implementation, but differ in training procedure, model calls, retrieval exposure, and output contract. TF--IDF + logistic regression is the strongest same-split predictor. The Top-1 difference for HiED--DA relative to TF--IDF is $-0.114$ (95\% CI [$-0.150$, $-0.079$]). HiED is therefore not an accuracy-leading system on this benchmark; its additional empirical value lies in the ranked differential, criterion-level audit, and stage-wise observability. Detailed paired-test results are reported in Appendix~\ref{app:supporting}, Table~\ref{tab:internal-paired-tests}.
+Top-1 Accuracy is the common primary endpoint because every evaluated system produces a committed primary diagnosis. Exact Match, Macro-F1, and Weighted-F1 are also reported, but these measures depend on the emitted label set and should not be interpreted as isolated effects of the multi-agent architecture. HiED-specific Top-3 coverage is examined later as part of the stage-wise analysis rather than as a direct comparison with Single.
 
-The lexical result also counters an exclusively missing-information explanation: transcript surface regularities recover some benchmark labels more effectively than the evaluated LLM pipeline. Synthetic generation may create lexical shortcuts, so this same-split result does not establish clinical or cross-corpus superiority. It does show that residual HiED errors alone cannot establish that the transcripts contain no usable primary-diagnosis signal.
+TF--IDF + logistic regression achieves the strongest same-split Top-1 result. Single and HiED--DA produce nearly identical committed Top-1 point estimates, despite using the retrieval configurations selected separately for their respective architectures. HiED is therefore not an accuracy-leading system on this benchmark. Its additional empirical value lies in its explicit ranked differential, criterion-level audit outputs, and the ability to localize disagreement across candidate detection, criterion verification, and primary selection. Detailed paired comparisons are reported in Appendix~\ref{app:supporting}.
 
 \section{Retrieval Results}
 \label{sec:retrieval-results}
 
-This section reports the matched retrieval comparisons used to answer RQ3.
+This section reports the within-architecture retrieval comparisons used to answer RQ3. Three retrieval conditions are evaluated separately for Single and HiED--DA: no retrieval, global Top-5 retrieval, and parent-balanced retrieval. Within each architecture, the model, prompt family, decoding settings, configured diagnostic scope, and output contract remain fixed. The comparison therefore examines complete retrieval configurations rather than differences between the Single and HiED architectures.
 
-\begin{table}[htbp]
+Table~\ref{tab:retrieval-results} presents results on both the public-validation and fixed internal test splits. Retrieval selection was performed independently within each architecture using only the public-validation results. The selected configurations were then fixed before evaluation on the held-out test set. Accordingly, the test rows are post-selection evaluations and are not used to revise the selected configurations.
+
+Single and HiED--DA are presented in separate panels because their output contracts differ. Single produces a committed primary diagnosis and optional comorbid diagnoses but does not produce an ordered differential; Top-3 is therefore not defined for Single. HiED--DA records an explicitly ranked differential before committing to its final primary diagnosis, allowing both committed Top-1 and genuine Top-3 candidate coverage to be evaluated.
+
+\begin{table}[H]
 \centering
-\caption{Retrieval-strategy results on the fixed internal test set. Single has no genuine ranked output, so Top-3 is not reported. The table presents test-set ablations and does not alter the validation-selected main configurations.}
+\caption{Retrieval-strategy results on the public-validation and fixed internal test splits. Configurations marked with $\dagger$ were selected using validation results. Test-set results are post-selection evaluations and do not revise the selected configurations.}
 \label{tab:retrieval-results}
+\small
+
+\textbf{Panel A. Single}
+
+\vspace{0.3em}
+
 \begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{|l|l|c|c|c|c|c|}
+\begin{tabular}{|l|l|c|c|c|c|}
 \hline
-Architecture & Retrieval & Top-1 & Top-3 & Exact Match & Macro-F1 & Weighted-F1\\
+Split & Retrieval & Top-1 & Exact Match & Macro-F1 & Weighted-F1\\
 \hline
-Single & None & 0.466 & --- & 0.017 & 0.183 & 0.426\\
-Single & Global Top-5 & 0.517 & --- & 0.029 & 0.224 & 0.447\\
-Single & Parent-balanced & 0.508 & --- & 0.011 & 0.192 & 0.433\\
+Validation & None & 0.466 & 0.016 & 0.174 & 0.429\\
+Validation & Global Top-5$^{\dagger}$ & 0.519 & 0.030 & 0.209 & 0.456\\
+Validation & Parent-balanced & 0.507 & 0.016 & 0.195 & 0.437\\
 \hline
-HiED--DA & None & 0.510 & 0.786 & 0.404 & 0.174 & 0.437\\
-HiED--DA & Global Top-5 & 0.524 & 0.815 & 0.435 & 0.196 & 0.437\\
-HiED--DA & Parent-balanced & 0.518 & 0.802 & 0.409 & 0.178 & 0.434\\
+Test & None & 0.466 & 0.017 & 0.183 & 0.426\\
+Test & Global Top-5$^{\dagger}$ & 0.517 & 0.029 & 0.224 & 0.447\\
+Test & Parent-balanced & 0.508 & 0.011 & 0.192 & 0.433\\
 \hline
 \end{tabular}
 \end{adjustbox}
+
+\vspace{0.8em}
+
+\textbf{Panel B. HiED--DA}
+
+\vspace{0.3em}
+
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{|l|l|c|c|c|c|c|}
+\hline
+Split & Retrieval & Top-1 & Top-3 & Exact Match & Macro-F1 & Weighted-F1\\
+\hline
+Validation & None & 0.509 & 0.792 & 0.456 & 0.173 & 0.428\\
+Validation & Global Top-5 & 0.525 & 0.797 & 0.432 & 0.178 & 0.435\\
+Validation & Parent-balanced$^{\dagger}$ & 0.523 & 0.800 & 0.428 & 0.181 & 0.440\\
+\hline
+Test & None & 0.510 & 0.786 & 0.404 & 0.174 & 0.437\\
+Test & Global Top-5 & 0.524 & 0.815 & 0.435 & 0.196 & 0.437\\
+Test & Parent-balanced$^{\dagger}$ & 0.518 & 0.802 & 0.409 & 0.178 & 0.434\\
+\hline
+\end{tabular}
+\end{adjustbox}
+
+\parbox{0.96\textwidth}{\footnotesize
+\textit{Note:} Single does not produce a genuine ordered differential, so Top-3 is not defined in Panel A. Selection was performed separately within each architecture using only the public-validation split. Global Top-5 and parent-balanced retrieval differ in retrieved-example count, composition, ordering, and prompt length; the comparisons therefore evaluate complete retrieval configurations rather than the isolated effect of label balancing.
+}
 \end{table}
 
-Global Top-5 produces the strongest test-set point estimates for Single. Both retrieval conditions improve Single Top-1 over no retrieval after within-family Holm adjustment, while global and parent-balanced retrieval do not differ significantly. Global Top-5 remains the selected Single configuration.
+For Single, global Top-5 retrieval achieved the strongest public-validation result across every endpoint defined for the Single output contract. Compared with no retrieval, it increased Top-1 Accuracy from 0.466 to 0.519, Macro-F1 from 0.174 to 0.209, and Weighted-F1 from 0.429 to 0.456. Parent-balanced retrieval also improved several endpoints over no retrieval but remained below global Top-5. Global Top-5 was therefore selected as the primary Single retrieval configuration.
 
-For HiED--DA, global retrieval has the highest Top-1, Top-3, Exact Match, and Macro-F1 point estimates, but none of the paired Top-1 contrasts is statistically supported after adjustment. Parent-balanced retrieval therefore remains the validation-selected main configuration. Because global and parent-balanced retrieval differ in example count, composition, order, and prompt length, this table compares complete retrieval configurations rather than isolating balancing as the cause.
+The same ordering remained visible on the held-out test set. Global Top-5 achieved a Top-1 Accuracy of 0.517, compared with 0.508 for parent-balanced retrieval and 0.466 without retrieval. Both retrieval configurations improved Single Top-1 over no retrieval after within-family Holm adjustment, whereas the global-versus-parent-balanced contrast was not statistically supported. These results indicate that retrieved examples benefited the direct single-call configuration, but they do not establish that global retrieval is consistently superior to parent-balanced retrieval.
+
+For HiED--DA, the public-validation results did not identify one retrieval configuration as uniformly strongest. Global Top-5 achieved higher Top-1 Accuracy and Exact Match than parent-balanced retrieval, whereas parent-balanced retrieval achieved higher genuine Top-3 Accuracy, Macro-F1, and Weighted-F1. Under the predefined promotion rule, global Top-5 improved only two of the five selection metrics and therefore did not replace parent-balanced retrieval. Parent-balanced retrieval was retained as the primary HiED--DA configuration before held-out evaluation.
+
+On the internal test split, global Top-5 produced higher point estimates than parent-balanced retrieval across all five HiED endpoints: Top-1 Accuracy, genuine Top-3 Accuracy, Exact Match, Macro-F1, and Weighted-F1. This validation--test rank reversal is reported as a post-selection sensitivity result and is not used to revise the validation-selected primary configuration. The paired Top-1 contrasts did not provide statistically supported evidence that one HiED retrieval configuration was consistently superior after adjustment.
+
+The retrieval results therefore support three conclusions. First, retrieval improves the Single configuration relative to no retrieval under the tested conditions. Second, the relative ordering of global and parent-balanced retrieval is less stable for HiED, with different configurations favored across validation metrics and test-set point estimates. Third, parent-balanced retrieval should be interpreted as the configuration selected by the predefined validation procedure, not as evidence that label balancing is intrinsically superior.
+
+Global Top-5 and parent-balanced retrieval differ in more than label balance. They also differ in the number, composition, ordering, and total token length of the retrieved examples. The observed differences therefore compare complete retrieval configurations and cannot be attributed solely to parent balancing.
 
 \section{Stage-Wise Failure Analysis}
 \label{sec:stage-wise-failure-results}
