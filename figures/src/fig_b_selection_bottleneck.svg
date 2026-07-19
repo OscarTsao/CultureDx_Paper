@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="560" viewBox="0 0 1000 560">
-  <rect width="1000" height="560" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="525" viewBox="0 0 1000 525">
+  <rect width="1000" height="525" fill="#ffffff"/>
   <style>
     text { font-family: Verdana; fill: #1f2933; }
     .axis { stroke: #52606d; stroke-width: 2; }
@@ -10,48 +10,34 @@
     .small { font-size: 18px; }
   </style>
 
-  <text x="430" y="38" text-anchor="middle" class="label">Candidate coverage and the Top-1 selection gap</text>
-  <line x1="80" y1="455" x2="690" y2="455" class="axis"/>
-  <line x1="80" y1="75" x2="80" y2="455" class="axis"/>
+  <text x="500" y="38" text-anchor="middle" class="label">Candidate coverage and the Top-1 selection gap</text>
+  <line x1="100" y1="455" x2="900" y2="455" class="axis"/>
+  <line x1="100" y1="75" x2="100" y2="455" class="axis"/>
 
-  <line x1="80" y1="379" x2="690" y2="379" class="grid"/>
-  <line x1="80" y1="303" x2="690" y2="303" class="grid"/>
-  <line x1="80" y1="227" x2="690" y2="227" class="grid"/>
-  <line x1="80" y1="151" x2="690" y2="151" class="grid"/>
-  <line x1="80" y1="75" x2="690" y2="75" class="grid"/>
+  <line x1="100" y1="379" x2="900" y2="379" class="grid"/>
+  <line x1="100" y1="303" x2="900" y2="303" class="grid"/>
+  <line x1="100" y1="227" x2="900" y2="227" class="grid"/>
+  <line x1="100" y1="151" x2="900" y2="151" class="grid"/>
+  <line x1="100" y1="75" x2="900" y2="75" class="grid"/>
 
-  <text x="66" y="462" text-anchor="end" class="tick">0.0</text>
-  <text x="66" y="386" text-anchor="end" class="tick">0.2</text>
-  <text x="66" y="310" text-anchor="end" class="tick">0.4</text>
-  <text x="66" y="234" text-anchor="end" class="tick">0.6</text>
-  <text x="66" y="158" text-anchor="end" class="tick">0.8</text>
-  <text x="66" y="82" text-anchor="end" class="tick">1.0</text>
-  <text x="24" y="265" text-anchor="middle" class="small" transform="rotate(-90 24 265)">Fraction of 1,000 cases</text>
+  <text x="86" y="462" text-anchor="end" class="tick">0.0</text>
+  <text x="86" y="386" text-anchor="end" class="tick">0.2</text>
+  <text x="86" y="310" text-anchor="end" class="tick">0.4</text>
+  <text x="86" y="234" text-anchor="end" class="tick">0.6</text>
+  <text x="86" y="158" text-anchor="end" class="tick">0.8</text>
+  <text x="86" y="82" text-anchor="end" class="tick">1.0</text>
+  <text x="34" y="265" text-anchor="middle" class="small" transform="rotate(-90 34 265)">Fraction of 1,000 cases</text>
 
-  <rect x="170" y="258.2" width="150" height="196.8" fill="#3f6f9f"/>
-  <rect x="440" y="150.2" width="150" height="304.8" fill="#5aa6a1"/>
-  <text x="245" y="242" text-anchor="middle" class="value">0.518</text>
-  <text x="515" y="134" text-anchor="middle" class="value">0.802</text>
-  <text x="245" y="490" text-anchor="middle" class="label">Committed Top-1</text>
-  <text x="515" y="490" text-anchor="middle" class="label">Genuine Top-3</text>
+  <rect x="245" y="258.2" width="180" height="196.8" fill="#3f6f9f"/>
+  <rect x="645" y="150.2" width="180" height="304.8" fill="#5aa6a1"/>
+  <text x="335" y="242" text-anchor="middle" class="value">0.518</text>
+  <text x="735" y="134" text-anchor="middle" class="value">0.802</text>
+  <text x="335" y="490" text-anchor="middle" class="label">Committed Top-1</text>
+  <text x="735" y="490" text-anchor="middle" class="label">Genuine Top-3</text>
 
-  <line x1="320" y1="204" x2="440" y2="204" stroke="#b83280" stroke-width="3"/>
-  <line x1="320" y1="196" x2="320" y2="212" stroke="#b83280" stroke-width="3"/>
-  <line x1="440" y1="196" x2="440" y2="212" stroke="#b83280" stroke-width="3"/>
-  <text x="380" y="188" text-anchor="middle" class="value" fill="#8e2464">284 cases</text>
-  <text x="380" y="224" text-anchor="middle" class="small">ranked but not selected</text>
-
-  <rect x="720" y="104" width="250" height="305" rx="6" fill="#f5f7fa" stroke="#829ab1" stroke-width="2"/>
-  <text x="845" y="132" text-anchor="middle" class="label">Supporting oracle</text>
-  <text x="845" y="158" text-anchor="middle" class="label">analysis</text>
-  <text x="845" y="198" text-anchor="middle" class="value">349 cases</text>
-  <text x="845" y="230" text-anchor="middle" class="small">gold label appears in a</text>
-  <text x="845" y="256" text-anchor="middle" class="small">broader supported cluster</text>
-  <text x="845" y="295" text-anchor="middle" class="value">0.867</text>
-  <text x="845" y="324" text-anchor="middle" class="small">optimistic upper bound</text>
-  <line x1="752" y1="343" x2="938" y2="343" stroke="#bcccdc" stroke-width="1"/>
-  <text x="845" y="369" text-anchor="middle" class="small">Gold-informed</text>
-  <text x="845" y="394" text-anchor="middle" class="small">Non-deployable</text>
-
-  <text x="500" y="535" text-anchor="middle" class="small">The oracle uses a broader candidate window and is not a third directly comparable system output.</text>
+  <line x1="425" y1="204" x2="645" y2="204" stroke="#b83280" stroke-width="3"/>
+  <line x1="425" y1="196" x2="425" y2="212" stroke="#b83280" stroke-width="3"/>
+  <line x1="645" y1="196" x2="645" y2="212" stroke="#b83280" stroke-width="3"/>
+  <text x="535" y="188" text-anchor="middle" class="value" fill="#8e2464">284 cases</text>
+  <text x="535" y="224" text-anchor="middle" class="small">ranked but not selected</text>
 </svg>
