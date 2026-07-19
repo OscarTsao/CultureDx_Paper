@@ -2,84 +2,128 @@
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta,calc}
 
-\definecolor{bggray}{RGB}{236,236,236}
-\definecolor{boxgrayfill}{RGB}{228,228,223}
-\definecolor{boxgraydraw}{RGB}{120,120,120}
-\definecolor{retrfill}{RGB}{252,238,238}
-\definecolor{retrdraw}{RGB}{212,76,76}
-\definecolor{diagfill}{RGB}{252,244,226}
-\definecolor{diagdraw}{RGB}{223,150,24}
-\definecolor{checkfill}{RGB}{252,244,226}
-\definecolor{checkdraw}{RGB}{223,150,24}
-\definecolor{logicfill}{RGB}{244,238,252}
-\definecolor{logicdraw}{RGB}{141,83,204}
-\definecolor{commitfill}{RGB}{234,248,244}
-\definecolor{commitdraw}{RGB}{0,122,94}
-\definecolor{auditfill}{RGB}{236,244,253}
-\definecolor{auditdraw}{RGB}{30,114,214}
-\definecolor{textgray}{RGB}{70,70,70}
+\definecolor{bggray}{RGB}{244,244,242}
+\definecolor{iofill}{RGB}{234,248,244}
+\definecolor{iodraw}{RGB}{0,117,89}
+\definecolor{llmfill}{RGB}{252,244,226}
+\definecolor{llmdraw}{RGB}{203,126,0}
+\definecolor{detfill}{RGB}{244,238,252}
+\definecolor{detdraw}{RGB}{126,75,183}
+\definecolor{artifactfill}{RGB}{250,250,249}
+\definecolor{artifactdraw}{RGB}{112,112,112}
+\definecolor{textgray}{RGB}{58,58,58}
 
-\newcommand{\TitleText}[1]{{\sffamily\fontsize{13.8}{15.2}\selectfont #1}}
-\newcommand{\SubText}[1]{{\sffamily\fontsize{8.8}{10.0}\selectfont #1}}
+\newcommand{\ModuleTitle}[1]{{\sffamily\bfseries\fontsize{12.0}{13.2}\selectfont #1}}
+\newcommand{\ModuleSub}[1]{{\sffamily\fontsize{8.3}{9.3}\selectfont #1}}
+\newcommand{\ArtifactTitle}[1]{{\sffamily\bfseries\fontsize{9.6}{10.6}\selectfont #1}}
+\newcommand{\ArtifactSub}[1]{{\sffamily\fontsize{7.8}{8.8}\selectfont #1}}
 
 \begin{document}
 \begin{tikzpicture}[
   font=\sffamily,
-  >={Latex[length=2.3mm]},
-  mainarrow/.style={draw=textgray, line width=0.7pt, -{Latex[length=2.4mm]}},
-  altarrow/.style={draw=auditdraw, dashed, line width=0.9pt, -{Latex[length=2.3mm]}},
-  module/.style={rounded corners=4pt, line width=0.85pt, minimum height=1.42cm, align=center, inner sep=4pt},
-  flowlabel/.style={font=\sffamily\fontsize{10.1}{11}\selectfont, text=textgray},
-  altlabel/.style={font=\sffamily\fontsize{9.6}{10.5}\selectfont, text=auditdraw}
+  >={Latex[length=2.2mm]},
+  mainarrow/.style={draw=textgray, line width=0.72pt, -{Latex[length=2.3mm]}},
+  module/.style={line width=0.9pt, minimum height=1.34cm, align=center, inner sep=4pt},
+  llm/.style={module, rounded corners=4pt, draw=llmdraw, fill=llmfill, text=llmdraw},
+  deterministic/.style={module, rounded corners=1pt, draw=detdraw, fill=detfill, text=detdraw, line width=1.05pt},
+  io/.style={module, rounded corners=6pt, draw=iodraw, fill=iofill, text=iodraw, line width=1.15pt},
+  artifact/.style={rounded corners=2.5pt, draw=artifactdraw, fill=artifactfill, dashed, line width=0.65pt, minimum height=1.12cm, align=center, inner sep=3pt},
+  output/.style={rounded corners=5pt, draw=iodraw, fill=iofill, line width=1.05pt, minimum height=1.12cm, align=center, inner sep=3pt},
+  flowlabel/.style={font=\sffamily\fontsize{8.2}{9.2}\selectfont, text=textgray, fill=bggray, inner sep=1.5pt},
+  inputlabel/.style={font=\sffamily\fontsize{8.6}{9.6}\selectfont, text=llmdraw},
+  legendtext/.style={font=\sffamily\fontsize{7.7}{8.7}\selectfont, text=textgray, anchor=west},
+  legendswatch/.style={rectangle, minimum width=0.42cm, minimum height=0.24cm, inner sep=0pt, line width=0.8pt}
 ]
 
-% background
-\fill[bggray] (-0.2,-2.95) rectangle (21.8,1.45);
+\fill[bggray] (-0.35,-3.70) rectangle (23.05,3.60);
 
-% top row
-\node[module, draw=boxgraydraw, fill=boxgrayfill, text=black, minimum width=2.15cm] (transcript) at (1.35,0.4)
-{\TitleText{Transcript}};
+% Color and border-style legend
+\node[font=\sffamily\bfseries\fontsize{7.7}{8.7}\selectfont, text=textgray, anchor=west] at (0.20,3.22) {Legend};
+\node[legendswatch, rounded corners=2pt, draw=iodraw, fill=iofill] at (1.75,3.22) {};
+\node[legendtext] at (2.05,3.22) {Input / final output};
+\node[legendswatch, rounded corners=2pt, draw=llmdraw, fill=llmfill] at (6.55,3.22) {};
+\node[legendtext] at (6.85,3.22) {LLM-based component};
+\node[legendswatch, draw=detdraw, fill=detfill, line width=1pt] at (12.05,3.22) {};
+\node[legendtext] at (12.35,3.22) {Deterministic component};
+\node[legendswatch, rounded corners=1pt, draw=artifactdraw, fill=artifactfill, dashed] at (18.25,3.22) {};
+\node[legendtext] at (18.55,3.22) {Recorded artifact};
 
-\node[module, draw=retrdraw, fill=retrfill, text=retrdraw, minimum width=3.35cm] (retriever) at (5.65,0.4)
-{\TitleText{Similar-Case Retriever}\\[-1pt]
- \textcolor{retrdraw}{\SubText{Retrieved similar cases}}\\[-1pt]
- \textcolor{retrdraw}{\SubText{at most 1 / parent}}};
+% Shared input
+\node[io, minimum width=2.35cm] (transcript) at (1.35,0)
+{\ModuleTitle{Transcript}\\[-1pt]
+ \ModuleTitle{Input}};
 
-\node[module, draw=diagdraw, fill=diagfill, text=diagdraw, minimum width=3.9cm] (diagnostician) at (11.05,0.4)
-{\TitleText{Diagnostician}\\[-1pt]
- \textcolor{diagdraw}{\SubText{Ranked candidate diagnoses}}\\[-1pt]
- \textcolor{diagdraw}{\SubText{Emitted primary diagnosis}}};
+% Candidate-generation path
+\node[deterministic, minimum width=3.20cm] (retriever) at (4.55,2.15)
+{\ModuleTitle{Similar-Case}\\[-1pt]
+ \ModuleTitle{Retriever}\\[-1pt]
+ \ModuleSub{Fixed retrieval}};
 
-\node[module, draw=commitdraw, fill=commitfill, text=commitdraw, minimum width=4.15cm] (commit) at (18.0,0.4)
-{\TitleText{Committed diagnosis}\\[-1pt]
- \textcolor{commitdraw}{\SubText{primary + optional comorbidity}}};
+\node[artifact, minimum width=2.10cm] (retrieved) at (7.30,2.15)
+{\ArtifactTitle{Retrieved}\\[-1pt]
+ \ArtifactTitle{examples}};
 
-% bottom row
-\node[module, draw=checkdraw, fill=checkfill, text=checkdraw, minimum width=4.0cm] (checker) at (6.7,-1.95)
-{\TitleText{Criterion Checker}\\[-1pt]
- \textcolor{checkdraw}{\SubText{Criterion states}}};
+\node[llm, minimum width=2.95cm] (diagnostician) at (10.05,2.15)
+{\ModuleTitle{Diagnostician}\\[-1pt]
+ \ModuleTitle{Agent}\\[-1pt]
+ \ModuleSub{LLM}};
 
-\node[module, draw=logicdraw, fill=logicfill, text=logicdraw, minimum width=4.2cm] (logic) at (12.8,-1.95)
-{\TitleText{Compatibility Auditor}\\[-1pt]
- \textcolor{logicdraw}{\SubText{Logic-confirmed diagnoses}}};
+\node[artifact, minimum width=3.45cm] (ranked) at (13.45,2.15)
+{\ArtifactTitle{Ranked Top-5}\\[-1pt]
+ \ArtifactSub{Emitted primary}\\[-1pt]
+ \ArtifactSub{Optional comorbidity}};
 
-\node[module, draw=auditdraw, fill=auditfill, text=auditdraw, minimum width=4.65cm] (audit) at (18.65,-1.95)
-{\TitleText{Audit artifacts}\\[-1pt]
- \textcolor{auditdraw}{\SubText{Criterion states, evidence, and rules}}};
+% Criterion-verification path
+\node[llm, minimum width=3.40cm] (checker) at (4.60,-2.15)
+{\ModuleTitle{Criterion Checker}\\[-1pt]
+ \ModuleTitle{Agents}\\[-1pt]
+ \ModuleSub{LLM, all categories}};
 
-% arrows top
-\draw[mainarrow] (transcript.east) -- (retriever.west);
-\draw[mainarrow] (retriever.east) -- (diagnostician.west);
-\draw[mainarrow] (diagnostician.east) -- node[above=3pt, flowlabel] {Direct-Answer} (commit.west);
+\node[artifact, minimum width=3.60cm] (states) at (8.25,-2.15)
+{\ArtifactTitle{Criterion states}\\[-1pt]
+ \ArtifactSub{\texttt{met} / \texttt{not\_met}}\\[-1pt]
+ \ArtifactSub{\texttt{insufficient\_evidence}}};
 
-% arrows down and bottom
-\draw[mainarrow] (diagnostician.south) -- ++(0,-0.55) -| (checker.north);
-\draw[mainarrow] (checker.east) -- (logic.west);
-\draw[mainarrow] (logic.east) -- (audit.west);
+\node[deterministic, minimum width=3.20cm] (auditor) at (11.95,-2.15)
+{\ModuleTitle{Compatibility}\\[-1pt]
+ \ModuleTitle{Auditor}\\[-1pt]
+ \ModuleSub{Rule aggregation}};
 
-% NtS path to committed output without output-output arrow
-\draw[altarrow] ($(logic.north)+(0.2,0)$) -- ++(0,0.55) -| ($(commit.south)+(0.0,-0.03)$);
-\node[altlabel] at (16.55,-0.90) {Nominate-then-Select};
+\node[artifact, minimum width=3.05cm] (compatible) at (15.30,-2.15)
+{\ArtifactTitle{Criterion-compatible}\\[-1pt]
+ \ArtifactTitle{set}};
+
+% Finalization and observed output
+\node[deterministic, minimum width=2.90cm] (finalization) at (17.85,0)
+{\ModuleTitle{Finalization}\\[-1pt]
+ \ModuleSub{DA / NtS policy}};
+
+\node[output, minimum width=3.10cm] (committed) at (21.05,0)
+{\ArtifactTitle{Committed primary}\\[-1pt]
+ \ArtifactSub{diagnosis}};
+
+% Input branches. The Diagnostician and Criterion Checker receive the transcript independently.
+\draw[mainarrow] (transcript.north) |- (retriever.west);
+\draw[mainarrow] (transcript.east) -- ++(0.42,0) -| (diagnostician.south);
+\node[flowlabel] at (6.15,0.02) {Transcript};
+\draw[mainarrow] (transcript.south) |- (checker.west);
+
+% Candidate-generation artifacts
+\draw[mainarrow] (retriever.east) -- (retrieved.west);
+\draw[mainarrow] (retrieved.east) -- (diagnostician.west);
+\draw[mainarrow] (diagnostician.east) -- (ranked.west);
+
+% Criterion-verification artifacts
+\draw[mainarrow] (checker.east) -- (states.west);
+\draw[mainarrow] (states.east) -- (auditor.west);
+\draw[mainarrow] (auditor.east) -- (compatible.west);
+\node[inputlabel] (criteria) at (4.60,-3.32) {Configured criteria for all categories};
+\draw[mainarrow] (criteria.north) -- (checker.south);
+
+% Both recorded output views are available to finalization.
+\draw[mainarrow] (ranked.south east) -- ($(finalization.north)+(-0.55,0)$);
+\draw[mainarrow] (compatible.north east) -- ($(finalization.south)+(-0.55,0)$);
+\draw[mainarrow] (finalization.east) -- (committed.west);
 
 \end{tikzpicture}
 \end{document}
