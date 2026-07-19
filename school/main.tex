@@ -739,29 +739,49 @@ Figure~\ref{fig:evidence-sequence} summarizes this evaluation sequence. The ongo
 \label{fig:evidence-sequence}
 \end{figure}
 
-\section{Internal Benchmark and Retrieval Comparisons}
+\section{Benchmark Positioning and Retrieval Comparisons}
 
-The public validation split selects retrieval separately for Single and HiED--DA using the predefined promotion rule across their available benchmark metrics. Selected configurations are fixed before held-out evaluation, and validation results are used for configuration selection rather than as independent test estimates.
+This section defines the first evaluation block shown in Figure~\ref{fig:evidence-sequence}. The same-split system comparison addresses RQ1, while the matched retrieval comparison addresses RQ3. Both analyses use the parent-label projection and evaluation measures defined in Chapter~\ref{ch:data}.
 
-The held-out comparison includes Majority, TF--IDF + LR, Single without retrieval, the validation-selected Single configuration, HiED--DA, and HiED--NtS. All rows use the same cases, parent projection, and scoring code, although the complete systems differ in training procedure, retrieval exposure, model calls, and output contract. Top-1 is the main predictive measure; genuine Top-3 and multilabel metrics are reported only where the relevant output view exists.
+\paragraph{Same-split benchmark comparison (RQ1).}
+The main held-out comparison includes Majority, TF--IDF + LR, Single without retrieval, the validation-selected Single configuration, HiED--DA, and HiED--NtS. All methods are evaluated on the same fixed 1,000-case internal set using the same parent-label projection and scoring implementation. Top-1 Accuracy is the primary predictive endpoint. Genuine Top-3 and multilabel measures are reported only when the corresponding output view is available.
 
-The Majority baseline predicts the most frequent training-corpus parent. TF--IDF + LR is trained on the 13,000 training cases using character-boundary 1--2-grams, at most 10,000 features, \texttt{min\_df=2}, \texttt{max\_df=0.95}, and sublinear term frequency. Twelve one-vs-rest logistic-regression classifiers use $C=1.0$, the L-BFGS solver, balanced class weights, and a 2,000-iteration limit; their probabilities define the ranking and thresholded label set. Single uses one diagnostic LLM call and emits a primary with an optional secondary diagnosis, so genuine Top-3 is undefined.
+The Majority baseline always predicts the most frequent scoring parent in the training source. TF--IDF + LR is trained on the 13,000 training-source cases using character-boundary 1--2-grams, at most 10,000 features, \texttt{min\_df=2}, \texttt{max\_df=0.95}, and sublinear term frequency. Twelve one-vs-rest logistic-regression classifiers use $C=1.0$, the L-BFGS solver, balanced class weights, and a 2,000-iteration limit; their probabilities define the ranking and thresholded multilabel prediction. Single uses one diagnostic LLM call and emits a primary diagnosis with at most one optional secondary diagnosis; because it does not produce a genuine ranked differential, Top-3 is not assigned.
 
-Retrieval is compared within Single and HiED--DA under no retrieval, global Top-5 retrieval, and parent-balanced retrieval. Within each architecture, the model, prompt family, diagnostic scope, decoding settings, and output contract remain fixed. Global and parent-balanced retrieval also differ in example count, composition, order, and prompt length, so their contrast evaluates complete retrieval configurations rather than the isolated effect of balancing.
+The comparison is matched at the level of evaluation cases, parent-label projection, and scoring code, but it is not a component-controlled ablation. The systems differ in training procedure, retrieval exposure, number of model calls, and output contract. RQ1 therefore compares complete diagnostic configurations rather than estimating the isolated effect of the multi-agent architecture.
+
+\paragraph{Matched retrieval comparison (RQ3).}
+Retrieval is evaluated separately within the Single and HiED--DA architectures under three conditions: no retrieval, global Top-5 retrieval, and parent-balanced retrieval. Within each architecture, the model, prompt family, configured diagnostic scope, decoding settings, and output contract remain fixed.
+
+The public-validation split is used to select the primary retrieval configuration separately for Single and HiED--DA according to the predefined promotion rule. The selected configurations are fixed before evaluation on the internal held-out set. Public-validation results are therefore used for configuration selection and are not interpreted as independent test estimates.
+
+Global Top-5 and parent-balanced retrieval differ not only in label balance but also in the number, composition, ordering, and total token length of the retrieved examples. Their comparison therefore evaluates complete retrieval configurations rather than the isolated causal effect of parent balancing.
 
 \section{Stage-Wise Failure Analysis}
 
-The stage-wise analysis uses the indicators defined in Chapter~\ref{ch:data} on one recorded HiED--DA trace: $D_3$ measures gold-label presence in the genuine Top-3, $R$ measures gold-label retention after criterion verification, and $S$ measures agreement of the committed primary with the gold-label set. $D_3$ and $S$ are available on all internal cases, whereas $R$ is restricted to checker-eligible cases.
+This section defines the stage-wise analysis used to answer RQ2 and corresponds to the second evaluation block in Figure~\ref{fig:evidence-sequence}. The primary analysis uses the validation-selected parent-balanced HiED--DA trace on the fixed 1,000-case internal held-out set because this run contains the complete ranked, criterion-checking, compatibility, and finalization outputs.
 
-The joint $D_3$--$R$--$S$ analysis therefore uses the checker-eligible subset and reports the corresponding conditional rates. Its strict primary-selection subset satisfies $D_3=1$, $R=1$, and $S=0$: a gold parent is ranked and retained but not selected as the committed primary. The indicators are not a strictly nested runtime funnel because criterion checking covers the configured scope rather than only the genuine Top-3.
+The analysis uses the three indicators defined in Chapter~\ref{ch:data}. $D_3$ records whether at least one benchmark gold parent appears in the genuine ranked Top-3, $R$ records whether at least one benchmark gold parent is retained in the criterion-compatible set, and $S$ records whether the committed primary diagnosis matches at least one benchmark gold parent. $D_3$ and $S$ are evaluated on all 1,000 internal cases, whereas $R$ is defined only for the 915 checker-eligible cases.
 
-A supporting oracle analysis searches a broader window formed from ranked and criterion-compatible diagnoses and identifies cases in which a gold parent appears in a similarly supported cluster. Because it uses the gold label and assumes identified errors can be corrected without harming correct cases, it is interpreted only as an optimistic, non-deployable upper bound.
+The joint $D_3$--$R$--$S$ analysis is therefore restricted to the checker-eligible subset. Of particular interest is the ranked-and-retained nonselection profile, defined by $D_3=1$, $R=1$, and $S=0$: at least one benchmark gold parent is present in the genuine Top-3 and retained as criterion-compatible, but another diagnosis is selected as the committed primary. These indicators do not form a strictly nested runtime funnel because the Criterion Checker evaluates the full configured scope, not only the ranked Top-3.
 
-\section{Primary-Selection Strategies}
+A supplementary oracle analysis examines a broader candidate window formed from ranked and criterion-compatible diagnoses. Because the oracle uses the benchmark gold label to identify potentially recoverable cases and assumes that corrected cases can be changed without harming initially correct predictions, it is interpreted only as an optimistic, non-deployable upper bound and is not used as the primary answer to RQ2.
 
-Committed Top-1 agreement is the main comparison measure. DA preserves the Diagnostician's primary, whereas NtS reuses the recorded ranking, checker states, and criterion-compatible set to select one diagnosis without new LLM inference. DA and NtS are compared on identical cases within all three retrieval conditions, and difference-in-differences bootstrap contrasts test whether retrieval changes the finalization-policy effect. Because NtS emits one label, its set-level metrics also reflect output cardinality and do not isolate primary re-selection.
+\section{Primary-Selection Interventions}
 
-Recorded-output methods such as NtS and deterministic fusion reuse DA artifacts and permit relatively direct attribution to the tested selection rule. Independent pairwise comparison, forced pairwise application, debate, SC, and CISC require new inference or sampling and are evaluated as complete configurations. Their execution settings and interpretation boundaries are summarized in Appendix~\ref{app:supporting}.
+This section defines the primary-selection experiments used to answer RQ4 and corresponds to the third evaluation block in Figure~\ref{fig:evidence-sequence}. Direct-Answer (DA) is the reference policy, and committed Top-1 agreement is the primary endpoint. The experiments test whether alternative uses of the available diagnostic outputs improve the committed primary diagnosis; they do not assume that any intervention is necessarily better than DA.
+
+\paragraph{Recorded-output interventions.}
+Nominate-then-Select (NtS) and deterministic fusion reuse outputs already recorded in a DA run and do not introduce an additional diagnostic LLM call. NtS applies the deterministic finalization rule defined in Chapter~\ref{ch:architecture} to the ranked candidates and criterion-compatible set. Deterministic fusion combines recorded ranking and criterion-support signals using a predefined scoring rule.
+
+DA and NtS are first compared on the same 1,000 internal cases under no retrieval, global Top-5 retrieval, and parent-balanced retrieval. Paired differences estimate the effect of replacing DA finalization with NtS within each retrieval condition. Difference-in-differences bootstrap contrasts then test whether the effect of NtS changes across retrieval conditions. Because the upstream run artifacts are shared, these comparisons permit relatively direct attribution to the tested finalization rule.
+
+Additional internal intervention results use the validation-selected parent-balanced DA configuration as the reported reference. Paired effects and confidence intervals are reported when case-level paired records are available. Although DA may retain an optional comorbid diagnosis whereas NtS emits one diagnosis, committed Top-1 remains directly comparable. Set-level metrics are not interpreted as isolated effects of primary re-selection because they also reflect output cardinality.
+
+\paragraph{New-inference and sampling interventions.}
+The remaining methods add model inference or repeated sampling. Independent and forced pairwise configurations regenerate upstream outputs and use pairwise preferences differently. Two-view debate adds role-specific inference before finalization. Self-consistency (SC) and confidence-informed self-consistency (CISC) aggregate repeated samples.
+
+These methods may differ from DA in prompt structure, context length, number of model calls, decoding behavior, or aggregation procedure. Their results are therefore interpreted as comparisons between complete configurations rather than as estimates of the isolated effect of pairwise comparison, debate, or sampling. Exact execution settings and supporting paired statistics are reported in Appendix~\ref{app:supporting}.
 
 \section{Robustness and External Synthetic Evaluation}
 
