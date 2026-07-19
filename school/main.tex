@@ -417,33 +417,9 @@ Z71 & Z71 & Counseling without a specific disorder\\
 
 The diagnostician prompt contains four readable parts: the task and the fixed list of configured diagnostic categories; the speaker-labeled transcript; retrieved training examples, when retrieval is enabled; and the required structured output fields. Retrieval is completed before generation. The model sees only the current transcript and the supplied examples.
 
-\ThesisFigure[1.0\textwidth]{fig_pipeline_round20c.pdf}{Overview of the HiED pipeline and its intermediate artifacts. Direct-Answer keeps the Diagnostician's emitted primary diagnosis, whereas Nominate-then-Select uses Criterion Checker and deterministic rule-layer artifacts to determine the committed diagnosis.}{fig:pipeline-thesis-rewrite}
+\ThesisFigure[1.0\textwidth]{fig_pipeline_round20c.pdf}{HiED components and recorded intermediate artifacts. Colors and border styles distinguish input and final-output elements, LLM-based components, deterministic components, and recorded artifacts. The Diagnostician and Criterion Checker receive the transcript independently; the Checker evaluates all configured categories rather than only the ranked Top-5.}{fig:pipeline-thesis-rewrite}
 
-\begin{table}[htbp]
-\centering
-\caption{Functions and interfaces of the blocks shown in Figure~\ref{fig:pipeline-thesis-rewrite}.}
-\label{tab:fig31-block-functions}
-\small
-\begin{tabularx}{\textwidth}{|p{2.8cm}|p{3.0cm}|p{4.1cm}|X|}
-\hline
-Block & Main input & Function & Output and downstream use\\
-\hline
-Transcript Input & Speaker-labeled transcript & Preserves turn order, applies the fixed prompt-budget rule, and attaches the configured diagnostic profile & Supplies the Diagnostician and Criterion Checker prompts\\
-\hline
-Similar-Case Retriever & Transcript and training-set retrieval index & Finds prompt-side examples; retrieved cases go only to the Diagnostician & Optional examples, never direct finalization evidence\\
-\hline
-Diagnostician & Transcript, profile, and optional retrieved examples & Produces a ranked differential diagnosis and emitted primary & Ranked candidate list, primary field, optional comorbid field\\
-\hline
-Criterion Checker & Transcript and category-specific criteria & Assigns \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_\allowbreak{}evidence} states & Criterion trace for audit and deterministic compatibility rules\\
-\hline
-Compatibility Auditor & Checker states and fixed rules & Deterministic rule application over each configured diagnostic category & Criterion-compatible diagnoses and rule trace\\
-\hline
-Committed Diagnosis & Ranked candidate list, emitted primary, compatible set, and policy & Applies DA or NtS finalization & Final primary diagnosis depends on the selected finalization policy\\
-\hline
-Audit Artifacts & Candidates, checker states, rules, and finalization source & Records inspectable intermediate outputs & Offline review only; Audit Artifacts do not alter the Direct-Answer committed primary output\\
-\hline
-\end{tabularx}
-\end{table}
+Retrieved examples are supplied only to the Diagnostician. Finalization receives the ranked output under both policies and the criterion-compatible set under NtS: DA preserves the emitted primary diagnosis and optional comorbidity, whereas NtS produces one re-selected committed primary diagnosis. The recorded ranking, criterion states, compatible set, and committed primary provide the output views used for stage-wise failure localization.
 
 In this thesis, an \emph{agent} means an LLM call with a distinct prompt and task. The checker agents run independently; they do not have autonomous memory, planning, or free-form negotiation. HiED is therefore a modular multi-stage LLM orchestration with role-specific agents and deterministic rule aggregation.
 
