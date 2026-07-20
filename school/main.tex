@@ -481,7 +481,7 @@ The denominator is the minimum satisfying count defined by the configured operat
 
 \paragraph{Output contracts.}
 
-DA produces one committed primary diagnosis and may retain one optional comorbid diagnosis. NtS produces one re-selected committed primary diagnosis and does not emit a comorbid diagnosis. Thus, the two policies differ in both their primary-selection rule and final output cardinality. Additional primary-selection methods are defined in Chapter~\ref{ch:experimental} and do not alter the core architecture described here.
+DA produces one committed primary diagnosis and may retain one optional comorbid diagnosis. NtS produces one re-selected committed primary diagnosis and does not emit a comorbid diagnosis. Thus, the two policies differ in both their primary-selection rule and final output cardinality. 
 
 \section{Worked Example}
 \label{sec:running-example}
@@ -721,7 +721,7 @@ Top-3 and committed Top-1 are computed over all 1,000 internal test cases. Gold-
 \mathrm{Top\text{-}3\ Accuracy}=\frac{1}{N}\sum_x \mathbb{1}[R_3(x)\cap G(x)\neq\varnothing],
 \]
 \[
-\mathrm{Exact}=\frac{1}{N}\sum_x \mathbb{1}[M(x)=G(x)].
+\mathrm{Exact Match}=\frac{1}{N}\sum_x \mathbb{1}[M(x)=G(x)].
 \]
 
 Macro-F1 is the unweighted mean of the twelve one-vs-rest label-level F1 scores obtained by binarizing $G(x)$ and $M(x)$ over the fixed scoring classes. Weighted-F1 uses the same label-level F1 scores but weights each class by its gold-label support.
