@@ -209,7 +209,7 @@ To make the different sources of diagnostic disagreement observable, this thesis
 
 HiED combines two complementary diagnostic processes. An LLM-based Diagnostician produces a ranked differential diagnosis and an emitted primary diagnosis, while diagnosis-specific Criterion Checkers evaluate the same transcript against operationalized ICD-10-informed criteria. A deterministic compatibility module aggregates the criterion judgments, and a finalization policy converts the recorded outputs into a committed diagnosis. The ranked candidates, criterion judgments, compatibility decisions, and committed diagnosis are stored separately.
 
-This separation supports stage-wise analysis of candidate generation, criterion verification, and primary selection. It allows the study to distinguish a diagnosis that was not proposed, one that was not included in the criterion-compatible set, and one that remained available but was not selected as the committed primary diagnosis. 
+This separation supports stage-wise analysis of candidate generation, criterion verification, and primary selection. It allows the study to distinguish a diagnosis that was not proposed, one that was not included in the criterion-compatible set, and one that remained available but was not selected as the committed primary diagnosis.
 
 \section{Contributions}
 
@@ -361,9 +361,9 @@ Taken together, the reviewed literature leaves five unresolved questions that ar
 
 This thesis therefore uses five research questions:
 
-\begin{description}[style=nextline,leftmargin=3cm,labelwidth=2.5cm,itemsep=0.2em,parsep=0pt]
+\begin{description}[style=nextline,leftmargin=1.5cm,labelwidth=1.1cm,itemsep=0.2em,parsep=0pt]
 \item[RQ1] How does HiED compare with conventional and single-model baselines under the same data split, label mapping, and primary evaluation endpoint?
-\item[RQ2] How often is a benchmark diagnosis present among ranked candidates or criterion-supported alternatives but not selected as the committed diagnosis?
+\item[RQ2] How often does a benchmark gold label appear among the ranked candidates or in the criterion-compatible set without being selected as the committed primary diagnosis?
 \item[RQ3] How do no retrieval, global Top-5 retrieval, and parent-balanced retrieval compare in matched Single and HiED pipelines?
 \item[RQ4] Under the evaluated settings, do criterion-based re-selection or the tested primary-selection methods improve committed Top-1 agreement over Direct-Answer?
 \item[RQ5] To what extent do the main findings persist across model sizes, external synthetic corpora, and changes in the configured diagnostic scope, and which error patterns characterize the remaining disagreements?
@@ -1837,7 +1837,7 @@ The following answers are restricted to the evaluated synthetic benchmarks, decl
 
 HiED did not outperform the strongest same-split predictor. TF--IDF + logistic regression achieved the highest committed Top-1 Accuracy, while the validation-selected Single and HiED--DA configurations produced nearly identical committed-primary performance. HiED's distinct empirical value lies in the ranked differential, criterion states, compatibility decisions, and finalization trace that enable stage-wise analysis rather than in an overall accuracy advantage.
 
-\item[RQ2] \textbf{How often is a benchmark diagnosis present among ranked candidates or criterion-supported alternatives but not selected as the committed diagnosis?}
+\item[RQ2] \textbf{How often does a benchmark gold label appear among the ranked candidates or in the criterion-compatible set without being selected as the committed primary diagnosis?}
 
 A benchmark gold parent appeared in the genuine Top-3 substantially more often than it was selected as the committed primary diagnosis. Among the 915 checker-eligible cases, 272 satisfied $D_3=1$, $R=1$, and $S=0$: a benchmark gold parent was present in both the Top-3 and criterion-compatible set, but another diagnosis was committed as primary. This \emph{ranked and criterion-compatible, but not selected} group was the largest strict recorded disagreement subset. It identifies primary selection as the largest remaining recorded bottleneck under the evaluated contract, but does not establish that all 272 cases are clinically incorrect or automatically recoverable.
 
