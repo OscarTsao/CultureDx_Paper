@@ -209,7 +209,7 @@ To make the different sources of diagnostic disagreement observable, this thesis
 
 HiED combines two complementary diagnostic processes. An LLM-based Diagnostician produces a ranked differential diagnosis and an emitted primary diagnosis, while diagnosis-specific Criterion Checkers evaluate the same transcript against operationalized ICD-10-informed criteria. A deterministic compatibility module aggregates the criterion judgments, and a finalization policy converts the recorded outputs into a committed diagnosis. The ranked candidates, criterion judgments, compatibility decisions, and committed diagnosis are stored separately.
 
-This separation supports stage-wise analysis of candidate generation, criterion verification, and primary selection. It allows the study to distinguish a diagnosis that was not proposed, one that was not included in the criterion-compatible set, and one that remained available but was not selected as the committed primary diagnosis. The detailed architecture and evaluation definitions are presented in Chapters~\ref{ch:architecture} and~\ref{ch:data}.
+This separation supports stage-wise analysis of candidate generation, criterion verification, and primary selection. It allows the study to distinguish a diagnosis that was not proposed, one that was not included in the criterion-compatible set, and one that remained available but was not selected as the committed primary diagnosis. 
 
 \section{Contributions}
 
@@ -278,7 +278,7 @@ Among the studies reviewed in this thesis, we did not identify an evaluation tha
 
 \section{Primary-Diagnosis Selection}
 
-Criterion compatibility and primary-diagnosis selection answer different questions. Criterion checking asks whether each diagnosis is individually consistent with the available evidence under a defined rule. Because psychiatric disorders can share symptoms and more than one diagnosis may remain compatible, this process does not by itself determine whether a diagnosis is primary, comorbid, or a differential alternative. Selecting one committed primary therefore requires comparison among the remaining diagnoses rather than independent criterion satisfaction alone.
+Criterion compatibility and primary-diagnosis selection answer different questions. Criterion compatibility asks whether each diagnosis is individually consistent with the available evidence under a defined rule. Because psychiatric disorders can share symptoms and more than one diagnosis may remain compatible, this process does not by itself determine whether a diagnosis is primary, comorbid, or a differential alternative. Selecting one committed primary therefore requires comparison among the remaining diagnoses rather than independent criterion satisfaction alone.
 
 Structured diagnostic knowledge offers mechanisms for organizing the evidence used in this comparison. MedKGI combines a medical knowledge graph, information-guided inquiry, and a structured dialogue state to obtain discriminative information during iterative diagnosis~\citep{wang2025medkgi}. DKEC constructs heterogeneous knowledge graphs from external medical sources and incorporates their relations into multi-label diagnosis prediction~\citep{ge2024dkec}. These systems show how structured representations can support evidence acquisition or label prediction, but their evaluated objectives differ from selecting one primary diagnosis among several criterion-compatible psychiatric alternatives in a fixed transcript.
 
