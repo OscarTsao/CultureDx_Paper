@@ -55,7 +55,7 @@
   <rect x="50" y="755" width="760" height="140" rx="7" fill="#f3eaf5" stroke="#80558c" stroke-width="2.5"/>
   <text x="430" y="793" text-anchor="middle" class="heading">5. Sensitivity and transfer analyses (RQ5)</text>
   <text x="430" y="834" text-anchor="middle" class="detail">Model scale and MDD-5k</text>
-  <text x="430" y="865" text-anchor="middle" class="detail">Diagnostic scope, cross-corpus transfer, and error patterns</text>
+  <text x="430" y="865" text-anchor="middle" class="detail">Diagnostic scope, cross-corpus transfer, and disagreement patterns</text>
 
   <rect x="880" y="180" width="470" height="650" rx="7" fill="#f7f8fa" stroke="#52606d" stroke-width="2.5" stroke-dasharray="10 7"/>
   <text x="1115" y="217" text-anchor="middle" class="study">ONGOING COMPLEMENTARY</text>

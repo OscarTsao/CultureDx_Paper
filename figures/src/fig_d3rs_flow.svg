@@ -2,71 +2,70 @@
   <rect width="1400" height="720" fill="#ffffff"/>
   <style>
     .title { font: 700 34px Arial, sans-serif; fill: #18212b; }
-    .head { font: 700 24px Arial, sans-serif; fill: #18212b; }
-    .body { font: 19px Arial, sans-serif; fill: #34404c; }
-    .count { font: 700 30px Arial, sans-serif; fill: #18212b; }
-    .note { font: 17px Arial, sans-serif; fill: #4d5965; }
+    .head { font: 700 22px Arial, sans-serif; fill: #18212b; }
+    .body { font: 18px Arial, sans-serif; fill: #34404c; }
+    .count { font: 700 29px Arial, sans-serif; fill: #18212b; }
+    .note { font: 16px Arial, sans-serif; fill: #4d5965; }
     .line { stroke: #61707e; stroke-width: 3; fill: none; }
     .box { stroke-width: 2.5; rx: 8; }
   </style>
 
-  <text x="700" y="48" text-anchor="middle" class="title">Recorded D3-R-S profiles</text>
+  <text x="700" y="46" text-anchor="middle" class="title">Four mutually exclusive D3-R-S groups</text>
 
-  <rect x="45" y="275" width="205" height="120" class="box" fill="#eef3f7" stroke="#607889"/>
-  <text x="147" y="315" text-anchor="middle" class="head">Eligible cases</text>
-  <text x="147" y="360" text-anchor="middle" class="count">N = 915</text>
+  <rect x="35" y="270" width="210" height="120" class="box" fill="#eef3f7" stroke="#607889"/>
+  <text x="140" y="310" text-anchor="middle" class="head">Checker-eligible</text>
+  <text x="140" y="342" text-anchor="middle" class="head">cases</text>
+  <text x="140" y="376" text-anchor="middle" class="count">N = 915</text>
 
-  <path d="M250 335 H315 M315 335 V175 H365 M315 335 V505 H365" class="line"/>
+  <path d="M245 330 H280 M280 330 V165 H320 M280 330 V470 H320" class="line"/>
 
-  <rect x="365" y="105" width="230" height="135" class="box" fill="#e8f2fb" stroke="#3d78a8"/>
-  <text x="480" y="145" text-anchor="middle" class="head">Gold label ranked</text>
-  <text x="480" y="180" text-anchor="middle" class="body">D3 = Yes</text>
-  <text x="480" y="215" text-anchor="middle" class="count">802</text>
+  <rect x="320" y="100" width="240" height="130" class="box" fill="#e9f4e7" stroke="#4d8d48"/>
+  <text x="440" y="140" text-anchor="middle" class="head">Committed primary</text>
+  <text x="440" y="174" text-anchor="middle" class="body">S = 1</text>
+  <text x="440" y="211" text-anchor="middle" class="count">518</text>
 
-  <rect x="365" y="438" width="230" height="135" class="box" fill="#f6f7f8" stroke="#7b8791"/>
-  <text x="480" y="478" text-anchor="middle" class="head">Not in Top-3</text>
-  <text x="480" y="513" text-anchor="middle" class="body">D3 = No</text>
-  <text x="480" y="548" text-anchor="middle" class="count">113</text>
+  <rect x="320" y="405" width="240" height="130" class="box" fill="#fcebea" stroke="#b6534c"/>
+  <text x="440" y="445" text-anchor="middle" class="head">Primary disagreement</text>
+  <text x="440" y="479" text-anchor="middle" class="body">S = 0</text>
+  <text x="440" y="516" text-anchor="middle" class="count">397</text>
 
-  <path d="M595 172 H655 M655 172 V115 H705 M655 172 V267 H705" class="line"/>
-  <path d="M595 505 H655 M655 505 V450 H705 M655 505 V595 H705" class="line"/>
+  <path d="M560 165 H640" class="line"/>
+  <rect x="640" y="95" width="720" height="140" class="box" fill="#e9f4e7" stroke="#4d8d48"/>
+  <text x="1000" y="137" text-anchor="middle" class="head">Committed-primary agreement</text>
+  <text x="1000" y="174" text-anchor="middle" class="body">Grouped regardless of D3 or R</text>
+  <text x="1000" y="215" text-anchor="middle" class="count">518</text>
 
-  <rect x="705" y="65" width="235" height="105" class="box" fill="#e8f6f1" stroke="#2e8b72"/>
-  <text x="822" y="102" text-anchor="middle" class="head">Gold label included</text>
-  <text x="822" y="134" text-anchor="middle" class="body">R = Yes</text>
-  <text x="905" y="134" text-anchor="middle" class="count">778</text>
+  <path d="M560 470 H600 M600 470 V335 H640 M600 470 V585 H640" class="line"/>
 
-  <rect x="705" y="215" width="235" height="105" class="box" fill="#fff4e7" stroke="#b87828"/>
-  <text x="822" y="252" text-anchor="middle" class="head">Gold label absent</text>
-  <text x="822" y="284" text-anchor="middle" class="body">R = No</text>
-  <text x="905" y="284" text-anchor="middle" class="count">24</text>
+  <rect x="640" y="275" width="250" height="120" class="box" fill="#f6f7f8" stroke="#7b8791"/>
+  <text x="765" y="314" text-anchor="middle" class="head">Gold label not ranked</text>
+  <text x="765" y="347" text-anchor="middle" class="body">D3 = 0</text>
+  <text x="765" y="381" text-anchor="middle" class="count">113</text>
 
-  <rect x="705" y="398" width="235" height="105" class="box" fill="#e8f6f1" stroke="#2e8b72"/>
-  <text x="822" y="435" text-anchor="middle" class="head">Gold label included</text>
-  <text x="822" y="467" text-anchor="middle" class="body">R = Yes</text>
-  <text x="905" y="467" text-anchor="middle" class="count">79</text>
+  <path d="M890 335 H970" class="line"/>
+  <rect x="970" y="270" width="390" height="130" class="box" fill="#f6f7f8" stroke="#7b8791"/>
+  <text x="1165" y="309" text-anchor="middle" class="head">Top-3 candidate miss</text>
+  <text x="1165" y="343" text-anchor="middle" class="body">S = 0, D3 = 0</text>
+  <text x="1165" y="382" text-anchor="middle" class="count">113</text>
 
-  <rect x="705" y="543" width="235" height="105" class="box" fill="#f6f7f8" stroke="#7b8791"/>
-  <text x="822" y="580" text-anchor="middle" class="head">Gold label absent</text>
-  <text x="822" y="612" text-anchor="middle" class="body">R = No</text>
-  <text x="905" y="612" text-anchor="middle" class="count">34</text>
+  <rect x="640" y="525" width="250" height="120" class="box" fill="#e8f2fb" stroke="#3d78a8"/>
+  <text x="765" y="564" text-anchor="middle" class="head">Gold label ranked</text>
+  <text x="765" y="597" text-anchor="middle" class="body">D3 = 1</text>
+  <text x="765" y="631" text-anchor="middle" class="count">284</text>
 
-  <path d="M940 117 H1000 M1000 117 V82 H1045 M1000 117 V187 H1045" class="line"/>
-  <path d="M940 267 H990 V318 H1045" class="line"/>
+  <path d="M890 585 H925 M925 585 V500 H970 M925 585 V625 H970" class="line"/>
 
-  <rect x="1045" y="35" width="305" height="95" class="box" fill="#e9f4e7" stroke="#4d8d48"/>
-  <text x="1197" y="62" text-anchor="middle" class="head">Committed-primary</text>
-  <text x="1197" y="88" text-anchor="middle" class="head">agreement</text>
-  <text x="1197" y="119" text-anchor="middle" class="count">506</text>
+  <rect x="970" y="440" width="390" height="115" class="box" fill="#fff4e7" stroke="#b87828"/>
+  <text x="1165" y="474" text-anchor="middle" class="head">Ranked but absent from</text>
+  <text x="1165" y="502" text-anchor="middle" class="head">the compatible set</text>
+  <text x="1080" y="536" text-anchor="middle" class="body">R = 0</text>
+  <text x="1290" y="538" text-anchor="middle" class="count">12</text>
 
-  <rect x="1045" y="145" width="305" height="105" class="box" fill="#fcebea" stroke="#b6534c"/>
-  <text x="1197" y="175" text-anchor="middle" class="head">Ranked and compatible</text>
-  <text x="1197" y="201" text-anchor="middle" class="head">but not selected</text>
-  <text x="1197" y="235" text-anchor="middle" class="count">272</text>
+  <rect x="970" y="570" width="390" height="115" class="box" fill="#f5efe8" stroke="#9b7246"/>
+  <text x="1165" y="604" text-anchor="middle" class="head">Ranked and compatible</text>
+  <text x="1165" y="632" text-anchor="middle" class="head">but not selected</text>
+  <text x="1080" y="666" text-anchor="middle" class="body">R = 1</text>
+  <text x="1290" y="668" text-anchor="middle" class="count">272</text>
 
-  <rect x="1045" y="265" width="305" height="105" class="box" fill="#f5efe8" stroke="#9b7246"/>
-  <text x="1197" y="300" text-anchor="middle" class="head">Commitment when R = No</text>
-  <text x="1197" y="334" text-anchor="middle" class="body">12 agreement; 12 disagreement</text>
-
-  <text x="700" y="692" text-anchor="middle" class="note">R indicates gold-label inclusion in the criterion-compatible set; the diagram summarizes joint profiles rather than a strict runtime funnel.</text>
+  <text x="700" y="710" text-anchor="middle" class="note">Cases are assigned by S first, then D3 and R; this classification order is not a runtime sequence.</text>
 </svg>
