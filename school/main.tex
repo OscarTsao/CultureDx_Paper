@@ -284,7 +284,9 @@ Structured diagnostic knowledge offers mechanisms for organizing the evidence us
 
 A comparative selector may need to represent symptom--diagnosis relations together with temporal order, duration, illness course, exclusionary causes, syndrome dominance, explanatory dependence, and comorbidity. The reviewed structured methods may organize evidence or identify plausible labels, but they do not directly evaluate whether a criterion-supported diagnosis remains available yet is not selected when one primary diagnosis is committed. This gap motivates evaluation that separates Top-3 candidate detection, gold-label inclusion in the criterion-compatible set, and committed-primary agreement.
 
-Table~\ref{tab:related-work-matrix} compares only the intermediate outputs reported by each study; it does not rank overall system quality or clinical capability.
+\section{Research Gap and Research Questions}
+
+The reviewed studies expose different parts of the diagnostic process, including candidate hypotheses, criterion-related reasoning, and final diagnoses. Table~\ref{tab:related-work-matrix} summarizes which intermediate outputs are available for stage-wise analysis. It compares only the published outputs and does not rank overall system quality or clinical capability.
 
 \begin{table}[htbp]
 \centering
@@ -344,21 +346,22 @@ No\\
 \hline
 \end{tabular}
 \end{adjustbox}
+
+\vspace{0.4em}
+\begin{minipage}{0.98\textwidth}
+\footnotesize
+\textit{Note.} ``Partial'' indicates that a study reports intermediate diagnostic or criterion-related outputs but does not separately evaluate candidate detection, criterion verification, and primary selection on the same cases. ``Not reported'' refers only to the published evaluation and does not establish that the implementation lacks the corresponding capability.
+\end{minipage}
 \end{table}
+\FloatBarrier
 
-\noindent\textit{Note:} ``Partial'' indicates that a study reports intermediate diagnostic or criterion-related outputs but does not separately evaluate candidate detection, criterion verification, and primary selection on the same cases. ``Not reported'' refers only to the published evaluation and does not establish that the implementation lacks the capability.
+However, none of the reviewed evaluations jointly measures Top-3 candidate detection, gold-label inclusion in a criterion-compatible set, and committed-primary agreement on the same fixed cases. These differences motivate the stage-wise evaluation questions defined below.
 
-The reviewed studies expose different parts of the diagnostic process, including candidate hypotheses, criterion-related reasoning, and final diagnoses. However, none of the reviewed evaluations jointly measures Top-3 candidate detection, gold-label inclusion in a criterion-compatible set, and committed-primary agreement on the same fixed cases. These differences motivate the stage-wise evaluation questions defined in the following section.
-
-\section{Research Gap and Research Questions}
-
-Taken together, the reviewed literature shows that LLM diagnosis, retrieved demonstrations, multi-agent orchestration, and criterion grounding can each support psychiatric diagnosis. However, the studies use different case sets, label mappings, endpoints, and observable intermediate outputs. They therefore do not by themselves establish how Top-3 candidate detection, gold-label inclusion in a criterion-compatible set, and committed-primary agreement relate on the same cases.
-
-The reviewed literature consequently leaves five unresolved questions that are directly relevant to this thesis. First, heterogeneous task definitions and complete-system differences complicate comparisons among conventional classifiers, single LLMs, and multi-stage systems under one split, label mapping, and primary endpoint. Second, final-label accuracy does not show whether a benchmark diagnosis was absent from the ranked candidates, was absent from the criterion-compatible set, or remained available but was not selected as the committed primary. Third, the effect of demonstration retrieval depends on example selection, requiring matched comparison of global similarity and label-aware balanced policies across Single and multi-stage architectures. Fourth, multi-agent and criterion-based interventions often change several stages or inference conditions at once, limiting attribution of final-performance differences to primary selection. Fifth, the persistence of the main findings across model sizes, a second synthetic corpus, changes in diagnostic scope, and cross-corpus transfer, together with the remaining error patterns, requires separate boundary analysis. HiED examines these questions by recording candidate ranking, criterion verification, compatibility, and final selection as separately observable outputs under declared comparison contracts.
+Taken together, the reviewed literature leaves five unresolved questions that are directly relevant to this thesis. First, heterogeneous task definitions and complete-system differences complicate comparisons among conventional classifiers, single LLMs, and multi-stage systems under one split, label mapping, and primary endpoint. Second, final-label accuracy does not show whether a benchmark diagnosis was absent from the ranked candidates, was absent from the criterion-compatible set, or remained available but was not selected as the committed primary. Third, the effect of demonstration retrieval depends on example selection, requiring matched comparison of global similarity and label-aware balanced policies across Single and multi-stage architectures. Fourth, multi-agent and criterion-based interventions often change several stages or inference conditions at once, limiting attribution of final-performance differences to primary selection. Fifth, the persistence of the main findings across model sizes, a second synthetic corpus, changes in diagnostic scope, and cross-corpus transfer, together with the remaining error patterns, requires separate boundary analysis. HiED examines these questions by recording candidate ranking, criterion verification, compatibility, and final selection as separately observable outputs under declared comparison contracts.
 
 This thesis therefore uses five research questions:
 
-\begin{description}[style=nextline,leftmargin=3cm,labelwidth=2.5cm]
+\begin{description}[style=nextline,leftmargin=3cm,labelwidth=2.5cm,itemsep=0.2em,parsep=0pt]
 \item[RQ1] How does HiED compare with conventional and single-model baselines under the same data split, label mapping, and primary evaluation endpoint?
 \item[RQ2] How often is a benchmark diagnosis present among ranked candidates or criterion-supported alternatives but not selected as the committed diagnosis?
 \item[RQ3] How do no retrieval, global Top-5 retrieval, and parent-balanced retrieval compare in matched Single and HiED pipelines?
