@@ -10,7 +10,7 @@
     .box { stroke-width: 2.5; rx: 8; }
   </style>
 
-  <text x="700" y="46" text-anchor="middle" class="title">Four mutually exclusive D3-R-S groups</text>
+  <text x="700" y="46" text-anchor="middle" class="title">Four mutually exclusive D3-I-S groups</text>
 
   <rect x="35" y="270" width="210" height="120" class="box" fill="#eef3f7" stroke="#607889"/>
   <text x="140" y="310" text-anchor="middle" class="head">Checker-eligible</text>
@@ -32,7 +32,7 @@
   <path d="M560 165 H640" class="line"/>
   <rect x="640" y="95" width="720" height="140" class="box" fill="#e9f4e7" stroke="#4d8d48"/>
   <text x="1000" y="137" text-anchor="middle" class="head">Committed-primary agreement</text>
-  <text x="1000" y="174" text-anchor="middle" class="body">Grouped regardless of D3 or R</text>
+  <text x="1000" y="174" text-anchor="middle" class="body">Grouped regardless of D3 or I</text>
   <text x="1000" y="215" text-anchor="middle" class="count">518</text>
 
   <path d="M560 470 H600 M600 470 V335 H640 M600 470 V585 H640" class="line"/>
@@ -56,16 +56,16 @@
   <path d="M890 585 H925 M925 585 V500 H970 M925 585 V625 H970" class="line"/>
 
   <rect x="970" y="440" width="390" height="115" class="box" fill="#fff4e7" stroke="#b87828"/>
-  <text x="1165" y="474" text-anchor="middle" class="head">Ranked but absent from</text>
-  <text x="1165" y="502" text-anchor="middle" class="head">the compatible set</text>
-  <text x="1080" y="536" text-anchor="middle" class="body">R = 0</text>
+  <text x="1165" y="474" text-anchor="middle" class="head">Gold label ranked but</text>
+  <text x="1165" y="502" text-anchor="middle" class="head">not included</text>
+  <text x="1080" y="536" text-anchor="middle" class="body">I = 0</text>
   <text x="1290" y="538" text-anchor="middle" class="count">12</text>
 
   <rect x="970" y="570" width="390" height="115" class="box" fill="#f5efe8" stroke="#9b7246"/>
-  <text x="1165" y="604" text-anchor="middle" class="head">Ranked and compatible</text>
+  <text x="1165" y="604" text-anchor="middle" class="head">Gold label ranked and included</text>
   <text x="1165" y="632" text-anchor="middle" class="head">but not selected</text>
-  <text x="1080" y="666" text-anchor="middle" class="body">R = 1</text>
+  <text x="1080" y="666" text-anchor="middle" class="body">I = 1</text>
   <text x="1290" y="668" text-anchor="middle" class="count">272</text>
 
-  <text x="700" y="710" text-anchor="middle" class="note">Cases are assigned by S first, then D3 and R; this classification order is not a runtime sequence.</text>
+  <text x="700" y="710" text-anchor="middle" class="note">Cases are assigned by S first, then D3 and I; this classification order is not a runtime sequence.</text>
 </svg>
