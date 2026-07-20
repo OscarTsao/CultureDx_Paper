@@ -642,7 +642,7 @@ G_{\mathrm{in}}(x), & G_{\mathrm{in}}(x)\neq\varnothing,\\
 \{\mathrm{Others}\}, & G_{\mathrm{in}}(x)=\varnothing.
 \end{cases}
 \]
-Thus, a mixed case such as F90 with F41.1 is scored as $\{\mathrm{F41}\}$ rather than $\{\mathrm{Others},\mathrm{F41}\}$. A case is in scope when $G_{\mathrm{in}}(x)$ is nonempty and out of scope otherwise. Because the main system has neither an \emph{Others} output nor a trained unknown detector, it cannot correctly represent an out-of-scope case.
+Thus, when a case contains both an out-of-scope code and F41.1, its scored gold-label set is $\{\mathrm{F41}\}$ rather than $\{\mathrm{Others},\mathrm{F41}\}$. A case is in scope when $G_{\mathrm{in}}(x)$ is nonempty and out of scope otherwise. Because the main system has neither an \emph{Others} output nor a trained unknown detector, it cannot correctly represent an out-of-scope case.
 
 For case $x$, $G(x)$ is the deduplicated gold-label set after parent-level projection. LingxiDiag cases may contain more than one gold parent label, and neither dataset provides a psychiatrist-reviewed unique clinical primary diagnosis. The first-listed gold parent is used only for explicitly single-label descriptive analyses such as the confusion matrix.
 
