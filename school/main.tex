@@ -235,42 +235,61 @@ Chapter~\ref{ch:related} reviews related psychiatric LLM, multi-agent, and audit
 
 \section{Psychiatric LLM Diagnosis}
 
-Psychiatric LLM studies cover several different tasks, including examination questions, short vignettes, diagnostic reasoning, and comparison with clinicians~\citep{qiu2023largeai,li2024taiwan,raballo2025,sarma2025}. These studies show that LLMs can produce plausible clinical answers, but performance depends on the input, label space, and reference standard. Detecting depression from text or audio is also different from choosing one primary diagnosis among several overlapping disorders~\citep{li2025addreview}.
+Psychiatric LLM studies do not evaluate one uniform diagnostic task. The literature includes psychiatric knowledge or licensing-examination questions, diagnosis from clinical vignettes, focused assessment of particular disorders, automated depression detection, fixed-record diagnosis, and interactive consultation~\citep{qiu2023largeai,li2024taiwan,raballo2025,sarma2025,li2025addreview,mcduff2025amie}. Results across these settings are not directly interchangeable because the available evidence, diagnostic scope, required output, and reference standard differ.
 
-Chinese psychiatric datasets make disorder-level evaluation possible. LingxiDiagBench includes static diagnosis and dynamic consultation over the synthetic LingxiDiag-16K corpus and reports a clear drop from broad depression--anxiety classification to fine-grained diagnosis~\citep{xu2026lingxidiagbench}. MDD-5k provides a second synthetic Chinese diagnostic-dialogue resource based on anonymized cases~\citep{yin2024mdd5k}. These datasets support reproducible experiments, but they do not replace real-patient validation.
+This distinction is especially important when moving from screening or broad category classification to fine-grained differential diagnosis. Detecting prominent depression or anxiety signals does not require the same comparison as selecting one primary diagnosis among disorders with overlapping symptoms. Disorder-level diagnosis may additionally depend on duration, temporal sequence, illness course, exclusion conditions, and comorbidity. LingxiDiagBench makes this coarse-to-fine gap explicit: performance decreases substantially from binary depression--anxiety classification to comorbidity recognition and twelve-way diagnosis~\citep{xu2026lingxidiagbench}. MDD-5k provides a second synthetic Chinese diagnostic-dialogue resource generated from anonymized patient cases~\citep{yin2024mdd5k}. Both resources support reproducible disorder-level experiments, but neither substitutes for validation on naturally occurring clinical conversations.
 
-Existing systems also differ in whether they can ask questions. MIND, WiseMind/ProAI, MAGI, and DSM5AgentFlow study inquiry or interactive diagnostic workflows~\citep{li2026mind,wu2026wisemind,bi2025magi,ozgun2025dsm5agentflow}. MentalSeek-Dx and MoodAngels focus more on diagnosis from information already available in records or transcripts~\citep{sun2026mentalseek,xiao2025moodangels}. Interactive systems can obtain missing evidence, while fixed-input systems isolate how well a model uses the same evidence. This thesis studies the fixed-input setting.
+The evidence setting creates a further distinction. MIND, WiseMind/ProAI, MAGI, DSM5AgentFlow, and conversational diagnostic AI study inquiry or interactive workflows that can seek additional information during assessment~\citep{li2026mind,wu2026wisemind,bi2025magi,ozgun2025dsm5agentflow,tu2025conversational}. MentalSeek-Dx and MoodAngels instead emphasize diagnosis from information already available in records or transcripts~\citep{sun2026mentalseek,xiao2025moodangels}. Interactive systems combine evidence acquisition with diagnostic reasoning, whereas fixed-input systems must interpret the same potentially incomplete evidence. A fixed-input design therefore isolates how a model uses the available transcript without attributing gains to additional questioning.
+
+Existing evaluations also differ in what they make observable. Final-label accuracy can show whether the emitted diagnosis agrees with the reference, but it cannot show whether a reference diagnosis was never considered, appeared among the candidates but lacked criterion support, or remained plausible but was not selected as primary. Some psychiatric systems expose diagnostic hypotheses, criteria-grounded rationales, or intermediate dialogue states, yet the published evaluations do not generally measure candidate coverage, criterion retention, and committed primary selection together on the same fixed cases.
+
+These limitations motivate evaluations that distinguish candidate generation, criterion support, and final diagnostic selection rather than relying only on final-label accuracy.
 
 \section{Retrieval-Augmented Diagnostic Reasoning}
 
-Retrieval-augmented generation conditions a model on external records selected for the current query rather than relying only on information encoded in model parameters~\citep{lewis2020rag}. In-context-learning studies similarly show that semantically related demonstrations can be retrieved to construct a query-specific prompt and that performance depends on which examples are selected~\citep{liu2022incontext}. In transcript-based diagnosis, retrieved cases can therefore provide prompt-side examples of symptom descriptions and diagnostic labels. They are demonstrations rather than patient evidence and should not directly determine the committed diagnosis.
+Retrieval augmentation can serve two different roles in diagnostic systems. Knowledge retrieval supplies external documents, guidelines, or other factual resources to supplement information encoded in model parameters~\citep{lewis2020rag}. Demonstration retrieval instead selects labeled examples or similar cases as prompt context for in-context learning~\citep{liu2022incontext}. In this thesis, retrieval refers to labeled training examples used as prompt-side demonstrations, not to diagnostic guidelines or external evidence about the current patient.
 
-Similarity retrieval can expose useful corpus-local regularities, but it can also reproduce the frequency and wording patterns of the indexed data. Ordinary nearest-neighbor retrieval may repeatedly select examples from common labels, while a parent-balanced policy changes the label composition of the prompt. It may also change the number, ordering, and total token length of the retrieved examples. A comparison between global and parent-balanced retrieval consequently evaluates complete retrieval configurations rather than isolating balancing as a single causal factor.
+Semantically similar demonstrations can expose corpus-specific expressions, the expected input--output format, examples of the diagnostic label space, and recurring symptom--diagnosis associations. In-context-learning performance, however, depends strongly on which examples are selected~\citep{liu2022incontext}. Retrieved cases describe other patients or synthetic cases; they are demonstrations rather than evidence about the current patient and should not directly determine the committed diagnosis.
 
-These considerations motivate the retrieval experiments in this thesis. No retrieval, global Top-5 retrieval, and parent-balanced retrieval are compared using the same training-set retrieval index, evaluation cases, label projection, and scoring implementation. The comparison is repeated in both the Single and HiED pipelines so that retrieval behavior is not inferred from only one architecture.
+The benefit of similarity retrieval is therefore not automatic. The retrieved prompt reflects the label distribution and wording patterns of the indexed corpus. Common labels may appear repeatedly, lexical overlap may encourage corpus-specific shortcuts, and a misleading or weakly related neighbor may interfere with interpretation of the current transcript. Retrieval should consequently be treated as an empirical configuration rather than an inherently beneficial component.
+
+Label-aware balancing may increase the diagnostic diversity of the demonstrations and reduce repeated exposure to frequent classes. It does not, however, change label balance alone. A balanced policy may also alter the number, composition, ordering, similarity distribution, total token length, and context density of the examples. Comparisons with ordinary global similarity retrieval therefore estimate differences between complete retrieval configurations rather than the isolated causal effect of balancing.
+
+Prior work establishes that demonstration choice can affect in-context learning, but it remains unclear how retrieval policies behave in fine-grained psychiatric diagnosis. These findings indicate that retrieval policies should be evaluated under matched conditions, particularly when label imbalance and prompt composition may affect the retrieved demonstrations.
 
 \section{Medical Multi-Agent Reasoning}
 
-Medical multi-agent systems assign different roles to LLMs and combine their outputs through consultation, debate, or adaptive collaboration~\citep{tang2024medagents,kim2024mdagents}. AMIE and related work also show the value of broad differential diagnosis, realistic consultation, and expert review~\citep{mcduff2025amie,tu2025conversational}. These systems demonstrate that structured interaction can help, but adding agents does not guarantee a better final answer. Agents may repeat the same model bias, and free-form discussion can make it difficult to identify which component changed the decision.
+Medical multi-agent systems use several forms of orchestration. Role-specialized decomposition assigns distinct functions such as diagnosis, evidence extraction, critique, or final decision-making. Deliberative systems combine proposals through consultation, debate, voting, or consensus, while verification-oriented systems separate an initial answer from later checking or revision. MedAgents uses multi-round collaboration among role-based medical experts, and MDAgents adapts the collaboration structure to estimated task complexity~\citep{tang2024medagents,kim2024mdagents}. Multiagent debate provides a related general mechanism for exchanging and revising competing answers~\citep{du2024debate}.
 
-For this thesis, the important issue is controlled attribution. If ranking, criterion checking, debate, and finalization all change at once, an accuracy difference cannot show which change helped. HiED therefore compares two policies that reuse the same ranked candidates and checker outputs: Direct-Answer keeps the diagnostician's decision, whereas Nominate-then-Select uses criterion compatibility to choose the primary.
+These arrangements offer several possible advantages. Task decomposition can focus each role on a narrower subproblem, redundant judgments may expose omissions, cross-checking can compare a proposed diagnosis with supporting evidence or criteria, and structured aggregation can preserve intermediate outputs before a final decision. These are design opportunities rather than guarantees: an increase in the number of agents or interaction rounds does not by itself establish better diagnostic accuracy.
+
+Multi-agent systems also introduce characteristic failure modes. Agents that share a backbone model, similar prompts, and the same evidence may produce correlated rather than independent errors. An incorrect upstream candidate or evidence statement can propagate into later critique and selection. Free-form interaction may change several parts of the reasoning process at once, and a final aggregator may still choose an incorrect answer even when individual agents have surfaced useful alternatives.
+
+These dependencies create an attribution problem. When candidate generation, evidence representation, inter-agent discussion, and aggregation all differ between systems, a change in final accuracy is a package-level effect rather than evidence that one component caused the difference. Comparisons with a Single model may also differ in prompt structure, context, inference calls, and compute. Final-answer evaluation alone therefore provides limited information about where a multi-agent configuration helped or failed.
+
+These limitations call for controlled evaluations in which candidate generation, verification, and final aggregation are recorded separately, allowing performance changes to be attributed to specific functions rather than to the multi-agent system as a whole.
 
 \section{Auditability and Criterion Grounding}
 \label{sec:auditability-definition}
 
-A fluent explanation is not proof of faithful reasoning. Model-generated chains can sound coherent while not reflecting the factors that produced the answer~\citep{turpin2023unfaithful}. In healthcare, explanation quality, interpretability, and clinical validity therefore need separate evaluation~\citep{rudin2019stop,huang2024xiai}.
+A fluent explanation is not proof of faithful reasoning. Model-generated chains can sound coherent while not reflecting the factors that produced the answer~\citep{turpin2023unfaithful}. In this thesis, \emph{explainability} refers to a human-facing account of a decision, \emph{interpretability} to how directly a person can understand the decision mechanism, \emph{faithfulness} to whether a stated account reflects the factors that produced the output, and \emph{auditability} to the availability of an external record that can be inspected and replayed. These properties require separate evaluation in high-stakes healthcare settings~\citep{rudin2019stop,huang2024xiai}.
 
-Diagnostic-chain and symptom-based methods make outputs easier to inspect~\citep{chen2025cod,lee2026interpretable,lyu2026depllm}. However, a generated reasoning chain is still another model output. This thesis uses the narrower term \emph{auditability}: an external record that links transcript evidence, criterion states, rule results, and the final output. The record can be checked and replayed, but it does not reveal the model's hidden reasoning or turn checker outputs into clinical ground truth.
+Diagnostic-chain and symptom-based methods can expose intermediate hypotheses, confidence values, or clinically motivated features~\citep{chen2025cod,lee2026interpretable,lyu2026depllm}. Psychiatric systems may further ground outputs in diagnostic guidelines, structured interviews, symptom-to-criterion mappings, and supporting or contradictory evidence~\citep{li2026mind,bi2025magi,ozgun2025dsm5agentflow}. Constraint-logic approaches make the rule layer more explicit by translating diagnostic criteria into inspectable programs~\citep{kim2025clp}. Together, these approaches make parts of the diagnostic process more accessible to external review.
 
-Constraint-logic systems are the closest related approach because they translate diagnostic criteria into explicit rules~\citep{kim2025clp}. HiED keeps the learned diagnostician separate from the criterion and rule layer. Under Direct-Answer, the structured layer audits the decision; under Nominate-then-Select, it is tested as a selector. Among the reviewed studies, we did not identify an evaluation that uses this separation to compare retention of a benchmark diagnosis with primary selection on the same Chinese psychiatric transcripts.
+Criterion grounding nevertheless depends on the quality of the operationalized criteria and the mapping from transcript text to criterion states. A generated evidence statement may be unsupported, a criterion may be represented incorrectly, and an inspectable rule may still implement an inappropriate clinical assumption. The need for expert inspection of model-generated diagnostic rules illustrates this limitation~\citep{kim2025clp}. Criteria-grounded outputs are therefore reviewable model artifacts rather than clinician-validated evidence or clinical ground truth.
 
-\section{Structured Diagnostic Knowledge and Primary Selection}
+An auditable diagnostic system should retain an external record linking source evidence, criterion states, rule results, intermediate diagnostic outputs, and the final decision. Such a record does not reveal hidden model reasoning. A structured criterion layer may be used either to audit a model-generated diagnosis or to participate in final diagnosis selection, and these roles should be evaluated separately because successful evidence recording or compatibility assessment does not imply successful primary selection.
 
-Knowledge-based diagnosis methods represent relations among symptoms, disorders, and missing information. MedKGI supports information-guided inquiry, and DKEC uses structured domain knowledge for label prediction~\citep{wang2025medkgi,ge2024dkec}. Such relations may help when disorders share symptoms but differ in onset, duration, exclusions, or causal direction.
+Among the studies reviewed in this thesis, we did not identify an evaluation that separately measures ranked candidate coverage, criterion-supported retention, and committed primary selection on the same fixed Chinese psychiatric transcripts. This evaluation gap motivates a stage-wise design that separates evidence auditing from diagnosis selection; it is not a claim that prior systems lack diagnostic criteria or intermediate reasoning outputs.
 
-HiED does not implement a full knowledge-graph selector. Instead, this literature motivates future work if simple criterion counts and local re-ranking are not enough. A stronger selector may need to compare which diagnosis best explains the full presentation, not only how many criteria each diagnosis satisfies.
+\section{Primary-Diagnosis Selection}
 
-\clearpage
+Criterion compatibility and primary-diagnosis selection answer different questions. Criterion checking asks whether each diagnosis is individually consistent with the available evidence under a defined rule. Because psychiatric disorders can share symptoms and more than one diagnosis may remain compatible, this process does not by itself determine whether a diagnosis is primary, comorbid, or a differential alternative. Selecting one committed primary therefore requires comparison among the remaining diagnoses rather than independent criterion satisfaction alone.
+
+Structured diagnostic knowledge offers mechanisms for organizing the evidence used in this comparison. MedKGI combines a medical knowledge graph, information-guided inquiry, and a structured dialogue state to obtain discriminative information during iterative diagnosis~\citep{wang2025medkgi}. DKEC constructs heterogeneous knowledge graphs from external medical sources and incorporates their relations into multi-label diagnosis prediction~\citep{ge2024dkec}. These systems show how structured representations can support evidence acquisition or label prediction, but their evaluated objectives differ from selecting one primary diagnosis among several criterion-compatible psychiatric alternatives in a fixed transcript.
+
+A comparative selector may need to represent symptom--diagnosis relations together with temporal order, duration, illness course, exclusionary causes, syndrome dominance, explanatory dependence, and comorbidity. The reviewed structured methods may organize evidence or identify plausible labels, but they do not directly evaluate whether a criterion-supported diagnosis remains available yet is not selected when one primary diagnosis is committed. This gap motivates evaluation that separates candidate availability, criterion-compatible retention, and committed primary selection.
+
 Table~\ref{tab:related-work-matrix} compares only the intermediate outputs reported by each study; it does not rank overall system quality or clinical capability.
 
 \begin{table}[htbp]
@@ -329,23 +348,19 @@ None &
 Inspectable diagnostic rules &
 No\\
 \hline
-Ours &
-Fixed transcript &
-Ranked Top-5; Top-3 evaluated &
-Criterion states and deterministic rule trace &
-Yes\\
-\hline
 \end{tabular}
 \end{adjustbox}
 \end{table}
 
 \noindent\textit{Note:} ``Partial'' indicates that a study reports intermediate diagnostic or criterion-related outputs but does not separately evaluate candidate detection, criterion verification, and primary selection on the same cases. ``Not reported'' refers only to the published evaluation and does not establish that the implementation lacks the capability.
 
-The reviewed studies expose different parts of the diagnostic process, including candidate hypotheses, criterion-related reasoning, and final diagnoses. However, none of the reviewed evaluations jointly measures ranked candidate coverage, retention after criterion verification, and primary selection on the same fixed cases. HiED is designed to make these three output views separately measurable.
+The reviewed studies expose different parts of the diagnostic process, including candidate hypotheses, criterion-related reasoning, and final diagnoses. However, none of the reviewed evaluations jointly measures ranked candidate coverage, retention after criterion verification, and primary selection on the same fixed cases. These differences motivate the stage-wise evaluation questions defined in the following section.
 
 \section{Research Gap and Research Questions}
 
-Prior work shows that LLMs can diagnose psychiatric cases, retrieve examples, use diagnostic criteria, and work in multi-agent systems. Five gaps remain. First, conventional text classifiers, single LLMs, retrieval-augmented LLMs, and structured systems are not always compared under the same split and endpoint. Second, final accuracy does not show whether a benchmark diagnosis was absent from the candidate list or present but not selected as the committed primary. Third, global nearest-neighbor retrieval and parent-balanced retrieval require matched comparison across architectures. Fourth, criterion-based finalization and later primary-selection methods must be evaluated separately from candidate generation and retrieval. Fifth, it remains unclear whether the observed Top-3--Top-1 selection gap persists across model sizes, external corpora, and changes in the configured diagnostic scope. The precise gap addressed here is that HiED retains candidate detection, criterion verification, and primary selection as separately observable stages evaluated on the same cases.
+Taken together, the reviewed literature shows that LLM diagnosis, retrieved demonstrations, multi-agent orchestration, and criterion grounding can each support psychiatric diagnosis. However, the studies use different case sets, label mappings, endpoints, and observable intermediate outputs. They therefore do not by themselves establish how candidate ranking, criterion retention, and committed primary selection relate on the same cases.
+
+The reviewed literature consequently leaves five unresolved questions that are directly relevant to this thesis. First, heterogeneous task definitions and complete-system differences complicate comparisons among conventional classifiers, single LLMs, and multi-stage systems under one split, label mapping, and primary endpoint. Second, final-label accuracy does not show whether a benchmark diagnosis was absent from the ranked candidates, was not retained after criterion checking, or remained available but was not selected as the committed primary. Third, the effect of demonstration retrieval depends on example selection, requiring matched comparison of global similarity and label-aware balanced policies across Single and multi-stage architectures. Fourth, multi-agent and criterion-based interventions often change several stages or inference conditions at once, limiting attribution of final-performance differences to primary selection. Fifth, the persistence of the main findings across model sizes, a second synthetic corpus, changes in diagnostic scope, and cross-corpus transfer, together with the remaining error patterns, requires separate boundary analysis. HiED examines these questions by retaining candidate ranking, criterion verification, compatibility, and final selection as separately observable outputs under declared comparison contracts.
 
 This thesis therefore uses five research questions:
 
@@ -353,10 +368,10 @@ This thesis therefore uses five research questions:
 \item[RQ1] How does HiED compare with conventional and single-model baselines under the same data split, label mapping, and primary evaluation endpoint?
 \item[RQ2] How often is a benchmark diagnosis present among ranked candidates or criterion-supported alternatives but not selected as the committed diagnosis?
 \item[RQ3] How do no retrieval, global Top-5 retrieval, and parent-balanced retrieval compare in matched Single and HiED pipelines?
-\item[RQ4] Do criterion-based re-selection or the tested primary-selection methods improve over Direct-Answer?
-\item[RQ5] To what extent do the main findings persist across model sizes, external synthetic corpora, and changes in the configured diagnostic scope, and what error patterns characterize the remaining failures?
+\item[RQ4] Under the evaluated settings, do criterion-based re-selection or the tested primary-selection methods improve committed Top-1 agreement over Direct-Answer?
+\item[RQ5] To what extent do the main findings persist across model sizes, external synthetic corpora, and changes in the configured diagnostic scope, and which error patterns characterize the remaining disagreements?
 \end{description}
-RQ1 and RQ3 use matched comparisons on the same fixed internal test set, with common label projection and evaluation code. Clinical effectiveness and criterion-level clinical validity are not answered by the completed computational RQs; the LingxiDiag pilot review and CGMH real-world validation are separate ongoing clinical studies.
+These RQs define computational analyses on synthetic benchmark data. RQ1 and RQ3 use matched comparisons on the same fixed internal test set, with common label projection and evaluation code. RQ5 combines complementary sensitivity, external synthetic, scope, transfer, and error-pattern analyses rather than one statistical hypothesis. Clinical effectiveness and criterion-level clinical validity are not answered by the completed computational RQs; the LingxiDiag pilot review and CGMH real-world validation are separate ongoing clinical studies.
 
 \chapter{HiED System Architecture}
 \label{ch:architecture}
@@ -481,7 +496,7 @@ The denominator is the minimum satisfying count defined by the configured operat
 
 \paragraph{Output contracts.}
 
-DA produces one committed primary diagnosis and may retain one optional comorbid diagnosis. NtS produces one re-selected committed primary diagnosis and does not emit a comorbid diagnosis. Thus, the two policies differ in both their primary-selection rule and final output cardinality. Additional primary-selection methods are defined in Chapter~\ref{ch:experimental} and do not alter the core architecture described here.
+DA produces one committed primary diagnosis and may retain one optional comorbid diagnosis. NtS produces one re-selected committed primary diagnosis and does not emit a comorbid diagnosis. Thus, the two policies differ in both their primary-selection rule and final output cardinality.
 
 \section{Worked Example}
 \label{sec:running-example}
@@ -515,6 +530,8 @@ Criterion-verification result & \textbf{Not retained} & \textbf{Criterion-compat
 \end{table}
 
 The Diagnostician ranks F41.1 first and emits it as the primary diagnosis, while F32 remains second in the ranked differential. The Criterion Checker records unresolved duration and associated-feature information for F41.1, whereas the configured F32 rule is satisfied. The Compatibility Auditor therefore retains F32 but not F41.1 in the criterion-compatible set. DA preserves the emitted F41.1 primary diagnosis, whereas NtS selects F32 as the highest-ranked compatible diagnosis. This divergence demonstrates the difference between the Diagnostician's emitted decision and criterion-based re-selection; it does not show that F32 is the clinically correct primary diagnosis.
+
+In this running example, F41.1 is projected to its scoring parent, F41, allowing predictions made at different levels of ICD specificity to be compared under a consistent label representation.
 
 \section{Implementation Configuration}
 
@@ -578,15 +595,13 @@ Thus, a mixed case such as F90 with F41.1 is scored as $\{\mathrm{F41}\}$ rather
 
 For case $x$, $G(x)$ is the deduplicated gold-label set after parent-level projection. LingxiDiag cases may contain more than one gold parent label, and neither dataset provides a psychiatrist-reviewed unique clinical primary diagnosis. The first-listed gold parent is used only for explicitly single-label descriptive analyses such as the confusion matrix.
 
-In the running example from Chapter~\ref{ch:architecture}, F41.1 is scored as F41. If the gold-label set contains F41 and the system emits F32 while ranking F41.1 second, Top-1 is wrong but Top-3 is correct.
-
 \section{Datasets, Case Construction, and Split Roles}
 
-The study uses two synthetic Chinese psychiatric dialogue datasets. LingxiDiagBench is the source corpus for the in-domain experiments. MDD-5k provides an external synthetic test set.
+The study uses two synthetic Chinese psychiatric dialogue datasets. LingxiDiag-16K, the dataset underlying LingxiDiagBench, provides the source data for development and internal held-out evaluation, whereas MDD-5k is used for external cross-dataset evaluation.
 
-\subsection{LingxiDiagBench}
+\subsection{LingxiDiag-16K}
 
-LingxiDiagBench contains synthetic Chinese psychiatric consultations generated for static diagnostic classification and interactive consultation tasks~\citep{xu2026lingxidiagbench}. It is used as the source corpus for the in-domain experiments because it provides a fixed diagnostic label space and sufficient cases for training, configuration selection, and held-out evaluation. Its published results also show that fine-grained disorder-level diagnosis is substantially more difficult than broad depression--anxiety classification.
+LingxiDiag-16K is the synthetic Chinese psychiatric dialogue dataset underlying LingxiDiagBench and was generated for static diagnostic classification and interactive consultation tasks~\citep{xu2026lingxidiagbench}. It provides a fixed diagnostic label space and sufficient cases for training, configuration selection, and internal held-out evaluation. The published LingxiDiagBench results also show that fine-grained disorder-level diagnosis is substantially more difficult than broad depression--anxiety classification.
 
 The accessible release used in this study contained 14,000 training-source cases and 1,000 public-validation cases. The official test file was not available in the accessible release used when the experiments were designed. To obtain a held-out internal evaluation set, 1,000 cases were separated from the 14,000-case training source before the main experiments. The remaining 13,000 cases were used to train conventional baselines and build the retrieval index.
 
@@ -594,7 +609,7 @@ The internal held-out set was stratified to approximate the public-validation di
 
 \begin{table}[htbp]
 \centering
-\caption{LingxiDiag data splits and their roles in this thesis.}
+\caption{LingxiDiag-16K data splits and their roles in this thesis.}
 \label{tab:data-roles-rewrite}
 \small
 \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{3.7cm}|r|>{\raggedright\arraybackslash}X|}
@@ -605,7 +620,7 @@ Training source & 13,000 & Trains conventional baselines and builds the retrieva
 \hline
 Public validation & 1,000 & Supports prompt, rule, sensitivity, and retrieval-configuration selection; reported only as descriptive development-set context\\
 \hline
-Internal held-out set & 1,000 & Provides the main in-domain performance estimate after configuration selection\\
+Internal held-out set & 1,000 & Provides the main internal performance estimate after configuration selection\\
 \hline
 \end{tabularx}
 \end{table}
@@ -616,7 +631,7 @@ All internal methods are evaluated on the same fixed 1,000-case held-out set. Be
 
 MDD-5k is a synthetic Chinese psychiatric dialogue dataset generated from anonymized psychiatric case information through a neuro-symbolic multi-agent process~\citep{yin2024mdd5k}. Some patient files contain multiple dialogue rounds. The study adapter concatenates these rounds in their recorded order while preserving doctor and patient turns, and each patient file is treated as one evaluation case.
 
-The evaluated release contains 925 patient-level cases. Under HiED's main configured output space defined in Section~\ref{sec:gold-label-conventions}, a case is defined as \emph{in scope} when at least one projected benchmark gold diagnosis can be emitted by the system and as \emph{out of scope} when none of its projected gold diagnoses is represented in that output space. Among the 925 external cases, 878 are in scope and the remaining 47 are out of scope. Because MDD-5k transcripts are generally longer than the internal LingxiDiag transcripts, the same predefined prompt-budget rule described in Chapter~\ref{ch:architecture} is applied during external evaluation. MDD-5k is used as an external synthetic benchmark and does not constitute validation on real patient transcripts.
+The evaluated release contains 925 patient-level cases. Under HiED's main configured output space defined in Section~\ref{sec:gold-label-conventions}, a case is defined as \emph{in scope} when at least one projected benchmark gold diagnosis can be emitted by the system and as \emph{out of scope} when none of its projected gold diagnoses is represented in that output space. Among the 925 external cases, 878 are in scope and the remaining 47 are out of scope. Because MDD-5k transcripts are generally longer than those in LingxiDiag-16K, the same prompt-budget rule defined in Chapter~\ref{ch:architecture} is applied to the external evaluation. MDD-5k is used as an external synthetic benchmark and does not constitute validation on real patient transcripts.
 
 \subsection{Evaluation-Set Label Distributions}
 
@@ -684,6 +699,8 @@ TF--IDF + logistic regression obtains its Top-3 from ranked class scores. HiED o
 
 Because a case may contain more than one gold label, Top-$k$ Accuracy counts a case as correct when at least one gold label appears among the first $k$ predictions. Exact Match, also called subset accuracy, requires the complete predicted label set to equal the complete gold-label set. These are benchmark-agreement measures, not independent measures of the patient's true clinical diagnosis.
 
+For example, suppose that the projected gold-label set contains F41, while the system ranks F32 first and F41.1 second. Because F41.1 is projected to its scoring parent F41, the case is incorrect under committed Top-1 evaluation but correct under Top-3 evaluation.
+
 DA may emit a committed primary diagnosis and one optional comorbid diagnosis, whereas NtS emits one committed primary diagnosis. Their Top-1 comparison therefore evaluates the committed primary directly, but differences in Exact Match, Macro-F1, or Weighted-F1 also reflect output cardinality and cannot be interpreted as isolated effects of primary re-selection.
 
 Table~\ref{tab:metric-contract} summarizes which recorded output view is evaluated by each measure. The subsequent equations provide the formal case-level definitions used by the scoring implementation.
@@ -721,7 +738,7 @@ Top-3 and committed Top-1 are computed over all 1,000 internal test cases. Gold-
 \mathrm{Top\text{-}3\ Accuracy}=\frac{1}{N}\sum_x \mathbb{1}[R_3(x)\cap G(x)\neq\varnothing],
 \]
 \[
-\mathrm{Exact}=\frac{1}{N}\sum_x \mathbb{1}[M(x)=G(x)].
+\mathrm{Exact Match}=\frac{1}{N}\sum_x \mathbb{1}[M(x)=G(x)].
 \]
 
 Macro-F1 is the unweighted mean of the twelve one-vs-rest label-level F1 scores obtained by binarizing $G(x)$ and $M(x)$ over the fixed scoring classes. Weighted-F1 uses the same label-level F1 scores but weights each class by its gold-label support.
@@ -874,7 +891,7 @@ Committed Top-1 remains the common endpoint across finalization policies. Set-le
 \section{Sensitivity and Transfer Analyses}
 \label{sec:sensitivity-transfer-design}
 
-This section defines the analyses used to answer RQ5. These analyses examine whether the main in-domain findings remain observable under changes in model scale, a second synthetic corpus, diagnostic scope, and corpus-specific lexical representations. They evaluate sensitivity and partial transfer under the tested conditions rather than establishing general robustness or clinical generalizability.
+This section defines the analyses used to answer RQ5. These analyses examine whether the main internal findings remain observable under changes in model scale, a second synthetic dataset, diagnostic scope, and corpus-specific lexical representations. They evaluate sensitivity and partial transfer under the tested conditions rather than establishing general robustness or clinical generalizability.
 
 \paragraph{Within-family model-scale sensitivity.}
 Model-scale sensitivity is evaluated using Qwen3-4B, 8B, 14B, and 32B on the same fixed 1,000-case internal set. The prompt family, configured diagnostic scope, retrieval policy, decoding contract, and evaluation endpoints are held constant across sizes. Committed Top-1, genuine Top-3, structured-output failures, and abstention events are recorded.
@@ -947,7 +964,7 @@ The audit-assisted outcomes will be treated as exploratory human--AI review and 
 
 Agreement with the recorded clinical diagnosis, agreement with the blinded transcript-only psychiatrist reference, and audit-assisted psychiatrist decisions represent different information conditions and will be reported separately. Data collection and clinical review are ongoing, and incomplete CGMH results are not included in the present quantitative conclusions.
 
-\chapter{In-Domain Evaluation Results}
+\chapter{Internal Evaluation Results}
 \label{ch:results}
 
 This chapter first establishes the predictive position of HiED on the internal evaluation set, then localizes disagreements across candidate detection, criterion verification, and primary selection. Retrieval, primary-selection strategies, model scale, and diagnostic confusions are examined afterward as alternative explanations and supporting analyses.
@@ -1257,7 +1274,7 @@ Detailed discordant counts, exact McNemar tests, interaction contrasts, and adju
 \section{Model-Scale and Diagnostic Error Analysis}
 \label{sec:robustness-error-distribution}
 
-This section provides the in-domain model-scale and diagnostic-confusion evidence for RQ5.
+This section provides the internal model-scale and diagnostic-confusion evidence for RQ5.
 
 \paragraph{Model scale.}
 
@@ -1279,13 +1296,13 @@ Overall, TF--IDF + logistic regression is the strongest same-split predictor, wh
 \chapter{External Synthetic Evaluation}
 \label{ch:external}
 
-This chapter addresses the external-corpus component of RQ5 by testing whether the selection gap identified under RQ2 and the primary-selection findings from RQ4 remain observable on MDD-5k, a second Chinese synthetic corpus with different generation procedures, label distributions, and diagnostic coverage. Its analysis populations are subsets of one source corpus rather than independent cohorts, and the results do not constitute real-patient or Taiwanese clinical validation.
+This chapter addresses the external cross-dataset component of RQ5 by testing whether the selection gap identified under RQ2 and the primary-selection findings from RQ4 remain observable on MDD-5k, a second Chinese synthetic dataset with different generation procedures, label distributions, and diagnostic coverage. Its analysis populations are subsets of one source dataset rather than independent cohorts, and the results do not constitute real-patient or Taiwanese clinical validation.
 
 \section[External Performance and Candidate-to-Commitment Gap]{\raggedright External Performance and Candidate-to-Commitment Gap}
 \label{sec:mdd-multiway}
 \label{sec:external-ranking-gap}
 
-This section examines whether the main in-domain performance pattern remains visible on MDD-5k, a second Chinese synthetic corpus with different generation procedures, label distributions, and diagnostic coverage. The analysis provides external synthetic evidence under RQ5; it does not constitute validation on real patients or an independent clinical cohort.
+This section examines whether the main internal performance pattern remains visible on MDD-5k, a second Chinese synthetic dataset with different generation procedures, label distributions, and diagnostic coverage. The analysis provides external cross-dataset synthetic evidence under RQ5; it does not constitute validation on real patients or an independent clinical cohort.
 
 Table~\ref{tab:external-inventory} distinguishes the populations used in the external analyses. The full 925-case set supports multi-way performance and common-trace primary-selection analyses. The 878-case in-scope subset excludes cases for which none of the benchmark gold diagnoses can be emitted under HiED's main configured output space. The 47 remaining cases are retained in the full-set estimate because diagnostic-scope limitations are part of the evaluated system. The restricted 490-case F32/F41 subset is a separate binary task and is not directly comparable with the multi-way evaluation.
 
@@ -1739,9 +1756,9 @@ Overall, the measurement framework can localize where benchmark disagreement app
 
 \section{Dataset and Generalizability Limitations}
 
-LingxiDiagBench and MDD-5k consist of synthetically generated Chinese psychiatric dialogues. They provide controlled and reproducible evaluation settings but may contain regular generation patterns, simplified diagnostic ambiguity, limited comorbidity, clearer symptom cues, and less conversational and longitudinal complexity than real psychiatric consultations. Similar findings across the two corpora may therefore reflect properties shared by synthetic dialogue generation rather than general characteristics of clinical diagnosis.
+LingxiDiag-16K and MDD-5k consist of synthetically generated Chinese psychiatric dialogues. They provide controlled and reproducible evaluation settings but may contain regular generation patterns, simplified diagnostic ambiguity, limited comorbidity, clearer symptom cues, and less conversational and longitudinal complexity than real psychiatric consultations. Similar findings across the two datasets may therefore reflect properties shared by synthetic dialogue generation rather than general characteristics of clinical diagnosis.
 
-Because the official LingxiDiagBench test split was unavailable, the main internal evaluation uses a fixed 1,000-case held-out subset sampled from the training-source corpus. Case identifiers were excluded from training and retrieval, but the evaluation cases still share the source generation process, language style, label distribution, and annotation procedure with the development data. A complete semantic near-duplicate audit was not performed. The internal results should therefore be interpreted as same-source held-out performance rather than independent external validation.
+Because the official LingxiDiagBench test split was unavailable, the main internal evaluation uses a fixed 1,000-case held-out subset sampled from the LingxiDiag-16K training source. Case identifiers were excluded from training and retrieval, but the evaluation cases still share the source generation process, language style, label distribution, and annotation procedure with the development data. A complete semantic near-duplicate audit was not performed. The internal results should therefore be interpreted as same-source held-out performance rather than independent external validation.
 
 The public-validation split was used repeatedly for prompt development, compatibility-rule refinement, sensitivity analysis, and retrieval selection. It consequently represents development evidence rather than an independent estimate of generalization. The reversal between the validation-selected retrieval ordering and the held-out results further illustrates the uncertainty associated with configuration selection from a limited development split.
 
@@ -1821,11 +1838,11 @@ A benchmark gold parent appeared in the genuine Top-3 substantially more often t
 
 Retrieval benefited Single more consistently than HiED. Global Top-5 was selected for Single on validation, and both retrieval configurations improved its held-out Top-1 result relative to no retrieval. HiED showed mixed validation outcomes, and parent-balanced retrieval was retained according to the predefined selection rule; however, global Top-5 produced higher held-out point estimates across the reported HiED endpoints. The results therefore do not identify a stable best retrieval configuration for HiED or isolate a causal benefit of parent balancing.
 
-\item[RQ4] \textbf{Do criterion-based re-selection or the tested primary-selection methods improve over Direct-Answer?}
+\item[RQ4] \textbf{Under the evaluated settings, do criterion-based re-selection or the tested primary-selection methods improve committed Top-1 agreement over Direct-Answer?}
 
 No evaluated intervention produced a clear and attributable improvement over Direct-Answer. NtS provided the cleanest finalization comparison because it reused the same upstream ranking and criterion-checking artifacts, but it reduced committed Top-1 agreement under all three retrieval conditions. Deterministic fusion, pairwise comparison, debate, and sampling-based methods likewise produced negative or statistically uncertain results under the tested configurations. These findings apply to the evaluated rules, prompts, models, and inference budgets rather than to the broader method families in general.
 
-\item[RQ5] \textbf{To what extent do the main findings persist across model sizes, external synthetic corpora, and changes in the configured diagnostic scope, and what error patterns characterize the remaining failures?}
+\item[RQ5] \textbf{To what extent do the main findings persist across model sizes, external synthetic corpora, and changes in the configured diagnostic scope, and which error patterns characterize the remaining disagreements?}
 
 The candidate-to-commitment pattern remained observable across the evaluated Qwen3 sizes and on MDD-5k. The external trace did not contain matched criterion-retention outputs, so the complete internal $D_3$--$R$--$S$ pathway could not be replicated. Diagnostic-scope expansion increased output-space representability without producing committed-primary recovery, while cross-corpus TF--IDF performance degraded substantially.
 
