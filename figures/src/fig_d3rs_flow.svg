@@ -32,22 +32,22 @@
   <path d="M595 505 H655 M655 505 V450 H705 M655 505 V595 H705" class="line"/>
 
   <rect x="705" y="65" width="235" height="105" class="box" fill="#e8f6f1" stroke="#2e8b72"/>
-  <text x="822" y="102" text-anchor="middle" class="head">Retained</text>
+  <text x="822" y="102" text-anchor="middle" class="head">Gold label included</text>
   <text x="822" y="134" text-anchor="middle" class="body">R = Yes</text>
   <text x="905" y="134" text-anchor="middle" class="count">778</text>
 
   <rect x="705" y="215" width="235" height="105" class="box" fill="#fff4e7" stroke="#b87828"/>
-  <text x="822" y="252" text-anchor="middle" class="head">Not retained</text>
+  <text x="822" y="252" text-anchor="middle" class="head">Gold label absent</text>
   <text x="822" y="284" text-anchor="middle" class="body">R = No</text>
   <text x="905" y="284" text-anchor="middle" class="count">24</text>
 
   <rect x="705" y="398" width="235" height="105" class="box" fill="#e8f6f1" stroke="#2e8b72"/>
-  <text x="822" y="435" text-anchor="middle" class="head">Retained</text>
+  <text x="822" y="435" text-anchor="middle" class="head">Gold label included</text>
   <text x="822" y="467" text-anchor="middle" class="body">R = Yes</text>
   <text x="905" y="467" text-anchor="middle" class="count">79</text>
 
   <rect x="705" y="543" width="235" height="105" class="box" fill="#f6f7f8" stroke="#7b8791"/>
-  <text x="822" y="580" text-anchor="middle" class="head">Not retained</text>
+  <text x="822" y="580" text-anchor="middle" class="head">Gold label absent</text>
   <text x="822" y="612" text-anchor="middle" class="body">R = No</text>
   <text x="905" y="612" text-anchor="middle" class="count">34</text>
 
@@ -60,13 +60,13 @@
   <text x="1197" y="119" text-anchor="middle" class="count">506</text>
 
   <rect x="1045" y="145" width="305" height="105" class="box" fill="#fcebea" stroke="#b6534c"/>
-  <text x="1197" y="175" text-anchor="middle" class="head">Ranked-and-retained</text>
-  <text x="1197" y="201" text-anchor="middle" class="head">nonselection</text>
+  <text x="1197" y="175" text-anchor="middle" class="head">Ranked and compatible</text>
+  <text x="1197" y="201" text-anchor="middle" class="head">but not selected</text>
   <text x="1197" y="235" text-anchor="middle" class="count">272</text>
 
   <rect x="1045" y="265" width="305" height="105" class="box" fill="#f5efe8" stroke="#9b7246"/>
   <text x="1197" y="300" text-anchor="middle" class="head">Commitment when R = No</text>
   <text x="1197" y="334" text-anchor="middle" class="body">12 agreement; 12 disagreement</text>
 
-  <text x="700" y="692" text-anchor="middle" class="note">R records criterion-compatible retention over the configured checker scope; the diagram summarizes joint profiles rather than a strict runtime funnel.</text>
+  <text x="700" y="692" text-anchor="middle" class="note">R indicates gold-label inclusion in the criterion-compatible set; the diagram summarizes joint profiles rather than a strict runtime funnel.</text>
 </svg>

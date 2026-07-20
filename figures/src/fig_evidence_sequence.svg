@@ -35,9 +35,10 @@
   <rect x="74" y="476" width="220" height="50" rx="5" fill="#f8fcfb" stroke="#74aaa5" stroke-width="1.5"/>
   <rect x="302" y="476" width="220" height="50" rx="5" fill="#f8fcfb" stroke="#74aaa5" stroke-width="1.5"/>
   <rect x="530" y="476" width="256" height="50" rx="5" fill="#f8fcfb" stroke="#74aaa5" stroke-width="1.5"/>
-  <text x="184" y="508" text-anchor="middle" class="small-detail">Candidate detection</text>
-  <text x="412" y="496" text-anchor="middle" class="small-detail">Criterion-compatible</text>
-  <text x="412" y="518" text-anchor="middle" class="small-detail">retention</text>
+  <text x="184" y="496" text-anchor="middle" class="small-detail">Top-3 candidate</text>
+  <text x="184" y="518" text-anchor="middle" class="small-detail">detection</text>
+  <text x="412" y="496" text-anchor="middle" class="small-detail">Gold-label</text>
+  <text x="412" y="518" text-anchor="middle" class="small-detail">inclusion</text>
   <text x="658" y="496" text-anchor="middle" class="small-detail">Committed-primary</text>
   <text x="658" y="518" text-anchor="middle" class="small-detail">agreement</text>
 
