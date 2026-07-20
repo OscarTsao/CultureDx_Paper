@@ -1,77 +1,77 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="850" viewBox="0 0 1400 850">
-  <rect width="1400" height="850" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="925" viewBox="0 0 1400 925">
+  <rect width="1400" height="925" fill="#ffffff"/>
   <defs>
     <marker id="arrow-solid" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#52606d"/>
-    </marker>
-    <marker id="arrow-dashed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#697784"/>
-    </marker>
-    <marker id="arrow-step" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3f8f88"/>
     </marker>
   </defs>
   <style>
     text { font-family: Verdana, Arial, sans-serif; fill: #1f2933; }
     .title { font-size: 29px; font-weight: 700; }
     .heading { font-size: 22px; font-weight: 700; }
-    .detail { font-size: 16px; }
-    .study { font-size: 14px; font-weight: 700; fill: #52606d; }
-    .connector-label { font-size: 14px; fill: #52606d; }
+    .detail { font-size: 18px; }
+    .small-detail { font-size: 16px; }
+    .study { font-size: 15px; font-weight: 700; fill: #52606d; letter-spacing: 0.4px; }
     .flow { stroke: #52606d; stroke-width: 3; fill: none; marker-end: url(#arrow-solid); }
-    .stage-link { stroke: #3f8f88; stroke-width: 2.2; fill: none; marker-end: url(#arrow-step); }
-    .review-link { stroke: #697784; stroke-width: 2.5; fill: none; stroke-dasharray: 9 7; marker-end: url(#arrow-dashed); }
   </style>
 
   <text x="700" y="43" text-anchor="middle" class="title">Empirical evidence sequence</text>
 
-  <rect x="60" y="75" width="680" height="150" rx="7" fill="#e9f2fb" stroke="#3f6f9f" stroke-width="2.5"/>
-  <text x="400" y="113" text-anchor="middle" class="heading">1. Benchmark positioning</text>
-  <text x="400" y="155" text-anchor="middle" class="detail">RQ1: Majority, TF-IDF + LR, Single, and HiED</text>
-  <text x="400" y="187" text-anchor="middle" class="detail">RQ3: No retrieval, global Top-5, and parent-balanced retrieval</text>
+  <rect x="50" y="75" width="760" height="130" rx="7" fill="#e9f2fb" stroke="#3f6f9f" stroke-width="2.5"/>
+  <text x="430" y="112" text-anchor="middle" class="heading">1. Retrieval-configuration selection (RQ3)</text>
+  <text x="430" y="151" text-anchor="middle" class="detail">Public validation: no retrieval / global Top-5 / parent-balanced</text>
+  <text x="430" y="180" text-anchor="middle" class="detail">Select and freeze the Single and HiED–DA configurations</text>
 
-  <path d="M400 225 V260" class="flow"/>
+  <path d="M430 205 V235" class="flow"/>
 
-  <rect x="60" y="270" width="680" height="150" rx="7" fill="#e7f4f2" stroke="#3f8f88" stroke-width="2.5"/>
-  <text x="400" y="308" text-anchor="middle" class="heading">2. Stage-wise failure localization</text>
-  <text x="400" y="342" text-anchor="middle" class="detail">RQ2</text>
-  <text x="165" y="382" text-anchor="middle" class="detail">Candidate detection</text>
-  <path d="M250 377 H292" class="stage-link"/>
-  <text x="400" y="382" text-anchor="middle" class="detail">Criterion verification</text>
-  <path d="M500 377 H542" class="stage-link"/>
-  <text x="635" y="382" text-anchor="middle" class="detail">Primary selection</text>
+  <rect x="50" y="245" width="760" height="125" rx="7" fill="#eef3f8" stroke="#5d7994" stroke-width="2.5"/>
+  <text x="430" y="283" text-anchor="middle" class="heading">2. Same-split benchmark positioning (RQ1)</text>
+  <text x="430" y="327" text-anchor="middle" class="detail">Internal held-out: Majority / TF-IDF + LR / Single / HiED-DA</text>
 
-  <path d="M400 420 V455" class="flow"/>
+  <path d="M430 370 V395" class="flow"/>
 
-  <rect x="60" y="465" width="680" height="150" rx="7" fill="#f7f1df" stroke="#a57c24" stroke-width="2.5"/>
-  <text x="400" y="503" text-anchor="middle" class="heading">3. Primary-selection interventions</text>
-  <text x="400" y="545" text-anchor="middle" class="detail">RQ4: DA, NtS, fusion, pairwise, debate,</text>
-  <text x="400" y="577" text-anchor="middle" class="detail">and SC/CISC</text>
+  <rect x="50" y="405" width="760" height="150" rx="7" fill="#e7f4f2" stroke="#3f8f88" stroke-width="2.5"/>
+  <text x="430" y="443" text-anchor="middle" class="heading">3. Stage-wise disagreement localization (RQ2)</text>
+  <rect x="74" y="476" width="220" height="50" rx="5" fill="#f8fcfb" stroke="#74aaa5" stroke-width="1.5"/>
+  <rect x="302" y="476" width="220" height="50" rx="5" fill="#f8fcfb" stroke="#74aaa5" stroke-width="1.5"/>
+  <rect x="530" y="476" width="256" height="50" rx="5" fill="#f8fcfb" stroke="#74aaa5" stroke-width="1.5"/>
+  <text x="184" y="508" text-anchor="middle" class="small-detail">Candidate detection</text>
+  <text x="412" y="496" text-anchor="middle" class="small-detail">Criterion-compatible</text>
+  <text x="412" y="518" text-anchor="middle" class="small-detail">retention</text>
+  <text x="658" y="496" text-anchor="middle" class="small-detail">Committed-primary</text>
+  <text x="658" y="518" text-anchor="middle" class="small-detail">agreement</text>
 
-  <path d="M400 615 V650" class="flow"/>
+  <path d="M430 555 V580" class="flow"/>
 
-  <rect x="60" y="660" width="680" height="150" rx="7" fill="#f3eaf5" stroke="#80558c" stroke-width="2.5"/>
-  <text x="400" y="698" text-anchor="middle" class="heading">4. Robustness and transfer</text>
-  <text x="400" y="740" text-anchor="middle" class="detail">RQ5: Model scale, MDD-5k, diagnostic scope,</text>
-  <text x="400" y="772" text-anchor="middle" class="detail">and cross-corpus transfer</text>
+  <rect x="50" y="590" width="760" height="130" rx="7" fill="#f7f1df" stroke="#a57c24" stroke-width="2.5"/>
+  <text x="430" y="628" text-anchor="middle" class="heading">4. Primary-selection interventions (RQ4)</text>
+  <text x="430" y="658" text-anchor="middle" class="detail">DA vs. NtS</text>
+  <text x="430" y="681" text-anchor="middle" class="detail">Fusion, pairwise, debate,</text>
+  <text x="430" y="704" text-anchor="middle" class="detail">and repeated-generation methods</text>
 
-  <path d="M740 377 H890" class="review-link"/>
-  <rect x="748" y="323" width="135" height="43" fill="#ffffff"/>
-  <text x="815" y="340" text-anchor="middle" class="connector-label">Separate cohorts</text>
-  <text x="815" y="359" text-anchor="middle" class="connector-label">Separate outcomes</text>
+  <path d="M430 720 V745" class="flow"/>
 
-  <rect x="890" y="235" width="450" height="540" rx="7" fill="#f7f8fa" stroke="#52606d" stroke-width="2.5" stroke-dasharray="10 7"/>
-  <text x="1115" y="272" text-anchor="middle" class="study">COMPLEMENTARY CLINICAL EVALUATION</text>
+  <rect x="50" y="755" width="760" height="140" rx="7" fill="#f3eaf5" stroke="#80558c" stroke-width="2.5"/>
+  <text x="430" y="793" text-anchor="middle" class="heading">5. Sensitivity and transfer analyses (RQ5)</text>
+  <text x="430" y="834" text-anchor="middle" class="detail">Model scale and MDD-5k</text>
+  <text x="430" y="865" text-anchor="middle" class="detail">Diagnostic scope, cross-corpus transfer, and error patterns</text>
 
-  <rect x="920" y="300" width="390" height="190" rx="6" fill="#eef4f7" stroke="#697784" stroke-width="1.8"/>
-  <text x="1115" y="340" text-anchor="middle" class="heading">LingxiDiag pilot</text>
-  <text x="1115" y="379" text-anchor="middle" class="detail">20 synthetic disagreement cases</text>
-  <text x="1115" y="411" text-anchor="middle" class="detail">Pilot expert characterization</text>
-  <text x="1115" y="454" text-anchor="middle" class="study">ONGOING</text>
+  <rect x="880" y="180" width="470" height="650" rx="7" fill="#f7f8fa" stroke="#52606d" stroke-width="2.5" stroke-dasharray="10 7"/>
+  <text x="1115" y="217" text-anchor="middle" class="study">ONGOING COMPLEMENTARY</text>
+  <text x="1115" y="240" text-anchor="middle" class="study">CLINICAL STUDIES</text>
 
-  <rect x="920" y="525" width="390" height="190" rx="6" fill="#f2f3f8" stroke="#697784" stroke-width="1.8"/>
-  <text x="1115" y="565" text-anchor="middle" class="heading">CGMH validation</text>
-  <text x="1115" y="604" text-anchor="middle" class="detail">Prespecified real-world cohort</text>
-  <text x="1115" y="636" text-anchor="middle" class="detail">System-physician agreement</text>
-  <text x="1115" y="679" text-anchor="middle" class="study">ONGOING</text>
+  <rect x="910" y="275" width="410" height="190" rx="6" fill="#eef4f7" stroke="#697784" stroke-width="1.8"/>
+  <text x="1115" y="313" text-anchor="middle" class="heading">LingxiDiag Pilot Review</text>
+  <text x="1115" y="351" text-anchor="middle" class="detail">20 selected disagreement cases</text>
+  <text x="1115" y="381" text-anchor="middle" class="detail">from the internal held-out set</text>
+  <text x="1115" y="414" text-anchor="middle" class="detail">Blinded review by two psychiatrists</text>
+  <text x="1115" y="443" text-anchor="middle" class="study">ONGOING</text>
+
+  <rect x="910" y="505" width="410" height="255" rx="6" fill="#f2f3f8" stroke="#697784" stroke-width="1.8"/>
+  <text x="1115" y="546" text-anchor="middle" class="heading">CGMH Real-World Validation</text>
+  <text x="1115" y="590" text-anchor="middle" class="detail">Real-world psychiatric consultations</text>
+  <text x="1115" y="620" text-anchor="middle" class="detail">Agreement with recorded diagnoses and</text>
+  <text x="1115" y="650" text-anchor="middle" class="detail">a blinded psychiatrist</text>
+  <text x="1115" y="680" text-anchor="middle" class="detail">transcript-only reference</text>
+  <text x="1115" y="718" text-anchor="middle" class="study">ONGOING</text>
 </svg>

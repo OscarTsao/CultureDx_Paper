@@ -1,14 +1,23 @@
 \documentclass[tikz,border=5pt]{standalone}
+\usepackage{fontspec}
+\usepackage{xeCJK}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,calc,positioning}
+
+\setsansfont{Nimbus Sans}
+\setCJKmainfont{Noto Serif CJK TC}
+\setCJKsansfont{Noto Sans CJK TC}
+\setCJKmonofont{Noto Sans Mono CJK TC}
 
 \definecolor{canvas}{RGB}{246,247,248}
 \definecolor{textgray}{RGB}{54,60,66}
 \definecolor{muted}{RGB}{92,100,108}
-\definecolor{evidencefill}{RGB}{236,244,253}
-\definecolor{evidencedraw}{RGB}{44,111,176}
+\definecolor{inputfill}{RGB}{236,244,253}
+\definecolor{inputdraw}{RGB}{44,111,176}
 \definecolor{rankfill}{RGB}{252,244,226}
 \definecolor{rankdraw}{RGB}{190,119,16}
+\definecolor{checkerfill}{RGB}{248,248,247}
+\definecolor{checkerdraw}{RGB}{104,111,116}
 \definecolor{rejectfill}{RGB}{252,238,238}
 \definecolor{rejectdraw}{RGB}{181,62,62}
 \definecolor{acceptfill}{RGB}{234,248,244}
@@ -18,98 +27,83 @@
 \definecolor{dafill}{RGB}{238,240,242}
 \definecolor{dadraw}{RGB}{88,96,104}
 
-\newcommand{\CardTitle}[1]{{\fontsize{12.2}{13.5}\selectfont\bfseries #1}}
-\newcommand{\CardText}[1]{{\fontsize{8.9}{10.4}\selectfont #1}}
-\newcommand{\SmallText}[1]{{\fontsize{8.1}{9.4}\selectfont #1}}
+\newcommand{\CardTitle}[1]{{\fontsize{11.2}{12.7}\selectfont\bfseries #1}}
+\newcommand{\CardText}[1]{{\fontsize{8.8}{10.3}\selectfont #1}}
+\newcommand{\SmallText}[1]{{\fontsize{8.0}{9.3}\selectfont #1}}
 
 \begin{document}
 \begin{tikzpicture}[
   font=\sffamily,
   >={Latex[length=2.2mm]},
   flow/.style={draw=textgray, line width=0.75pt, -{Latex[length=2.3mm]}},
-  policyflow/.style={draw=evidencedraw, line width=0.85pt, -{Latex[length=2.4mm]}},
+  policyflow/.style={draw=inputdraw, line width=0.85pt, -{Latex[length=2.4mm]}},
+  recordedflow/.style={draw=inputdraw, line width=0.75pt, dashed, -{Latex[length=2.3mm]}},
   card/.style={rounded corners=3pt, line width=0.85pt, align=left, inner sep=6pt},
   stage/.style={font=\sffamily\fontsize{8.2}{9.2}\selectfont\bfseries, text=muted, align=center},
-  arrowlabel/.style={font=\sffamily\fontsize{8.2}{9.2}\selectfont, text=muted, fill=canvas, inner sep=2pt}
+  arrowlabel/.style={font=\sffamily\fontsize{7.8}{8.8}\selectfont, text=muted, fill=canvas, inner sep=2pt}
 ]
 
-\fill[canvas] (-0.2,-4.15) rectangle (20.1,4.75);
+\fill[canvas] (-0.25,-4.85) rectangle (21.65,5.15);
 
-\node[stage] at (2.15,4.30) {TRANSCRIPT};
-\node[stage] at (6.55,4.30) {RANKED DIFFERENTIAL};
-\node[stage] at (11.15,4.30) {CRITERION VERIFICATION};
-\node[stage] at (15.05,4.30) {COMPATIBLE SET};
-\node[stage] at (18.35,4.30) {FINALIZATION};
+\node[stage] at (2.20,4.70) {SPEAKER-LABELED INPUT};
+\node[stage] at (8.55,4.70) {LLM-BASED DIAGNOSTIC OUTPUTS};
+\node[stage] at (14.95,4.70) {DETERMINISTIC AUDITOR};
+\node[stage] at (19.45,4.70) {FINALIZATION};
 
-\node[card, draw=evidencedraw, fill=evidencefill, text=textgray,
-      text width=3.75cm, minimum height=5.45cm] (evidence) at (2.15,0)
-{\CardTitle{Selected transcript information}\\[3pt]
- \textcolor{evidencedraw}{\SmallText{\textbf{Reported information}}}\\[2pt]
- \CardText{\textbullet\ Depressed mood for about two weeks\par
- \textbullet\ Loss of interest\par
- \textbullet\ Early awakening and fatigue\par
- \textbullet\ Poor concentration\par
- \textbullet\ Persistent worry}\\[6pt]
- \textcolor{evidencedraw}{\CardTitle{Unresolved\\information}}\\[3pt]
- \CardText{\textbullet\ Anxiety duration and chronology\par
- \textbullet\ Motor or autonomic symptoms\par
- \textbullet\ Relation between mood\par
- and anxiety syndromes}};
+\node[card, draw=inputdraw, fill=inputfill, text=textgray,
+      text width=3.80cm, minimum height=7.10cm] (transcript) at (2.20,0)
+{\CardTitle{Chinese transcript}\\[5pt]
+ \SmallText{\textbf{Clinician:} 最近最困擾你的事情是什麼？\par\medskip
+ \textbf{Patient:} 這兩個星期幾乎每天心情都很低落，原本喜歡做的事情也都不想做。\par\medskip
+ \textbf{Clinician:} 這種擔心持續多久了？\par\medskip
+ \textbf{Patient:} 我不確定，好像心情變差後比較明顯。}\\[7pt]
+ \textcolor{inputdraw}{\SmallText{Speaker labels preserved\\Turn order preserved}}};
 
 \node[card, draw=rankdraw, fill=rankfill, text=textgray,
-      text width=3.25cm, minimum height=4.55cm] (ranking) at (6.55,0)
-{\CardTitle{Diagnostician ranking}\\[5pt]
- \CardText{\textbf{1}\quad F41.1 Generalized\par
- anxiety disorder\par
+      text width=4.50cm, minimum height=2.70cm] (diagnostician) at (7.65,2.35)
+{\CardTitle{Diagnostician}\\[4pt]
+ \CardText{\textbf{1}\quad F41.1 Generalized anxiety disorder\par
  \textbf{2}\quad F32 Depressive episode\par
- \textbf{3}\quad F41.2 Mixed\par
- anxiety and depressive\par
- disorder}\\[7pt]
- \textcolor{rankdraw}{\SmallText{Other candidates: F51, F39}}};
+ \textbf{3--5}\quad Other ranked candidates}\\[5pt]
+ \textcolor{rankdraw}{\SmallText{Emitted primary: \textbf{F41.1}}}};
 
-\node[card, draw=rejectdraw, fill=rejectfill, text=textgray,
-      text width=4.05cm, minimum height=2.65cm] (f411) at (11.15,1.65)
-{\CardTitle{F41.1 verification}\\[3pt]
- \SmallText{\textbf{Supporting information:}\par worry, concentration, and sleep disturbance\par
- \textbf{Unresolved information:}\par six-month duration and broader anxiety features}\\[4pt]
- \textcolor{rejectdraw}{\CardText{\textbf{Not retained}}}};
-
-\node[card, draw=acceptdraw, fill=acceptfill, text=textgray,
-      text width=4.05cm, minimum height=2.65cm] (f32) at (11.15,-1.90)
-{\CardTitle{F32 verification}\\[3pt]
- \SmallText{\textbf{Supporting information:}\par mood, anhedonia, duration, fatigue, poor focus, and sleep\par
- \textbf{Unresolved information:}\par several associated symptoms}\\[4pt]
- \textcolor{acceptdraw}{\CardText{\textbf{Criterion-compatible}}}};
+\node[card, draw=checkerdraw, fill=checkerfill, text=textgray,
+      text width=7.50cm, minimum height=3.55cm] (checkers) at (8.65,-1.45)
+{\CardTitle{Diagnosis-specific\\Criterion Checkers}\\[5pt]
+ \textcolor{rejectdraw}{\SmallText{\textbf{F41.1}}}\quad
+ \SmallText{worry \texttt{met}; six-month duration \texttt{insufficient\_evidence}; rule not satisfied}\\[7pt]
+ \textcolor{acceptdraw}{\SmallText{\textbf{F32}}}\quad
+ \SmallText{core symptoms and total symptom count \texttt{met};\par two-week duration \texttt{met}; rule satisfied}\\[6pt]
+ \textcolor{checkerdraw}{\SmallText{Each checker reads the same transcript independently}}};
 
 \node[card, draw=setdraw, fill=setfill, text=textgray,
-      text width=2.45cm, minimum height=1.55cm, align=center] (compatible) at (15.05,-1.90)
-{\CardTitle{Compatible set}\\[4pt]
+      text width=2.85cm, minimum height=2.75cm, align=center] (auditor) at (14.95,-1.45)
+{\CardTitle{Compatibility\\Auditor}\\[5pt]
+ \SmallText{Aggregates checker states only}\\[6pt]
+ \textcolor{setdraw}{\CardText{Compatible set}}\\[-1pt]
  \textcolor{setdraw}{\CardTitle{F32}}};
 
 \node[card, draw=dadraw, fill=dafill, text=textgray,
-      text width=3.0cm, minimum height=2.05cm, align=center] (da) at (18.35,1.65)
-{\CardTitle{Direct-Answer}\\[4pt]
- \SmallText{Keeps rank 1}\\[4pt]
- \textcolor{dadraw}{\CardTitle{$\rightarrow$ F41.1}}};
+      text width=3.45cm, minimum height=2.25cm, align=center] (da) at (19.45,2.35)
+{\CardTitle{Direct-Answer}\\[5pt]
+ \SmallText{Preserves emitted primary}\\[5pt]
+ \textcolor{dadraw}{\CardTitle{F41.1}}};
 
 \node[card, draw=acceptdraw, fill=acceptfill, text=textgray,
-      text width=3.0cm, minimum height=2.05cm, align=center] (nts) at (18.35,-1.90)
-{\CardTitle{Nominate-then-\\Select}\\[4pt]
- \SmallText{Chooses highest-ranked compatible diagnosis}\\[4pt]
- \textcolor{acceptdraw}{\CardTitle{$\rightarrow$ F32}}};
+      text width=3.45cm, minimum height=2.45cm, align=center] (nts) at (19.45,-1.45)
+{\CardTitle{Nominate-then-\\Select}\\[5pt]
+ \SmallText{Chooses highest-ranked compatible diagnosis}\\[5pt]
+ \textcolor{acceptdraw}{\CardTitle{F32}}};
 
-\draw[flow] (evidence.east) -- (ranking.west);
-\draw[flow] (ranking.east) -- ++(0.40,0) |- (f411.west);
-\draw[flow] (ranking.east) -- ++(0.40,0) |- (f32.west);
-\draw[flow] (f32.east) -- (compatible.west);
-\draw[policyflow] (compatible.east) -- (nts.west);
+\draw[flow] (transcript.east) -- ++(0.40,0) |- (diagnostician.west);
+\draw[flow] (transcript.east) -- ++(0.55,0) |- (checkers.west);
+\draw[flow] (checkers.east) -- (auditor.west);
+\draw[policyflow] (diagnostician.east) -- node[above=2pt, arrowlabel] {emitted primary} (da.west);
+\draw[policyflow] (auditor.east) -- (nts.west);
 
-\draw[policyflow] ($(ranking.north)+(0,0.04)$) -- ++(0,1.35)
-  -| node[pos=0.62, above=2pt, arrowlabel] {Preserve emitted primary} (da.north);
-
-\node[font=\sffamily\fontsize{8.1}{9.0}\selectfont\bfseries,
-      text=evidencedraw, text width=5.8cm, align=center] at (16.70,0.10)
-{Same transcript and recorded outputs,\\different finalization policies};
+\draw[recordedflow] (diagnostician.south west) -- ++(-0.55,0) |- ($(checkers.south west)+(-0.35,-0.70)$)
+  -- node[pos=0.62, below=2pt, arrowlabel] {ranked candidates} ($(nts.south)+(0,-0.70)$)
+  -- (nts.south);
 
 \end{tikzpicture}
 \end{document}

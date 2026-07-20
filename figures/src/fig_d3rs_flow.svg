@@ -10,7 +10,7 @@
     .box { stroke-width: 2.5; rx: 8; }
   </style>
 
-  <text x="700" y="48" text-anchor="middle" class="title">Detection-verification-selection profiles</text>
+  <text x="700" y="48" text-anchor="middle" class="title">Recorded D3-R-S profiles</text>
 
   <rect x="45" y="275" width="205" height="120" class="box" fill="#eef3f7" stroke="#607889"/>
   <text x="147" y="315" text-anchor="middle" class="head">Eligible cases</text>
@@ -55,16 +55,18 @@
   <path d="M940 267 H990 V318 H1045" class="line"/>
 
   <rect x="1045" y="35" width="305" height="95" class="box" fill="#e9f4e7" stroke="#4d8d48"/>
-  <text x="1197" y="70" text-anchor="middle" class="head">Primary selected correctly</text>
-  <text x="1197" y="104" text-anchor="middle" class="count">506</text>
+  <text x="1197" y="62" text-anchor="middle" class="head">Committed-primary</text>
+  <text x="1197" y="88" text-anchor="middle" class="head">agreement</text>
+  <text x="1197" y="119" text-anchor="middle" class="count">506</text>
 
   <rect x="1045" y="145" width="305" height="105" class="box" fill="#fcebea" stroke="#b6534c"/>
-  <text x="1197" y="180" text-anchor="middle" class="head">Primary not selected</text>
-  <text x="1197" y="214" text-anchor="middle" class="count">272</text>
+  <text x="1197" y="175" text-anchor="middle" class="head">Ranked-and-retained</text>
+  <text x="1197" y="201" text-anchor="middle" class="head">nonselection</text>
+  <text x="1197" y="235" text-anchor="middle" class="count">272</text>
 
   <rect x="1045" y="265" width="305" height="105" class="box" fill="#f5efe8" stroke="#9b7246"/>
-  <text x="1197" y="300" text-anchor="middle" class="head">Outcomes when R = No</text>
-  <text x="1197" y="334" text-anchor="middle" class="body">12 correct; 12 incorrect</text>
+  <text x="1197" y="300" text-anchor="middle" class="head">Commitment when R = No</text>
+  <text x="1197" y="334" text-anchor="middle" class="body">12 agreement; 12 disagreement</text>
 
-  <text x="700" y="692" text-anchor="middle" class="note">R records retention after verification over the configured checker scope; the diagram summarizes joint profiles rather than a strict runtime funnel.</text>
+  <text x="700" y="692" text-anchor="middle" class="note">R records criterion-compatible retention over the configured checker scope; the diagram summarizes joint profiles rather than a strict runtime funnel.</text>
 </svg>

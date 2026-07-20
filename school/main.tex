@@ -223,7 +223,7 @@ This thesis makes two main contributions.
 
 First, it presents an auditable hybrid architecture that combines LLM-based diagnosis, structured criterion-level checking against operationalized ICD-10-informed criteria, and deterministic compatibility rules. The system records criterion states, checker-generated supporting text, and compatibility-rule outcomes instead of relying only on a free-form rationale. The trace can be inspected and replayed, but it does not prove that the LLM's hidden reasoning is faithful or that the checker judgments are clinically correct~\citep{turpin2023unfaithful}.
 
-Second, it presents a stage-wise failure-localization and empirical evaluation framework that separates candidate detection, criterion verification, and primary selection, quantifies the primary-selection bottleneck, and tests whether criterion-based finalization and several primary-selection methods close the observed gap. The absence of improvement under the evaluated selection interventions narrows several simple explanations under the tested settings, but it does not show that better selectors or additional clinical information can never help.
+Second, it presents a stage-wise disagreement-localization and empirical evaluation framework that separates candidate detection, criterion verification, and primary selection, quantifies the primary-selection bottleneck, and tests whether criterion-based finalization and several primary-selection methods close the observed gap. The absence of improvement under the evaluated selection interventions narrows several simple explanations under the tested settings, but it does not show that better selectors or additional clinical information can never help.
 
 \section{Thesis Organization}
 
@@ -294,7 +294,7 @@ Table~\ref{tab:related-work-matrix} compares only the intermediate outputs repor
 
 \begin{table}[htbp]
 \centering
-\caption{Representative psychiatric diagnostic systems and the outputs available for stage-wise failure analysis.}
+\caption{Representative psychiatric diagnostic systems and the outputs available for stage-wise disagreement analysis.}
 \label{tab:related-work-matrix}
 \small
 \begin{adjustbox}{max width=\textwidth}
@@ -494,40 +494,76 @@ The denominator is the minimum satisfying count defined by the configured operat
 
 DA produces one committed primary diagnosis and may retain one optional comorbid diagnosis. NtS produces one re-selected committed primary diagnosis and does not emit a comorbid diagnosis. Thus, the two policies differ in both their primary-selection rule and final output cardinality.
 
-\section{Worked Example}
+\section{Worked Example of the HiED Data Flow}
 \label{sec:running-example}
 
-This constructed example illustrates how the Diagnostician, Criterion Checker, Compatibility Auditor, and finalization policies shown in Figure~\ref{fig:pipeline-thesis-rewrite} operate on one transcript. The example follows the system's output schema and configured compatibility rules, but it is neither a patient record nor an exported model trace.
+This constructed example illustrates the stage-wise data flow of HiED using a short Chinese psychiatric consultation. It follows the system's input and output contracts but is neither a patient record nor an exported model trace. Retrieval is omitted for clarity. Although the actual system evaluates all fourteen configured diagnostic categories, only the two leading candidates are shown below.
 
-\begin{quote}
-\small
-The patient reports approximately two weeks of depressed mood, loss of interest, early awakening, fatigue, and poor concentration. Persistent worry is also described, but its duration and onset relative to the low mood remain unclear. Motor tension, autonomic symptoms, and the relationship between the mood and anxiety presentations are not established. Manic symptoms and suicidal thoughts are denied.
-\end{quote}
+Table~\ref{tab:worked-example-transcript} presents the speaker-labeled input without first converting it into an author-written symptom summary. The consultation turns deliberately separate explicit evidence, uncertain information, and a direct denial so that the resulting criterion states can be distinguished.
 
-\ThesisFigure[1.0\textwidth]{fig_worked_example_flow.pdf}{Worked example of the recorded outputs produced by the Diagnostician, Criterion Checker, Compatibility Auditor, and finalization policies. Direct-Answer preserves the Diagnostician's emitted primary diagnosis, whereas Nominate-then-Select chooses the highest-ranked diagnosis in the criterion-compatible set. Both policies operate on the same recorded upstream outputs. The example illustrates the system contract and does not establish which diagnosis is clinically preferable.}{fig:worked-example-flow}
-
-Figure~\ref{fig:worked-example-flow} shows how the example moves through the system, while Table~\ref{tab:running-example} summarizes the candidate-specific transcript information and compatibility decisions that produce the finalization difference.
-
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
-\caption{Selected ranking and criterion-verification outputs in the constructed example.}
-\label{tab:running-example}
-\small
-\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.2cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
-\toprule
-\textbf{Output} & \textbf{F41.1 Generalized anxiety disorder} & \textbf{F32 Depressive episode}\\
-\midrule
-Diagnostician rank & 1 & 2\\
-Relevant transcript information & Persistent worry, concentration difficulty, and sleep disturbance & Depressed mood, loss of interest, two-week duration, fatigue, concentration difficulty, and early awakening\\
-Main unresolved information & Six-month duration and broader anxiety features & Several additional associated symptoms are not discussed\\
-Criterion-verification result & \textbf{Not retained} & \textbf{Criterion-compatible}\\
-\bottomrule
+\caption{Constructed Chinese consultation excerpt used in the worked example.}
+\label{tab:worked-example-transcript}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.08}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{1.7cm}|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|}
+\hline
+Speaker & Original Chinese utterance & English translation\\
+\hline
+Clinician & 最近最困擾你的事情是什麼？ & What has been troubling you most recently?\\
+\hline
+Patient & 這兩個星期幾乎每天心情都很低落，原本喜歡做的事情也都不想做。 & For the past two weeks, I have felt low almost every day and no longer want to do things I previously enjoyed.\\
+\hline
+Clinician & 睡眠、精神和專注力有受到影響嗎？ & Have your sleep, energy, or concentration been affected?\\
+\hline
+Patient & 我常常很早就醒來，整天沒有力氣，上班也很難專心。 & I often wake up very early, feel tired throughout the day, and have difficulty concentrating at work.\\
+\hline
+Clinician & 你也提到會擔心。這種擔心持續多久了？ & You also mentioned feeling worried. How long has this worry continued?\\
+\hline
+Patient & 最近工作和家裡的事情都會擔心，腦子停不下來，但我不確定是從什麼時候開始，好像心情變差後比較明顯。 & Recently, I have worried about both work and family and cannot stop thinking, but I am unsure when it began. It seems to have become more noticeable after my mood worsened.\\
+\hline
+Clinician & 有沒有明顯坐立不安、肌肉緊繃、心悸或冒汗？ & Have you experienced clear restlessness, muscle tension, palpitations, or sweating?\\
+\hline
+Patient & 沒有特別注意，有一些可能有，但我不確定。 & I have not particularly noticed them. Some may be present, but I am unsure.\\
+\hline
+Clinician & 以前有沒有一段時間特別亢奮，睡得很少也不覺得累？ & Have you ever had a period of unusually elevated mood in which you slept very little without feeling tired?\\
+\hline
+Patient & 沒有。 & No.\\
+\hline
 \end{tabularx}
 \end{table}
 
-The Diagnostician ranks F41.1 first and emits it as the primary diagnosis, while F32 remains second in the ranked differential. The Criterion Checker records unresolved duration and associated-feature information for F41.1, whereas the configured F32 rule is satisfied. The Compatibility Auditor therefore retains F32 but not F41.1 in the criterion-compatible set. DA preserves the emitted F41.1 primary diagnosis, whereas NtS selects F32 as the highest-ranked compatible diagnosis. This divergence demonstrates the difference between the Diagnostician's emitted decision and criterion-based re-selection; it does not show that F32 is the clinically correct primary diagnosis.
+Figure~\ref{fig:worked-example-flow} traces the parallel diagnostic and criterion-checking paths. The Diagnostician and all diagnosis-specific Criterion Checkers receive the same transcript; the checker path does not depend on which diagnoses the Diagnostician ranks. Only the recorded checker states are passed to the deterministic Compatibility Auditor.
 
-In this running example, F41.1 is projected to its scoring parent, F41, allowing predictions made at different levels of ICD specificity to be compared under a consistent label representation.
+\ThesisFigure[1.0\textwidth]{fig_worked_example_flow.pdf}{Stage-wise HiED data flow for the constructed consultation. The Diagnostician and Criterion Checkers receive the same transcript, the deterministic Compatibility Auditor aggregates checker-generated states, and DA and NtS apply different finalization contracts.}{fig:worked-example-flow}
+\FloatBarrier
+
+Table~\ref{tab:running-example} summarizes selected recorded outputs for F41.1 and F32. The state labels illustrate how the model-generated checker judgments are converted into diagnosis-level compatibility under the study-specific rules in Appendix~\ref{app:configured-profile}.
+
+\begin{table}[htbp]
+\centering
+\caption{Selected stage-wise outputs for the two leading diagnoses in the constructed example.}
+\label{tab:running-example}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.0cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Recorded stage or rule} & \textbf{F41.1 Generalized anxiety disorder} & \textbf{F32 Depressive episode}\\
+\midrule
+Diagnostician output & Rank 1; emitted primary diagnosis & Rank 2\\
+Example checker states & Worry across several topics: \texttt{met}; six-month duration: \texttt{insufficient\_\allowbreak{}evidence}; restlessness, tension, and autonomic features: \texttt{insufficient\_\allowbreak{}evidence} & Depressed mood, loss of interest, fatigue, impaired concentration, early awakening, and two-week duration: \texttt{met}\\
+Operational compatibility rule & At least four symptoms and at least six months; not satisfied & At least two core symptoms, four total symptoms, and two weeks; satisfied\\
+Compatibility Auditor result & \textbf{Not retained} & \textbf{Retained}; compatible set $=\{\mathrm{F32}\}$\\
+\bottomrule
+\end{tabularx}
+\end{table}
+\FloatBarrier
+
+The Diagnostician ranks F41.1 first and emits it as the primary diagnosis, while F32 remains second in the differential. The F41.1 checker records worry as present but lacks evidence for the configured six-month duration and a sufficient breadth of associated symptoms. The F32 checker records two core symptoms, more than four total symptoms, and a two-week duration. Uncertain answers are represented as \texttt{insufficient\_\allowbreak{}evidence}, rather than being converted into \texttt{not\_met}; by contrast, the explicit denial of a prior elevated-mood episode can be recorded as negative evidence by the relevant F31 checker, which is not displayed in the two-candidate table.
+
+The Compatibility Auditor does not reinterpret the transcript. It applies the configured rules to these checker-generated states and therefore retains F32 but not F41.1. DA preserves the Diagnostician's emitted F41.1 primary diagnosis, whereas NtS selects F32 as the highest-ranked diagnosis in the criterion-compatible set. The example thus illustrates how the same recorded upstream artifacts can produce different outputs under two finalization contracts; it does not establish that F32 is the clinically correct primary diagnosis.
 
 \section{Implementation Configuration}
 
@@ -743,7 +779,7 @@ First-listed-label agreement compares the committed diagnosis only with the firs
 
 \section{Failure-Localization Indicators}
 
-The thesis defines three failure-localization indicators. Candidate detection and primary agreement are defined for all evaluation cases, whereas criterion retention is defined only for checker-eligible cases.
+The thesis defines three disagreement-localization indicators. Candidate detection and primary agreement are defined for all evaluation cases, whereas criterion retention is defined only for checker-eligible cases.
 
 For case $x$,
 \[
@@ -777,188 +813,164 @@ This chapter organizes the empirical design around the five research questions.
 \section{Evaluation Overview}
 \label{sec:experimental-overview}
 
-The empirical evaluation is organized around five research questions. RQ1 positions HiED against conventional and single-model baselines on the same internal split. RQ2 localizes benchmark disagreement across candidate detection, criterion verification, and committed primary selection. RQ3 evaluates retrieval configurations within the Single and HiED architectures. RQ4 tests whether alternative primary-selection strategies reduce the observed candidate-to-commitment gap. RQ5 examines whether the main findings remain observable across model sizes, a second synthetic corpus, changes in diagnostic scope, cross-corpus lexical transfer, and diagnostic error patterns.
+Figure~\ref{fig:evidence-sequence} presents the sequence of the computational analyses reported in this thesis. Retrieval configurations are first compared on the public-validation split and selected separately for the Single and HiED--DA architectures (RQ3). The selected configurations are then frozen and evaluated on the fixed internal held-out set for same-split benchmark positioning (RQ1). The validation-selected HiED--DA trace is subsequently used for stage-wise disagreement localization (RQ2), followed by primary-selection interventions (RQ4) and sensitivity and transfer analyses (RQ5).
 
-Figure~\ref{fig:evidence-sequence} presents the overall evidence sequence. The computational analyses are organized as a progression from benchmark positioning and retrieval selection to stage-wise localization, primary-selection interventions, and sensitivity or transfer analyses. The LingxiDiag pilot psychiatrist review and CGMH real-world validation are shown as a separate complementary branch because they use different populations, reference conditions, and outcomes and are not included in the completed computational research questions.
+The LingxiDiag pilot review and CGMH real-world validation are ongoing complementary clinical studies. They are presented separately from the computational sequence because they use different study populations and reference conditions and do not contribute completed results to the computational RQs reported in this thesis.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.78\textwidth]{fig_evidence_sequence.pdf}
-\caption{Overview of the computational evaluation sequence and the separate complementary clinical-evaluation branch.}
+\includegraphics[width=0.92\textwidth]{fig_evidence_sequence.pdf}
+\caption{Empirical evidence sequence for the completed computational analyses and ongoing complementary clinical studies. Retrieval-configuration selection under RQ3 precedes RQ1 because the selected Single and HiED--DA configurations are frozen before held-out benchmark evaluation. The clinical studies are shown separately and are not included in the completed computational results.}
 \label{fig:evidence-sequence}
 \end{figure}
 \FloatBarrier
 
-Table~\ref{tab:rq-evaluation-map} specifies the population, main comparison, and primary evidence associated with each research question.
-
-\begin{table}[htbp]
-\centering
-\caption{Mapping from research questions to evaluation populations, comparisons, and primary endpoints.}
-\label{tab:rq-evaluation-map}
-\small
-\setlength{\tabcolsep}{3.5pt}
-\begin{tabularx}{\textwidth}{|>{\centering\arraybackslash}p{0.8cm}|>{\raggedright\arraybackslash}p{2.7cm}|>{\raggedright\arraybackslash}p{3.2cm}|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}p{2.8cm}|}
-\hline
-RQ & Evaluation role & Population or split & Main comparison & Primary evidence\\
-\hline
-RQ1 & Benchmark positioning & Fixed internal held-out set ($N=1000$) & Majority, TF--IDF + LR, validation-selected Single, and validation-selected HiED--DA & Committed Top-1 Accuracy\\
-\hline
-RQ2 & Stage-wise failure localization & Parent-balanced HiED--DA trace; $N=1000$ for ranking and primary agreement and $N=915$ for criterion retention & Candidate detection, criterion-compatible retention, and committed primary selection & $D_3$, $R$, and $S$ profiles\\
-\hline
-RQ3 & Retrieval-configuration analysis & Public-validation and fixed internal held-out splits & No retrieval, global Top-5, and parent-balanced retrieval within Single and HiED--DA & Within-architecture metric differences and validation-based configuration selection\\
-\hline
-RQ4 & Primary-selection interventions & Fixed internal held-out set; matched populations where available & DA versus NtS, recorded-output methods, pairwise comparison, debate, and sampling-based aggregation & Paired committed Top-1 difference\\
-\hline
-RQ5 & Sensitivity and transfer analyses & Model-size runs, MDD-5k populations, scope-expansion samples, and cross-corpus evaluations & Model scale, external synthetic evaluation, diagnostic scope, cross-corpus lexical transfer, and diagnostic error patterns & Persistence of the main observed patterns under each tested condition\\
-\hline
-\end{tabularx}
-\parbox{0.96\textwidth}{\footnotesize
-\textit{Note:} Exact denominators, eligibility conditions, and statistical procedures are specified in the corresponding sections and Appendix~\ref{app:supporting}.
-}
-\end{table}
+The following sections define the study populations, comparison contracts, and evaluation endpoints for the analyses shown in Figure~\ref{fig:evidence-sequence}.
 
 \section{Retrieval-Configuration Selection and Benchmark Positioning}
 \label{sec:benchmark-retrieval-design}
 
-This section defines the first evaluation block in Figure~\ref{fig:evidence-sequence}. Retrieval configurations are first compared and selected separately within the Single and HiED--DA architectures using the public-validation split (RQ3). The selected configurations are then fixed and used in the same-split benchmark comparison on the internal held-out set (RQ1). All analyses use the parent-label projection and evaluation measures defined in Chapter~\ref{ch:data}.
+This section corresponds to the first two computational blocks in Figure~\ref{fig:evidence-sequence}. Retrieval configurations are first compared and selected separately for the Single and HiED--DA architectures using the public-validation split (RQ3). The selected configurations are then frozen and evaluated on the fixed internal held-out set for same-split benchmark positioning (RQ1). Both analyses use the parent-label projection and evaluation measures defined in Chapter~\ref{ch:data}.
 
-\paragraph{Retrieval-configuration selection (RQ3).}
-Retrieval is evaluated separately within the Single and HiED--DA architectures under three conditions: no retrieval, global Top-5 retrieval, and parent-balanced retrieval. Within each architecture, the backbone model, prompt family, configured diagnostic scope, decoding settings, and output contract remain fixed. The comparison is case matched within each architecture.
+\subsection{Retrieval-Configuration Selection (RQ3)}
+Retrieval is evaluated separately within the Single and HiED--DA architectures under three conditions: no retrieval, global Top-5 retrieval, and parent-balanced retrieval. Within each architecture, the backbone model, prompt family, configured diagnostic scope, decoding settings, and output contract remain fixed. The same public-validation cases are evaluated under all three retrieval conditions.
 
-The public-validation split is used to select the primary retrieval configuration separately for Single and HiED--DA according to the predefined promotion rule. After selection, the chosen configuration is frozen before evaluation on the fixed internal held-out set. Validation results are therefore used for configuration selection and are not interpreted as independent test estimates. Held-out results are not used to revise the selected configurations.
+The public-validation split is used to select one retrieval configuration separately for Single and HiED--DA according to the predefined promotion rule. Once selected, each configuration is frozen before evaluation on the internal held-out set. Validation results are therefore used for configuration selection and are not interpreted as independent test estimates. Held-out results are not used to revise the selected configurations.
 
-Global Top-5 and parent-balanced retrieval differ not only in label balance, but also in the number, composition, ordering, similarity distribution, and total token length of the retrieved examples. Their comparison therefore evaluates complete retrieval configurations rather than the isolated causal effect of parent balancing.
+Global Top-5 and parent-balanced retrieval differ not only in label balance but also in the number, composition, ordering, similarity distribution, and total token length of the retrieved demonstrations. Their comparison is therefore interpreted as a comparison of complete retrieval configurations, rather than as the isolated causal effect of parent balancing.
 
-\paragraph{Same-split benchmark positioning (RQ1).}
-The main held-out comparison includes the Majority baseline, TF--IDF + logistic regression, the validation-selected Single configuration, and the validation-selected HiED--DA configuration. All methods are evaluated on the same fixed 1,000-case internal set using the same parent-label projection and scoring implementation.
+\subsection{Same-Split Benchmark Positioning (RQ1)}
+After retrieval-configuration selection, the validation-selected Single and HiED--DA configurations are evaluated together with the Majority baseline and TF--IDF with logistic regression on the same fixed 1,000-case internal held-out set. All methods use the same parent-label projection and scoring implementation.
 
-Committed Top-1 Accuracy is the common primary endpoint because every evaluated configuration produces a committed primary diagnosis. Genuine Top-3 and multilabel measures are reported only when the corresponding output view is defined. In particular, Single produces a committed primary diagnosis and optional comorbid diagnoses but does not produce an ordered differential diagnosis; its comorbid outputs are therefore not treated as a genuine Top-3 ranking.
+Committed Top-1 Accuracy is the common primary endpoint because every evaluated configuration produces a committed primary diagnosis. Genuine Top-3 and multilabel measures are reported only when the corresponding output view is available. In particular, Single produces a committed primary diagnosis and may emit an optional comorbid diagnosis, but it does not produce a genuine ordered differential. Its outputs are therefore not converted into an artificial Top-3 ranking.
 
-The Majority baseline always predicts the most frequent scoring parent in the training source. TF--IDF + logistic regression uses a prespecified character-level representation and twelve one-vs-rest, class-balanced classifiers trained on the 13,000-case training source. Full implementation settings are reported in Appendix~\ref{app:supporting}.
+The Majority baseline predicts the most frequent scoring parent in the training source. TF--IDF with logistic regression follows the prespecified character-level, one-vs-rest implementation described in Appendix~\ref{app:supporting}.
 
-The comparison is matched at the level of evaluation cases, parent-label projection, and scoring implementation, but it is not a component-controlled architecture ablation. TF--IDF, Single, and HiED differ in training procedure, retrieval exposure, number of model calls, intermediate outputs, and output contract. RQ1 therefore compares complete diagnostic configurations rather than estimating the isolated effect of the multi-agent architecture.
+This analysis compares complete diagnostic configurations under the same held-out evaluation contract; it is not a component-controlled architecture ablation. The conventional classifier, Single, and HiED differ in training procedure, retrieval exposure, number of model calls, intermediate outputs, and output contract. Performance differences are therefore interpreted at the complete-configuration level rather than as the isolated effect of multi-agent orchestration.
 
-\section{Stage-Wise Failure Analysis}
+\section{Stage-Wise Disagreement Localization}
 \label{sec:stage-wise-analysis-design}
 
-The stage-wise analysis addresses RQ2 using the validation-selected parent-balanced HiED--DA trace on the fixed 1,000-case internal held-out set. This trace is used because it contains the complete ranked differential, criterion states, criterion-compatible set, and committed primary diagnosis required for the analysis.
+This analysis addresses RQ2 using the case-level trace from the validation-selected HiED--DA configuration with parent-balanced retrieval on the fixed 1,000-case internal held-out set. The trace contains the ranked differential, criterion states, criterion-compatible set, and committed primary diagnosis required to compare the recorded output views. In this section, \emph{disagreement} refers to disagreement with the benchmark gold-label set under the defined scoring contract, rather than an independently confirmed clinical diagnostic error.
 
-The analysis uses $D_3$, $R$, and $S$ as defined in Chapter~\ref{ch:data}. Candidate detection and committed-primary agreement, represented by $D_3$ and $S$, are evaluated on all 1,000 internal cases. Criterion retention, represented by $R$, is defined only for the 915 checker-eligible cases whose benchmark label set contains at least one non-\emph{Others} scoring parent represented by a corresponding Criterion Checker. Analyses involving all three indicators are therefore restricted to these 915 cases.
+The analysis uses candidate detection $D_3$, criterion-compatible retention $R$, and committed-primary agreement $S$, as defined in Chapter~\ref{ch:data}. $D_3$ and $S$ are available for all 1,000 internal cases. $R$ is defined only for the 915 checker-eligible cases whose benchmark gold-label set contains at least one non-\emph{Others} scoring parent represented by a corresponding Criterion Checker. Analyses involving all three indicators are therefore restricted to these 915 cases.
 
 For the checker-eligible analysis, cases are partitioned into four mutually exclusive recorded-output groups:
 
 \begin{enumerate}[label=(\arabic*)]
-\item correct primary selection, defined by $S=1$;
-\item candidate-detection failure, defined by $D_3=0$ and $S=0$;
-\item criterion-verification failure, defined by $D_3=1$, $R=0$, and $S=0$; and
+\item committed-primary agreement, defined by $S=1$;
+\item Top-3 candidate miss, defined by $D_3=0$ and $S=0$;
+\item ranked but not criterion-retained, defined by $D_3=1$, $R=0$, and $S=0$; and
 \item ranked-and-retained nonselection, defined by $D_3=1$, $R=1$, and $S=0$.
 \end{enumerate}
 
-The ranked-and-retained nonselection group is the primary profile used to examine whether benchmark disagreement remains after a benchmark gold parent has already appeared in the genuine Top-3 and been retained as criterion-compatible. The indicators describe related recorded outputs rather than a strictly chronological runtime funnel, because Direct-Answer commits its diagnosis before criterion verification and the Criterion Checker evaluates the complete configured diagnostic scope rather than only the ranked Top-3.
+Cases with $S=1$ are grouped together regardless of criterion retention because the partition is designed to localize cases with committed-primary disagreement. The ranked-and-retained nonselection group is the main disagreement profile used to examine whether benchmark disagreement remains after a benchmark gold parent has appeared in the genuine Top-3 and been retained as criterion-compatible.
 
-A supplementary gold-informed oracle examines a broader set of ranked and criterion-supported alternatives to estimate optimistic primary-selection headroom. Because the oracle uses benchmark labels to identify favorable candidates and assumes that eligible disagreements can be corrected without harming initially correct predictions, it is treated as a non-deployable upper bound rather than an implemented selector or the primary answer to RQ2. Its candidate filter, thresholds, and sensitivity analyses are reported in Appendix~\ref{app:supporting}.
+These indicators describe separately recorded output views rather than a chronological funnel through which every case passes. Under Direct-Answer, the committed diagnosis is taken from the Diagnostician, while the Criterion Checkers independently evaluate the complete configured diagnostic scope rather than only the ranked candidates. The group labels therefore describe observable output patterns and do not by themselves identify the clinical or causal source of a disagreement.
+
+\paragraph{Supplementary upper-bound analysis.}
+A gold-informed oracle examines a broader set of ranked and criterion-compatible alternatives to estimate optimistic primary-selection headroom. Because the oracle uses benchmark labels to identify favorable candidates and assumes that eligible disagreements can be corrected without harming initially benchmark-consistent predictions, it is treated as a non-deployable upper bound rather than an implemented selector or the primary answer to RQ2. Its candidate filter, thresholds, and sensitivity analyses are reported in Appendix~\ref{app:supporting}.
 
 \section{Primary-Selection Intervention Design}
 \label{sec:primary-selection-intervention-design}
 
-This section defines the intervention analyses used to answer RQ4. Direct-Answer (DA) is the reference policy, and committed Top-1 Accuracy is the primary endpoint. The analyses test whether alternative procedures for converting the available diagnostic outputs into a committed primary diagnosis change or improve benchmark agreement.
+RQ4 evaluates whether alternative finalization and primary-selection procedures improve committed-primary benchmark agreement relative to Direct-Answer (DA). Committed Top-1 Accuracy is the primary endpoint because all evaluated methods produce one committed primary diagnosis.
 
-\paragraph{Primary intervention analysis.}
-The prespecified primary intervention analysis compares DA with Nominate-then-Select (NtS). Both policies reuse the same Diagnostician ranking, Criterion Checker states, and criterion-compatible set within each retrieval condition. DA preserves the Diagnostician's emitted primary diagnosis, whereas NtS applies the deterministic finalization rule defined in Chapter~\ref{ch:architecture} to select from the criterion-compatible candidates.
+\paragraph{Primary matched finalization comparison.}
+The prespecified primary comparison evaluates DA against Nominate-then-Select (NtS). Within each retrieval condition, both finalization policies reuse the same Diagnostician ranking, Criterion Checker states, and criterion-compatible set. DA preserves the Diagnostician's emitted primary diagnosis, whereas NtS applies the deterministic finalization rule defined in Chapter~\ref{ch:architecture}.
 
-DA and NtS are compared on the same 1,000 internal cases under no retrieval, global Top-5 retrieval, and parent-balanced retrieval. The primary effect estimate is the paired difference in committed Top-1 correctness. Paired-bootstrap confidence intervals and exact McNemar tests are used as defined in Chapter~\ref{ch:data}. Difference-in-differences contrasts examine whether the effect of replacing DA with NtS varies across the three retrieval configurations.
+DA and NtS are compared on the same 1,000 internal held-out cases under no retrieval, global Top-5 retrieval, and parent-balanced retrieval. The primary effect estimate is the paired difference in committed Top-1 correctness. Paired-bootstrap confidence intervals and exact McNemar tests are computed as defined in Chapter~\ref{ch:data}.
 
-Because DA and NtS share the upstream ranking and criterion-checking artifacts and NtS introduces no additional LLM inference, this comparison provides the clearest evidence about the evaluated deterministic finalization policy. It does not establish the general effectiveness of all criterion-based selection methods.
+Because DA and NtS share the same upstream artifacts and NtS introduces no additional LLM inference, this comparison provides the clearest evidence about the evaluated deterministic finalization rule. It does not establish the effectiveness of criterion-based primary-selection methods in general.
 
-\paragraph{Supporting recorded-output methods.}
-Deterministic fusion provides a supporting analysis that combines recorded candidate rank, compatibility status, and criterion-support summaries before deciding whether to replace the DA primary. It reuses existing system artifacts but evaluates one prespecified combination rule rather than a general fusion framework. Paired effects are reported only when complete case-level records are available.
+\paragraph{Supporting recorded-output method.}
+Deterministic fusion combines recorded candidate rank, compatibility status, and criterion-support summaries before deciding whether to replace the DA primary diagnosis. It reuses existing system artifacts but evaluates one predefined combination rule rather than a general fusion framework.
 
 \paragraph{Supporting additional-inference methods.}
-Pairwise comparison and two-view debate introduce new inference to compare plausible alternatives more directly. The pairwise configurations ask the model to choose between closely supported candidates, while debate generates competing diagnostic arguments followed by a judging step. These methods may differ from DA in prompt structure, context organization, number of inference calls, decoding behavior, or final decision procedure. They are therefore interpreted as complete-configuration comparisons rather than isolated finalization ablations.
+Pairwise comparison and debate introduce additional LLM inference to compare plausible diagnostic alternatives. These methods may differ from DA in prompt structure, context organization, number of inference calls, decoding behavior, and final decision procedure. Their results are therefore interpreted as complete-configuration comparisons rather than isolated effects of primary selection.
 
-\paragraph{Supporting sampling-based methods.}
-Self-consistency generates repeated Diagnostician outputs and selects the diagnosis receiving the largest number of primary votes. Confidence-informed self-consistency uses the same samples but weights the votes by the confidence recorded in each output. These methods evaluate whether repeated model preferences yield a more stable committed diagnosis; they do not directly validate the model's stated confidence or reproduce the complete HiED pipeline.
+\paragraph{Supporting repeated-generation methods.}
+Self-consistency generates repeated Diagnostician outputs and selects the diagnosis receiving the largest number of primary votes. Confidence-informed self-consistency uses the same samples but weights the votes by the confidence recorded in each output. These analyses test whether repeated model preferences produce more stable committed-primary agreement; they do not validate the model's reported confidence or constitute a fixed-artifact finalization comparison.
 
 \paragraph{Comparison and reporting boundaries.}
-Additional internal interventions use the validation-selected parent-balanced DA configuration as the reported reference unless otherwise specified. Paired differences and confidence intervals are reported only when the compared methods use identical case IDs and complete case-level outputs. When prompts, inference budgets, contexts, or output-generation procedures differ, the results are interpreted as comparisons between declared complete configurations.
+Additional internal interventions use the validation-selected parent-balanced DA configuration as the reference unless otherwise specified. Paired effects and confidence intervals are reported only when the compared methods use identical case IDs and complete case-level outputs. When prompts, contexts, inference budgets, or output-generation procedures differ, results are interpreted as comparisons of declared complete configurations.
 
-Committed Top-1 remains the common endpoint across finalization policies. Set-level measures such as Exact Match, Macro-F1, and Weighted-F1 are not used to isolate primary-selection effects because DA may emit an optional comorbid diagnosis whereas some alternative policies emit only one committed diagnosis. Exact eligibility rules, thresholds, seed schedules, inference budgets, and supporting statistical details are reported in Appendix~\ref{app:supporting}.
+Committed Top-1 Accuracy is the common endpoint across the evaluated primary-selection methods. Exact Match, Macro-F1, and Weighted-F1 are not used to isolate primary-selection effects because DA may emit an optional comorbid diagnosis, whereas several alternative methods emit only one committed diagnosis. Detailed eligibility rules, inference budgets, seed schedules, and supporting configurations are reported in Appendix~\ref{app:supporting}.
 
 \section{Sensitivity and Transfer Analyses}
 \label{sec:sensitivity-transfer-design}
 
-This section defines the analyses used to answer RQ5. These analyses examine whether the main internal findings remain observable under changes in model scale, a second synthetic dataset, diagnostic scope, and corpus-specific lexical representations. They evaluate sensitivity and partial transfer under the tested conditions rather than establishing general robustness or clinical generalizability.
+RQ5 examines whether the main internal findings remain observable under changes in model scale, evaluation corpus, and configured diagnostic scope, and whether corpus-specific lexical representations transfer across the two synthetic datasets. These analyses provide sensitivity and boundary evidence under the tested conditions rather than establishing general robustness, clinical generalizability, or transfer across unrelated model families and real-world populations.
 
 \paragraph{Within-family model-scale sensitivity.}
-Model-scale sensitivity is evaluated using Qwen3-4B, 8B, 14B, and 32B on the same fixed 1,000-case internal set. The prompt family, configured diagnostic scope, retrieval policy, decoding contract, and evaluation endpoints are held constant across sizes. Committed Top-1, genuine Top-3, structured-output failures, and abstention events are recorded.
+Model-scale sensitivity is evaluated using Qwen3-4B, 8B, 14B, and 32B on the same fixed 1,000-case internal held-out set. The prompt family, configured diagnostic scope, retrieval policy, decoding contract, and evaluation endpoints are held constant across model sizes. Committed Top-1 Accuracy, genuine Top-3 Accuracy, structured-output failures, and abstention events are recorded.
 
-This comparison tests whether the candidate-coverage and candidate-to-commitment patterns depend strongly on one Qwen3 model size. Because all evaluated models belong to the same model family and serving setup, the analysis does not establish robustness across unrelated architectures, training procedures, or deployment environments.
+This comparison examines whether candidate availability and committed-primary agreement depend strongly on one Qwen3 model size. Because all evaluated models belong to the same model family and serving setup, the analysis does not establish sensitivity across unrelated architectures, training procedures, or deployment environments.
 
 \paragraph{External synthetic evaluation.}
-MDD-5k is used to test whether the main findings remain observable under a second Chinese synthetic data-generation process with different transcript characteristics, label frequencies, and diagnostic coverage. The primary multi-way analyses use the complete 925-case evaluation set and the 878-case in-scope subset for which at least one benchmark diagnosis is represented in HiED's main configured output space.
+MDD-5k is used for external cross-dataset evaluation under a second Chinese synthetic dialogue-generation process with different transcript characteristics, label frequencies, and diagnostic coverage. The primary multi-class analyses use the complete 925-case evaluation set and the 878-case in-scope subset for which at least one benchmark gold diagnosis is represented in HiED's main configured output space.
 
-A separate 490-case F32-versus-F41 subset is evaluated as a secondary binary task and is not treated as the main external performance estimate. The common external trace supports committed Top-1, genuine Top-3, the candidate-to-commitment gap, and same-trace primary-selection comparisons. It does not contain matched criterion-retention outputs, so the complete internal $D_3$--$R$--$S$ analysis cannot be reconstructed.
+A separate 490-case F32-versus-F41 subset is evaluated as a secondary binary analysis and is not treated as the main external performance estimate. The available external trace supports committed Top-1 Accuracy, genuine Top-3 Accuracy, comparison between candidate availability and committed-primary agreement, and same-trace primary-selection comparisons. It does not contain matched criterion-retention outputs, so the complete internal $D_3$--$R$--$S$ analysis cannot be reproduced on MDD-5k.
 
-\paragraph{Diagnostic-scope expansion.}
-A configuration-level scope experiment expands the diagnostic profile from fourteen to 33 configured categories by adding category-specific checker definitions without changing the model weights. The expanded categories are not used in the primary external evaluation.
+\paragraph{Configuration-only diagnostic-scope expansion.}
+A configuration-level experiment expands the diagnostic profile from fourteen to 33 configured diagnostic categories by adding category-specific checker definitions without updating the model weights. The expanded configuration is evaluated separately and is not used in the primary external analysis.
 
-This analysis distinguishes output-space representability from behavioral recovery. It tests whether making a benchmark diagnosis available to the Diagnostician and Criterion Checker is sufficient for that diagnosis to become a ranked or committed output. The experiment does not establish the general effectiveness or safety of diagnostic-scope expansion.
+This experiment distinguishes output-space representability from behavioral recovery. It tests whether making a benchmark diagnosis available within the configured diagnostic profile is sufficient for that diagnosis to appear in the ranked candidates or become the committed primary diagnosis. It does not establish the general effectiveness, clinical validity, or safety of diagnostic-scope expansion.
 
 \paragraph{Cross-corpus lexical transfer.}
 Cross-corpus lexical transfer is evaluated using the same TF--IDF classifier family trained on one synthetic corpus and tested both within that corpus and on the other corpus. The analysis examines whether corpus-derived lexical associations with benchmark labels remain predictive under a different synthetic generation process.
 
-This experiment evaluates the portability of a lexical representation rather than the clinical validity of the diagnostic labels or the transferability of the complete HiED architecture.
+This experiment evaluates the portability of a lexical representation. It does not evaluate transfer of the complete HiED architecture or establish the clinical validity of the underlying diagnostic labels.
 
 \paragraph{Descriptive diagnostic error patterns.}
-Diagnostic disagreements are further examined using first-listed-label confusion patterns, frequent benchmark-to-predicted diagnosis pairs, and the stage-wise profiles defined by $D_3$, $R$, and $S$. The confusion matrix uses one first-listed projected benchmark parent per case and is treated as a descriptive visualization rather than the primary multilabel endpoint.
+Remaining benchmark disagreements are characterized using first-listed-label confusion patterns, frequent benchmark-to-predicted diagnosis pairs, and the stage-wise output profiles defined by $D_3$, $R$, and $S$. The confusion matrix uses one first-listed projected benchmark parent per case and is treated as a descriptive visualization rather than the primary multilabel endpoint.
 
-Criterion-state, compatibility, and stage-wise output analyses are used to characterize where disagreement is recorded in the evaluated system. They do not assign clinical causes to individual disagreements or establish that the benchmark diagnosis is clinically preferable.
+Criterion-state, compatibility, and stage-wise output analyses are used to describe where disagreement is recorded in the evaluated system. They do not identify the clinical cause of an individual disagreement or establish that the benchmark diagnosis is clinically preferable.
 
-The model-scale and MDD-5k analyses provide the primary RQ5 evidence, while diagnostic-scope expansion, cross-corpus lexical transfer, and error-pattern analyses are interpreted as supporting sensitivity analyses.
+The model-scale and MDD-5k analyses provide the primary evidence for RQ5. Diagnostic-scope expansion, cross-corpus lexical transfer, and descriptive error-pattern analyses are interpreted as supporting boundary analyses.
 
 \section{Complementary Clinical Evaluation Plan}
 \label{sec:clinical-evaluation-plan}
-\label{sec:psychiatrist-case-review}
 
-The complementary clinical evaluation comprises two separate ongoing studies with different objectives. The LingxiDiag study is a small pilot review of selected synthetic benchmark disagreements, whereas the CGMH study is a real-world validation using psychiatric data collected at Chang Gung Memorial Hospital. Their populations, reference conditions, and outcomes will be analyzed separately and will not be combined into one agreement estimate.
+The complementary clinical evaluation comprises two ongoing studies conducted separately from the completed computational RQs. The LingxiDiag pilot uses twenty selected disagreement cases from the internal held-out set for blinded review by two psychiatrists. The CGMH study evaluates real-world psychiatric consultations by comparing HiED outputs with diagnoses recorded during routine clinical care and with a blinded psychiatrist transcript-only reference. The two studies use different populations and reference conditions; their findings will therefore be analyzed separately and are not included in the completed computational results reported in this thesis.
 
 \subsection{LingxiDiag Pilot Psychiatrist Review}
 \label{sec:lingxidiag-pilot-review}
 
-The LingxiDiag pilot is designed to test the feasibility of the psychiatrist annotation procedure and to obtain independent clinical judgments for a selected computational disagreement population. It is not a real-patient clinical validation study.
+The LingxiDiag pilot evaluates the feasibility of the psychiatrist-review procedure and provides independent clinical characterization of a selected synthetic disagreement population. It is not a real-patient clinical validation study and is not designed to estimate overall clinical diagnostic accuracy.
 
-Twenty cases will be sampled without replacement from the 272 checker-eligible internal cases satisfying $D_3=1$, $R=1$, and $S=0$. The random seed and selected case identifiers will be fixed before review. Cases will not be selected according to preliminary psychiatrist judgments or perceived clinical interest.
+Twenty cases are sampled without replacement from the 272 checker-eligible internal cases satisfying $D_3=1$, $R=1$, and $S=0$. In these cases, at least one benchmark gold parent appears in the genuine Top-3 and is retained as criterion-compatible, but another diagnosis is committed as primary. The random seed and selected case identifiers are fixed before psychiatrist review.
 
-Two psychiatrists will review all twenty cases independently and in separately randomized orders. Both reviewers will remain blinded to the benchmark labels, HiED outputs, computational failure profile, selected-case rationale, and the other reviewer's responses.
+Two psychiatrists independently review all twenty cases in separately randomized orders. They remain blinded to the benchmark labels, HiED outputs, computational disagreement profile, case-selection rationale, and the other reviewer's responses.
 
-The review contains two transcript-only annotation stages. In the first stage, reviewers receive the synthetic transcript and the configured diagnostic scope. For each case, they record whether the transcript supports a unique primary diagnosis, select a preferred primary diagnosis, identify any comorbid diagnoses, and provide up to three ranked differential diagnoses. These diagnostic judgments are locked before the second stage begins.
+The review records both provisional and final diagnostic judgments. Reviewers first read the transcript and record whether the available information supports a unique primary diagnosis, their provisional primary diagnosis, possible comorbid diagnoses, and up to three ranked differential diagnoses. They then label the prespecified canonical evidence items and diagnosis-specific qualifiers as \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_evidence}. After completing the evidence annotation, reviewers may revise their diagnostic judgments. Both the provisional and final responses are retained.
 
-In the second stage, reviewers independently label a prespecified set of canonical evidence items and diagnosis-specific qualifiers as \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_evidence}. Shared symptom or impairment concepts are labeled once, whereas diagnosis-specific duration, frequency, temporal, relational, threshold, and exclusion conditions remain separate. The mapping from the physician-facing items to the original Criterion Checker items will be defined and frozen before annotation.
+Shared symptom and impairment concepts are annotated once, whereas diagnosis-specific duration, frequency, temporal, relational, threshold, and exclusion conditions remain separate. The mapping between the physician-facing evidence items and the original Criterion Checker items is defined and frozen before annotation.
 
-No HiED output or benchmark label will be disclosed at either stage. After both reviewers have completed and locked their independent assessments, the research team will compare the psychiatrist judgments with the LingxiDiag benchmark labels, HiED ranked and committed diagnoses, Criterion Checker states, and deterministic compatibility decisions. Pre-consensus inter-rater agreement will be retained. Any subsequent consensus or adjudication will be conducted using the transcript and independent annotations without disclosing the HiED outputs or benchmark labels.
+Benchmark labels and HiED outputs are not disclosed during independent review. After both reviewers complete their final independent assessments, the research team compares the provisional and final psychiatrist judgments with the LingxiDiag benchmark labels, HiED ranked and committed diagnoses, Criterion Checker states, and deterministic compatibility decisions.
 
-Planned pilot outcomes include agreement on transcript-only primary diagnosis, ranked differential coverage, criterion-state agreement, inter-rater agreement, and agreement between physician-derived and system-derived compatibility decisions. Because the pilot includes only twenty synthetic cases selected from one computational disagreement population, its findings will be interpreted as feasibility and exploratory agreement evidence rather than an estimate of overall clinical diagnostic accuracy or Criterion Checker performance in an unselected population.
+Pre-consensus inter-rater agreement is retained. Any subsequent consensus or adjudication is conducted using the transcript and the independent annotations while the benchmark labels and HiED outputs remain concealed. The planned pilot analyses include agreement on the final transcript-only primary diagnosis, ranked differential coverage, criterion-state agreement, inter-rater agreement, changes between provisional and final diagnoses, and agreement between psychiatrist-derived and system-derived compatibility decisions. Because the pilot contains only twenty synthetic cases selected from one disagreement population, its findings are interpreted as feasibility and exploratory agreement evidence rather than population-level clinical validation.
 
 \subsection{Ongoing CGMH Real-World Validation}
 \label{sec:cgmh-validation}
 
-The CGMH study is an ongoing real-world validation using cases included according to prespecified clinical eligibility and inclusion procedures. The cohort will not be selected according to whether HiED agrees with the recorded diagnosis. The model checkpoint, prompts, retrieval configuration, diagnostic scope, criterion definitions, compatibility rules, transcript-preprocessing procedure, and evaluation implementation will be fixed before outcome analysis.
+The CGMH study is an ongoing real-world validation using psychiatric consultations included according to prespecified clinical eligibility and inclusion procedures. Cases are not selected according to whether HiED agrees with the recorded diagnosis. The model checkpoint, prompts, retrieval configuration, diagnostic scope, criterion definitions, compatibility rules, transcript-preprocessing procedure, and evaluation implementation are fixed before outcome analysis.
 
 The CGMH evaluation contains three separate analyses.
 
-First, HiED predictions will be compared with the diagnoses recorded during routine clinical care. This analysis measures agreement with the clinical record. Because the recorded diagnosis may incorporate information beyond the transcript available to HiED, including prior history, longitudinal follow-up, collateral information, laboratory findings, or other clinical observations, it will not be treated as equivalent to a transcript-only reference.
+First, HiED predictions are compared with diagnoses recorded during routine clinical care. This analysis measures agreement with the clinical record. The recorded diagnosis may incorporate information unavailable in the transcript provided to HiED, including prior history, longitudinal follow-up, collateral information, laboratory findings, and other clinical observations. Disagreement is therefore not automatically interpreted as a system error.
 
-Second, two psychiatrists will independently review the same transcript version and diagnostic scope provided to HiED. They will remain blinded to the recorded clinical diagnosis, HiED outputs, and each other's responses. Reviewers will first record transcript sufficiency, primary diagnosis, comorbid diagnoses, and up to three ranked differential diagnoses. These diagnostic responses will be locked before they complete the prespecified canonical evidence and diagnosis-specific qualifier labels.
+Second, two psychiatrists independently review the same transcript version and diagnostic scope provided to HiED. They remain blinded to the recorded clinical diagnosis, HiED outputs, and each other's responses. As in the LingxiDiag pilot, provisional diagnostic judgments are recorded before the evidence annotation, and reviewers may revise them afterward. Both provisional and final judgments are retained.
 
-Original independent judgments will be retained. Disagreements will subsequently be resolved through a prespecified consensus or adjudication procedure while the recorded clinical diagnosis and HiED outputs remain concealed. This process will produce a psychiatrist-consensus transcript-only reference.
+After independent review, disagreements are resolved through a prespecified consensus or adjudication procedure while the recorded clinical diagnosis and HiED outputs remain concealed. This process produces a psychiatrist transcript-only reference under an information condition matched more closely to the system input.
 
-HiED will then be compared separately with each independent reviewer and with the transcript-only consensus. Planned outcomes include committed-primary agreement, ranked-differential coverage, comorbidity agreement, inter-rater agreement, Criterion Checker state agreement, diagnostic-scope coverage, and agreement between system-derived and physician-evidence-derived compatibility decisions.
+HiED is compared separately with each independent reviewer and with the transcript-only reference. Planned outcomes include committed-primary agreement, ranked-differential coverage, comorbidity agreement, inter-rater agreement, changes between provisional and final diagnoses, Criterion Checker state agreement, diagnostic-scope coverage, and agreement between system-derived and psychiatrist-evidence-derived compatibility decisions.
 
-Third, only after the independent transcript-only reference has been completed and locked will the psychiatrists inspect the HiED ranked differential, committed diagnosis, criterion states, supporting evidence, and compatibility results. The recorded clinical diagnosis will remain concealed during this audit-assisted review. Reviewers will assess the consistency of the trace with the transcript, identify criterion-level errors when present, and record whether exposure to HiED changes their original diagnosis.
+Third, an exploratory audit-assisted review examines how psychiatrists assess the HiED ranked differential, criterion states, supporting text, compatibility decisions, and committed diagnosis after completing the blinded transcript-only assessment and consensus or adjudication. The recorded clinical diagnosis remains concealed during this review. Reviewers assess the consistency of the trace with the transcript, identify criterion-level errors when present, and record whether exposure to HiED changes their final blinded diagnosis.
 
-The audit-assisted outcomes will be treated as exploratory human--AI review and usability evidence. Decisions made after disclosure of HiED are not independent reference judgments and will not be used as the clinical gold standard or as proof that the audit trace improves diagnostic accuracy.
+Judgments made after disclosure of the HiED output are analyzed separately as exploratory human--AI review and usability evidence. They are not treated as independent reference diagnoses, the clinical gold standard, or proof that the audit trace improves diagnostic accuracy.
 
-Agreement with the recorded clinical diagnosis, agreement with the blinded transcript-only psychiatrist reference, and audit-assisted psychiatrist decisions represent different information conditions and will be reported separately. Data collection and clinical review are ongoing, and incomplete CGMH results are not included in the present quantitative conclusions.
+The CGMH analyses therefore distinguish agreement with the routine clinical record, agreement with a blinded transcript-only psychiatrist reference, and exploratory audit-assisted review. These analyses use different information conditions and are not combined into one overall agreement estimate. As the study is ongoing, no incomplete CGMH results contribute to the quantitative conclusions of this thesis.
 
 \chapter{Internal Evaluation Results}
 \label{ch:results}
@@ -1005,7 +1017,7 @@ Qwen3-32B & Published benchmark & 0.470 & 0.566 & 0.241 & 0.188 & 0.431\\
 
 Table~\ref{tab:matched-baselines-retrieval} reports the main same-split comparison on the fixed 1,000-case internal test set. Each thesis system uses the retrieval configuration selected independently for that architecture on the public-validation split: global Top-5 for Single and parent-balanced retrieval for HiED--DA. This table therefore compares complete validation-selected systems rather than a retrieval-matched or component-controlled architecture ablation. Matched results under no retrieval, global Top-5 retrieval, and parent-balanced retrieval are examined separately in Section~\ref{sec:retrieval-results}.
 
-Top-1 Accuracy is the common primary endpoint because every evaluated system produces a committed primary diagnosis. Exact Match, Macro-F1, and Weighted-F1 are also reported, but these measures depend on the complete emitted label set and are affected by differences in output cardinality. HiED-specific Top-3 coverage is examined later as part of the stage-wise failure analysis rather than interpreted as a direct improvement over Single.
+Top-1 Accuracy is the common primary endpoint because every evaluated system produces a committed primary diagnosis. Exact Match, Macro-F1, and Weighted-F1 are also reported, but these measures depend on the complete emitted label set and are affected by differences in output cardinality. HiED-specific Top-3 coverage is examined later as part of the stage-wise disagreement analysis rather than interpreted as a direct improvement over Single.
 
 \begin{table}[H]
 \centering
@@ -1110,7 +1122,7 @@ Overall, retrieval provides a clearer benefit for the direct Single configuratio
 
 Global Top-5 and parent-balanced retrieval also differ in the number, composition, ordering, and total token length of the retrieved examples. Their observed differences therefore reflect complete retrieval configurations and cannot be attributed solely to parent balancing.
 
-\section{Stage-Wise Failure Analysis}
+\section{Stage-Wise Disagreement Analysis}
 \label{sec:stage-wise-failure-results}
 
 This section answers RQ2 by localizing benchmark disagreement across candidate detection, criterion verification, and committed primary selection. The analysis uses the validation-selected parent-balanced HiED--DA trace on the fixed 1,000-case internal test set. Although global Top-5 produced higher point estimates in the held-out retrieval sensitivity analysis, changing the primary analysis trace after inspecting the test results would introduce post hoc configuration selection. The parent-balanced trace therefore remains the prespecified basis of the stage-wise analysis.
@@ -1122,11 +1134,11 @@ Figure~\ref{fig:selection-bottleneck} compares committed Top-1 agreement with ge
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.98\textwidth]{fig_b_selection_bottleneck.pdf}
-\caption{Committed Top-1 agreement and genuine Top-3 gold-label coverage on the 1,000-case internal test set. A benchmark gold parent appears in the genuine Top-3 in 802 cases but is selected as the committed primary diagnosis in 518 cases. The 284-case difference is a directly observed candidate-to-commitment gap under the evaluated DA contract; it does not imply that all 284 cases are clinically resolvable or recoverable by another finalization strategy.}
+\caption{Committed Top-1 agreement and genuine Top-3 gold-label coverage on the 1,000-case internal test set. A benchmark gold parent appears in the genuine Top-3 in 802 cases but is selected as the committed primary diagnosis in 518 cases. The 284-case difference is a directly observed gap between candidate availability and committed-primary agreement under the evaluated DA contract; it does not imply that all 284 cases are clinically resolvable or recoverable by another finalization strategy.}
 \label{fig:selection-bottleneck}
 \end{figure}
 
-This directly observed candidate-to-commitment gap shows that candidate generation alone does not account for all remaining benchmark disagreements. However, the 284 cases should not be interpreted as automatically correctable errors. The transcript may not support a unique primary diagnosis, the benchmark label may not be the only clinically plausible interpretation, and an alternative finalization strategy may also change cases that are already correct.
+This directly observed gap between candidate availability and committed-primary agreement shows that candidate generation alone does not account for all remaining benchmark disagreements. However, the 284 cases should not be interpreted as automatically correctable errors. The transcript may not support a unique primary diagnosis, the benchmark label may not be the only clinically plausible interpretation, and an alternative finalization strategy may also change cases that already agree with the benchmark.
 
 \paragraph{Criterion verification.}
 \label{sec:criterion-verification}
@@ -1135,32 +1147,32 @@ Criterion retention is evaluated on the 915 cases whose benchmark gold-label set
 
 These results indicate high gold-label retention but limited selectivity. Criterion verification rarely removes every benchmark gold parent once the relevant category is covered, but it often preserves several alternatives. The compatibility stage therefore acts as a broad evidence filter rather than consistently reducing the case to one clearly preferred diagnosis. The criterion states and supporting text are model-generated audit outputs and should not be interpreted as clinician-validated criterion annotations.
 
-\paragraph{Joint failure localization.}
+\paragraph{Joint disagreement localization.}
 
-Table~\ref{tab:d3rs-joint} jointly summarizes candidate detection, criterion retention, and committed primary correctness on the 915 checker-eligible cases.
+Table~\ref{tab:d3rs-joint} jointly summarizes candidate detection, criterion-compatible retention, and committed-primary agreement on the 915 checker-eligible cases.
 
 \begin{table}[htbp]
 \centering
-\caption{Joint distribution of candidate detection ($D_3$), gold-label retention after criterion verification ($R$), and primary-selection correctness ($S$) on the 915 checker-eligible cases.}
+\caption{Joint distribution of candidate detection ($D_3$), criterion-compatible retention ($R$), and committed-primary agreement ($S$) on the 915 checker-eligible cases.}
 \label{tab:d3rs-joint}
 \small
 \setlength{\tabcolsep}{3pt}
 \begin{tabularx}{\textwidth}{|>{\centering\arraybackslash}p{2.3cm}|>{\centering\arraybackslash}p{2.9cm}|>{\centering\arraybackslash}p{2.5cm}|>{\centering\arraybackslash}p{2.1cm}|X|}
 \hline
-Gold label in genuine Top-3 ($D_3$)? & Gold label in criterion-compatible set ($R$)? & Committed primary correct ($S$)? & Cases, $n$ (\%) & Interpretation\\
+Gold label in genuine Top-3 ($D_3$)? & Gold label in criterion-compatible set ($R$)? & Committed-primary agreement ($S$)? & Cases, $n$ (\%) & Interpretation\\
 \hline
-No & No & No & 34 (3.7\%) & Neither detected nor retained; primary incorrect\\
-No & Yes & No & 79 (8.6\%) & Retained by full-scope checking but absent from Top-3\\
-Yes & No & No & 12 (1.3\%) & Detected but not retained; primary incorrect\\
-Yes & No & Yes & 12 (1.3\%) & Correctly selected despite non-retention\\
-Yes & Yes & No & 272 (29.7\%) & Ranked and retained but not selected\\
-Yes & Yes & Yes & 506 (55.3\%) & Ranked, retained, and correctly selected\\
+No & No & No & 34 (3.7\%) & Neither ranked nor retained\\
+No & Yes & No & 79 (8.6\%) & Retained outside the Top-3\\
+Yes & No & No & 12 (1.3\%) & Ranked but not retained\\
+Yes & No & Yes & 12 (1.3\%) & Agreement despite non-retention\\
+Yes & Yes & No & 272 (29.7\%) & Ranked-and-retained nonselection\\
+Yes & Yes & Yes & 506 (55.3\%) & Ranked-and-retained agreement\\
 \hline
 \end{tabularx}
 \parbox{0.96\textwidth}{\footnotesize \textit{Note:} Profiles with $D_3=0$ and $S=1$ are impossible under the DA ranking contract and are omitted. Percentages are shares of the 915 checker-eligible cases and may not sum to exactly 100\% because of rounding.}
 \end{table}
 
-\ThesisFigure[0.98\textwidth]{fig_d3rs_flow.pdf}{Joint detection--verification--selection profiles on the 915 checker-eligible internal cases. The criterion-compatible set is evaluated over the configured checker scope rather than only the Top-3, so the paths summarize joint case profiles rather than a strictly nested runtime funnel.}{fig:d3rs-flow}
+\ThesisFigure[0.98\textwidth]{fig_d3rs_flow.pdf}{Joint $D_3$--$R$--$S$ profiles on the 915 checker-eligible internal cases. The paths summarize recorded outputs rather than a nested runtime funnel because $R$ is evaluated over the configured checker scope.}{fig:d3rs-flow}
 
 The indicators describe complementary output views rather than a strictly nested runtime funnel. The Criterion Checker evaluates the configured diagnostic scope, not only the Diagnostician's Top-3. A benchmark gold parent may therefore be retained as criterion-compatible even when it is absent from the ranked Top-3.
 
@@ -1200,7 +1212,7 @@ Under this definition, 349 of the 1,000 cases are initially incorrect but contai
 \frac{518+349}{1000}=0.867.
 \]
 
-This is not the performance of an implemented selector. The oracle uses the benchmark gold label to identify the preferred candidate, assumes that every eligible disagreement can be corrected, and assumes that no initially correct case is harmed. It is therefore a non-deployable, no-harm correction upper bound rather than an estimate of expected recoverable performance. The broader oracle candidate window also differs from the genuine Top-3 used to define the 284-case candidate-to-commitment gap. Full operational details and threshold sensitivity results are reported in Appendix~\ref{app:supporting}.
+This is not the performance of an implemented selector. The oracle uses the benchmark gold label to identify the preferred candidate, assumes that every eligible disagreement can be corrected, and assumes that no initially benchmark-consistent case is harmed. It is therefore a non-deployable, no-harm correction upper bound rather than an estimate of expected recoverable performance. The broader oracle candidate window also differs from the genuine Top-3 used to define the 284-case gap between candidate availability and committed-primary agreement. Full operational details and threshold sensitivity results are reported in Appendix~\ref{app:supporting}.
 
 \section{Primary-Selection Intervention Results}
 \label{sec:nts-factorial}
@@ -1294,7 +1306,7 @@ Overall, TF--IDF + logistic regression is the strongest same-split predictor, wh
 
 This chapter addresses the external cross-dataset component of RQ5 by testing whether the selection gap identified under RQ2 and the primary-selection findings from RQ4 remain observable on MDD-5k, a second Chinese synthetic dataset with different generation procedures, label distributions, and diagnostic coverage. Its analysis populations are subsets of one source dataset rather than independent cohorts, and the results do not constitute real-patient or Taiwanese clinical validation.
 
-\section[External Performance and Candidate-to-Commitment Gap]{\raggedright External Performance and Candidate-to-Commitment Gap}
+\section[External Candidate Availability and Committed-Primary Agreement]{\raggedright External Candidate Availability and Committed-Primary Agreement}
 \label{sec:mdd-multiway}
 \label{sec:external-ranking-gap}
 
@@ -1354,9 +1366,9 @@ The restricted F32/F41 task produces substantially higher performance than the m
 
 Figure~\ref{fig:internal-external-gap} compares committed Top-1 agreement with genuine Top-3 candidate coverage on the internal and external synthetic corpora. On the full MDD-5k set, a benchmark gold parent appears in the genuine Top-3 in 0.8508 of cases but is selected as the committed primary in 0.5708. The difference corresponds to 259 of the 925 cases in which a benchmark gold parent is ranked among the leading candidates but another diagnosis is committed as primary.
 
-\ThesisFigure[0.92\textwidth]{fig_internal_external_gap.pdf}{Committed Top-1 agreement and genuine Top-3 gold-label coverage on the internal and MDD-5k synthetic evaluation sets. A benchmark gold parent is ranked but not selected as the committed primary in 284 of 1,000 internal cases and 259 of 925 external cases. The external trace does not provide a matched criterion-retention view, so the figure compares candidate-to-commitment gaps rather than the complete stage-wise pathway.}{fig:internal-external-gap}
+\ThesisFigure[0.92\textwidth]{fig_internal_external_gap.pdf}{Committed Top-1 agreement and genuine Top-3 gold-label coverage on the internal and MDD-5k synthetic evaluation sets. A benchmark gold parent is ranked but not selected as the committed primary in 284 of 1,000 internal cases and 259 of 925 external cases. The external trace does not provide a matched criterion-retention view, so the figure compares gaps between candidate availability and committed-primary agreement rather than the complete stage-wise pathway.}{fig:internal-external-gap}
 
-The external candidate-to-commitment gap is similar in magnitude to the internal pattern and therefore provides a partial replication of the distinction between candidate coverage and committed primary selection. However, the external common trace does not contain a matched criterion-retention output. The full candidate-detection--criterion-retention--primary-selection analysis used internally cannot therefore be reconstructed on MDD-5k.
+The external gap between candidate availability and committed-primary agreement is similar in magnitude to the internal pattern and therefore provides a partial replication of that distinction. However, the external common trace does not contain a matched criterion-retention output. The full candidate-detection--criterion-retention--primary-selection analysis used internally cannot therefore be reconstructed on MDD-5k.
 
 These results support two conclusions. First, the evaluated HiED configuration remains above the majority baseline under a second synthetic data-generation process, particularly when the benchmark diagnosis is represented in the configured output space. Second, high candidate coverage again does not translate directly into equally high committed-primary agreement. The evidence remains synthetic and does not establish clinical transferability.
 
@@ -1419,7 +1431,7 @@ Self-consistency and confidence-informed self-consistency produce small positive
 
 SC and CISC produce identical committed predictions in the retained external records. Under these runs, confidence weighting therefore does not change the decision obtained from the underlying samples. The results should not be interpreted as evidence that confidence weighting and unweighted voting are generally equivalent.
 
-Taken together, none of the evaluated strategies provides a clear and reliable improvement over DA on MDD-5k. Recorded-output re-selection substantially reduces benchmark agreement, debate also performs below the reference configuration, and sampling-based aggregation yields only small and statistically uncertain point estimates. The external candidate-to-commitment gap identified in Section~\ref{sec:mdd-multiway} therefore represents potential decision headroom, but it does not imply that the tested selectors can recover that headroom.
+Taken together, none of the evaluated strategies provides a clear and reliable improvement over DA on MDD-5k. Recorded-output re-selection substantially reduces benchmark agreement, debate also performs below the reference configuration, and sampling-based aggregation yields only small and statistically uncertain point estimates. The external gap between candidate availability and committed-primary agreement identified in Section~\ref{sec:mdd-multiway} therefore represents potential decision headroom, but it does not imply that the tested selectors can recover that headroom.
 
 Detailed discordant counts, exact McNemar tests, and paired-bootstrap results are reported in Appendix~\ref{app:supporting}, Table~\ref{tab:external-paired-tests}. Set-level metrics are not used to isolate primary-selection effects because DA may emit an optional comorbid diagnosis, whereas several alternative policies emit only one committed diagnosis.
 
@@ -1482,12 +1494,12 @@ The large within-corpus and cross-corpus differences indicate that the evaluated
 Taken together, the scope and transfer analyses identify two distinct barriers to external use. First, a diagnosis must be represented in the configured output space, but representability alone does not produce recovery. Second, predictive lexical signals learned within one synthetic corpus may degrade sharply when transferred to another. These findings support the need for explicit diagnostic-scope evaluation and cross-corpus testing, while remaining insufficient to establish transfer to real clinical transcripts.
 
 
-\chapter{Stage-Wise Failure Analysis}
+\chapter{Stage-Wise Disagreement Analysis}
 \label{ch:error}
 
-This chapter characterizes the benchmark-disagreement locations identified in Chapter~\ref{ch:results} by examining candidate ranks, diagnostic directions, criterion-state patterns, diagnostic-set construction, and selected output traces. The primary analysis uses the validation-selected parent-balanced HiED--DA trace on the fixed internal test set, with the applicable population stated for each analysis. Throughout this chapter, a \emph{failure} denotes disagreement with the projected benchmark gold labels at a recorded system stage; it does not establish a psychiatrist-confirmed diagnostic error or identify its clinical cause.
+This chapter characterizes the benchmark-disagreement locations identified in Chapter~\ref{ch:results} by examining candidate ranks, diagnostic directions, criterion-state patterns, diagnostic-set construction, and selected output traces. The primary analysis uses the validation-selected parent-balanced HiED--DA trace on the fixed internal test set, with the applicable population stated for each analysis. Throughout this chapter, a \emph{disagreement} denotes non-agreement with the projected benchmark gold labels at a recorded system output; it does not establish a psychiatrist-confirmed diagnostic error or identify its clinical cause.
 
-\section{Stage-Wise Failure Taxonomy}
+\section{Stage-Wise Disagreement Taxonomy}
 \label{sec:ch8-stagewise-taxonomy}
 
 This chapter separates benchmark disagreements according to the recorded stage at which a benchmark gold parent is no longer preserved. The analysis uses three indicators introduced in Chapter~\ref{ch:data}: $D_3$ indicates whether a benchmark gold parent appears in the Diagnostician's genuine Top-3, $R$ indicates whether a benchmark gold parent is retained in the criterion-compatible set, and $S$ indicates whether the committed primary diagnosis matches a benchmark gold parent.
@@ -1497,11 +1509,13 @@ Candidate ranking and committed-primary agreement are available for all 1,000 in
 For the checker-eligible analysis, cases are divided into four mutually exclusive groups:
 
 \begin{enumerate}[label=(\arabic*),nosep]
-\item correct primary selection, defined by $S=1$;
-\item candidate-detection failure, defined by $D_3=0$ and $S=0$;
-\item criterion-verification failure, defined by $D_3=1$, $R=0$, and $S=0$; and
-\item primary-selection failure, defined by $D_3=1$, $R=1$, and $S=0$.
+\item committed-primary agreement, defined by $S=1$;
+\item Top-3 candidate miss, defined by $D_3=0$ and $S=0$;
+\item ranked but not criterion-retained, defined by $D_3=1$, $R=0$, and $S=0$; and
+\item ranked-and-retained nonselection, defined by $D_3=1$, $R=1$, and $S=0$.
 \end{enumerate}
+
+Cases with $S=1$ are grouped together regardless of criterion retention because the partition is designed to localize cases with committed-primary disagreement.
 
 \begin{table}[htbp]
 \centering
@@ -1513,32 +1527,32 @@ For the checker-eligible analysis, cases are divided into four mutually exclusiv
 \hline
 Group & Definition & Cases & Recorded profile\\
 \hline
-Correct primary selection & $S=1$ & 518 & A benchmark gold parent is selected as the committed primary diagnosis.\\
+Committed-primary agreement & $S=1$ & 518 & A benchmark gold parent is selected as the committed primary diagnosis.\\
 \hline
-Candidate-detection failure & $D_3=0,\ S=0$ & 113 & No benchmark gold parent appears in the genuine Top-3 and the committed primary is incorrect.\\
+Top-3 candidate miss & $D_3=0,\ S=0$ & 113 & No benchmark gold parent appears in the genuine Top-3, and the committed primary does not agree with a benchmark gold parent.\\
 \hline
-Criterion-verification failure & $D_3=1,\ R=0,\ S=0$ & 12 & A benchmark gold parent is ranked but not retained as criterion-compatible, and another diagnosis is committed.\\
+Ranked but not criterion-retained & $D_3=1,\ R=0,\ S=0$ & 12 & A benchmark gold parent is ranked but not retained as criterion-compatible, and another diagnosis is committed.\\
 \hline
-Primary-selection failure & $D_3=1,\ R=1,\ S=0$ & 272 & A benchmark gold parent is ranked and retained, but another diagnosis is committed as primary.\\
+Ranked-and-retained nonselection & $D_3=1,\ R=1,\ S=0$ & 272 & A benchmark gold parent is ranked and retained, but another diagnosis is committed as primary.\\
 \hline
 \end{tabularx}
 \end{table}
 
-\subsection{Candidate-Detection Failures}
+\subsection{Top-3 Candidate Misses}
 
-Across all 1,000 internal cases, 198 cases do not contain a benchmark gold parent in the genuine Top-3. Of these cases, 113 are checker-eligible and also have an incorrect committed primary diagnosis, placing them in the mutually exclusive candidate-detection failure group. The other 85 cases are scored as the evaluation-only \emph{Others} category and do not have a corresponding gold-parent checker.
+Across all 1,000 internal cases, 198 cases do not contain a benchmark gold parent in the genuine Top-3. Of these cases, 113 are checker-eligible and also have committed-primary disagreement, placing them in the mutually exclusive Top-3 candidate miss group. The other 85 cases are scored as the evaluation-only \emph{Others} category and do not have a corresponding gold-parent checker.
 
 Full-scope criterion verification retains a benchmark gold parent in 79 of these 113 cases, even though that diagnosis is absent from the Diagnostician's Top-3. The remaining 34 cases neither rank nor retain a benchmark gold parent. This difference reflects the non-nested system design: the Diagnostician produces a limited differential, whereas the Criterion Checker evaluates the complete configured diagnostic scope.
 
-Retention outside the Top-3 does not provide a deployable correction under Direct-Answer, because the committed diagnosis is selected from the Diagnostician's ranked candidates. These cases therefore remain candidate-generation failures under the recorded output contract.
+Retention outside the Top-3 does not provide a deployable correction under Direct-Answer, because the committed diagnosis is selected from the Diagnostician's ranked candidates. These cases therefore remain Top-3 candidate misses under the recorded output contract.
 
-\subsection{Criterion-Verification Failures}
+\subsection{Ranked but Not Criterion-Retained Cases}
 
-Twenty-four of the 915 checker-eligible cases contain a benchmark gold parent in the genuine Top-3 but not in the criterion-compatible set. Twelve of these cases nevertheless commit a benchmark-consistent primary diagnosis under Direct-Answer. The remaining twelve cases have both gold-label non-retention and an incorrect committed primary and therefore form the mutually exclusive criterion-verification failure group.
+Twenty-four of the 915 checker-eligible cases contain a benchmark gold parent in the genuine Top-3 but not in the criterion-compatible set. Twelve of these cases nevertheless commit a benchmark-consistent primary diagnosis under Direct-Answer. The remaining twelve cases have both gold-label non-retention and committed-primary disagreement and therefore form the mutually exclusive ranked-but-not-criterion-retained group.
 
 The checker traces in these cases contain a high proportion of \texttt{insufficient\_\allowbreak{}evidence} states for criteria associated with the benchmark diagnosis. This describes how the system recorded the available evidence but does not establish whether the relevant information was absent from the transcript or whether the checker judgments were clinically correct.
 
-The largest remaining failure group consists of the 272 cases in which a benchmark gold parent is both ranked and retained but another diagnosis is committed as primary. The following section examines the ranking positions, diagnostic directions, and compatibility patterns associated with this ranked-and-retained nonselection group.
+The largest remaining disagreement group consists of the 272 cases in which a benchmark gold parent is both ranked and retained but another diagnosis is committed as primary. The following section examines the ranking positions, diagnostic directions, and compatibility patterns associated with this ranked-and-retained nonselection group.
 
 \section{Characteristics of Ranked-and-Retained Nonselection}
 \label{sec:ch8-primary-selection}
@@ -1573,12 +1587,12 @@ F51 & F32 & 9 & 3.3\%\\
 
 The five most frequent pairs account for 222 of the 272 cases (81.6\%), showing that the disagreements are concentrated rather than evenly distributed across diagnostic directions. F41-to-F32 alone accounts for 158 cases (58.1\%), whereas the reverse F32-to-F41 direction occurs in only eleven cases. F32 is therefore the dominant committed destination among the largest ranked-and-retained disagreement pairs.
 
-Together, the rank and pair analyses identify a concentrated candidate-to-commitment pattern: a benchmark gold parent is usually ranked immediately behind the leading candidate, yet the system frequently commits F32 instead. This result localizes the recorded disagreement but does not determine which diagnosis is clinically preferable; that question requires independent psychiatrist review.
+Together, the rank and pair analyses identify a concentrated gap between candidate availability and committed-primary agreement: a benchmark gold parent is usually ranked immediately behind the leading candidate, yet the system frequently commits F32 instead. This result localizes the recorded disagreement but does not determine which diagnosis is clinically preferable; that question requires independent psychiatrist review.
 
 \section{Diagnostic-Set Construction Disagreements}
 \label{sec:ch8-diagnostic-set}
 
-The preceding analyses focus on whether the committed primary diagnosis agrees with at least one benchmark gold parent. Correct primary selection, however, does not guarantee that the complete emitted diagnosis set agrees with the complete benchmark label set.
+The preceding analyses focus on whether the committed primary diagnosis agrees with at least one benchmark gold parent. Committed-primary agreement, however, does not guarantee that the complete emitted diagnosis set agrees with the complete benchmark label set.
 
 Among the 1,000 internal cases, HiED--DA selects a benchmark-consistent primary diagnosis in 518 cases. Exact agreement between the complete emitted diagnosis set and the benchmark label set is observed in 409 of these cases. The remaining 109 cases therefore have a benchmark-consistent primary diagnosis but a disagreement in diagnostic-set construction.
 
@@ -1630,13 +1644,13 @@ Figure~\ref{fig:ch8-criterion-composition} compares the mean within-case proport
 \label{fig:ch8-criterion-composition}
 \end{figure}
 
-The ranked-and-retained nonselection group and the correct-primary group show closely overlapping criterion-state compositions. Candidate-detection failures also overlap broadly with correct selections because the Criterion Checker evaluates the complete configured diagnostic scope, including diagnoses outside the Diagnostician's Top-3. The criterion-verification group shows descriptively fewer \texttt{met} states and more unresolved states, but this group contains only twelve cases and does not support a stable group-level inference.
+The ranked-and-retained nonselection group and the committed-primary-agreement group show closely overlapping criterion-state compositions. Top-3 candidate misses also overlap broadly with committed-primary agreement because the Criterion Checker evaluates the complete configured diagnostic scope, including diagnoses outside the Diagnostician's Top-3. The ranked-but-not-criterion-retained group shows descriptively fewer \texttt{met} states and more unresolved states, but this group contains only twelve cases and does not support a stable group-level inference.
 
 Together, the compatible-set and criterion-state analyses show that broad checker-derived quantities do not determine comparative primacy. The Checker records diagnosis-specific support, contradiction, unresolved evidence, and operational compatibility, but neither the number of retained diagnoses nor the aggregate state composition indicates which compatible diagnosis should be committed as primary.
 
 \subsection{Illustrative Stage-Wise Output Traces}
 
-Table~\ref{tab:audit-trace-examples} presents three de-identified system-output summaries selected to illustrate candidate detection, criterion verification, and ranked-and-retained nonselection. The examples contain no transcript text, have not been reviewed by psychiatrists, and are used only to demonstrate how the recorded artifacts localize benchmark disagreement.
+Table~\ref{tab:audit-trace-examples} presents three de-identified system-output summaries selected to illustrate a Top-3 candidate miss, a ranked but not criterion-retained case, and ranked-and-retained nonselection. The examples contain no transcript text, have not been reviewed by psychiatrists, and are used only to demonstrate how the recorded artifacts localize benchmark disagreement.
 
 \begin{table}[htbp]
 \centering
@@ -1648,15 +1662,15 @@ Table~\ref{tab:audit-trace-examples} presents three de-identified system-output 
 \hline
 Recorded location & Benchmark parent & Diagnostician Top-3 & Criterion-compatible set & Committed primary & Unresolved benchmark criteria\\
 \hline
-Candidate detection & F31 & F32, F39, F41 & F32, F39, F41, F43, F51, F98 & F32 & None recorded\\
-Criterion verification & F32 & F39, F32, F41 & F51, F98, Z71 & F39 & B1, C2, C5\\
+Top-3 candidate miss & F31 & F32, F39, F41 & F32, F39, F41, F43, F51, F98 & F32 & None recorded\\
+Ranked but not criterion-retained & F32 & F39, F32, F41 & F51, F98, Z71 & F39 & B1, C2, C5\\
 Ranked-and-retained nonselection & F32 & F20, F32, F41 & F20, F32, F39, F41, F43 & F20 & C2, C7\\
 \hline
 \end{tabular}
 \end{adjustbox}
 \end{table}
 
-The examples illustrate three distinct recorded conditions. In the first, the benchmark diagnosis is absent from both the ranked differential and the compatible set. In the second, it is ranked but removed by criterion verification. In the third, it is both ranked and retained but another diagnosis is committed as primary. In the table, ``none recorded'' means that no benchmark criterion was assigned the \texttt{insufficient\_\allowbreak{}evidence} state; it does not imply full support or clinical correctness.
+The examples illustrate three distinct recorded conditions. In the first, the benchmark diagnosis is absent from both the ranked differential and the compatible set. In the second, it is ranked but not retained in the criterion-compatible set. In the third, it is both ranked and retained but another diagnosis is committed as primary. In the table, ``none recorded'' means that no benchmark criterion was assigned the \texttt{insufficient\_\allowbreak{}evidence} state; it does not imply full support or clinical correctness.
 
 These summaries demonstrate how the retained ranking, criterion, compatibility, and finalization artifacts can localize a benchmark disagreement. They do not validate the Criterion Checker, establish the clinically correct diagnosis, or identify whether the disagreement is attributable to the system, incomplete transcript evidence, or the benchmark reference.
 
@@ -1664,12 +1678,12 @@ Clinical interpretation of the ranked-and-retained nonselection cases remains pe
 
 \section{Chapter Summary}
 
-This chapter separated internal benchmark disagreements into candidate-detection, criterion-verification, ranked-and-retained nonselection, and diagnostic-set construction groups. The largest strict subset consists of cases in which a benchmark gold parent is both ranked and retained but another diagnosis is committed as primary. These disagreements are concentrated in several diagnostic directions, particularly F41-to-F32, while broad criterion-state composition and compatible-set size do not clearly distinguish them from correctly selected cases. External diagnostic-scope limitations are reported separately in Chapter~\ref{ch:external}. The retained artifacts support stage-wise localization, but clinical interpretation remains pending the blinded LingxiDiag pilot review.
+This chapter partitioned the 915 checker-eligible internal cases into committed-primary agreement, Top-3 candidate miss, ranked but not criterion-retained, and ranked-and-retained nonselection groups, and separately examined diagnostic-set disagreements. The largest strict disagreement subset consists of cases in which a benchmark gold parent is both ranked and retained but another diagnosis is committed as primary. These disagreements are concentrated in several diagnostic directions, particularly F41-to-F32, while broad criterion-state composition and compatible-set size do not clearly distinguish them from cases with committed-primary agreement. External diagnostic-scope limitations are reported separately in Chapter~\ref{ch:external}. The retained artifacts support stage-wise localization, but clinical interpretation remains pending the blinded LingxiDiag pilot review.
 
 \chapter{Discussion}
 \label{ch:discussion}
 
-The results support a stage-wise interpretation of HiED rather than an accuracy-leading claim. Its ranked, criterion, compatibility, and finalization outputs reveal where benchmark disagreement remains after a plausible diagnosis has entered the differential. The external synthetic evaluation reproduces the candidate-to-commitment gap but lacks matched criterion retention, so it provides partial rather than complete replication of the internal localization.
+The results support a stage-wise interpretation of HiED rather than an accuracy-leading claim. Its ranked, criterion, compatibility, and finalization outputs reveal where benchmark disagreement remains after a plausible diagnosis has entered the differential. The external synthetic evaluation reproduces the gap between candidate availability and committed-primary agreement but lacks matched criterion retention, so it provides partial rather than complete replication of the internal localization.
 
 This distinction matters because the same benchmark error can arise under different recorded conditions. A missing candidate calls for better candidate generation, a rejected candidate calls for scrutiny of the evidence representation or compatibility rule, and a ranked-and-retained alternative calls for comparative selection. The contribution of the trace is to separate these questions without treating the recorded stages as a causal model of the language model's internal reasoning.
 
@@ -1691,7 +1705,7 @@ Primary selection is therefore the largest remaining \emph{recorded} bottleneck 
 \section{Why the Evaluated Selection Strategies Did Not Reliably Close the Gap}
 \label{sec:discussion-selection-strategies}
 
-The candidate-to-commitment gap indicates that a benchmark-consistent diagnosis is often already available among the leading candidates. However, candidate availability does not imply that the recorded outputs contain a simple and reliable rule for replacing the committed primary diagnosis.
+The gap between candidate availability and committed-primary agreement indicates that a benchmark-consistent diagnosis is often already available among the leading candidates. However, candidate availability does not imply that the recorded outputs contain a simple and reliable rule for replacing the committed primary diagnosis.
 
 The recorded-output methods provide the clearest test of this possibility because they reuse the existing candidate ranking, criterion states, and compatibility decisions. Nominate-then-Select and deterministic fusion nevertheless did not improve Direct-Answer. These methods rely on rank position, compatibility status, and criterion-support summaries, but none of these signals directly represents why one compatible diagnosis should be preferred over another. A rule that overturns an incorrect commitment may therefore also replace an initially correct decision.
 
@@ -1714,7 +1728,7 @@ Diagnostic-set construction determines which diagnoses should accompany the comm
 
 Diagnostic scope defines which diagnoses the system is able to rank, verify, or emit. A diagnosis that is absent from the configured profile cannot be recovered through improved candidate ranking or finalization. However, the scope-expansion experiment in Chapter~\ref{ch:external} also shows that making a diagnosis representable does not automatically cause the system to rank or select it. Broader coverage may require corresponding examples, retrieval support, prompt adaptation, or training that changes system behavior rather than only its available labels.
 
-External transfer presents a further boundary. MDD-5k reproduces the candidate-to-commitment gap under a second synthetic data-generation process, but its retained artifacts do not support the complete internal $D_3$--$R$--$S$ analysis. The strong degradation of the lexical classifier across corpora also indicates that predictive signals learned within one synthetic corpus may depend strongly on corpus-specific wording, generation procedures, and label distributions.
+External transfer presents a further boundary. MDD-5k reproduces the gap between candidate availability and committed-primary agreement under a second synthetic data-generation process, but its retained artifacts do not support the complete internal $D_3$--$R$--$S$ analysis. The strong degradation of the lexical classifier across corpora also indicates that predictive signals learned within one synthetic corpus may depend strongly on corpus-specific wording, generation procedures, and label distributions.
 
 These findings place complementary limits on the main conclusion. Primary selection is the largest remaining recorded bottleneck within the evaluated internal HiED trace, but it does not account for errors in comorbidity construction, unavailable diagnostic categories, or distribution-specific prediction behavior. The external evidence supports partial persistence across synthetic corpora, not transfer to real patients or clinical workflows.
 
@@ -1758,7 +1772,7 @@ Because the official LingxiDiagBench test split was unavailable, the main intern
 
 The public-validation split was used repeatedly for prompt development, compatibility-rule refinement, sensitivity analysis, and retrieval selection. It consequently represents development evidence rather than an independent estimate of generalization. The reversal between the validation-selected retrieval ordering and the held-out results further illustrates the uncertainty associated with configuration selection from a limited development split.
 
-MDD-5k introduces a second synthetic generation process with different transcript characteristics, label frequencies, and diagnostic coverage. It reproduces the candidate-to-commitment gap, but its common trace does not contain the matched criterion-retention outputs required to reconstruct the complete internal $D_3$--$R$--$S$ analysis. Its results also combine corpus shift with differences in diagnostic scope and possible effects of transcript truncation that were not separately quantified.
+MDD-5k introduces a second synthetic generation process with different transcript characteristics, label frequencies, and diagnostic coverage. It reproduces the gap between candidate availability and committed-primary agreement, but its common trace does not contain the matched criterion-retention outputs required to reconstruct the complete internal $D_3$--$R$--$S$ analysis. Its results also combine corpus shift with differences in diagnostic scope and possible effects of transcript truncation that were not separately quantified.
 
 The cross-corpus lexical results further indicate that strong within-corpus prediction may rely on corpus-specific wording, generation patterns, and label priors. Overall, the completed evidence demonstrates same-source behavior and partial persistence under a second synthetic distribution. It does not establish generalization to naturally occurring psychiatric conversations, real patients, independent hospitals, or Taiwanese clinical practice.
 
@@ -1780,7 +1794,7 @@ Finally, the model-scale analysis is restricted to the evaluated Qwen3 model fam
 
 The reported confidence intervals and statistical tests quantify uncertainty for the observed benchmark cases under fixed system outputs and evaluation configurations. They do not account for uncertainty in benchmark validity, prompt design, checkpoint selection, synthetic data generation, or performance in a new population. Statistical uncertainty within the evaluated sample should therefore not be interpreted as uncertainty over all possible models, datasets, or clinical settings.
 
-Several analyses also involve small or imbalanced subgroups. Rare diagnostic categories and the strict criterion-verification group, which contains only twelve cases, do not support stable class-specific or group-level conclusions. An interval containing zero indicates insufficient evidence of a difference rather than equivalence. Conversely, an interval excluding zero establishes a difference between the evaluated configurations but does not identify which component caused that difference when the configurations vary in multiple ways.
+Several analyses also involve small or imbalanced subgroups. Rare diagnostic categories and the strict ranked-but-not-criterion-retained group, which contains only twelve cases, do not support stable class-specific or group-level conclusions. An interval containing zero indicates insufficient evidence of a difference rather than equivalence. Conversely, an interval excluding zero establishes a difference between the evaluated configurations but does not identify which component caused that difference when the configurations vary in multiple ways.
 
 The analyses differ in their degree of prespecification and record completeness. The same-split benchmark comparison, validation-based retrieval selection, internal $D_3$--$R$--$S$ analysis, and paired DA--NtS comparison form the primary quantitative evidence. The gold-informed oracle, diagnostic-scope expansion, lexical transfer, and additional selection interventions are supporting analyses. Some secondary methods lack complete case-level paired records, limiting uncertainty estimation and preventing reconstruction of which individual cases improved or deteriorated.
 
@@ -1808,11 +1822,11 @@ Auditability and reproducibility do not establish clinical validity. An inspecta
 
 This thesis introduced HiED, an auditable multi-stage framework for differential diagnosis from Chinese psychiatric initial-consultation transcripts. Rather than reducing diagnosis to a single final label, HiED preserves the ranked differential, diagnosis-specific criterion states, deterministic compatibility decisions, and committed primary diagnosis as separately inspectable artifacts. Its main contribution is therefore a system and evaluation framework for locating benchmark disagreement, rather than a state-of-the-art predictive result.
 
-On the fixed internal evaluation set, TF--IDF + logistic regression was the strongest same-split predictor, while the validation-selected Single and HiED--DA configurations achieved similar committed-primary performance. HiED nevertheless exposed a substantial candidate-to-commitment gap. The largest strict recorded disagreement group consisted of 272 checker-eligible cases in which a benchmark gold parent appeared in the genuine Top-3 and was retained as criterion-compatible, but another diagnosis was committed as primary.
+On the fixed internal evaluation set, TF--IDF + logistic regression was the strongest same-split predictor, while the validation-selected Single and HiED--DA configurations achieved similar committed-primary performance. HiED nevertheless exposed a substantial gap between candidate availability and committed-primary agreement. The largest strict recorded disagreement group consisted of 272 checker-eligible cases in which a benchmark gold parent appeared in the genuine Top-3 and was retained as criterion-compatible, but another diagnosis was committed as primary.
 
 The analysis further showed that candidate availability and individual criterion compatibility do not by themselves determine comparative primacy. Ranked-and-retained nonselection cases often involved nearby alternatives and were strongly concentrated in particular diagnostic directions, while compatible-set size and aggregate criterion-state composition did not clearly distinguish them from cases with a benchmark-consistent commitment.
 
-None of the evaluated deterministic, pairwise, debate, fusion, or sampling-based selection strategies provided a clear and attributable improvement over Direct-Answer. The candidate-to-commitment pattern remained observable across the evaluated Qwen3 sizes and on MDD-5k, although the external trace did not provide the criterion-retention outputs required for a complete replication of the internal stage-wise analysis.
+None of the evaluated deterministic, pairwise, debate, fusion, or sampling-based selection strategies provided a clear and attributable improvement over Direct-Answer. The gap between candidate availability and committed-primary agreement remained observable across the evaluated Qwen3 sizes and on MDD-5k, although the external trace did not provide the criterion-retention outputs required for a complete replication of the internal stage-wise analysis.
 
 These findings identify primary selection as the largest remaining \emph{recorded} bottleneck under the evaluated HiED configuration and synthetic benchmark contract. They do not establish that every benchmark disagreement is a clinically incorrect or automatically recoverable decision. The completed contribution of HiED is to make candidate generation, criterion verification, compatibility, and commitment separately observable; reliable comparative diagnosis and clinical validity remain to be established through independent psychiatrist review and real-world validation.
 
@@ -1840,7 +1854,7 @@ No evaluated intervention produced a clear and attributable improvement over Dir
 
 \item[RQ5] \textbf{To what extent do the main findings persist across model sizes, external synthetic corpora, and changes in the configured diagnostic scope, and which error patterns characterize the remaining disagreements?}
 
-The candidate-to-commitment pattern remained observable across the evaluated Qwen3 sizes and on MDD-5k. The external trace did not contain matched criterion-retention outputs, so the complete internal $D_3$--$R$--$S$ pathway could not be replicated. Diagnostic-scope expansion increased output-space representability without producing committed-primary recovery, while cross-corpus TF--IDF performance degraded substantially.
+The gap between candidate availability and committed-primary agreement remained observable across the evaluated Qwen3 sizes and on MDD-5k. The external trace did not contain matched criterion-retention outputs, so the complete internal $D_3$--$R$--$S$ pathway could not be replicated. Diagnostic-scope expansion increased output-space representability without producing committed-primary recovery, while cross-corpus TF--IDF performance degraded substantially.
 
 Within the internal ranked-and-retained nonselection group, the highest-ranked benchmark gold parent was usually the second-ranked candidate, and disagreements were strongly concentrated in the F41-to-F32 direction. Compatible-set size and aggregate criterion-state composition did not clearly distinguish these cases from cases with a benchmark-consistent commitment. These findings demonstrate persistence and concentrated error patterns only under the tested synthetic conditions, not robustness across unrelated models or clinical populations.
 
@@ -1850,9 +1864,9 @@ Within the internal ranked-and-retained nonselection group, the highest-ranked b
 
 \paragraph{Completion of the planned clinical evaluations.}
 
-The LingxiDiag pilot and CGMH real-world validation should be completed and reported as separate studies. The LingxiDiag pilot should report the frozen case sample, reviewer characteristics, independent transcript-only diagnoses, canonical evidence and diagnosis-specific qualifier labels, pre-consensus inter-rater agreement, consensus or adjudication outcomes, and offline agreement with the benchmark and HiED outputs. Because the cases are selected from one synthetic disagreement population, the findings should remain framed as feasibility and exploratory agreement evidence.
+The LingxiDiag pilot and CGMH real-world validation should be completed and reported as separate studies. The LingxiDiag pilot should report the frozen case sample, reviewer characteristics, provisional and final transcript-only diagnoses, changes following evidence annotation, canonical evidence and diagnosis-specific qualifier labels, pre-consensus inter-rater agreement, consensus or adjudication outcomes, and offline agreement with the benchmark and HiED outputs. Because the cases are selected from one synthetic disagreement population, the findings should remain framed as feasibility and exploratory agreement evidence.
 
-The CGMH study should separately report agreement between HiED and the recorded clinical diagnoses, agreement with the blinded transcript-only psychiatrist consensus, criterion-state and compatibility agreement, diagnostic-scope coverage, and exploratory audit-assisted review outcomes. The recorded diagnosis, blinded transcript-only reference, and psychiatrist decisions made after viewing HiED should remain separate because they represent different information conditions.
+The CGMH study should separately report agreement between HiED and the recorded clinical diagnoses, agreement with the blinded transcript-only psychiatrist reference, provisional-to-final diagnostic changes, criterion-state and compatibility agreement, diagnostic-scope coverage, and exploratory audit-assisted review outcomes. The recorded diagnosis, blinded transcript-only reference, and psychiatrist decisions made after viewing HiED should remain separate because they represent different information conditions.
 
 \paragraph{Comparative primary selection and evidence representation.}
 
@@ -1956,10 +1970,10 @@ Table~\ref{tab:ch8-criterion-ratios} reports case-level distributions for Figure
 \hline
 Group & $N$ & \texttt{met} & \texttt{not\_met} & \texttt{insufficient\_evidence}\\
 \hline
-Correct primary selection & 518 & 50.0 [46.2, 52.6] & 23.1 [19.2, 26.9] & 26.9 [23.1, 30.8]\\
-Candidate-detection failure & 113 & 48.7 [43.6, 52.6] & 21.8 [17.9, 26.9] & 28.2 [23.1, 35.9]\\
-Criterion-verification failure & 12 & 41.0 [33.0, 47.4] & 27.6 [21.5, 33.0] & 27.6 [22.8, 37.2]\\
-Primary-selection failure & 272 & 50.0 [46.2, 53.8] & 21.8 [19.2, 26.9] & 26.9 [21.8, 32.1]\\
+Committed-primary agreement & 518 & 50.0 [46.2, 52.6] & 23.1 [19.2, 26.9] & 26.9 [23.1, 30.8]\\
+Top-3 candidate miss & 113 & 48.7 [43.6, 52.6] & 21.8 [17.9, 26.9] & 28.2 [23.1, 35.9]\\
+Ranked but not criterion-retained & 12 & 41.0 [33.0, 47.4] & 27.6 [21.5, 33.0] & 27.6 [22.8, 37.2]\\
+Ranked-and-retained nonselection & 272 & 50.0 [46.2, 53.8] & 21.8 [19.2, 26.9] & 26.9 [21.8, 32.1]\\
 \hline
 \end{tabularx}
 \end{table}

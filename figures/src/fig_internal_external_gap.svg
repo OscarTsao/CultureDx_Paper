@@ -9,7 +9,7 @@
     .grid { stroke: #d7dde2; stroke-width: 1.5; }
   </style>
 
-  <text x="600" y="48" text-anchor="middle" class="title">Internal and external candidate-to-commitment gaps</text>
+  <text x="600" y="48" text-anchor="middle" class="title">Candidate availability and committed-primary agreement</text>
 
   <line x1="130" y1="590" x2="1100" y2="590" stroke="#64717d" stroke-width="2"/>
   <line x1="130" y1="110" x2="130" y2="590" stroke="#64717d" stroke-width="2"/>
