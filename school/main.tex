@@ -537,23 +537,45 @@ Figure~\ref{fig:worked-example-flow} traces the parallel diagnostic and criterio
 \ThesisFigure[1.0\textwidth]{fig_worked_example_flow.pdf}{Stage-wise HiED data flow for the constructed consultation. The Diagnostician and Criterion Checkers receive the same transcript, the deterministic Compatibility Auditor aggregates checker-generated states, and DA and NtS apply different finalization contracts.}{fig:worked-example-flow}
 \FloatBarrier
 
-Table~\ref{tab:running-example} summarizes selected recorded outputs for F41.1 and F32. The state labels illustrate how the model-generated checker judgments are converted into diagnosis-level compatibility under the study-specific rules in Appendix~\ref{app:configured-profile}.
+Table~\ref{tab:running-example} summarizes the Diagnostician outputs, selected transcript evidence, and compatible-set status for F41.1 and F32. The following text explains how the model-generated checker judgments are converted into diagnosis-level compatibility under the study-specific rules in Appendix~\ref{app:configured-profile}.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
-\caption{Selected stage-wise outputs for the two leading diagnoses in the constructed example.}
+\caption{Selected outputs for the two leading diagnoses in the constructed example.}
 \label{tab:running-example}
-\footnotesize
-\setlength{\tabcolsep}{4pt}
-\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.0cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
-\toprule
-\textbf{Recorded stage or rule} & \textbf{F41.1 Generalized anxiety disorder} & \textbf{F32 Depressive episode}\\
-\midrule
-Diagnostician output & Rank 1; emitted primary diagnosis & Rank 2\\
-Example checker states & Worry across several topics: \texttt{met}; six-month duration: \texttt{insufficient\_\allowbreak{}evidence}; restlessness, tension, and autonomic features: \texttt{insufficient\_\allowbreak{}evidence} & Depressed mood, loss of interest, fatigue, impaired concentration, early awakening, and two-week duration: \texttt{met}\\
-Operational compatibility rule & At least four symptoms and at least six months; not satisfied & At least two core symptoms, four total symptoms, and two weeks; satisfied\\
-Compatibility Auditor result & \textbf{Not criterion-compatible} & \textbf{Criterion-compatible}; compatible set $=\{\mathrm{F32}\}$\\
-\bottomrule
+\small
+\renewcommand{\arraystretch}{1.18}
+\setlength{\tabcolsep}{5pt}
+
+\begin{tabularx}{\textwidth}{
+|>{\raggedright\arraybackslash}p{3.0cm}
+|>{\raggedright\arraybackslash}X
+|>{\raggedright\arraybackslash}X|}
+\hline
+\textbf{Output} &
+\textbf{F41.1 Generalized anxiety disorder} &
+\textbf{F32 Depressive episode}\\
+\hline
+
+Diagnostician output &
+Rank 1; emitted primary &
+Rank 2\\
+\hline
+
+Supporting evidence &
+Persistent worry; poor concentration; sleep disturbance &
+Depressed mood; loss of interest; two-week duration; fatigue; poor concentration; early awakening\\
+\hline
+
+Missing or unclear evidence &
+Six-month duration; sufficient associated anxiety symptoms &
+Additional associated symptoms not fully discussed\\
+\hline
+
+Compatible-set status &
+\textbf{Not included} &
+\textbf{Included}\\
+\hline
 \end{tabularx}
 \end{table}
 \FloatBarrier
