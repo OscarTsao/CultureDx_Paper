@@ -933,7 +933,7 @@ MDD-5k is used for external cross-dataset evaluation under a second Chinese synt
 A separate 490-case F32-versus-F41 subset is evaluated as a secondary binary analysis and is not treated as the main external performance estimate. The available external trace supports committed Top-1 Accuracy, genuine Top-3 Accuracy, comparison between candidate availability and committed-primary agreement, and same-trace primary-selection comparisons. It does not contain matched gold-label-inclusion outputs, so the complete internal $D_3$--$R$--$S$ analysis cannot be reproduced on MDD-5k.
 
 \paragraph{Configuration-only diagnostic-scope expansion.}
-A configuration-level experiment expands the diagnostic profile from fourteen to 33 configured diagnostic categories by adding category-specific checker definitions without updating the model weights. The expanded configuration is evaluated separately and is not used in the primary external analysis.
+A configuration-level experiment expands the diagnostic profile from 14 to 33 configured diagnostic categories by adding category-specific checker definitions without updating the model weights. The expanded configuration is evaluated separately and is not used in the primary external analysis.
 
 This experiment distinguishes output-space representability from behavioral recovery. It tests whether making a benchmark diagnosis available within the configured diagnostic profile is sufficient for that diagnosis to appear in the ranked candidates or become the committed primary diagnosis. It does not establish the general effectiveness, clinical validity, or safety of diagnostic-scope expansion.
 
