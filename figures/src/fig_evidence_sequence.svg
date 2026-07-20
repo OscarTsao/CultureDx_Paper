@@ -47,8 +47,8 @@
   <rect x="50" y="590" width="760" height="130" rx="7" fill="#f7f1df" stroke="#a57c24" stroke-width="2.5"/>
   <text x="430" y="628" text-anchor="middle" class="heading">4. Primary-selection interventions (RQ4)</text>
   <text x="430" y="658" text-anchor="middle" class="detail">DA vs. NtS</text>
-  <text x="430" y="681" text-anchor="middle" class="detail">Fusion, pairwise, debate,</text>
-  <text x="430" y="704" text-anchor="middle" class="detail">and repeated-generation methods</text>
+  <text x="430" y="681" text-anchor="middle" class="detail">Fusion, pairwise comparison, debate,</text>
+  <text x="430" y="704" text-anchor="middle" class="detail">and self-consistency variants</text>
 
   <path d="M430 720 V745" class="flow"/>
 

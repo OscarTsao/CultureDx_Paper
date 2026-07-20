@@ -733,7 +733,7 @@ Others & Out-of-scope gold diagnosis & 85 & 0 & 47\\
 
 \noindent\textit{Note:} Cases may contain more than one projected gold label. For this descriptive distribution, each case is assigned to its first-listed projected gold label so that each column sums to the corresponding number of cases. The table therefore does not report multilabel prevalence. \emph{Others} is an evaluation category assigned when none of a case's dataset gold diagnoses is represented in the configured output space; it is not a diagnosis that HiED can emit.
 
-F32 and F41 account for most cases in both in-scope evaluation sets, whereas several configured categories have limited support. Performance measures that weight labels by support are therefore expected to be influenced strongly by these frequent categories. The table is descriptive and does not imply that the first-listed label is a clinically validated primary diagnosis.
+F32 and F41 make up most cases in both the internal held-out set and the in-scope \mbox{MDD-5k} subset, while several other categories contain only a small number of cases. Consequently, support-weighted measures such as Weighted-F1 are driven mainly by performance on F32 and F41 and may underrepresent performance on less frequent categories. The table is descriptive only: the first-listed label is used to assign each case to one row and is not treated as a clinically validated primary diagnosis.
 
 \section{Prediction Views and Metrics}
 
@@ -796,25 +796,26 @@ Macro-F1 is the unweighted mean of the twelve one-vs-rest label-level F1 scores 
 
 First-listed-label agreement compares the committed diagnosis only with the first-listed projected gold parent. It is used for the confusion matrix but not for the main result. It may differ from any-gold Top-1 Accuracy when a case contains more than one gold parent label.
 
-\section{Disagreement-Localization Indicators}
+\section{Case-Level Indicators for Disagreement Localization}
 
-The thesis defines three disagreement-localization indicators. Top-3 candidate detection and committed-primary agreement are defined for all evaluation cases, whereas gold-label inclusion is defined only for checker-eligible cases.
+The measures defined in the preceding section summarize performance across evaluation cases. For case-level disagreement localization, this thesis uses three corresponding binary indicators: Top-3 candidate detection, gold-label inclusion in the criterion-compatible set, and committed-primary agreement.
 
 For case $x$,
 \[
-D_3(x)=\mathbb{1}[R_3(x)\cap G(x)\neq\varnothing],
+\begin{aligned}
+D_3(x) &= \mathbb{1}[R_3(x)\cap G(x)\neq\varnothing],\\
+R(x) &= \mathbb{1}[L(x)\cap G(x)\neq\varnothing],\\
+S(x) &= \mathbb{1}[p_1(x)\in G(x)].
+\end{aligned}
 \]
-\[
-R(x)=\mathbb{1}[L(x)\cap G(x)\neq\varnothing],
-\]
-\[
-S(x)=\mathbb{1}[p_1(x)\in G(x)],
-\]
-where $L(x)$ is the set of scoring parent labels classified as criterion-compatible by the Compatibility Auditor. $D_3(x)$ indicates whether at least one benchmark gold parent appears in the genuine ranked Top-3, $R(x)$ indicates whether the criterion-compatible set contains at least one benchmark gold parent, and $S(x)$ indicates whether the committed primary diagnosis matches at least one benchmark gold parent.
 
-$D_3$ and $S$ are computed over all 1,000 internal evaluation cases. $R$ is computed only for the 915 checker-eligible cases whose gold-label set contains at least one non-\emph{Others} parent represented by a corresponding Criterion Checker. The resulting rates therefore use different denominators and should not be interpreted as consecutive stages of a single case-level funnel.
+$D_3(x)$ is the case-level indicator underlying Top-3 Accuracy: it equals one when at least one benchmark gold label appears in the genuine ranked Top-3. $R(x)$ equals one when the criterion-compatible set contains at least one benchmark gold label. $S(x)$ is the case-level indicator underlying committed Top-1 Accuracy: it equals one when the committed primary diagnosis matches at least one benchmark gold label.
 
-These indicators provide complementary views of the recorded outputs for the same case: Top-3 candidate detection, gold-label inclusion in the criterion-compatible set, and committed-primary agreement. They do not imply that every finalization policy executes these operations in that chronological order.
+Accordingly, Top-3 Accuracy is the mean of $D_3(x)$ across all evaluation cases, and committed Top-1 Accuracy is the mean of $S(x)$. The gold-label inclusion rate is the mean of $R(x)$ over checker-eligible cases.
+
+$D_3$ and $S$ are available for all 1,000 internal evaluation cases, whereas $R$ is defined only for the 915 checker-eligible cases whose benchmark gold-label set contains at least one non-\emph{Others} parent represented by a corresponding Criterion Checker. The three aggregate rates therefore use different denominators and must not be interpreted as consecutive stages of one numerical funnel.
+
+These indicators describe complementary recorded output views for the same case. They do not imply that every finalization policy executes candidate ranking, criterion checking, and primary selection in this chronological order.
 
 \section{Statistical Analysis}
 
