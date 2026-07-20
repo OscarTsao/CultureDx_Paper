@@ -630,7 +630,7 @@ Checker-output recovery is applied only when an LLM response can be parsed but c
 
 Throughout this thesis, the dataset-provided diagnoses used for scoring are referred to as \emph{benchmark gold labels}. The term \emph{gold} denotes the official benchmark reference and does not imply a uniquely correct clinical diagnosis.
 
-The main system uses fourteen configured ICD-10 diagnostic categories, listed in Table~\ref{tab:configured-profile-summary}. For evaluation, subtype-level categories are projected to eleven broader parent labels. Let $G_{\mathrm{raw}}(x)$ be the raw benchmark gold codes for case $x$, let $\pi$ map subtype codes such as F41.0, F41.1, and F41.2 to their scoring parent, and let $\mathcal{C}$ be the set of eleven configured scoring parents. The in-scope gold-label set is
+The main system uses fourteen configured ICD-10 diagnostic categories, listed in Table~\ref{tab:configured-profile-summary}. For evaluation, subtype-level categories are projected to eleven broader parent labels. Let $G_{\mathrm{raw}}(x)$ be the raw benchmark gold codes for case $x$, and let $\pi$ map subtype-level codes to their scoring parents, mapping F41.0, F41.1, and F41.2 to F41 and F43.1 and F43.2 to F43. Codes already defined at the scoring-parent level are left unchanged. Let $\mathcal{C}$ be the set of eleven configured scoring parents. The in-scope gold-label set is
 \[
 G_{\mathrm{in}}(x)=\{\pi(c):c\in G_{\mathrm{raw}}(x),\ \pi(c)\in\mathcal{C}\}.
 \]
