@@ -648,15 +648,15 @@ For case $x$, $G(x)$ is the deduplicated gold-label set after parent-level proje
 
 \section{Datasets, Case Construction, and Split Roles}
 
-The study uses two synthetic Chinese psychiatric dialogue datasets. LingxiDiag-16K, the dataset underlying LingxiDiagBench, provides the source data for development and internal held-out evaluation, whereas MDD-5k is used for external cross-dataset evaluation.
+The study uses two synthetic Chinese psychiatric dialogue datasets. LingxiDiag-16K, the dataset underlying LingxiDiagBench, is used for system development and internal held-out evaluation, whereas MDD-5k is used for external cross-dataset evaluation.
 
 \subsection{LingxiDiag-16K}
 
 LingxiDiag-16K is the synthetic Chinese psychiatric dialogue dataset underlying LingxiDiagBench and was generated for static diagnostic classification and interactive consultation tasks~\citep{xu2026lingxidiagbench}. It provides a fixed diagnostic label space and sufficient cases for training, configuration selection, and internal held-out evaluation. The published LingxiDiagBench results also show that fine-grained disorder-level diagnosis is substantially more difficult than broad depression--anxiety classification.
 
-The accessible release used in this study contained 14,000 training-source cases and 1,000 public-validation cases. The official test file was not available in the accessible release used when the experiments were designed. To obtain a held-out internal evaluation set, 1,000 cases were separated from the 14,000-case training source before the main experiments. The remaining 13,000 cases were used to train conventional baselines and build the retrieval index.
+The accessible release used in this study contained 14,000 training-source cases and 1,000 public-validation cases. The official test file was not available in the accessible release used when the experiments were designed.
 
-The internal held-out set was stratified to approximate the public-validation distribution using the first-listed projected parent label and a fixed random seed. The first-listed label was used only as a sampling variable and was not treated as a psychiatrist-validated clinical primary diagnosis. Exact case-ID checks confirmed that held-out cases were excluded from the training and retrieval pools. No separate semantic near-duplicate screen was performed. The held-out cases were excluded from all reported configuration-selection procedures.
+The 1,000-case internal held-out set was sampled from the 14,000-case training source using the first-listed projected parent label to approximately match the public-validation class distribution. A fixed random seed was used for reproducibility. The remaining 13,000 cases were used to train conventional baselines and build the retrieval index. The first-listed label served only as a stratification variable and was not treated as a clinically validated primary diagnosis. Case-ID checks confirmed that held-out cases were excluded from baseline training, the retrieval index, and all configuration-selection procedures. No additional semantic near-duplicate screening was performed.
 
 \begin{table}[htbp]
 \centering
