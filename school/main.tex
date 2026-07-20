@@ -429,15 +429,11 @@ Z71 & Z71 & Counseling without a specific disorder\\
 
 \section{System Overview and Output Artifacts}
 
-The diagnostician prompt contains four readable parts: the task and the fixed list of configured diagnostic categories; the speaker-labeled transcript; retrieved training examples, when retrieval is enabled; and the required structured output fields. Retrieval is completed before generation. The model sees only the current transcript and the supplied examples.
+Figure~\ref{fig:pipeline-thesis-rewrite} presents the overall HiED architecture. A Similar-Case Retriever may first provide labeled training examples to the Diagnostician, which produces a ranked differential diagnosis and an emitted primary diagnosis. In parallel, diagnosis-specific Criterion Checkers evaluate the transcript against the configured criteria, and a deterministic Compatibility Auditor converts the resulting criterion states into a criterion-compatible diagnosis set. A finalization policy then converts the recorded diagnostic and compatibility outputs into the committed diagnosis.
 
-\ThesisFigure[1.0\textwidth]{fig_pipeline_round20c.pdf}{HiED components and recorded intermediate artifacts. Colors and border styles distinguish input and final-output elements, LLM-based components, deterministic components, and recorded artifacts. The Diagnostician and Criterion Checker receive the transcript independently; the Checker evaluates all configured categories rather than only the ranked Top-5.}{fig:pipeline-thesis-rewrite}
+\ThesisFigure[1.0\textwidth]{fig_pipeline_round20c.pdf}{Overview of the HiED components, data flow, and recorded intermediate artifacts. Colors and border styles distinguish inputs and final outputs, LLM-based components, deterministic components, and stored artifacts.}{fig:pipeline-thesis-rewrite}
 
-Retrieved examples are supplied only to the Diagnostician. Finalization receives the ranked output under both policies and the criterion-compatible set under NtS: DA preserves the emitted primary diagnosis and optional comorbidity, whereas NtS produces one re-selected committed primary diagnosis. The recorded ranking, criterion states and supporting text, criterion-compatible set and compatibility-rule trace, and committed primary provide the output views used for stage-wise failure localization.
-
-The retained audit artifacts comprise the emitted diagnosis set, ranked differential, criterion states, checker-generated supporting text, criterion-compatible diagnoses, compatibility-rule trace, finalization source, and execution failures. Because these records are stored separately, a reviewer can inspect the candidate ranking, an individual criterion judgment, an applied compatibility rule, or the final selection. This record follows the definition of auditability in Section~\ref{sec:auditability-definition}: it supports inspection and replay but does not expose the LLM's hidden reasoning, establish clinical correctness, or replace real-patient validation.
-
-In this thesis, an \emph{agent} means an LLM call with a distinct prompt and task. The checker agents run independently; they do not have autonomous memory, planning, or free-form negotiation. HiED is therefore a modular multi-stage LLM orchestration with role-specific agents and deterministic rule aggregation.
+HiED stores ranked diagnostic outputs, criterion and compatibility records, and the committed diagnosis as separate artifacts. This separation supports stage-wise inspection and replay of deterministic aggregation, but does not reveal the model's hidden reasoning or establish clinical correctness. In this thesis, an \emph{agent} is an LLM call with a distinct prompt and task, without autonomous memory, planning, or free-form negotiation.
 
 \section{Candidate Generation and Retrieval}
 \label{sec:retrieval}
@@ -470,9 +466,9 @@ For each criterion, the checker assigns one of the three criterion states define
 
 \paragraph{Compatibility Auditor.}
 
-The Compatibility Auditor is a deterministic module that converts criterion-level states into diagnosis-level compatibility decisions. For each configured diagnostic category, it applies the predefined operational rule associated with that category. Depending on the diagnosis, a rule may require particular core criteria, a minimum number of total criteria, specified criterion groups, or all listed requirements. A diagnosis is added to the \emph{criterion-compatible set} only when its configured rule is satisfied.
+The Compatibility Auditor is a deterministic module that converts the criterion-level states produced by the diagnosis-specific Criterion Checkers into diagnosis-level compatibility decisions. It does not independently interpret the transcript or revise the checker judgments. For each configured diagnostic category, the auditor applies the predefined operational rule associated with that category. Depending on the diagnosis, a rule may require particular core criteria, a minimum number of total criteria, specified criterion groups, or all listed requirements. A diagnosis is added to the \emph{criterion-compatible set} only when its configured rule is satisfied.
 
-The auditor records the applied rule, the relevant criterion counts, and the resulting compatibility decision in the compatibility-rule trace. Because the aggregation is deterministic, the same checker states always produce the same criterion-compatible set. The complete category-specific rules are listed in Appendix~\ref{app:configured-profile}.
+The auditor records the applied rule, the relevant criterion counts, and the resulting compatibility decision in the compatibility-rule trace. Because the aggregation is deterministic, the same set of checker-generated criterion states always produces the same criterion-compatible set. The complete category-specific rules are listed in Appendix~\ref{app:configured-profile}.
 
 \paragraph{Interpretation boundary.}
 
