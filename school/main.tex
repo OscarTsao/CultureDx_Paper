@@ -195,11 +195,11 @@ These features make first-visit psychiatric diagnosis a problem of comparative b
 \section{Problem Definition and Challenges}
 \label{sec:problem-definition}
 
-Large language models offer capabilities that are well aligned with psychiatric transcript analysis: they can process free-form dialogue, organize symptom evidence, retrieve relevant examples, and produce structured outputs. Medical multi-agent systems can further divide the diagnostic task among specialized roles and combine their outputs~\citep{li2024taiwan,raballo2025,sarma2025,tang2024medagents,kim2024mdagents}. However, these capabilities do not by themselves ensure reliable differential diagnosis from a fixed transcript.\ct{Does our model deal with all these problems?}
+Large language models offer capabilities that are well aligned with psychiatric transcript analysis: they can process free-form dialogue, organize symptom evidence, retrieve relevant examples, and produce structured outputs. Medical multi-agent systems can further divide the diagnostic task among specialized roles and combine their outputs~\citep{li2024taiwan,raballo2025,sarma2025,tang2024medagents,kim2024mdagents}. However, these capabilities do not by themselves ensure reliable differential diagnosis from a fixed transcript.
 
 A final diagnostic error may arise for different reasons. A clinically relevant diagnosis may never be proposed as a candidate, the available transcript may not provide sufficient criterion-level support for that diagnosis, or the diagnosis may remain plausible but lose the final comparison against competing alternatives. These failure modes require different remedies, but they are usually collapsed into a single final-accuracy score.
 
-This creates the central technical problem studied in this thesis: existing evaluation often does not reveal whether disagreement arises during candidate generation, criterion-based verification, or primary-diagnosis selection. Without separately observable outputs for these stages, it is difficult to determine whether better retrieval, evidence checking, or comparative selection is needed. The next section introduces HiED as a framework designed to make these distinctions observable.\ct{what problem?}
+This creates the central technical problem studied in this thesis: existing evaluation often does not reveal whether disagreement arises during candidate generation, criterion-based verification, or primary-diagnosis selection. Without separately observable outputs for these stages, it is difficult to determine whether better retrieval, evidence checking, or comparative selection is needed. The next section introduces HiED as a framework designed to make these distinctions observable.
 
 \section{Overview of HiED and Study Scope}
 
@@ -356,8 +356,6 @@ This thesis therefore uses five research questions:
 \item[RQ4] Do criterion-based re-selection or the tested primary-selection methods improve over Direct-Answer?
 \item[RQ5] To what extent do the main findings persist across model sizes, external synthetic corpora, and changes in the configured diagnostic scope, and what error patterns characterize the remaining failures?
 \end{description}
-\ct{Does your thesis really answer all 5 questions?}
-
 RQ1 and RQ3 use matched comparisons on the same fixed internal test set, with common label projection and evaluation code. Clinical effectiveness and criterion-level clinical validity are not answered by the completed computational RQs; the LingxiDiag pilot review and CGMH real-world validation are separate ongoing clinical studies.
 
 \chapter{HiED System Architecture}
@@ -366,7 +364,7 @@ RQ1 and RQ3 use matched comparisons on the same fixed internal test set, with co
 \section{Input and Diagnostic Scope}
 \label{sec:input-diagnostic-scope}
 
-HiED processes one Chinese psychiatric consultation transcript at a time. The input is an ordered sequence of turns, each marked as \texttt{Clinician} or \texttt{Patient}; speaker labels and turn order are preserved in the prompt. Transcripts longer than the available prompt budget are deterministically truncated by retaining complete turns from the beginning and end, with an explicit marker for the omitted middle. The system does not summarize or invent missing text. This is a fixed-input study: the system cannot ask the patient a follow-up question during inference.\ct{Is this about input and transcript format?}
+HiED processes one Chinese psychiatric consultation transcript at a time. The input is an ordered sequence of turns, each marked as \texttt{Clinician} or \texttt{Patient}; speaker labels and turn order are preserved in the prompt. Transcripts longer than the available prompt budget are deterministically truncated by retaining complete turns from the beginning and end, with an explicit marker for the omitted middle. The system does not summarize or invent missing text. This is a fixed-input study: the system cannot ask the patient a follow-up question during inference.
 
 ICD-10 is the diagnostic coding system used to name the disorders in this study~\citep{who2019icd10}. The system does not search all ICD-10 diagnoses. Before a run begins, it loads one fixed \emph{configured diagnostic profile} that is used for every patient. The main diagnostic profile contains fourteen configured diagnostic categories. F41 and F43 include subtype-level categories, so the fourteen categories are projected to eleven broader parent labels for scoring. Chapter~\ref{ch:data} defines how mixed in-scope and out-of-scope dataset-provided diagnosis codes are projected for evaluation.
 
