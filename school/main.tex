@@ -463,9 +463,9 @@ For each criterion, the checker assigns one of the three criterion states define
 
 \paragraph{Compatibility Auditor.}
 
-The Compatibility Auditor is a deterministic module that converts the criterion-level states produced by the diagnosis-specific Criterion Checkers into diagnosis-level compatibility decisions. It does not independently interpret the transcript or revise the checker judgments. For each configured diagnostic category, the auditor applies the predefined operational rule associated with that category. Depending on the diagnosis, a rule may require particular core criteria, a minimum number of total criteria, specified criterion groups, or all listed requirements. A diagnosis is added to the \emph{criterion-compatible set} only when its configured rule is satisfied.
+The Compatibility Auditor is a deterministic module that applies predefined rules to the criterion states produced by the Criterion Checkers and determines whether each configured diagnostic category is included in the \emph{criterion-compatible set}. It does not independently interpret the transcript or revise the checker outputs. Depending on the diagnostic category, the rule may require particular core criteria, a minimum number of total criteria, specified criterion groups, or all listed requirements.
 
-The auditor records the applied rule, the relevant criterion counts, and the resulting compatibility decision in the compatibility-rule trace. Because the aggregation is deterministic, the same set of checker-generated criterion states always produces the same criterion-compatible set. The complete category-specific rules are listed in Appendix~\ref{app:configured-profile}.
+The auditor records the applied rule, the relevant criterion counts, and the resulting inclusion status in the compatibility-rule trace. Because the aggregation is deterministic, the same set of checker-generated criterion states always produces the same criterion-compatible set. The complete category-specific rules are listed in Appendix~\ref{app:configured-profile}.
 
 \paragraph{Interpretation boundary.}
 
@@ -485,7 +485,7 @@ Nominate-then-Select (NtS) is a deterministic alternative that uses the recorded
 \[
 \operatorname{met\_ratio}(d)=\min\!\left(1,\frac{\text{number of \texttt{met} criteria for }d}{\text{required criterion count for }d}\right).
 \]
-The denominator is the minimum satisfying count defined by the configured operational rule rather than the total number of listed criteria. NtS first selects the highest-ranked criterion-compatible diagnosis within the ranked Top-5. If none of the ranked candidates is criterion-compatible, it selects from the remaining criterion-compatible diagnoses by descending $\operatorname{met\_ratio}$, with ties resolved by the predefined configured-category order. If the criterion-compatible set is empty, NtS falls back to the first-ranked diagnosis.
+The denominator is the minimum satisfying count defined by the configured operational rule rather than the total number of listed criteria. NtS first selects the highest-ranked criterion-compatible diagnosis within the ranked Top-5. If none of the ranked candidates is criterion-compatible, it selects the remaining criterion-compatible diagnosis with the highest $\operatorname{met\_ratio}$. Ties are broken using the fixed category order listed in Table~\ref{tab:configured-profile-summary}; this order is used only to ensure deterministic output and does not represent clinical priority. If the criterion-compatible set is empty, NtS falls back to the first-ranked diagnosis.
 
 \paragraph{Output contracts.}
 
