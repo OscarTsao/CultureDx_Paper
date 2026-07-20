@@ -361,14 +361,14 @@ Taken together, the reviewed literature leaves five unresolved questions that ar
 
 This thesis therefore uses five research questions:
 
-\begin{description}[style=nextline,leftmargin=1.5cm,labelwidth=1.1cm,itemsep=0.2em,parsep=0pt]
+\begin{description}[style=nextline,leftmargin=1.5cm,labelwidth=1.1cm,itemsep=0pt,parsep=0pt,topsep=0pt,partopsep=0pt]
 \item[RQ1] How does HiED compare with conventional and single-model baselines under the same data split, label mapping, and primary evaluation endpoint?
 \item[RQ2] How often does a benchmark gold label appear among the ranked candidates or in the criterion-compatible set without being selected as the committed primary diagnosis?
 \item[RQ3] How do no retrieval, global Top-5 retrieval, and parent-balanced retrieval compare in matched Single and HiED pipelines?
 \item[RQ4] Under the evaluated settings, do criterion-based re-selection or the tested primary-selection methods improve committed Top-1 agreement over Direct-Answer?
 \item[RQ5] To what extent do the main findings persist across model sizes, external synthetic corpora, and changes in the configured diagnostic scope, and which error patterns characterize the remaining disagreements?
 \end{description}
-These RQs define computational analyses on synthetic benchmark data. RQ1 and RQ3 use matched comparisons on the same fixed internal test set, with common label projection and evaluation code. RQ5 combines complementary sensitivity, external synthetic, scope, transfer, and error-pattern analyses rather than one statistical hypothesis. Clinical effectiveness and criterion-level clinical validity are not answered by the completed computational RQs; the LingxiDiag pilot review and CGMH real-world validation are separate ongoing clinical studies.
+These RQs define computational analyses on synthetic benchmark data. RQ3 first compares retrieval configurations on the public-validation split and freezes the selected settings, whereas RQ1 evaluates the selected configurations on the fixed internal held-out set. RQ5 comprises complementary model-scale, external synthetic, diagnostic-scope, cross-corpus transfer, and error-pattern analyses rather than a single statistical hypothesis. Clinical effectiveness and criterion-level clinical validity are not addressed by the completed computational RQs. The ongoing LingxiDiag psychiatrist pilot review and CGMH real-world validation are reported separately and are not included in the present conclusions.
 
 \chapter{HiED System Architecture}
 \label{ch:architecture}
