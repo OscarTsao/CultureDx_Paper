@@ -35,7 +35,7 @@
   legendswatch/.style={rectangle, minimum width=0.42cm, minimum height=0.24cm, inner sep=0pt, line width=0.8pt}
 ]
 
-\fill[bggray] (-0.35,-3.70) rectangle (23.05,3.60);
+\fill[bggray] (-0.35,-3.70) rectangle (23.50,3.60);
 
 % Color and border-style legend
 \node[font=\sffamily\bfseries\fontsize{7.7}{8.7}\selectfont, text=textgray, anchor=west] at (0.20,3.22) {Legend};
@@ -96,17 +96,17 @@
  \ArtifactSub{Compatibility-rule trace}};
 
 % Finalization and observed output
-\node[deterministic, minimum width=2.90cm] (finalization) at (18.00,0)
+\node[deterministic, minimum width=2.90cm] (finalization) at (18.30,0)
 {\ModuleTitle{Finalization}\\[-1pt]
  \ModuleSub{DA / NtS policy}};
 
-\node[output, minimum width=3.10cm] (committed) at (21.35,0)
+\node[output, minimum width=3.10cm] (committed) at (21.75,0)
 {\ArtifactTitle{Committed primary}\\[-1pt]
  \ArtifactSub{diagnosis}};
 
 % Input branches. The Diagnostician and Criterion Checker receive the transcript independently.
 \draw[mainarrow] (transcript.north) |- (retriever.west);
-\draw[mainarrow] (transcript.east) -- ++(0.42,0) -| (diagnostician.south);
+\draw[mainarrow] (transcript.east) -| (diagnostician.south);
 \node[flowlabel] at (6.15,0.02) {Transcript};
 \draw[mainarrow] (transcript.south) |- (checker.west);
 
@@ -123,8 +123,8 @@
 \draw[mainarrow] (criteria.north) -- (checker.south);
 
 % Both recorded output views are available to finalization.
-\draw[mainarrow] (ranked.south east) -- ($(finalization.north)+(-0.55,0)$);
-\draw[mainarrow] (compatible.north east) -- ($(finalization.south)+(-0.55,0)$);
+\draw[mainarrow] (ranked.south) |- ($(finalization.west)+(0,0.34)$);
+\draw[mainarrow] (compatible.north) |- ($(finalization.west)+(0,-0.34)$);
 \draw[mainarrow] (finalization.east) -- (committed.west);
 
 \end{tikzpicture}
