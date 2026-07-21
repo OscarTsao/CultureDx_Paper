@@ -1055,7 +1055,7 @@ HiED--DA & Parent-balanced & Validation-selected proposed system & 0.518 & 0.802
 \end{tabular}
 \end{adjustbox}
 \parbox{0.96\textwidth}{\footnotesize
-\textit{Note.} Majority Top-3 is the hit rate over its single emitted label; TF--IDF + LR uses the three highest-scoring classes; Single uses its available emitted-label list, with the primary diagnosis first and at most three labels scored; and HiED--DA uses the Diagnostician's genuine ordered Top-3. Single's value is not interpreted as ranked differential coverage.
+\textit{Note.} Majority Top-3 is the hit rate over its single emitted label; TF--IDF + LR uses the three highest-scoring classes; Single uses its available emitted-label list, with the primary diagnosis first and at most three labels scored; and HiED--DA uses the Diagnostician's genuine ranked Top-3. Single's value is not interpreted as ranked differential coverage.
 }
 \end{table}
 
@@ -1070,7 +1070,7 @@ HiED's additional empirical value lies instead in the diagnostic artifacts unava
 
 This section reports the RQ3 comparison defined in Section~\ref{sec:benchmark-retrieval-design}. Table~\ref{tab:retrieval-results} presents public-validation and fixed internal test results; configurations were selected separately within Single and HiED--DA using validation only and were frozen before held-out evaluation.
 
-The panels remain separate because their Top-3 measures represent different output views. Panel A reports Single's benchmark-defined hit rate over the available emitted labels, whereas Panel B reports HiED--DA's genuine ordered Top-3 differential.
+The panels remain separate because their Top-3 measures represent different output views. Panel A reports Single's benchmark-defined hit rate over the available emitted labels, whereas Panel B reports HiED--DA's genuine ranked Top-3 differential.
 
 \begin{table}[H]
 \centering
@@ -1399,7 +1399,7 @@ Gold label ranked and included but not selected ($S=0,\ D_3=1,\ I=1$) & 272 (29.
 }
 \end{table}
 
-On MDD-5k, Top-3 candidate detection was observed in 787 of 878 cases (89.6\%), gold-label inclusion in 690 cases (78.6\%), and committed-primary agreement in 528 cases (60.1\%). The same broad qualitative profile recurred across the two synthetic corpora: candidate detection and gold-label inclusion both exceeded committed-primary agreement, and the largest strict disagreement group contained a gold label that was ranked and included but not selected.
+On MDD-5k, Top-3 candidate detection was observed in 787 of 878 cases (89.6\%), gold-label inclusion in 690 cases (78.6\%), and committed-primary agreement in 528 cases (60.1\%). The same broad qualitative profile recurred across the two synthetic corpora: candidate detection and gold-label inclusion both exceeded committed-primary agreement, and the largest disagreement group contained a gold label that was ranked and included but not selected.
 
 The profile proportions were not identical. The ranked-but-not-included group was larger externally than internally (3.9\% versus 1.3\%), whereas the ranked-and-included-but-not-selected group was smaller (25.6\% versus 29.7\%). These are descriptive cross-corpus comparisons, and no equivalence test was performed.
 
