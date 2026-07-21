@@ -1168,18 +1168,25 @@ Table~\ref{tab:d3rs-joint} jointly summarizes Top-3 candidate detection, gold-la
 \label{tab:d3rs-joint}
 \small
 \setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.08}
 \begin{tabularx}{\textwidth}{|>{\centering\arraybackslash}p{2.3cm}|>{\centering\arraybackslash}p{2.9cm}|>{\centering\arraybackslash}p{2.5cm}|>{\centering\arraybackslash}p{2.1cm}|X|}
 \hline
 Gold label in genuine Top-3 ($D_3$)? & Gold label in criterion-compatible set ($I$)? & Committed-primary agreement ($S$)? & Cases, $n$ (\%) & Interpretation\\
 \hline
 No & No & No & 34 (3.7\%) & Gold label absent from both views\\
+\hline
 No & Yes & No & 79 (8.6\%) & Compatible-set inclusion outside the Top-3\\
+\hline
 Yes & No & No & 12 (1.3\%) & Ranked; absent from compatible set\\
+\hline
 Yes & No & Yes & 12 (1.3\%) & Agreement; absent from compatible set\\
+\hline
 Yes & Yes & No & 272 (29.7\%) & Ranked and compatible; not selected\\
+\hline
 Yes & Yes & Yes & 506 (55.3\%) & Ranked, compatible, and selected\\
 \hline
 \end{tabularx}
+\renewcommand{\arraystretch}{1.0}
 \parbox{0.96\textwidth}{\footnotesize \textit{Note:} Profiles with $D_3=0$ and $S=1$ are impossible under the DA ranking contract and are omitted. Percentages are shares of the 915 checker-eligible cases and may not sum to exactly 100\% because of rounding.}
 \end{table}
 
@@ -1258,6 +1265,7 @@ Table~\ref{tab:internal-selection-results} summarizes the additional internal in
 \caption{Additional internal primary-selection methods relative to DA. Confidence intervals are paired-bootstrap intervals for the Top-1 difference; a dash denotes unavailable paired records.}
 \label{tab:internal-selection-results}
 \small
+\renewcommand{\arraystretch}{1.08}
 \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{3.2cm}|c|c|c|X|}
 \hline
 Method & Top-1 & $\Delta$ vs DA & 95\% CI & Interpretation\\
@@ -1265,11 +1273,15 @@ Method & Top-1 & $\Delta$ vs DA & 95\% CI & Interpretation\\
 DA & 0.518 & --- & --- & Reference output\\
 \hline
 Deterministic fusion & 0.514 & $-0.004$ & --- & Recorded-output summary\\
+\hline
 Forced pairwise override & 0.443 & $-0.075$ & [$-0.098$, $-0.053$] & Complete configuration\\
+\hline
 Pairwise independent & 0.524 & $+0.006$ & [$-0.010$, 0.022] & Complete configuration\\
+\hline
 Two-view debate & 0.485 & $-0.033$ & [$-0.049$, $-0.018$] & Complete configuration\\
 \hline
 \end{tabularx}
+\renewcommand{\arraystretch}{1.0}
 \end{table}
 
 Deterministic fusion produces a slightly lower Top-1 point estimate than DA, but a paired case-level record was not retained for interval estimation. Forced pairwise override and two-view debate both reduce Top-1, with confidence intervals that exclude zero. Independent pairwise comparison produces a small positive point estimate, but its interval includes zero and therefore does not provide clear evidence of improvement.
@@ -1320,18 +1332,25 @@ Table~\ref{tab:external-inventory} distinguishes the populations used in the ext
 \caption{External analysis populations and their roles.}
 \label{tab:external-inventory}
 \small
-\begin{tabularx}{\textwidth}{|X|r|X|}
+\renewcommand{\arraystretch}{1.10}
+\begin{tabularx}{\textwidth}{|X|>{\centering\arraybackslash}p{1.2cm}|X|}
 \hline
 Analysis population & $N$ & Role\\
 \hline
 MDD-5k full evaluation set & 925 & Multi-way performance and common-trace primary-selection analyses\\
+\hline
 In-scope subset & 878 & Performance when a gold diagnosis is representable\\
+\hline
 Out-of-scope cases & 47 & Diagnostic-scope limitation\\
+\hline
 Restricted F32/F41 subset & 490 & Separate binary task\\
+\hline
 Lexical-transfer holdout & 185 & Corpus-portability analysis\\
+\hline
 Scope-expansion sample & 58 & Newly representable diagnoses\\
 \hline
 \end{tabularx}
+\renewcommand{\arraystretch}{1.0}
 \end{table}
 
 Table~\ref{tab:external-summary-rewrite} reports the external predictive results. On both the full and in-scope multi-way populations, HiED exceeds the corresponding majority baseline. Excluding out-of-scope cases improves every reported system metric, showing that output-space representability contributes to the full-set performance loss. Weighted-F1 remains higher than Macro-F1, consistent with the strong influence of frequent labels in the external corpus.
@@ -1413,6 +1432,7 @@ Using the common 925-case MDD-5k trace defined in Section~\ref{sec:mdd-multiway}
 \caption{External primary-selection strategies relative to Direct-Answer on the common 925-case MDD-5k trace. Differences and paired-bootstrap confidence intervals are reported in percentage points.}
 \label{tab:mdd-finalization-results}
 \small
+\renewcommand{\arraystretch}{1.08}
 \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{4.0cm}|>{\raggedright\arraybackslash}p{3.0cm}|c|X|}
 \hline
 Method & Comparison contract & Top-1 & Difference vs DA (95\% CI), pp\\
@@ -1420,22 +1440,29 @@ Method & Comparison contract & Top-1 & Difference vs DA (95\% CI), pp\\
 \multicolumn{4}{|c|}{\textbf{Reference and recorded-output methods}}\\
 \hline
 Direct-Answer & Reference output & 57.08\% & ---\\
+\hline
 Nominate-then-Select & Same upstream trace; deterministic finalization & 40.65\% & $-16.43$ [$-19.5$, $-13.5$]\\
+\hline
 Deterministic fusion & Same upstream trace; recorded-output fusion & 47.14\% & $-9.95$ [$-12.4$, $-7.5$]\\
 \hline
 \multicolumn{4}{|c|}{\textbf{Additional-inference methods}}\\
 \hline
 Conservative pairwise gate & Eligibility-gated comparison & 57.08\% & $0.00$ (no committed changes)\\
+\hline
 Two-view debate & Complete new-inference configuration & 37.84\% & $-19.24$ [$-22.6$, $-16.0$]\\
 \hline
 \multicolumn{4}{|c|}{\textbf{Sampling-based methods}}\\
 \hline
 Self-consistency ($K=3$) & Majority aggregation over repeated samples & 57.84\% & $+0.76$ [$-0.9$, 2.4]\\
+\hline
 Self-consistency ($K=5$) & Majority aggregation over repeated samples & 58.16\% & $+1.08$ [$-0.5$, 2.7]\\
+\hline
 Confidence-informed SC ($K=3$) & Confidence-weighted aggregation & 57.84\% & $+0.76$ [$-0.9$, 2.4]\\
+\hline
 Confidence-informed SC ($K=5$) & Confidence-weighted aggregation & 58.16\% & $+1.08$ [$-0.5$, 2.7]\\
 \hline
 \end{tabularx}
+\renewcommand{\arraystretch}{1.0}
 \end{table}
 
 \paragraph{Recorded-output methods.}
@@ -1496,16 +1523,21 @@ Table~\ref{tab:lexical-transfer-rewrite} reports the cross-corpus lexical-transf
 \centering
 \caption{Within-corpus and cross-corpus TF--IDF Top-1 performance. The MDD-5k evaluations use the same 185-case transfer holdout; the results belong to a separate transfer experiment rather than the main same-split baseline.}
 \label{tab:lexical-transfer-rewrite}
-\begin{tabular}{|l|l|r|c|l|}
+\renewcommand{\arraystretch}{1.08}
+\begin{tabularx}{\textwidth}{|l|l|r|c|>{\raggedright\arraybackslash}X|}
 \hline
 Training corpus & Evaluation corpus & $N$ & Top-1 & Interpretation\\
 \hline
 LingxiDiag & LingxiDiag & 1000 & 0.610 & within-corpus fit\\
+\hline
 LingxiDiag & MDD-5k & 185 & 0.049 & cross-corpus degradation\\
+\hline
 MDD-5k & LingxiDiag & 1000 & 0.485 & reverse degradation\\
+\hline
 MDD-5k & MDD-5k & 185 & 0.692 & within-MDD fit\\
 \hline
-\end{tabular}
+\end{tabularx}
+\renewcommand{\arraystretch}{1.0}
 \end{table}
 
 Within-corpus performance is substantially higher than cross-corpus performance in both directions. A classifier trained on LingxiDiag achieves a Top-1 Accuracy of 0.610 on LingxiDiag but only 0.049 on the matched MDD-5k transfer holdout. Conversely, the MDD-trained classifier achieves 0.692 within MDD-5k but 0.485 when evaluated on LingxiDiag.
@@ -1640,18 +1672,38 @@ Table~\ref{tab:audit-trace-examples} presents three selected system-output summa
 \centering
 \caption{Illustrative output summaries for three recorded disagreement profiles.}
 \label{tab:audit-trace-examples}
-\scriptsize
-\begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{|l|l|l|l|l|l|}
+\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\textwidth}{
+|>{\raggedright\arraybackslash}p{3.4cm}
+|>{\raggedright\arraybackslash}X
+|>{\raggedright\arraybackslash}p{4.3cm}|}
 \hline
-Recorded-output profile & Benchmark gold parent & Diagnostician Top-3 & Criterion-compatible set & Committed primary & Benchmark criteria marked \texttt{insufficient\_\allowbreak{}evidence}\\
+Recorded-output profile & Ranking and compatibility artifacts & Committed primary and unresolved evidence\\
 \hline
-Top-3 candidate miss & F31 & F32, F39, F41 & F32, F39, F41, F43, F51, F98 & F32 & None recorded\\
-Ranked, absent from compatible set & F32 & F39, F32, F41 & F51, F98, Z71 & F39 & B1, C2, C5\\
-Ranked and compatible, not selected & F32 & F20, F32, F41 & F20, F32, F39, F41, F43 & F20 & C2, C7\\
+Top-3 candidate miss &
+\textbf{Benchmark gold parent:} F31\newline
+\textbf{Diagnostician Top-3:} F32, F39, F41\newline
+\textbf{Criterion-compatible set:} F32, F39, F41, F43, F51, F98 &
+\textbf{Committed primary:} F32\newline
+\textbf{Criteria marked \texttt{insufficient\_evidence}:} None recorded\\
 \hline
-\end{tabular}
-\end{adjustbox}
+Ranked, absent from compatible set &
+\textbf{Benchmark gold parent:} F32\newline
+\textbf{Diagnostician Top-3:} F39, F32, F41\newline
+\textbf{Criterion-compatible set:} F51, F98, Z71 &
+\textbf{Committed primary:} F39\newline
+\textbf{Criteria marked \texttt{insufficient\_evidence}:} B1, C2, C5\\
+\hline
+Ranked and compatible, not selected &
+\textbf{Benchmark gold parent:} F32\newline
+\textbf{Diagnostician Top-3:} F20, F32, F41\newline
+\textbf{Criterion-compatible set:} F20, F32, F39, F41, F43 &
+\textbf{Committed primary:} F20\newline
+\textbf{Criteria marked \texttt{insufficient\_evidence}:} C2, C7\\
+\hline
+\end{tabularx}
+\renewcommand{\arraystretch}{1.0}
 \end{table}
 
 The first example contains the benchmark gold diagnosis in neither the Diagnostician Top-3 nor the criterion-compatible set. In the second, it is ranked but absent from the criterion-compatible set. In the third, it appears in both output views but another diagnosis is committed as primary. In the table, ``None recorded'' means that no criterion for the benchmark gold diagnosis was assigned \texttt{insufficient\_\allowbreak{}evidence}; it does not imply that all criteria were met.
@@ -1936,16 +1988,21 @@ Table~\ref{tab:ch8-criterion-ratios} reports case-level distributions for Figure
 \label{tab:ch8-criterion-ratios}
 \small
 \setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.08}
 \begin{tabularx}{\textwidth}{|X|r|c|c|c|}
 \hline
 Group & $N$ & \texttt{met} & \texttt{not\_met} & \texttt{insufficient\_evidence}\\
 \hline
 Committed-primary agreement & 518 & 50.0 [46.2, 52.6] & 23.1 [19.2, 26.9] & 26.9 [23.1, 30.8]\\
+\hline
 Top-3 candidate miss & 113 & 48.7 [43.6, 52.6] & 21.8 [17.9, 26.9] & 28.2 [23.1, 35.9]\\
+\hline
 Ranked, absent from compatible set & 12 & 41.0 [33.0, 47.4] & 27.6 [21.5, 33.0] & 27.6 [22.8, 37.2]\\
+\hline
 Ranked and compatible, not selected & 272 & 50.0 [46.2, 53.8] & 21.8 [19.2, 26.9] & 26.9 [21.8, 32.1]\\
 \hline
 \end{tabularx}
+\renewcommand{\arraystretch}{1.0}
 \end{table}
 
 \section{Auxiliary Primary-Selection Configurations}
@@ -2005,20 +2062,29 @@ The prespecified retrieval-by-finalization interaction analysis tests whether th
 \caption{Detailed internal paired-test results. Reported adjustments reproduce the prespecified comparison-family analyses; rows marked exact are unadjusted two-sided exact McNemar tests.}
 \label{tab:internal-paired-tests}
 \footnotesize
+\renewcommand{\arraystretch}{1.08}
 \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}X|r|r|p{2.7cm}|p{2.8cm}|}
 \hline
 Comparison (A versus B) & A only & B only & Reported $p$-value & Test status\\
 \hline
 HiED--DA global versus parent-balanced retrieval (validation) & 29 & 27 & 0.894 & Exact\\
+\hline
 TF--IDF + LR versus HiED--DA & 229 & 115 & $3.14\times10^{-9}$ & Holm-adjusted\\
+\hline
 DA versus NtS, no retrieval & 37 & 9 & $<0.001$ & Holm-adjusted\\
+\hline
 DA versus NtS, global Top-5 & 44 & 15 & $<0.001$ & Holm-adjusted\\
+\hline
 DA versus NtS, parent-balanced & 45 & 17 & $<0.001$ & Holm-adjusted\\
+\hline
 DA versus forced pairwise override & 107 & 32 & $1.21\times10^{-10}$ & Exact\\
+\hline
 DA versus independent pairwise & 30 & 36 & 0.539 & Exact\\
+\hline
 DA versus two-view debate & 49 & 16 & $5.08\times10^{-5}$ & Exact\\
 \hline
 \end{tabularx}
+\renewcommand{\arraystretch}{1.0}
 \end{table}
 
 \begin{table}[htbp]
@@ -2026,19 +2092,27 @@ DA versus two-view debate & 49 & 16 & $5.08\times10^{-5}$ & Exact\\
 \caption{Detailed external paired-test results on the common 925-case MDD-5k trace. All $p$-values are unadjusted two-sided exact McNemar tests.}
 \label{tab:external-paired-tests}
 \footnotesize
+\renewcommand{\arraystretch}{1.08}
 \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}X|r|r|p{3.0cm}|}
 \hline
 Comparison (A versus B) & A only & B only & Exact $p$-value\\
 \hline
 DA versus NtS & 190 & 38 & $1.7\times10^{-25}$\\
+\hline
 DA versus deterministic fusion & 122 & 30 & $2.3\times10^{-14}$\\
+\hline
 DA versus two-view debate & 230 & 52 & $7.0\times10^{-28}$\\
+\hline
 DA versus self-consistency ($K=3$) & 27 & 34 & 0.44\\
+\hline
 DA versus self-consistency ($K=5$) & 23 & 33 & 0.23\\
+\hline
 DA versus confidence-informed SC ($K=3$) & 27 & 34 & 0.44\\
+\hline
 DA versus confidence-informed SC ($K=5$) & 23 & 33 & 0.23\\
 \hline
 \end{tabularx}
+\renewcommand{\arraystretch}{1.0}
 \end{table}
 
 \section{Exact Model-Scale Results}
@@ -2047,18 +2121,22 @@ DA versus confidence-informed SC ($K=5$) & 23 & 33 & 0.23\\
 \centering
 \caption{Qwen3 model-scale results on the same 1,000 internal cases.}
 \label{tab:qwen-size-results}
-\begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{|c|c|c|c|l|}
+\small
+\renewcommand{\arraystretch}{1.10}
+\begin{tabularx}{\textwidth}{|c|c|c|c|>{\raggedright\arraybackslash}X|}
 \hline
 Size & Single Top-1 & HiED--DA Top-1 & HiED Top-3 & Recorded execution event\\
 \hline
 4B & 0.143 & 0.538 & 0.807 & 17 Single abstentions; 164 HiED checker parse-recovery events\\
+\hline
 8B & 0.175 & 0.520 & 0.818 & None\\
+\hline
 14B & 0.391 & 0.497 & 0.803 & None\\
+\hline
 32B & 0.465 & 0.518 & 0.803 & None\\
 \hline
-\end{tabular}
-\end{adjustbox}
+\end{tabularx}
+\renewcommand{\arraystretch}{1.0}
 \end{table}
 
 \renewcommand{\bibname}{References} % IEEE 慣例與 CCU「參考文獻」對齊
