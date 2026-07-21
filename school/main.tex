@@ -532,7 +532,7 @@ Patient & 沒有。 & No.\\
 
 Figure~\ref{fig:worked-example-flow} traces the parallel diagnostic and criterion-checking paths. The Diagnostician and all diagnosis-specific Criterion Checkers receive the same transcript; the checker path does not depend on which diagnoses the Diagnostician ranks. Only the recorded checker states are passed to the deterministic Compatibility Auditor.
 
-\ThesisFigure[1.0\textwidth]{fig_worked_example_flow.pdf}{Stage-wise HiED data flow for the constructed consultation. The Diagnostician and Criterion Checkers receive the same transcript, the deterministic Compatibility Auditor aggregates checker-generated states, and DA and NtS apply different finalization contracts.}{fig:worked-example-flow}
+\ThesisFigure[1.0\textwidth]{fig_worked_example_flow.pdf}{Recorded-output HiED data flow for the constructed consultation. The Diagnostician and Criterion Checkers receive the same transcript, the deterministic Compatibility Auditor aggregates checker-generated states, and DA and NtS apply different finalization contracts.}{fig:worked-example-flow}
 \FloatBarrier
 
 Table~\ref{tab:running-example} summarizes the Diagnostician outputs, selected transcript evidence, and compatible-set status for F41.1 and F32. The following text explains how the model-generated checker judgments are converted into diagnosis-level compatibility under the study-specific rules in Appendix~\ref{app:configured-profile}.
@@ -837,7 +837,7 @@ Figure~\ref{fig:evidence-sequence} presents the sequence of the completed comput
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.92\textwidth]{fig_evidence_sequence.pdf}
+\includegraphics[width=0.98\textwidth]{fig_evidence_sequence.pdf}
 \caption{Empirical sequence of the completed computational analyses and ongoing complementary clinical studies. Retrieval-configuration selection under RQ3 precedes the frozen held-out evaluation under RQ1. The clinical studies are shown separately and are not part of the completed computational results.}
 \label{fig:evidence-sequence}
 \end{figure}
@@ -1287,7 +1287,7 @@ This section provides the internal model-scale and diagnostic-confusion evidence
 
 \paragraph{Model scale.}
 
-\ThesisFigure{fig_a_size_robustness.pdf}{Held-out Top-1 across Qwen3 model sizes for the Single baseline and HiED.}{fig:size-robustness}
+\ThesisFigure{fig_a_size_robustness.pdf}{Held-out Top-1 across Qwen3 model sizes for the Single baseline and HiED--DA. Shaded bands indicate the observed minimum-to-maximum range across the evaluated model sizes and are not confidence intervals.}{fig:size-robustness}
 
 Single Top-1 increases monotonically across the evaluated sizes, whereas HiED--DA varies over a narrower range and genuine Top-3 remains comparatively stable. The 4B run also records parsing and abstention events. Across the evaluated Qwen3 AWQ sizes, HiED shows limited sensitivity. Exact values and run-integrity notes are reported in Appendix~\ref{app:supporting}, Table~\ref{tab:qwen-size-results}.
 
@@ -1623,7 +1623,7 @@ Figure~\ref{fig:ch8-criterion-composition} compares the mean within-case proport
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.92\textwidth]{fig_ch8_criterion_state_composition.pdf}
+\includegraphics[width=1.0\textwidth]{fig_ch8_criterion_state_composition.pdf}
 \caption{Mean within-case composition of recorded criterion states across the four mutually exclusive recorded-output groups among the 915 checker-eligible internal cases.}
 \label{fig:ch8-criterion-composition}
 \end{figure}

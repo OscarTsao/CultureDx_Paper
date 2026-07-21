@@ -1,43 +1,44 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="525" viewBox="0 0 1000 525">
-  <rect width="1000" height="525" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="490" viewBox="0 0 1000 490">
+  <rect width="1000" height="490" fill="#ffffff"/>
   <style>
-    text { font-family: Verdana; fill: #1f2933; }
+    text { font-family: Verdana, Arial, sans-serif; fill: #1f2933; }
     .axis { stroke: #52606d; stroke-width: 2; }
     .grid { stroke: #d9e2ec; stroke-width: 1; }
     .tick { font-size: 20px; }
     .label { font-size: 23px; font-weight: 600; }
     .value { font-size: 25px; font-weight: 700; }
     .small { font-size: 18px; }
+    .gap { font-size: 20px; font-weight: 700; fill: #8e2464; }
   </style>
 
-  <text x="500" y="38" text-anchor="middle" class="label">Candidate coverage and the Top-1 selection gap</text>
-  <line x1="100" y1="455" x2="900" y2="455" class="axis"/>
-  <line x1="100" y1="75" x2="100" y2="455" class="axis"/>
+  <line x1="100" y1="420" x2="900" y2="420" class="axis"/>
+  <line x1="100" y1="40" x2="100" y2="420" class="axis"/>
 
-  <line x1="100" y1="379" x2="900" y2="379" class="grid"/>
-  <line x1="100" y1="303" x2="900" y2="303" class="grid"/>
-  <line x1="100" y1="227" x2="900" y2="227" class="grid"/>
-  <line x1="100" y1="151" x2="900" y2="151" class="grid"/>
-  <line x1="100" y1="75" x2="900" y2="75" class="grid"/>
+  <line x1="100" y1="344" x2="900" y2="344" class="grid"/>
+  <line x1="100" y1="268" x2="900" y2="268" class="grid"/>
+  <line x1="100" y1="192" x2="900" y2="192" class="grid"/>
+  <line x1="100" y1="116" x2="900" y2="116" class="grid"/>
+  <line x1="100" y1="40" x2="900" y2="40" class="grid"/>
 
-  <text x="86" y="462" text-anchor="end" class="tick">0.0</text>
-  <text x="86" y="386" text-anchor="end" class="tick">0.2</text>
-  <text x="86" y="310" text-anchor="end" class="tick">0.4</text>
-  <text x="86" y="234" text-anchor="end" class="tick">0.6</text>
-  <text x="86" y="158" text-anchor="end" class="tick">0.8</text>
-  <text x="86" y="82" text-anchor="end" class="tick">1.0</text>
-  <text x="34" y="265" text-anchor="middle" class="small" transform="rotate(-90 34 265)">Fraction of 1,000 cases</text>
+  <text x="86" y="427" text-anchor="end" class="tick">0.0</text>
+  <text x="86" y="351" text-anchor="end" class="tick">0.2</text>
+  <text x="86" y="275" text-anchor="end" class="tick">0.4</text>
+  <text x="86" y="199" text-anchor="end" class="tick">0.6</text>
+  <text x="86" y="123" text-anchor="end" class="tick">0.8</text>
+  <text x="86" y="47" text-anchor="end" class="tick">1.0</text>
+  <text x="34" y="230" text-anchor="middle" class="small" transform="rotate(-90 34 230)">Fraction of 1,000 cases</text>
 
-  <rect x="245" y="258.2" width="180" height="196.8" fill="#3f6f9f"/>
-  <rect x="645" y="150.2" width="180" height="304.8" fill="#5aa6a1"/>
-  <text x="335" y="242" text-anchor="middle" class="value">0.518</text>
-  <text x="735" y="134" text-anchor="middle" class="value">0.802</text>
-  <text x="335" y="490" text-anchor="middle" class="label">Committed Top-1</text>
-  <text x="735" y="490" text-anchor="middle" class="label">Genuine Top-3</text>
+  <rect x="245" y="223.2" width="180" height="196.8" fill="#3f6f9f"/>
+  <rect x="645" y="115.2" width="180" height="304.8" fill="#5aa6a1"/>
+  <text x="335" y="207" text-anchor="middle" class="value">0.518</text>
+  <text x="735" y="99" text-anchor="middle" class="value">0.802</text>
+  <text x="335" y="458" text-anchor="middle" class="label">Committed Top-1</text>
+  <text x="735" y="458" text-anchor="middle" class="label">Genuine Top-3</text>
 
-  <line x1="425" y1="204" x2="645" y2="204" stroke="#b83280" stroke-width="3"/>
-  <line x1="425" y1="196" x2="425" y2="212" stroke="#b83280" stroke-width="3"/>
-  <line x1="645" y1="196" x2="645" y2="212" stroke="#b83280" stroke-width="3"/>
-  <text x="535" y="188" text-anchor="middle" class="value" fill="#8e2464">284 cases</text>
-  <text x="535" y="224" text-anchor="middle" class="small">ranked but not selected</text>
+  <!-- Vertical bracket marks the observed selection gap. -->
+  <line x1="535" y1="115.2" x2="535" y2="223.2" stroke="#b83280" stroke-width="3"/>
+  <line x1="526" y1="115.2" x2="544" y2="115.2" stroke="#b83280" stroke-width="3"/>
+  <line x1="526" y1="223.2" x2="544" y2="223.2" stroke="#b83280" stroke-width="3"/>
+  <text x="555" y="158" class="gap">Gap = 0.284</text>
+  <text x="555" y="184" class="small">284 cases ranked but not selected</text>
 </svg>

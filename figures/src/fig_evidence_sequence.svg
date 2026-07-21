@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="925" viewBox="0 0 1400 925">
-  <rect width="1400" height="925" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="759" viewBox="0 0 1400 885">
+  <rect width="1200" height="759" fill="#ffffff"/>
   <defs>
     <marker id="arrow-solid" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#52606d"/>
@@ -8,14 +8,14 @@
   <style>
     text { font-family: Verdana, Arial, sans-serif; fill: #1f2933; }
     .title { font-size: 29px; font-weight: 700; }
-    .heading { font-size: 22px; font-weight: 700; }
-    .detail { font-size: 18px; }
-    .small-detail { font-size: 16px; }
-    .study { font-size: 15px; font-weight: 700; fill: #52606d; letter-spacing: 0.4px; }
+    .heading { font-size: 25px; font-weight: 700; }
+    .detail { font-size: 20px; }
+    .small-detail { font-size: 18px; }
+    .study { font-size: 17px; font-weight: 700; fill: #52606d; letter-spacing: 0.4px; }
     .flow { stroke: #52606d; stroke-width: 3; fill: none; marker-end: url(#arrow-solid); }
   </style>
 
-  <text x="700" y="43" text-anchor="middle" class="title">Empirical evidence sequence</text>
+  <g transform="translate(0,-40)">
 
   <rect x="50" y="75" width="760" height="130" rx="7" fill="#e9f2fb" stroke="#3f6f9f" stroke-width="2.5"/>
   <text x="430" y="112" text-anchor="middle" class="heading">1. Retrieval-configuration selection (RQ3)</text>
@@ -31,7 +31,7 @@
   <path d="M430 370 V395" class="flow"/>
 
   <rect x="50" y="405" width="760" height="150" rx="7" fill="#e7f4f2" stroke="#3f8f88" stroke-width="2.5"/>
-  <text x="430" y="443" text-anchor="middle" class="heading">3. Stage-wise disagreement localization (RQ2)</text>
+  <text x="430" y="443" text-anchor="middle" class="heading">3. Recorded-output disagreement localization (RQ2)</text>
   <rect x="74" y="476" width="220" height="50" rx="5" fill="#f8fcfb" stroke="#74aaa5" stroke-width="1.5"/>
   <rect x="302" y="476" width="220" height="50" rx="5" fill="#f8fcfb" stroke="#74aaa5" stroke-width="1.5"/>
   <rect x="530" y="476" width="256" height="50" rx="5" fill="#f8fcfb" stroke="#74aaa5" stroke-width="1.5"/>
@@ -75,4 +75,5 @@
   <text x="1115" y="650" text-anchor="middle" class="detail">a blinded psychiatrist</text>
   <text x="1115" y="680" text-anchor="middle" class="detail">transcript-only reference</text>
   <text x="1115" y="718" text-anchor="middle" class="study">ONGOING</text>
+  </g>
 </svg>

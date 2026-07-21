@@ -1,113 +1,102 @@
-\documentclass[tikz,border=5pt]{standalone}
+\documentclass[tikz,border=4pt]{standalone}
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta,calc}
 
-\definecolor{bggray}{RGB}{244,244,242}
+\definecolor{bggray}{RGB}{246,247,248}
 \definecolor{iofill}{RGB}{234,248,244}
 \definecolor{iodraw}{RGB}{0,117,89}
 \definecolor{llmfill}{RGB}{252,244,226}
-\definecolor{llmdraw}{RGB}{203,126,0}
+\definecolor{llmdraw}{RGB}{190,119,16}
 \definecolor{detfill}{RGB}{244,238,252}
 \definecolor{detdraw}{RGB}{126,75,183}
-\definecolor{artifactfill}{RGB}{250,250,249}
-\definecolor{artifactdraw}{RGB}{112,112,112}
-\definecolor{textgray}{RGB}{58,58,58}
+\definecolor{artifactfill}{RGB}{252,252,251}
+\definecolor{artifactdraw}{RGB}{104,111,116}
+\definecolor{textgray}{RGB}{54,60,66}
 
-\newcommand{\ModuleTitle}[1]{{\sffamily\bfseries\fontsize{12.0}{13.2}\selectfont #1}}
-\newcommand{\ModuleSub}[1]{{\sffamily\fontsize{8.3}{9.3}\selectfont #1}}
-\newcommand{\ArtifactTitle}[1]{{\sffamily\bfseries\fontsize{9.6}{10.6}\selectfont #1}}
-\newcommand{\ArtifactSub}[1]{{\sffamily\fontsize{7.8}{8.8}\selectfont #1}}
+\newcommand{\ModuleTitle}[1]{{\sffamily\bfseries\fontsize{13.2}{14.6}\selectfont #1}}
+\newcommand{\ModuleSub}[1]{{\sffamily\fontsize{10.0}{11.3}\selectfont #1}}
+\newcommand{\ArtifactTitle}[1]{{\sffamily\bfseries\fontsize{11.2}{12.6}\selectfont #1}}
+\newcommand{\ArtifactSub}[1]{{\sffamily\fontsize{9.4}{10.7}\selectfont #1}}
+\newcommand{\LegendText}[1]{{\sffamily\fontsize{9.2}{10.4}\selectfont #1}}
 
 \begin{document}
 \begin{tikzpicture}[
   font=\sffamily,
-  >={Latex[length=2.2mm]},
-  mainarrow/.style={draw=textgray, line width=0.72pt, -{Latex[length=2.3mm]}},
-  module/.style={line width=0.9pt, minimum height=1.34cm, align=center, inner sep=4pt},
-  llm/.style={module, rounded corners=4pt, draw=llmdraw, fill=llmfill, text=llmdraw},
-  deterministic/.style={module, rounded corners=1pt, draw=detdraw, fill=detfill, text=detdraw, line width=1.05pt},
-  io/.style={module, rounded corners=6pt, draw=iodraw, fill=iofill, text=iodraw, line width=1.15pt},
-  artifact/.style={rounded corners=2.5pt, draw=artifactdraw, fill=artifactfill, dashed, line width=0.65pt, minimum height=1.12cm, align=center, inner sep=3pt},
-  output/.style={rounded corners=5pt, draw=iodraw, fill=iofill, line width=1.05pt, minimum height=1.12cm, align=center, inner sep=3pt},
-  flowlabel/.style={font=\sffamily\fontsize{8.2}{9.2}\selectfont, text=textgray, fill=bggray, inner sep=1.5pt},
-  inputlabel/.style={font=\sffamily\fontsize{8.6}{9.6}\selectfont, text=llmdraw},
-  legendtext/.style={font=\sffamily\fontsize{7.7}{8.7}\selectfont, text=textgray, anchor=west},
-  legendswatch/.style={rectangle, minimum width=0.42cm, minimum height=0.24cm, inner sep=0pt, line width=0.8pt}
+  >={Latex[length=2.3mm]},
+  mainarrow/.style={draw=textgray, line width=0.78pt, -{Latex[length=2.45mm]}},
+  module/.style={line width=1.0pt, minimum height=1.42cm, align=center, inner sep=5pt},
+  llm/.style={module, rounded corners=4pt, draw=llmdraw, fill=llmfill, text=textgray},
+  deterministic/.style={module, rounded corners=2pt, draw=detdraw, fill=detfill, text=textgray, line width=1.1pt},
+  io/.style={module, rounded corners=6pt, draw=iodraw, fill=iofill, text=textgray, line width=1.15pt},
+  artifact/.style={rounded corners=2.5pt, draw=artifactdraw, fill=artifactfill, dashed, line width=0.7pt, minimum height=1.28cm, align=center, inner sep=4pt},
+  output/.style={rounded corners=5pt, draw=iodraw, fill=iofill, line width=1.1pt, minimum height=1.28cm, align=center, inner sep=4pt},
+  flowlabel/.style={font=\sffamily\fontsize{10.5}{11.8}\selectfont, text=textgray, fill=bggray, inner sep=1.5pt},
+  inputlabel/.style={font=\sffamily\fontsize{9.5}{10.8}\selectfont, text=llmdraw},
+  legendswatch/.style={rectangle, minimum width=0.40cm, minimum height=0.23cm, inner sep=0pt, line width=0.8pt}
 ]
 
-\fill[bggray] (-0.35,-3.70) rectangle (23.50,3.60);
-
-% Color and border-style legend
-\node[font=\sffamily\bfseries\fontsize{7.7}{8.7}\selectfont, text=textgray, anchor=west] at (0.20,3.22) {Legend};
-\node[legendswatch, rounded corners=2pt, draw=iodraw, fill=iofill] at (1.75,3.22) {};
-\node[legendtext] at (2.05,3.22) {Input / final output};
-\node[legendswatch, rounded corners=2pt, draw=llmdraw, fill=llmfill] at (6.55,3.22) {};
-\node[legendtext] at (6.85,3.22) {LLM-based component};
-\node[legendswatch, draw=detdraw, fill=detfill, line width=1pt] at (12.05,3.22) {};
-\node[legendtext] at (12.35,3.22) {Deterministic component};
-\node[legendswatch, rounded corners=1pt, draw=artifactdraw, fill=artifactfill, dashed] at (18.25,3.22) {};
-\node[legendtext] at (18.55,3.22) {Recorded artifact};
+\fill[bggray] (-0.30,-3.65) rectangle (24.35,3.55);
 
 % Shared input
-\node[io, minimum width=2.35cm] (transcript) at (1.35,0)
+\node[io, minimum width=2.35cm] (transcript) at (1.30,0.10)
 {\ModuleTitle{Transcript}\\[-1pt]
  \ModuleTitle{Input}};
 
 % Candidate-generation path
-\node[deterministic, minimum width=3.20cm] (retriever) at (4.40,2.15)
+\node[deterministic, minimum width=3.05cm] (retriever) at (4.30,2.15)
 {\ModuleTitle{Similar-Case}\\[-1pt]
  \ModuleTitle{Retriever}\\[-1pt]
  \ModuleSub{Fixed retrieval}};
 
-\node[artifact, minimum width=2.10cm] (retrieved) at (7.30,2.15)
+\node[artifact, minimum width=2.20cm] (retrieved) at (7.30,2.15)
 {\ArtifactTitle{Retrieved}\\[-1pt]
  \ArtifactTitle{examples}};
 
-\node[llm, minimum width=2.95cm] (diagnostician) at (10.15,2.15)
+\node[llm, minimum width=2.95cm] (diagnostician) at (10.40,2.15)
 {\ModuleTitle{Diagnostician}\\[-1pt]
  \ModuleTitle{Agent}\\[-1pt]
  \ModuleSub{LLM}};
 
-\node[artifact, minimum width=3.45cm] (ranked) at (13.60,2.15)
+\node[artifact, minimum width=3.45cm] (ranked) at (14.00,2.15)
 {\ArtifactTitle{Ranked Top-5}\\[-1pt]
  \ArtifactSub{Emitted primary}\\[-1pt]
  \ArtifactSub{Optional comorbidity}};
 
 % Criterion-verification path
-\node[llm, minimum width=3.40cm] (checker) at (4.30,-2.15)
+\node[llm, minimum width=3.50cm] (checker) at (4.30,-1.95)
 {\ModuleTitle{Criterion Checker}\\[-1pt]
  \ModuleTitle{Agents}\\[-1pt]
  \ModuleSub{LLM, all categories}};
 
-\node[artifact, minimum width=3.60cm, minimum height=1.34cm] (states) at (8.15,-2.15)
+\node[artifact, minimum width=3.70cm, minimum height=1.48cm] (states) at (8.00,-1.95)
 {\ArtifactTitle{Criterion states}\\[-1pt]
  \ArtifactSub{\texttt{met} / \texttt{not\_met}}\\[-1pt]
  \ArtifactSub{\texttt{insufficient\_evidence}}\\[-1pt]
- \ArtifactSub{+ supporting text}};
+ \ArtifactSub{Supporting text}};
 
-\node[deterministic, minimum width=3.20cm] (auditor) at (11.95,-2.15)
+\node[deterministic, minimum width=3.20cm] (auditor) at (11.90,-1.95)
 {\ModuleTitle{Compatibility}\\[-1pt]
  \ModuleTitle{Auditor}\\[-1pt]
  \ModuleSub{Rule aggregation}};
 
-\node[artifact, minimum width=3.35cm, minimum height=1.24cm] (compatible) at (15.70,-2.15)
+\node[artifact, minimum width=3.50cm, minimum height=1.36cm] (compatible) at (15.55,-1.95)
 {\ArtifactTitle{Criterion-compatible}\\[-1pt]
  \ArtifactTitle{set}\\[-1pt]
  \ArtifactSub{Compatibility-rule trace}};
 
 % Finalization and observed output
-\node[deterministic, minimum width=2.90cm] (finalization) at (18.30,0)
+\node[deterministic, minimum width=3.20cm] (finalization) at (19.20,0.10)
 {\ModuleTitle{Finalization}\\[-1pt]
  \ModuleSub{DA / NtS policy}};
 
-\node[output, minimum width=3.10cm] (committed) at (21.75,0)
+\node[output, minimum width=3.20cm] (committed) at (22.60,0.10)
 {\ArtifactTitle{Committed primary}\\[-1pt]
  \ArtifactSub{diagnosis}};
 
-% Input branches. The Diagnostician and Criterion Checker receive the transcript independently.
+% Transcript branches. Both LLM paths receive the same transcript independently.
 \draw[mainarrow] (transcript.north) |- (retriever.west);
-\draw[mainarrow] (transcript.east) -| (diagnostician.south);
-\node[flowlabel] at (6.15,0.02) {Transcript};
+\draw[mainarrow] (transcript.east) -- ++(0.55,0) |- (diagnostician.south);
+\node[flowlabel] at (5.95,0.12) {Same transcript};
 \draw[mainarrow] (transcript.south) |- (checker.west);
 
 % Candidate-generation artifacts
@@ -119,13 +108,23 @@
 \draw[mainarrow] (checker.east) -- (states.west);
 \draw[mainarrow] (states.east) -- (auditor.west);
 \draw[mainarrow] (auditor.east) -- (compatible.west);
-\node[inputlabel] (criteria) at (4.30,-3.32) {Configured criteria for all categories};
+\node[inputlabel] (criteria) at (4.30,-3.03) {Configured criteria for all categories};
 \draw[mainarrow] (criteria.north) -- (checker.south);
 
 % Both recorded output views are available to finalization.
-\draw[mainarrow] (ranked.south) |- ($(finalization.west)+(0,0.34)$);
-\draw[mainarrow] (compatible.north) |- ($(finalization.west)+(0,-0.34)$);
+\draw[mainarrow] (ranked.east) -- ++(0.45,0) -| ($(finalization.north)+(-0.35,0)$);
+\draw[mainarrow] (compatible.east) -- ++(0.45,0) -| ($(finalization.south)+(-0.35,0)$);
 \draw[mainarrow] (finalization.east) -- (committed.west);
+
+% Compact legend. The caption provides the full explanation.
+\node[legendswatch, rounded corners=2pt, draw=iodraw, fill=iofill] at (4.45,-3.38) {};
+\node[anchor=west, text=textgray] at (4.73,-3.38) {\LegendText{Input / final output}};
+\node[legendswatch, rounded corners=2pt, draw=llmdraw, fill=llmfill] at (9.25,-3.38) {};
+\node[anchor=west, text=textgray] at (9.53,-3.38) {\LegendText{LLM component}};
+\node[legendswatch, draw=detdraw, fill=detfill, line width=1pt] at (13.05,-3.38) {};
+\node[anchor=west, text=textgray] at (13.33,-3.38) {\LegendText{Deterministic component}};
+\node[legendswatch, rounded corners=1pt, draw=artifactdraw, fill=artifactfill, dashed] at (18.35,-3.38) {};
+\node[anchor=west, text=textgray] at (18.63,-3.38) {\LegendText{Recorded artifact}};
 
 \end{tikzpicture}
 \end{document}

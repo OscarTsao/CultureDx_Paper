@@ -1,71 +1,71 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="720" viewBox="0 0 1400 720">
-  <rect width="1400" height="720" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="514" viewBox="0 0 1400 600">
+  <rect width="1200" height="514" fill="#ffffff"/>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#61707e"/>
+    </marker>
+  </defs>
   <style>
-    .title { font: 700 34px Arial, sans-serif; fill: #18212b; }
-    .head { font: 700 22px Arial, sans-serif; fill: #18212b; }
-    .body { font: 18px Arial, sans-serif; fill: #34404c; }
-    .count { font: 700 29px Arial, sans-serif; fill: #18212b; }
-    .note { font: 16px Arial, sans-serif; fill: #4d5965; }
-    .line { stroke: #61707e; stroke-width: 3; fill: none; }
-    .box { stroke-width: 2.5; rx: 8; }
+    text { font-family: Arial, sans-serif; fill: #18212b; }
+    .head { font-size: 26px; font-weight: 700; }
+    .body { font-size: 19px; fill: #34404c; }
+    .body2 { font-size: 18px; fill: #34404c; }
+    .count { font-size: 31px; font-weight: 700; }
+    .branch { font-size: 18px; font-weight: 700; fill: #4d5965; }
+    .line { stroke: #61707e; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+    .trunk { stroke: #61707e; stroke-width: 3; fill: none; }
+    .box { stroke-width: 2.5; rx: 9; }
   </style>
 
-  <text x="700" y="46" text-anchor="middle" class="title">Four mutually exclusive D3-I-S groups</text>
+  <rect x="35" y="245" width="235" height="110" class="box" fill="#eef3f7" stroke="#607889"/>
+  <text x="152.5" y="278" text-anchor="middle" class="head">Checker-eligible</text>
+  <text x="152.5" y="307" text-anchor="middle" class="head">cases</text>
+  <text x="152.5" y="342" text-anchor="middle" class="count">N = 915</text>
 
-  <rect x="35" y="270" width="210" height="120" class="box" fill="#eef3f7" stroke="#607889"/>
-  <text x="140" y="310" text-anchor="middle" class="head">Checker-eligible</text>
-  <text x="140" y="342" text-anchor="middle" class="head">cases</text>
-  <text x="140" y="376" text-anchor="middle" class="count">N = 915</text>
+  <!-- Decision spine: S first, then D3 and I. Labels are analytical conditions, not runtime stages. -->
+  <path d="M270 300 H330" class="trunk"/>
+  <circle cx="330" cy="300" r="5" fill="#61707e"/>
 
-  <path d="M245 330 H280 M280 330 V165 H320 M280 330 V470 H320" class="line"/>
+  <!-- S = 1 -->
+  <path d="M330 300 V90 H825" class="line"/>
+  <text x="435" y="78" text-anchor="middle" class="branch">S = 1, D3 = 1 under DA</text>
+  <rect x="825" y="35" width="535" height="110" class="box" fill="#e9f4e7" stroke="#4d8d48"/>
+  <text x="855" y="74" class="head">Committed-primary agreement</text>
+  <text x="855" y="106" class="body">I unrestricted for group assignment</text>
+  <text x="1325" y="105" text-anchor="end" class="count">518</text>
 
-  <rect x="320" y="100" width="240" height="130" class="box" fill="#e9f4e7" stroke="#4d8d48"/>
-  <text x="440" y="140" text-anchor="middle" class="head">Committed primary</text>
-  <text x="440" y="174" text-anchor="middle" class="body">S = 1</text>
-  <text x="440" y="211" text-anchor="middle" class="count">518</text>
+  <!-- S = 0 -->
+  <path d="M330 300 H470" class="trunk"/>
+  <text x="400" y="286" text-anchor="middle" class="branch">S = 0 (N = 397)</text>
+  <circle cx="470" cy="300" r="5" fill="#61707e"/>
 
-  <rect x="320" y="405" width="240" height="130" class="box" fill="#fcebea" stroke="#b6534c"/>
-  <text x="440" y="445" text-anchor="middle" class="head">Primary disagreement</text>
-  <text x="440" y="479" text-anchor="middle" class="body">S = 0</text>
-  <text x="440" y="516" text-anchor="middle" class="count">397</text>
+  <!-- D3 = 0 -->
+  <path d="M470 300 V225 H825" class="line"/>
+  <text x="610" y="212" text-anchor="middle" class="branch">D3 = 0</text>
+  <rect x="825" y="170" width="535" height="110" class="box" fill="#f5f6f7" stroke="#7b8791"/>
+  <text x="855" y="209" class="head">Top-3 candidate miss</text>
+  <text x="855" y="241" class="body">No gold parent in the genuine Top-3</text>
+  <text x="1325" y="240" text-anchor="end" class="count">113</text>
 
-  <path d="M560 165 H640" class="line"/>
-  <rect x="640" y="95" width="720" height="140" class="box" fill="#e9f4e7" stroke="#4d8d48"/>
-  <text x="1000" y="137" text-anchor="middle" class="head">Committed-primary agreement</text>
-  <text x="1000" y="174" text-anchor="middle" class="body">Grouped regardless of D3 or I</text>
-  <text x="1000" y="215" text-anchor="middle" class="count">518</text>
+  <!-- D3 = 1 -->
+  <path d="M470 300 V430 H635" class="trunk"/>
+  <text x="545" y="418" text-anchor="middle" class="branch">D3 = 1 (N = 284)</text>
+  <circle cx="635" cy="430" r="5" fill="#61707e"/>
 
-  <path d="M560 470 H600 M600 470 V335 H640 M600 470 V585 H640" class="line"/>
+  <!-- I = 0 -->
+  <path d="M635 430 V365 H825" class="line"/>
+  <text x="720" y="352" text-anchor="middle" class="branch">I = 0</text>
+  <rect x="825" y="310" width="535" height="110" class="box" fill="#fff4e7" stroke="#b87828"/>
+  <text x="855" y="349" class="head">Ranked but not included</text>
+  <text x="855" y="381" class="body">Gold parent ranked; absent from compatible set</text>
+  <text x="1325" y="380" text-anchor="end" class="count">12</text>
 
-  <rect x="640" y="275" width="250" height="120" class="box" fill="#f6f7f8" stroke="#7b8791"/>
-  <text x="765" y="314" text-anchor="middle" class="head">Gold label not ranked</text>
-  <text x="765" y="347" text-anchor="middle" class="body">D3 = 0</text>
-  <text x="765" y="381" text-anchor="middle" class="count">113</text>
-
-  <path d="M890 335 H970" class="line"/>
-  <rect x="970" y="270" width="390" height="130" class="box" fill="#f6f7f8" stroke="#7b8791"/>
-  <text x="1165" y="309" text-anchor="middle" class="head">Top-3 candidate miss</text>
-  <text x="1165" y="343" text-anchor="middle" class="body">S = 0, D3 = 0</text>
-  <text x="1165" y="382" text-anchor="middle" class="count">113</text>
-
-  <rect x="640" y="525" width="250" height="120" class="box" fill="#e8f2fb" stroke="#3d78a8"/>
-  <text x="765" y="564" text-anchor="middle" class="head">Gold label ranked</text>
-  <text x="765" y="597" text-anchor="middle" class="body">D3 = 1</text>
-  <text x="765" y="631" text-anchor="middle" class="count">284</text>
-
-  <path d="M890 585 H925 M925 585 V500 H970 M925 585 V625 H970" class="line"/>
-
-  <rect x="970" y="440" width="390" height="115" class="box" fill="#fff4e7" stroke="#b87828"/>
-  <text x="1165" y="474" text-anchor="middle" class="head">Gold label ranked but</text>
-  <text x="1165" y="502" text-anchor="middle" class="head">not included</text>
-  <text x="1080" y="536" text-anchor="middle" class="body">I = 0</text>
-  <text x="1290" y="538" text-anchor="middle" class="count">12</text>
-
-  <rect x="970" y="570" width="390" height="115" class="box" fill="#f5efe8" stroke="#9b7246"/>
-  <text x="1165" y="604" text-anchor="middle" class="head">Gold label ranked and included</text>
-  <text x="1165" y="632" text-anchor="middle" class="head">but not selected</text>
-  <text x="1080" y="666" text-anchor="middle" class="body">I = 1</text>
-  <text x="1290" y="668" text-anchor="middle" class="count">272</text>
-
-  <text x="700" y="710" text-anchor="middle" class="note">Cases are assigned by S first, then D3 and I; this classification order is not a runtime sequence.</text>
+  <!-- I = 1 -->
+  <path d="M635 430 V505 H825" class="line"/>
+  <text x="720" y="492" text-anchor="middle" class="branch">I = 1</text>
+  <rect x="825" y="450" width="535" height="110" class="box" fill="#f5efe8" stroke="#9b7246"/>
+  <text x="855" y="489" class="head">Ranked and included but not selected</text>
+  <text x="855" y="518" class="body2">Gold parent ranked and compatible;</text>
+  <text x="855" y="542" class="body2">another diagnosis committed as primary</text>
+  <text x="1325" y="526" text-anchor="end" class="count">272</text>
 </svg>
