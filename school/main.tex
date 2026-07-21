@@ -1619,13 +1619,13 @@ This distinction also explains why committed Top-1 Accuracy and multilabel measu
 \section[Criterion-State Patterns and Illustrative Recorded-Output Traces]{\raggedright Criterion-State Patterns and Illustrative Recorded-Output Traces}
 \label{sec:ch8-criterion-evidence}
 
-This section examines whether aggregate Criterion Checker outputs distinguish the four mutually exclusive recorded-output groups reported in Table~\ref{tab:d3rs-joint}. It first compares the size and criterion-state composition of the recorded criterion-compatible sets and then presents selected output summaries illustrating the corresponding disagreement locations.
+This section examines whether aggregate checker-derived summaries distinguish the four recorded-output groups reported in Table~\ref{tab:d3rs-joint}. It first compares compatible-set size and case-level criterion-state composition, and then presents selected output summaries illustrating three disagreement profiles.
 
-\subsection{Group-Level Compatibility and Criterion-State Patterns}
+\subsection{Compatible-Set Size and Criterion-State Patterns}
 
-The criterion-compatible set contains a median of six configured categories, with an interquartile range of five to six, in the 272-case group. The same values are observed among cases with committed-primary agreement. Compatible-set size therefore does not distinguish the two groups.
+The criterion-compatible set contains a median of six configured categories, with an interquartile range of five to six, in both the 272-case group and the committed-primary-agreement group. Compatible-set size therefore shows no descriptive separation between these groups.
 
-Figure~\ref{fig:ch8-criterion-composition} compares the mean within-case proportions of \texttt{met}, \texttt{not\_met}, and \texttt{insufficient\_\allowbreak{}evidence} states across the four mutually exclusive groups. Each case is first summarized by its own criterion-state proportions before the group mean is calculated, preventing cases with more recorded criterion-state entries from dominating the comparison. Exact case-level medians and interquartile ranges are reported in Appendix~\ref{app:supporting}, Table~\ref{tab:ch8-criterion-ratios}.
+Figure~\ref{fig:ch8-criterion-composition} compares the mean within-case proportions of \texttt{met}, \texttt{not\_met}, and \texttt{insufficient\_\allowbreak{}evidence} states across the four recorded-output groups. Each case is first summarized by its own criterion-state proportions, after which group means are calculated, so that cases with more criterion-state entries do not receive greater weight. Corresponding case-level medians and interquartile ranges are reported in Appendix~\ref{app:supporting}, Table~\ref{tab:ch8-criterion-ratios}.
 
 \begin{figure}[htbp]
 \centering
@@ -1634,23 +1634,23 @@ Figure~\ref{fig:ch8-criterion-composition} compares the mean within-case proport
 \label{fig:ch8-criterion-composition}
 \end{figure}
 
-The 272-case group and the committed-primary-agreement group show closely overlapping criterion-state compositions. Top-3 candidate misses also overlap broadly with committed-primary agreement because the Criterion Checker evaluates the complete configured diagnostic scope, including diagnoses outside the Diagnostician's Top-3. The 12-case group shows descriptively fewer \texttt{met} states and more unresolved states, but does not support a stable group-level inference.
+The 272-case group and the committed-primary-agreement group show closely overlapping criterion-state compositions. Top-3 candidate misses also show broadly similar aggregate compositions. This pattern is consistent with the non-nested design, in which the Criterion Checkers evaluate the complete configured diagnostic scope rather than only the Diagnostician's Top-3. The 12-case ranked-but-not-included group shows descriptively fewer \texttt{met} states and more unresolved evidence, but its small sample does not support a stable group-level conclusion.
 
-The compatible-set size and aggregate criterion-state composition did not distinguish the 272-case group from committed-primary-agreement cases. These broad checker-derived summaries therefore did not identify which criterion-compatible diagnosis would be committed as primary in the evaluated trace.
+In these descriptive analyses, compatible-set size and aggregate criterion-state composition did not distinguish the 272-case group from cases with committed-primary agreement. These broad summaries were therefore insufficient to identify which criterion-compatible diagnosis would be committed as primary in the evaluated trace.
 
 \subsection{Illustrative Recorded-Output Traces}
 
-Table~\ref{tab:audit-trace-examples} presents three de-identified system-output summaries selected to illustrate the three disagreement groups. The examples contain no transcript text, have not been reviewed by psychiatrists, and are used only to demonstrate how the recorded artifacts localize benchmark disagreement.
+Table~\ref{tab:audit-trace-examples} presents three selected system-output summaries illustrating the three disagreement profiles. The examples contain no transcript text and have not undergone psychiatrist review.
 
 \begin{table}[htbp]
 \centering
-\caption{Illustrative recorded-output summaries for three recorded disagreement locations.}
+\caption{Illustrative output summaries for three recorded disagreement profiles.}
 \label{tab:audit-trace-examples}
 \scriptsize
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{|l|l|l|l|l|l|}
 \hline
-Recorded location & Benchmark parent & Diagnostician Top-3 & Criterion-compatible set & Committed primary & Benchmark criteria marked \texttt{insufficient\_\allowbreak{}evidence}\\
+Recorded-output profile & Benchmark gold parent & Diagnostician Top-3 & Criterion-compatible set & Committed primary & Benchmark criteria marked \texttt{insufficient\_\allowbreak{}evidence}\\
 \hline
 Top-3 candidate miss & F31 & F32, F39, F41 & F32, F39, F41, F43, F51, F98 & F32 & None recorded\\
 Ranked, absent from compatible set & F32 & F39, F32, F41 & F51, F98, Z71 & F39 & B1, C2, C5\\
@@ -1660,13 +1660,15 @@ Ranked and compatible, not selected & F32 & F20, F32, F41 & F20, F32, F39, F41, 
 \end{adjustbox}
 \end{table}
 
-The examples illustrate three distinct recorded conditions. In the first, the benchmark gold diagnosis is absent from both the ranked differential and the criterion-compatible set. In the second, it is ranked but absent from the criterion-compatible set. In the third, it is present in both output views but another diagnosis is committed as primary. ``None recorded'' means that no benchmark criterion was assigned this state; it does not imply full support or clinical correctness.
+The first example contains the benchmark gold diagnosis in neither the Diagnostician Top-3 nor the criterion-compatible set. In the second, it is ranked but absent from the criterion-compatible set. In the third, it appears in both output views but another diagnosis is committed as primary. In the table, ``None recorded'' means that no criterion for the benchmark gold diagnosis was assigned \texttt{insufficient\_\allowbreak{}evidence}; it does not imply that all criteria were met.
 
-These examples illustrate how the retained ranking, criterion-state, compatibility, and finalization artifacts distinguish the three recorded disagreement profiles.
+Together, the examples illustrate how the retained ranking, criterion-state, compatibility, and finalization artifacts distinguish the three recorded disagreement profiles.
 
 \section{Chapter Summary}
 
-This chapter further characterized the internal recorded-output disagreements. In the largest 272-case group, the highest-ranked benchmark gold parent was usually second, and the disagreements were concentrated in the F41-to-F32 direction. A further 109 cases had a benchmark-consistent committed primary diagnosis but disagreed with the benchmark at the complete diagnostic-set level. Compatible-set size and aggregate criterion-state composition did not clearly distinguish the largest disagreement group from cases with committed-primary agreement.
+This chapter further characterized the recorded-output disagreement profiles identified in Chapter~\ref{ch:results}. In the largest 272-case disagreement group, the highest-ranked benchmark gold parent was usually second, and the diagnostic directions were strongly concentrated toward F32, particularly from F41. The analysis also identified 109 cases in which the committed primary diagnosis agreed with a benchmark gold label but the complete emitted diagnosis set did not match the benchmark gold-label set, showing that primary selection and diagnostic-set construction are distinct decisions.
+
+Compatible-set size and aggregate criterion-state composition showed no clear descriptive separation between the 272-case group and cases with committed-primary agreement. The selected output traces nevertheless illustrated how the retained ranking, criterion-state, compatibility, and finalization artifacts distinguish candidate misses, compatibility exclusion, and primary-selection disagreement.
 
 \chapter{Discussion}
 \label{ch:discussion}
@@ -1948,7 +1950,7 @@ Table~\ref{tab:ch8-criterion-ratios} reports case-level distributions for Figure
 
 \begin{table}[htbp]
 \centering
-\caption{Case-level criterion-state proportions across the four mutually exclusive stage-wise groups. Values are median percentages with interquartile ranges in brackets.}
+\caption{Case-level criterion-state proportions across the four mutually exclusive recorded-output groups. Values are median percentages with interquartile ranges in brackets.}
 \label{tab:ch8-criterion-ratios}
 \small
 \setlength{\tabcolsep}{4pt}
