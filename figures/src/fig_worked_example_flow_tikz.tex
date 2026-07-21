@@ -18,16 +18,16 @@
 \definecolor{rankdraw}{RGB}{190,119,16}
 \definecolor{checkerfill}{RGB}{249,249,248}
 \definecolor{checkerdraw}{RGB}{104,111,116}
-\definecolor{unresolvedfill}{RGB}{255,246,229}
-\definecolor{unresolveddraw}{RGB}{177,106,0}
-\definecolor{acceptfill}{RGB}{234,248,244}
-\definecolor{acceptdraw}{RGB}{0,118,88}
 \definecolor{setfill}{RGB}{244,238,252}
 \definecolor{setdraw}{RGB}{125,76,181}
 \definecolor{dafill}{RGB}{238,240,242}
 \definecolor{dadraw}{RGB}{88,96,104}
+\definecolor{bandfill}{RGB}{240,242,244}
+\definecolor{banddraw}{RGB}{175,181,187}
+\definecolor{bandtext}{RGB}{120,128,135}
 
 \newcommand{\CardTitle}[1]{{\fontsize{11.4}{12.9}\selectfont\bfseries #1}}
+\newcommand{\PolicyTitle}[1]{{\fontsize{13.5}{15.2}\selectfont\bfseries #1}}
 \newcommand{\CardText}[1]{{\fontsize{9.0}{10.5}\selectfont #1}}
 \newcommand{\SmallText}[1]{{\fontsize{8.2}{9.5}\selectfont #1}}
 
@@ -43,7 +43,7 @@
   artifact/.style={rounded corners=2pt, line width=0.85pt, align=center, inner sep=5pt}
 ]
 
-\fill[canvas] (-8.45,-8.05) rectangle (8.45,5.45);
+\fill[canvas] (-8.45,-10.40) rectangle (8.45,5.45);
 
 \node[card, draw=inputdraw, fill=inputfill, text=textgray,
       text width=15.35cm, minimum height=1.70cm] (transcript) at (0,4.05)
@@ -59,72 +59,69 @@
 \node[card, draw=rankdraw, fill=rankfill, text=textgray,
       text width=6.25cm, minimum height=1.65cm, align=center] (diagnostician) at (-4.10,1.45)
 {\CardTitle{Diagnostician}\\[4pt]
- \SmallText{Produces a ranked differential diagnosis and an emitted primary diagnosis}};
+ \SmallText{Produces a ranked differential \mbox{diagnosis} and an emitted primary \mbox{diagnosis}}};
 
 \node[card, draw=checkerdraw, fill=checkerfill, text=textgray,
       text width=6.25cm, minimum height=1.65cm, align=center] (checkers) at (4.10,1.45)
 {\CardTitle{Criterion Checkers}\\[4pt]
  \SmallText{Diagnosis-specific evaluation of every configured category}};
 
-\node[artifact, draw=dadraw, fill=dafill, text=textgray,
-      text width=2.55cm, minimum height=1.30cm] (emitted) at (-6.05,-0.65)
-{\SmallText{EMITTED PRIMARY}\\[3pt]
- \textcolor{dadraw}{\CardTitle{F41.1}}};
-
 \node[artifact, draw=rankdraw, fill=rankfill, text=textgray,
-      text width=4.35cm, minimum height=1.30cm] (ranked) at (-1.95,-0.65)
+      text width=5.0cm, minimum height=1.40cm] (ranked) at (-4.10,-0.75)
 {\SmallText{RANKED CANDIDATES}\\[3pt]
- \CardText{\textbf{1} F41.1\quad \textbf{2} F32\quad \textbf{3--5} others}};
+ \textcolor{dadraw}{\CardText{\textbf{1} F41.1 (emitted primary)}}\\[2pt]
+ \CardText{\textbf{2} F32\quad \textbf{3--5} others}};
 
 \node[artifact, draw=checkerdraw, fill=checkerfill, text=textgray,
-      text width=6.35cm, minimum height=1.90cm, align=left] (states) at (4.10,-1.10)
+      text width=6.35cm, minimum height=1.90cm, align=left] (states) at (4.10,-1.35)
 {\SmallText{CRITERION STATES}\\[4pt]
- \textcolor{unresolveddraw}{\SmallText{\textbf{F41.1} (not included)}}\quad
+ \textcolor{muted}{\SmallText{\textbf{F41.1} (not included)}}\quad
  \SmallText{worry \texttt{met}; six-month duration \texttt{insufficient\_evidence}}\\[5pt]
- \textcolor{acceptdraw}{\SmallText{\textbf{F32} (included)}}\quad
+ \textcolor{setdraw}{\SmallText{\textbf{F32} (included)}}\quad
  \SmallText{core symptoms, symptom count, and two-week duration \texttt{met}}};
 
 \node[card, draw=setdraw, fill=setfill, text=textgray,
-      text width=4.35cm, minimum height=1.85cm, align=center] (auditor) at (4.10,-3.35)
+      text width=4.35cm, minimum height=2.35cm, align=center] (auditor) at (4.10,-4.05)
 {\CardTitle{Compatibility Auditor}\\[4pt]
- \SmallText{Applies predefined rules to criterion states}};
+ \SmallText{Applies predefined rules to criterion states}\\[5pt]
+ \textcolor{setdraw}{\CardText{Compatible set: \textbf{\{F32\}}}}};
 
-\node[artifact, draw=setdraw, fill=setfill, text=textgray,
-      text width=4.35cm, minimum height=1.10cm] (compatible) at (4.10,-5.05)
-{\SmallText{CRITERION-COMPATIBLE SET}\\[3pt]
- \textcolor{setdraw}{\CardTitle{\{F32\}}}};
+\node[card, draw=banddraw, fill=bandfill, text=textgray,
+      text width=10.6cm, minimum height=1.75cm, align=center] (shared) at (0,-6.30)
+{\textcolor{bandtext}{\SmallText{RECORDED UPSTREAM ARTIFACTS}}\\[5pt]
+ \CardText{Both policies reuse the same Diagnostician ranking,}\\
+ \CardText{criterion states, and criterion-compatible set.}};
 
 \node[card, draw=dadraw, fill=dafill, text=textgray,
-      text width=4.35cm, minimum height=1.75cm, align=center] (da) at (-6.05,-6.75)
+      text width=5.2cm, minimum height=2.15cm, align=center] (da) at (-2.90,-8.75)
 {\textcolor{muted}{\SmallText{REFERENCE POLICY}}\\[3pt]
- \CardTitle{Direct-Answer}\\[4pt]
+ \PolicyTitle{Direct-Answer}\\[4pt]
  \SmallText{Uses emitted primary}\\[4pt]
  \textcolor{dadraw}{\CardText{Committed: \textbf{F41.1}}}};
 
-\node[card, draw=acceptdraw, fill=acceptfill, text=textgray,
-      text width=4.75cm, minimum height=1.75cm, align=center] (nts) at (1.15,-6.75)
+\node[card, draw=setdraw, fill=setfill, text=textgray,
+      text width=5.6cm, minimum height=2.15cm, align=center] (nts) at (2.90,-8.75)
 {\textcolor{muted}{\SmallText{EVALUATED ALTERNATIVE}}\\[3pt]
- \CardTitle{Nominate-then-Select}\\[4pt]
+ \PolicyTitle{Nominate-then-Select}\\[4pt]
  \SmallText{Uses ranking and compatible set}\\[4pt]
- \textcolor{acceptdraw}{\CardText{Committed: \textbf{F32}}}};
+ \textcolor{setdraw}{\CardText{Committed: \textbf{F32}}}};
 
 \coordinate (inputsplit) at (0,2.70);
 \draw[draw=textgray, line width=0.78pt] (transcript.south) -- (inputsplit);
 \draw[flow] (inputsplit) -| (diagnostician.north);
 \draw[flow] (inputsplit) -| (checkers.north);
 
-\draw[rankflow] ($(diagnostician.south)+(-1.15,0)$) -- (emitted.north);
-\draw[rankflow] ($(diagnostician.south)+(1.15,0)$) -- (ranked.north);
+\draw[rankflow] (diagnostician.south) -- (ranked.north);
 \draw[flow] (checkers.south) -- (states.north);
 \draw[flow] (states.south) -- (auditor.north);
-\draw[setflow] (auditor.south) -- (compatible.north);
 
-% Finalization inputs use orthogonal paths to avoid long diagonal arrows.
-\draw[daflow] (emitted.south) -- (da.north);
-\coordinate (rankbend) at (-1.95,-5.75);
-\draw[rankflow] (ranked.south) -- (rankbend) -| ($(nts.north)+(-1.05,0)$);
-\coordinate (setbend) at (4.10,-5.75);
-\draw[setflow] (compatible.south) -- (setbend) -| ($(nts.north)+(1.05,0)$);
+% Both chains feed the shared-artifact band with clean straight drops.
+\draw[rankflow] (ranked.south) -- (-4.10,-5.425);
+\draw[setflow] (auditor.south) -- (4.10,-5.425);
+
+% The band splits cleanly into the two finalization policies below it.
+\draw[daflow] (-2.90,-7.175) -- (da.north);
+\draw[setflow] (2.90,-7.175) -- (nts.north);
 
 \end{tikzpicture}
 \end{document}

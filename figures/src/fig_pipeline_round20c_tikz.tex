@@ -3,6 +3,8 @@
 \usetikzlibrary{positioning,arrows.meta,calc}
 
 \definecolor{bggray}{RGB}{246,247,248}
+\definecolor{lanefill}{RGB}{240,242,244}
+\definecolor{lanetext}{RGB}{140,148,156}
 \definecolor{iofill}{RGB}{234,248,244}
 \definecolor{iodraw}{RGB}{0,117,89}
 \definecolor{llmfill}{RGB}{252,244,226}
@@ -18,6 +20,7 @@
 \newcommand{\ArtifactTitle}[1]{{\sffamily\bfseries\fontsize{11.2}{12.6}\selectfont #1}}
 \newcommand{\ArtifactSub}[1]{{\sffamily\fontsize{9.4}{10.7}\selectfont #1}}
 \newcommand{\LegendText}[1]{{\sffamily\fontsize{9.2}{10.4}\selectfont #1}}
+\newcommand{\LaneLabel}[1]{{\sffamily\bfseries\fontsize{9.0}{10.2}\selectfont #1}}
 
 \begin{document}
 \begin{tikzpicture}[
@@ -35,69 +38,75 @@
   legendswatch/.style={rectangle, minimum width=0.40cm, minimum height=0.23cm, inner sep=0pt, line width=0.8pt}
 ]
 
-\fill[bggray] (-0.30,-3.65) rectangle (24.35,3.55);
+\fill[bggray] (-0.35,-5.63) rectangle (24.05,4.45);
 
 % Shared input
-\node[io, minimum width=2.35cm] (transcript) at (1.30,0.10)
+\node[io, minimum width=2.30cm] (transcript) at (1.15,0.10)
 {\ModuleTitle{Transcript}\\[-1pt]
  \ModuleTitle{Input}};
 
-% Candidate-generation path
-\node[deterministic, minimum width=3.05cm] (retriever) at (4.30,2.15)
+% ---- Swimlane background bands (drawn before nodes so nodes sit on top) ----
+\fill[lanefill, rounded corners=6pt] (3.07,1.91) rectangle (14.93,4.17);
+\node[text=lanetext, anchor=north west] at (3.20,4.07) {\LaneLabel{CANDIDATE-GENERATION PATH}};
+
+\fill[lanefill, rounded corners=6pt] (3.07,-4.15) rectangle (16.78,-1.68);
+\node[text=lanetext, anchor=south east] at (16.65,-4.05) {\LaneLabel{CRITERION-VERIFICATION PATH}};
+
+% Candidate-generation path (top lane)
+\node[deterministic, minimum width=2.85cm] (retriever) at (4.50,2.90)
 {\ModuleTitle{Similar-Case}\\[-1pt]
  \ModuleTitle{Retriever}\\[-1pt]
  \ModuleSub{Fixed retrieval}};
 
-\node[artifact, minimum width=2.20cm] (retrieved) at (7.30,2.15)
+\node[artifact, minimum width=1.95cm] (retrieved) at (7.31,2.90)
 {\ArtifactTitle{Retrieved}\\[-1pt]
  \ArtifactTitle{examples}};
 
-\node[llm, minimum width=2.95cm] (diagnostician) at (10.40,2.15)
+\node[llm, minimum width=2.65cm] (diagnostician) at (10.03,2.90)
 {\ModuleTitle{Diagnostician}\\[-1pt]
  \ModuleTitle{Agent}\\[-1pt]
  \ModuleSub{LLM}};
 
-\node[artifact, minimum width=3.45cm] (ranked) at (14.00,2.15)
+\node[artifact, minimum width=3.15cm] (ranked) at (13.35,2.90)
 {\ArtifactTitle{Ranked Top-5}\\[-1pt]
  \ArtifactSub{Emitted primary}\\[-1pt]
  \ArtifactSub{Optional comorbidity}};
 
-% Criterion-verification path
-\node[llm, minimum width=3.50cm] (checker) at (4.30,-1.95)
+% Criterion-verification path (bottom lane)
+\node[llm, minimum width=3.10cm] (checker) at (4.62,-2.70)
 {\ModuleTitle{Criterion Checker}\\[-1pt]
  \ModuleTitle{Agents}\\[-1pt]
  \ModuleSub{LLM, all categories}};
 
-\node[artifact, minimum width=3.70cm, minimum height=1.48cm] (states) at (8.00,-1.95)
+\node[artifact, minimum width=3.35cm, minimum height=1.48cm] (states) at (8.27,-2.70)
 {\ArtifactTitle{Criterion states}\\[-1pt]
  \ArtifactSub{\texttt{met} / \texttt{not\_met}}\\[-1pt]
  \ArtifactSub{\texttt{insufficient\_evidence}}\\[-1pt]
  \ArtifactSub{Supporting text}};
 
-\node[deterministic, minimum width=3.20cm] (auditor) at (11.90,-1.95)
+\node[deterministic, minimum width=2.85cm] (auditor) at (11.79,-2.70)
 {\ModuleTitle{Compatibility}\\[-1pt]
  \ModuleTitle{Auditor}\\[-1pt]
  \ModuleSub{Rule aggregation}};
 
-\node[artifact, minimum width=3.50cm, minimum height=1.36cm] (compatible) at (15.55,-1.95)
+\node[artifact, minimum width=3.15cm, minimum height=1.36cm] (compatible) at (15.21,-2.70)
 {\ArtifactTitle{Criterion-compatible}\\[-1pt]
  \ArtifactTitle{set}\\[-1pt]
  \ArtifactSub{Compatibility-rule trace}};
 
-% Finalization and observed output
-\node[deterministic, minimum width=3.20cm] (finalization) at (19.20,0.10)
+% Finalization and observed output (vertically centered between the two lanes)
+\node[deterministic, minimum width=2.95cm] (finalization) at (18.86,0.10)
 {\ModuleTitle{Finalization}\\[-1pt]
  \ModuleSub{DA / NtS policy}};
 
-\node[output, minimum width=3.20cm] (committed) at (22.60,0.10)
+\node[output, minimum width=2.95cm] (committed) at (22.23,0.10)
 {\ArtifactTitle{Committed primary}\\[-1pt]
  \ArtifactSub{diagnosis}};
 
 % Transcript branches. Both LLM paths receive the same transcript independently.
 \draw[mainarrow] (transcript.north) |- (retriever.west);
-\draw[mainarrow] (transcript.east) -- ++(0.55,0) |- (diagnostician.south);
-\node[flowlabel] at (5.95,0.12) {Same transcript};
 \draw[mainarrow] (transcript.south) |- (checker.west);
+\node[flowlabel] at (1.15,1.50) {Same transcript};
 
 % Candidate-generation artifacts
 \draw[mainarrow] (retriever.east) -- (retrieved.west);
@@ -108,23 +117,24 @@
 \draw[mainarrow] (checker.east) -- (states.west);
 \draw[mainarrow] (states.east) -- (auditor.west);
 \draw[mainarrow] (auditor.east) -- (compatible.west);
-\node[inputlabel] (criteria) at (4.30,-3.03) {Configured criteria for all categories};
+\node[inputlabel] (criteria) at (4.62,-4.62) {Configured criteria for all categories};
 \draw[mainarrow] (criteria.north) -- (checker.south);
 
-% Both recorded output views are available to finalization.
-\draw[mainarrow] (ranked.east) -- ++(0.45,0) -| ($(finalization.north)+(-0.35,0)$);
-\draw[mainarrow] (compatible.east) -- ++(0.45,0) -| ($(finalization.south)+(-0.35,0)$);
+% Both recorded output views are available to finalization. Orthogonal entry
+% at distinct heights on the west edge keeps the two arrows visually distinct.
+\draw[mainarrow] (ranked.south) |- ($(finalization.west)+(0,0.59)$);
+\draw[mainarrow] (compatible.north) |- ($(finalization.west)+(0,-0.59)$);
 \draw[mainarrow] (finalization.east) -- (committed.west);
 
 % Compact legend. The caption provides the full explanation.
-\node[legendswatch, rounded corners=2pt, draw=iodraw, fill=iofill] at (4.45,-3.38) {};
-\node[anchor=west, text=textgray] at (4.73,-3.38) {\LegendText{Input / final output}};
-\node[legendswatch, rounded corners=2pt, draw=llmdraw, fill=llmfill] at (9.25,-3.38) {};
-\node[anchor=west, text=textgray] at (9.53,-3.38) {\LegendText{LLM component}};
-\node[legendswatch, draw=detdraw, fill=detfill, line width=1pt] at (13.05,-3.38) {};
-\node[anchor=west, text=textgray] at (13.33,-3.38) {\LegendText{Deterministic component}};
-\node[legendswatch, rounded corners=1pt, draw=artifactdraw, fill=artifactfill, dashed] at (18.35,-3.38) {};
-\node[anchor=west, text=textgray] at (18.63,-3.38) {\LegendText{Recorded artifact}};
+\node[legendswatch, rounded corners=2pt, draw=iodraw, fill=iofill] at (2.70,-5.21) {};
+\node[anchor=west, text=textgray] at (2.98,-5.21) {\LegendText{Input / final output}};
+\node[legendswatch, rounded corners=2pt, draw=llmdraw, fill=llmfill] at (7.10,-5.21) {};
+\node[anchor=west, text=textgray] at (7.38,-5.21) {\LegendText{LLM component}};
+\node[legendswatch, draw=detdraw, fill=detfill, line width=1pt] at (10.60,-5.21) {};
+\node[anchor=west, text=textgray] at (10.88,-5.21) {\LegendText{Deterministic component}};
+\node[legendswatch, rounded corners=1pt, draw=artifactdraw, fill=artifactfill, dashed] at (15.55,-5.21) {};
+\node[anchor=west, text=textgray] at (15.83,-5.21) {\LegendText{Recorded artifact}};
 
 \end{tikzpicture}
 \end{document}
