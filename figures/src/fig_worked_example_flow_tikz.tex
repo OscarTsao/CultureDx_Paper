@@ -38,12 +38,12 @@
   flow/.style={draw=textgray, line width=0.75pt, -{Latex[length=2.3mm]}},
   rankflow/.style={draw=rankdraw, line width=0.85pt, -{Latex[length=2.4mm]}},
   setflow/.style={draw=setdraw, line width=0.85pt, -{Latex[length=2.4mm]}},
-  policyflow/.style={draw=inputdraw, line width=0.85pt, -{Latex[length=2.4mm]}},
+  daflow/.style={draw=dadraw, line width=0.85pt, -{Latex[length=2.4mm]}},
   card/.style={rounded corners=3pt, line width=0.85pt, align=left, inner sep=6pt},
   artifact/.style={rounded corners=2pt, line width=0.8pt, align=center, inner sep=5pt}
 ]
 
-\fill[canvas] (-8.55,-8.45) rectangle (8.55,5.55);
+\fill[canvas] (-8.75,-8.45) rectangle (8.55,5.55);
 
 \node[card, draw=inputdraw, fill=inputfill, text=textgray,
       text width=15.45cm, minimum height=1.75cm] (transcript) at (0,4.10)
@@ -95,14 +95,14 @@
  \textcolor{setdraw}{\CardTitle{\{F32\}}}};
 
 \node[card, draw=dadraw, fill=dafill, text=textgray,
-      text width=3.65cm, minimum height=1.85cm, align=center] (da) at (-5.35,-7.30)
+      text width=3.95cm, minimum height=1.85cm, align=center] (da) at (-6.20,-7.30)
 {\textcolor{muted}{\SmallText{REFERENCE POLICY}}\\[3pt]
  \CardTitle{Direct-Answer}\\[4pt]
  \SmallText{Uses emitted primary}\\[4pt]
  \textcolor{dadraw}{\CardText{Committed: \textbf{F41.1}}}};
 
 \node[card, draw=acceptdraw, fill=acceptfill, text=textgray,
-      text width=4.65cm, minimum height=1.85cm, align=center] (nts) at (1.15,-7.30)
+      text width=4.65cm, minimum height=1.85cm, align=center] (nts) at (1.05,-7.30)
 {\textcolor{muted}{\SmallText{EVALUATED ALTERNATIVE}}\\[3pt]
  \CardTitle{Nominate-then-Select}\\[4pt]
  \SmallText{Uses ranking and compatible set}\\[4pt]
@@ -119,9 +119,9 @@
 \draw[flow] (states.south) -- (auditor.north);
 \draw[setflow] (auditor.south) -- (compatible.north);
 
-\draw[policyflow] (emitted.south) -- (da.north);
-\draw[rankflow] (ranked.south) -- ($(nts.north)+(-1.15,0)$);
-\draw[setflow] (compatible.south) -- ($(nts.north)+(1.15,0)$);
+\draw[daflow] (emitted.south) -- (da.north);
+\draw[rankflow] (ranked.south) |- ($(nts.north)+(-1.15,0)$);
+\draw[setflow] (compatible.south) |- ($(nts.north)+(1.15,0)$);
 
 \end{tikzpicture}
 \end{document}
