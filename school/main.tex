@@ -235,7 +235,7 @@ This distinction is especially important when moving from screening or broad cat
 
 The evidence setting creates a further distinction. MIND, WiseMind/ProAI, MAGI, DSM5AgentFlow, and conversational diagnostic AI study inquiry or interactive workflows that can seek additional information during assessment~\citep{li2026mind,wu2026wisemind,bi2025magi,ozgun2025dsm5agentflow,tu2025conversational}. MentalSeek-Dx and MoodAngels instead emphasize diagnosis from information already available in records or transcripts~\citep{sun2026mentalseek,xiao2025moodangels}. Interactive systems combine evidence acquisition with diagnostic reasoning, whereas fixed-input systems must interpret the same potentially incomplete evidence. A fixed-input design therefore isolates how a model uses the available transcript without attributing gains to additional questioning.
 
-Existing evaluations also differ in what they make observable. Final-label accuracy can show whether the emitted diagnosis agrees with the reference, but it cannot show whether a reference diagnosis was never considered, appeared among the candidates but was absent from a criterion-compatible set, or remained plausible but was not selected as primary. Some psychiatric systems expose diagnostic hypotheses, criteria-grounded rationales, or intermediate dialogue states, yet the published evaluations do not generally measure Top-3 candidate detection, gold-label inclusion in a criterion-compatible set, and committed-primary agreement together on the same fixed cases.
+Existing evaluations also differ in what they make observable. Final-label accuracy can show whether the emitted diagnosis agrees with a benchmark gold label, but it cannot show whether a benchmark gold diagnosis was never considered, appeared among the candidates but was absent from a criterion-compatible set, or remained plausible but was not selected as primary. Some psychiatric systems expose diagnostic hypotheses, criteria-grounded rationales, or intermediate dialogue states, yet the published evaluations do not generally measure Top-3 candidate detection, gold-label inclusion in a criterion-compatible set, and committed-primary agreement together on the same fixed cases.
 
 These limitations motivate evaluations that distinguish candidate generation, criterion support, and final diagnostic selection rather than relying only on final-label accuracy.
 
@@ -837,8 +837,6 @@ This chapter organizes the empirical design around the five research questions.
 
 Figure~\ref{fig:evidence-sequence} presents the sequence of the computational analyses reported in this thesis. Retrieval configurations are first compared on the public-validation split and selected separately for the Single and HiED--DA architectures (RQ3). The selected configurations are then frozen and evaluated on the fixed internal held-out set for same-split benchmark positioning (RQ1). The validation-selected HiED--DA trace is subsequently used for stage-wise disagreement localization (RQ2), followed by primary-selection interventions (RQ4) and sensitivity and transfer analyses (RQ5).
 
-The LingxiDiag pilot review and CGMH real-world validation are presented as a separate ongoing branch because they use different study populations and reference conditions.
-
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.92\textwidth]{fig_evidence_sequence.pdf}
@@ -904,8 +902,6 @@ Gold label ranked and criterion-compatible but not selected & 0 & 1 & 1 \\
 
 Cases with $S=1$ are grouped together regardless of gold-label inclusion because the partition is designed to localize cases with committed-primary disagreement. The fourth group is the main profile for cases in which a benchmark gold parent appears in both the genuine Top-3 and criterion-compatible set but is not committed as primary.
 
-As defined in Section~\ref{sec:case-level-indicators}, these indicators are separately recorded output views rather than a chronological funnel.
-
 \paragraph{Supplementary oracle analysis.}
 \label{sec:oracle-design}
 To estimate the primary-selection improvement available within the recorded ranked and criterion-compatible outputs, a gold-informed oracle searches a prespecified set of alternative diagnoses and selects a benchmark gold label whenever one satisfies the oracle eligibility rules. Cases whose committed primary diagnosis already matches a benchmark gold label are left unchanged. Because the procedure directly uses benchmark labels and assumes that every oracle-eligible disagreement can be corrected without introducing new errors, it is not a deployable selection method. It is therefore reported only as an optimistic, assumption-dependent estimate of selection headroom, rather than as the primary analysis for RQ2. The oracle candidate pool, eligibility thresholds, and sensitivity analyses are detailed in Appendix~\ref{app:supporting}.
@@ -923,7 +919,7 @@ DA and NtS are compared on the same 1,000 internal held-out cases under no retri
 Because DA and NtS share the same upstream artifacts and NtS introduces no additional LLM inference, this comparison provides the clearest estimate of the effect of the evaluated deterministic finalization rule.
 
 \paragraph{Additional RQ4 comparisons.}
-The matched DA--NtS comparison is the primary RQ4 analysis because both policies operate on the same recorded system artifacts. The following method families provide complementary comparisons. Deterministic fusion evaluates one predefined rule over existing artifacts, whereas pairwise comparison, debate, and repeated-generation methods modify the inference procedure or computational budget.
+The following method families provide complementary comparisons. Deterministic fusion evaluates one predefined rule over existing artifacts, whereas pairwise comparison, debate, and repeated-generation methods modify the inference procedure or computational budget.
 
 \paragraph{Recorded-output fusion.}
 Deterministic fusion combines candidate rank, compatibility status, and criterion-support summaries to determine whether the DA primary diagnosis should be retained or replaced. It reuses existing system artifacts but evaluates one prespecified combination rule rather than a general fusion framework. The complete replacement rule, threshold, and tie-breaking procedure are described in Appendix~\ref{app:supporting}.
@@ -937,7 +933,7 @@ Self-consistency generates multiple Diagnostician outputs and selects the diagno
 \paragraph{Comparison and reporting boundaries.}
 Unless otherwise stated, additional internal methods are compared against the validation-selected parent-balanced HiED--DA configuration. Paired differences and confidence intervals are reported only when both methods are evaluated on the same cases and provide complete case-level outputs. Methods that change the prompts, input contexts, inference budget, or output-generation procedure are treated as complete method configurations rather than as controlled tests of an isolated primary-selection component.
 
-Committed Top-1 Accuracy is the common evaluation metric because each method produces exactly one committed primary diagnosis. Exact Match, Macro-F1, and Weighted-F1 are not used to estimate primary-selection effects because DA may additionally emit a comorbid diagnosis, whereas several alternative methods emit only a single diagnosis. Detailed case-eligibility rules, inference budgets, seed schedules, and method configurations are provided in Appendix~\ref{app:supporting}.
+Exact Match, Macro-F1, and Weighted-F1 are not used to estimate primary-selection effects because DA may additionally emit a comorbid diagnosis, whereas several alternative methods emit only a single diagnosis. Detailed case-eligibility rules, inference budgets, seed schedules, and method configurations are provided in Appendix~\ref{app:supporting}.
 
 \section{Sensitivity and Transfer Analyses}
 \label{sec:sensitivity-transfer-design}
@@ -957,7 +953,7 @@ A separate 490-case F32-versus-F41 subset is evaluated as a secondary binary ana
 \paragraph{Configuration-only diagnostic-scope expansion.}
 A configuration-level experiment expands the diagnostic profile from 14 to 33 configured diagnostic categories by adding category-specific checker definitions without updating the model weights. The expanded configuration is evaluated separately and is not used in the primary external analysis.
 
-This experiment distinguishes output-space representability from behavioral recovery by testing whether a newly available benchmark diagnosis appears in the ranked candidates or becomes the committed primary diagnosis.
+This experiment distinguishes output-space representability from behavioral recovery by testing whether a newly available benchmark gold diagnosis appears in the ranked candidates or becomes the committed primary diagnosis.
 
 \paragraph{Cross-corpus lexical transfer.}
 Cross-corpus lexical transfer is evaluated using the same TF--IDF classifier family trained on one synthetic corpus and tested both within that corpus and on the other corpus. The analysis examines the portability of corpus-derived lexical associations under a different synthetic generation process.
@@ -1023,7 +1019,7 @@ This section addresses RQ1 by positioning the validation-selected configurations
 
 Table~\ref{tab:validation-configuration-matrix} presents the validation-selected Single and HiED--DA configurations together with representative published LingxiDiagBench results. Global Top-5 was selected for Single using the prespecified validation metrics available at selection time. Parent-balanced retrieval was retained for HiED--DA under the predefined promotion rule: it achieved higher validation Top-3 Accuracy, Macro-F1, and Weighted-F1, whereas global Top-5 achieved higher Top-1 Accuracy and Exact Match. The complete validation comparisons and their corresponding held-out results are reported in Table~\ref{tab:retrieval-results}.
 
-The published rows provide descriptive context under their original evaluation contracts, so no direct statistical comparison is made with the thesis configurations. For Single, benchmark-defined Top-3 is an emitted-label hit rate rather than a genuine ranked-differential measure. The case-level emitted-label artifact for the selected global Top-5 validation run was not retained, so that value cannot be reconstructed.
+The published rows provide descriptive context under their original evaluation contracts, so no direct statistical comparison is made with the thesis configurations.
 
 \begin{table}[H]
 \centering
@@ -1496,7 +1492,7 @@ A separate configuration-only experiment expands the diagnostic profile from fou
 
 \begin{table}[htbp]
 \centering
-\caption{Diagnostic-scope expansion and committed Top-1 recovery among cases whose benchmark diagnoses become newly representable.}
+\caption{Diagnostic-scope expansion and committed Top-1 recovery among cases whose benchmark gold diagnoses become newly representable.}
 \label{tab:scope-expansion-results}
 \small
 \begin{tabularx}{\textwidth}{|p{2.4cm}|c|c|X|c|}
@@ -1509,7 +1505,7 @@ Expanded & 33 & 30 & 58 & 0/58\\
 \end{tabularx}
 \end{table}
 
-As shown in Table~\ref{tab:scope-expansion-results}, the expanded profile makes the benchmark diagnoses of 58 sampled cases representable, but none becomes the committed Top-1 diagnosis. The experiment therefore demonstrates successful output-space expansion without corresponding behavioral recovery.
+As shown in Table~\ref{tab:scope-expansion-results}, the expanded profile makes the benchmark gold diagnoses of 58 sampled cases representable, but none becomes the committed Top-1 diagnosis. The experiment therefore demonstrates successful output-space expansion without corresponding behavioral recovery.
 
 Representability alone was insufficient under the evaluated configuration: adding a category to the prompt and checker profile did not cause the Diagnostician to rank or commit it in these cases. A paired preservation analysis for previously in-scope cases was unavailable.
 
@@ -1585,20 +1581,20 @@ Under Direct-Answer, these cases remain Top-3 candidate misses because the commi
 
 Twenty-four of the 915 checker-eligible cases contain a benchmark gold parent in the genuine Top-3 but not in the criterion-compatible set. Twelve nevertheless commit a benchmark-consistent primary diagnosis under Direct-Answer. The other twelve form the mutually exclusive \emph{ranked, but absent from the criterion-compatible set} group.
 
-The checker traces in these cases contain a high proportion of \texttt{insufficient\_\allowbreak{}evidence} states for criteria associated with the benchmark diagnosis.
+The checker traces in these cases contain a high proportion of \texttt{insufficient\_\allowbreak{}evidence} states for criteria associated with the benchmark gold parent.
 
 The largest remaining disagreement group consists of 272 cases in which a benchmark gold parent is present in both the genuine Top-3 and criterion-compatible set, but another diagnosis is committed as primary. The following section examines this 272-case group's ranking positions, diagnostic directions, and compatibility patterns.
 
 \section{Ranked and Criterion-Compatible, but Not Selected}
 \label{sec:ch8-primary-selection}
 
-Chapter~\ref{ch:results} identified 272 checker-eligible cases satisfying $D_3=1$, $I=1$, and $S=0$. In these cases, at least one benchmark gold parent appears in the genuine Top-3 and is also present in the criterion-compatible set, but another diagnosis is selected as the committed primary. This section examines how highly the benchmark diagnosis is ranked and whether the disagreements are concentrated in particular diagnostic directions.
+Chapter~\ref{ch:results} identified 272 checker-eligible cases satisfying $D_3=1$, $I=1$, and $S=0$. In these cases, at least one benchmark gold parent appears in the genuine Top-3 and is also present in the criterion-compatible set, but another diagnosis is selected as the committed primary. This section examines how highly the benchmark gold parent is ranked and whether the disagreements are concentrated in particular diagnostic directions.
 
 Figure~\ref{fig:ch8-reference-rank} shows the position of the highest-ranked benchmark gold parent within the three-item differential.
 
 \ThesisFigure[0.72\textwidth]{fig_ch8_reference_rank.pdf}{Rank of the highest-ranked benchmark gold parent in the 272-case group defined by $D_3=1$, $I=1$, and $S=0$.}{fig:ch8-reference-rank}
 
-The highest-ranked benchmark gold parent appears at rank two in 171 cases (62.9\%) and at rank three in 101 cases (37.1\%). The benchmark diagnosis is therefore the immediate alternative to the leading candidate in most cases, rather than being absent from the ranked differential. In these disagreements, the benchmark gold parent is already among the leading candidates and is also present in the criterion-compatible set.
+The highest-ranked benchmark gold parent appears at rank two in 171 cases (62.9\%) and at rank three in 101 cases (37.1\%). The benchmark gold parent is therefore the immediate alternative to the leading candidate in most cases, rather than being absent from the ranked differential. In these disagreements, the benchmark gold parent is already among the leading candidates and is also present in the criterion-compatible set.
 
 Rank proximity alone does not show whether the disagreements are distributed evenly across diagnostic categories. Table~\ref{tab:ch8-selection-pairs} therefore reports the most frequent pairs between the highest-ranked benchmark gold parent and the committed primary diagnosis. Each case contributes one pair based on its highest-ranked benchmark gold parent.
 
@@ -1648,7 +1644,7 @@ Diagnostic-set disagreement & 109 & The primary is benchmark-consistent, but the
 \hline
 Additional predicted diagnosis & 57 & At least one emitted diagnosis is absent from the benchmark set.\\
 \hline
-Omitted benchmark diagnosis & 54 & At least one benchmark diagnosis is absent from the emitted set.\\
+Omitted benchmark gold diagnosis & 54 & At least one benchmark gold diagnosis is absent from the emitted set.\\
 \hline
 Both additional and omitted diagnoses & 2 & The case contains both types of set disagreement.\\
 \hline
@@ -1705,7 +1701,7 @@ Ranked and compatible, not selected & F32 & F20, F32, F41 & F20, F32, F39, F41, 
 \end{adjustbox}
 \end{table}
 
-The examples illustrate three distinct recorded conditions. In the first, the benchmark diagnosis is absent from both the ranked differential and the criterion-compatible set. In the second, it is ranked but absent from the criterion-compatible set. In the third, it is present in both output views but another diagnosis is committed as primary. In the table, ``none recorded'' means that no benchmark criterion was assigned the \texttt{insufficient\_\allowbreak{}evidence} state; it does not imply full support or clinical correctness.
+The examples illustrate three distinct recorded conditions. In the first, the benchmark gold diagnosis is absent from both the ranked differential and the criterion-compatible set. In the second, it is ranked but absent from the criterion-compatible set. In the third, it is present in both output views but another diagnosis is committed as primary. In the table, ``none recorded'' means that no benchmark criterion was assigned the \texttt{insufficient\_\allowbreak{}evidence} state; it does not imply full support or clinical correctness.
 
 Together, these summaries show how the retained ranking, criterion, compatibility, and finalization artifacts localize benchmark disagreement across the recorded outputs.
 
@@ -1768,9 +1764,7 @@ These findings place complementary limits on the main conclusion. Primary select
 \section{Implications for Auditable Diagnostic Systems}
 \label{sec:discussion-clinical-implications}
 
-The blinded LingxiDiag pilot and the ongoing CGMH real-world validation provide separate pathways for clinical interpretation, as described in Section~\ref{sec:clinical-evaluation-plan}; neither contributes completed results to the present quantitative conclusions.
-
-HiED's main auditability contribution is to preserve distinct diagnostic artifacts rather than only a final label. The ranked differential, criterion states, supporting text, compatibility decisions, and finalization source allow a reviewer to determine whether a benchmark diagnosis was unavailable, omitted from the leading differential, absent from the criterion-compatible set, or present in that set but not committed as primary.
+HiED's main auditability contribution is to preserve distinct diagnostic artifacts rather than only a final label. The ranked differential, criterion states, supporting text, compatibility decisions, and finalization source allow a reviewer to determine whether a benchmark gold diagnosis was unavailable, omitted from the leading differential, absent from the criterion-compatible set, or present in that set but not committed as primary.
 
 This inspectability should not be confused with correctness. The retained artifacts do not reveal the language model's hidden reasoning, validate the Criterion Checker, or establish that the committed diagnosis is clinically appropriate. A coherent audit trace may still contain unsupported evidence, an incorrect criterion state, or a plausible but clinically suboptimal diagnosis. Auditability is therefore an analytical and review capability rather than evidence of clinical reliability.
 
@@ -1833,16 +1827,16 @@ The analyses differ in their degree of prespecification and record completeness.
 
 Reproduction requires preservation of the complete evaluation contract, including the model and serving environment, prompts and diagnostic configuration, data splits and recorded outputs, label projections and output-view definitions, and statistical procedures. A numerically similar result obtained with a different Top-3 definition, denominator, eligible population, or compatibility rule does not reproduce the same evaluation measure.
 
-Finally, computational and analytical reproducibility remain distinct from clinical validity. A prediction pipeline and its numerical results may be reproduced exactly while still relying on an ambiguous benchmark diagnosis, an incorrect criterion state, or a clinically inappropriate operational rule.
+Finally, computational and analytical reproducibility remain distinct from clinical validity. A prediction pipeline and its numerical results may be reproduced exactly while still relying on an ambiguous benchmark gold diagnosis, an incorrect criterion state, or a clinically inappropriate operational rule.
 
 \section{Clinical Validity and Deployment Boundaries}
 \label{sec:clinical-deployment-boundaries}
 
-The computational analyses localize disagreement among diagnostic scope, candidate ranking, criterion compatibility, and primary commitment. They cannot determine whether an individual disagreement is primarily attributable to the system, incomplete transcript evidence, or the benchmark reference. The benchmark diagnoses have not been independently adjudicated as unique clinical primaries, and the Criterion Checker states and supporting text remain model-generated rather than clinician-validated evidence. The recorded-output groups must therefore be interpreted as computational benchmark-disagreement profiles rather than psychiatrist-confirmed diagnostic errors.
+The computational analyses localize disagreement among diagnostic scope, candidate ranking, criterion compatibility, and primary commitment. They cannot determine whether an individual disagreement is primarily attributable to the system, incomplete transcript evidence, or the benchmark reference. The benchmark gold diagnoses have not been independently adjudicated as unique clinical primaries, and the Criterion Checker states and supporting text remain model-generated rather than clinician-validated evidence. The recorded-output groups must therefore be interpreted as computational benchmark-disagreement profiles rather than psychiatrist-confirmed diagnostic errors.
 
 The blinded LingxiDiag pilot and the CGMH real-world validation described in Section~\ref{sec:clinical-evaluation-plan} are ongoing and contribute no completed results to the present thesis. The pilot examines selected synthetic cases, while the CGMH study separates agreement with recorded diagnoses, a blinded transcript-only psychiatrist reference, and exploratory audit-assisted review. Post-disclosure judgments are analyzed separately from the independent reference assessments.
 
-HiED does not implement a validated mechanism for identifying unknown or out-of-scope presentations. The \texttt{Others} label is assigned only during evaluation when none of the benchmark diagnoses is represented in the scoring space; it is not a diagnosis emitted by the system. The current confidence fields are not calibrated to diagnostic correctness or clinical risk, and no clinically validated abstention, referral, or targeted follow-up policy has been evaluated.
+HiED does not implement a validated mechanism for identifying unknown or out-of-scope presentations. The \texttt{Others} label is assigned only during evaluation when none of the benchmark gold diagnoses is represented in the scoring space; it is not a diagnosis emitted by the system. The current confidence fields are not calibrated to diagnostic correctness or clinical risk, and no clinically validated abstention, referral, or targeted follow-up policy has been evaluated.
 
 Taiwan is the intended application context rather than a population in which clinical effectiveness has been demonstrated. The completed evidence does not establish performance for naturally occurring psychiatric consultations, spontaneous or mixed Mandarin--Taiwanese speech, local coding practices, hospital-system integration, clinician workload, subgroup fairness, treatment decisions, patient outcomes, or safety. The audit-assisted CGMH component is exploratory and does not constitute a prospective clinical-effectiveness study.
 
