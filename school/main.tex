@@ -1523,69 +1523,46 @@ The large within-corpus and cross-corpus differences indicate that the evaluated
 Taken together, the scope and transfer analyses identify two distinct barriers to external use. First, a diagnosis must be represented in the configured output space, but representability alone does not produce recovery. Second, predictive lexical signals learned within one synthetic corpus may degrade sharply when transferred to another. These findings support explicit diagnostic-scope evaluation and cross-corpus testing.
 
 
-\chapter{Stage-Wise Disagreement Analysis}
+\chapter{Characterization of Recorded-Output Disagreements}
 \label{ch:error}
 
-This chapter characterizes the benchmark-disagreement locations identified in Chapter~\ref{ch:results} by examining candidate ranks, diagnostic directions, criterion-state patterns, diagnostic-set construction, and selected output traces. The primary analysis uses the validation-selected parent-balanced HiED--DA trace on the fixed internal test set, with the applicable population stated for each analysis. Throughout this chapter, a \emph{disagreement} denotes non-agreement with the projected benchmark gold labels at a recorded system output; it does not establish a psychiatrist-confirmed diagnostic error or identify its clinical cause.
+This chapter further characterizes the recorded-output disagreement profiles localized in Chapter~\ref{ch:results} through candidate ranks, diagnostic directions, criterion-state patterns, diagnostic-set construction, and selected output traces. The analyses use the validation-selected parent-balanced HiED--DA trace on the fixed internal held-out set, with the applicable population stated for each result. Here, a \emph{disagreement} denotes non-agreement with the projected benchmark gold labels rather than a psychiatrist-confirmed clinical error.
 
-\section{Stage-Wise Disagreement Taxonomy}
+\section{Candidate and Compatibility Disagreement Profiles}
 \label{sec:ch8-stagewise-taxonomy}
 
-The analysis applies the $D_3$--$I$--$S$ indicators and checker-eligible population defined in Section~\ref{sec:case-level-indicators}. Table~\ref{tab:ch8-stagewise-groups} reports the four mutually exclusive groups used to characterize the 915 checker-eligible cases.
-
-\begin{table}[htbp]
-\centering
-\caption{Mutually exclusive stage-wise groups among the 915 checker-eligible internal cases.}
-\label{tab:ch8-stagewise-groups}
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{4.0cm}|>{\centering\arraybackslash}p{2.8cm}|r|X|}
-\hline
-Group & Definition & Cases & Recorded profile\\
-\hline
-Committed-primary agreement & $S=1$ & 518 & A benchmark gold parent is selected as the committed primary diagnosis.\\
-\hline
-Top-3 candidate miss & $D_3=0,\ S=0$ & 113 & No benchmark gold parent appears in the genuine Top-3, and the committed primary does not agree with a benchmark gold parent.\\
-\hline
-Ranked, but absent from the criterion-compatible set & $D_3=1,\ I=0,\ S=0$ & 12 & A benchmark gold parent is ranked but absent from the criterion-compatible set, and another diagnosis is committed.\\
-\hline
-Ranked and criterion-compatible, but not selected & $D_3=1,\ I=1,\ S=0$ & 272 & A benchmark gold parent is present in both the Top-3 and criterion-compatible set, but another diagnosis is committed as primary.\\
-\hline
-\end{tabularx}
-\end{table}
+The complete joint distribution of $D_3$, $I$, and $S$ is reported in Table~\ref{tab:d3rs-joint}. This section further characterizes Top-3 candidate misses and cases in which a benchmark gold parent is ranked but absent from the criterion-compatible set.
 
 \subsection{Top-3 Candidate Misses}
 
-Across all 1,000 internal cases, 198 cases do not contain a benchmark gold parent in the genuine Top-3. Of these cases, 113 are checker-eligible and also have committed-primary disagreement, placing them in the mutually exclusive Top-3 candidate miss group. The other 85 cases are scored as the evaluation-only \emph{Others} category and do not have a corresponding gold-parent checker.
+Across all 1,000 internal held-out cases, 198 contain no benchmark gold parent in the genuine Top-3. Of these, 113 are checker-eligible, whereas the remaining 85 are scored as the evaluation-only \emph{Others} category and therefore have no corresponding gold-parent checker.
 
-The criterion-compatible set contains a benchmark gold parent in 79 of these 113 cases, even though that diagnosis is absent from the Diagnostician's Top-3. In the remaining 34 cases, the benchmark gold parent is absent from both output views. This difference reflects the non-nested system design: the Diagnostician produces a limited differential, whereas the Criterion Checker evaluates the complete configured diagnostic scope.
-
-Under Direct-Answer, these cases remain Top-3 candidate misses because the committed diagnosis is selected from the Diagnostician's ranked candidates.
+As shown in Table~\ref{tab:d3rs-joint}, 79 of the 113 checker-eligible candidate misses nevertheless contain a benchmark gold parent in the criterion-compatible set, whereas 34 contain it in neither recorded output view.
 
 \subsection{Ranked but Absent from the Criterion-Compatible Set}
 
-Twenty-four of the 915 checker-eligible cases contain a benchmark gold parent in the genuine Top-3 but not in the criterion-compatible set. Twelve nevertheless commit a benchmark-consistent primary diagnosis under Direct-Answer. The other twelve form the mutually exclusive \emph{ranked, but absent from the criterion-compatible set} group.
+Twenty-four checker-eligible cases contain a benchmark gold parent in the genuine Top-3 but not in the criterion-compatible set. Twelve nevertheless commit a benchmark-consistent primary diagnosis under DA, whereas the remaining twelve form the ranked-but-not-included disagreement group.
 
-The checker traces in these cases contain a high proportion of \texttt{insufficient\_\allowbreak{}evidence} states for criteria associated with the benchmark gold parent.
+Because the disagreement group contains only twelve cases, its criterion-state composition is examined descriptively in Section~\ref{sec:ch8-criterion-evidence} rather than treated as evidence of a stable group-level pattern.
 
-The largest remaining disagreement group consists of 272 cases in which a benchmark gold parent is present in both the genuine Top-3 and criterion-compatible set, but another diagnosis is committed as primary. The following section examines this 272-case group's ranking positions, diagnostic directions, and compatibility patterns.
+The 272-case group in which a benchmark gold parent is both ranked and criterion-compatible but not selected is characterized in the following section.
 
-\section{Ranked and Criterion-Compatible, but Not Selected}
+\section{Ranked and Criterion-Compatible but Not Selected}
 \label{sec:ch8-primary-selection}
 
-Chapter~\ref{ch:results} identified 272 checker-eligible cases satisfying $D_3=1$, $I=1$, and $S=0$. In these cases, at least one benchmark gold parent appears in the genuine Top-3 and is also present in the criterion-compatible set, but another diagnosis is selected as the committed primary. This section examines how highly the benchmark gold parent is ranked and whether the disagreements are concentrated in particular diagnostic directions.
+This section further characterizes the 272-case primary-selection disagreement group identified in Chapter~\ref{ch:results} by examining the rank of the highest-ranked benchmark gold parent and the diagnostic directions in which the disagreements concentrate.
 
 Figure~\ref{fig:ch8-reference-rank} shows the position of the highest-ranked benchmark gold parent within the three-item differential.
 
-\ThesisFigure[0.72\textwidth]{fig_ch8_reference_rank.pdf}{Rank of the highest-ranked benchmark gold parent in the 272-case group defined by $D_3=1$, $I=1$, and $S=0$.}{fig:ch8-reference-rank}
+\ThesisFigure[0.72\textwidth]{fig_ch8_reference_rank.pdf}{Rank of the highest-ranked benchmark gold parent among the 272 cases with $D_3=1$, $I=1$, and $S=0$.}{fig:ch8-reference-rank}
 
-The highest-ranked benchmark gold parent appears at rank two in 171 cases (62.9\%) and at rank three in 101 cases (37.1\%). The benchmark gold parent is therefore the immediate alternative to the leading candidate in most cases, rather than being absent from the ranked differential. In these disagreements, the benchmark gold parent is already among the leading candidates and is also present in the criterion-compatible set.
+The highest-ranked benchmark gold parent appears at rank two in 171 cases (62.9\%) and at rank three in 101 cases (37.1\%). It is therefore the immediate alternative to the leading diagnosis in most cases.
 
-Rank proximity alone does not show whether the disagreements are distributed evenly across diagnostic categories. Table~\ref{tab:ch8-selection-pairs} therefore reports the most frequent pairs between the highest-ranked benchmark gold parent and the committed primary diagnosis. Each case contributes one pair based on its highest-ranked benchmark gold parent.
+Rank proximity alone does not show whether the disagreements are distributed evenly across diagnostic categories. Table~\ref{tab:ch8-selection-pairs} therefore reports the most frequent pairings between the highest-ranked benchmark gold parent and the committed primary diagnosis.
 
 \begin{table}[htbp]
 \centering
-\caption{Most frequent benchmark-gold-to-committed-primary pairs in the 272-case group defined by $D_3=1$, $I=1$, and $S=0$.}
+\caption{Most frequent pairings between the highest-ranked benchmark gold parent and the committed primary diagnosis in the 272-case group.}
 \label{tab:ch8-selection-pairs}
 \small
 \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}p{3.2cm}|r|r|}
@@ -1599,84 +1576,81 @@ F41 & F42 & 9 & 3.3\%\\
 F51 & F32 & 9 & 3.3\%\\
 \hline
 \end{tabularx}
+\parbox{0.96\textwidth}{\footnotesize
+\textit{Note.} Each case contributes one pair based on its highest-ranked benchmark gold parent. Percentages use the 272-case group as the denominator; only the five most frequent pairs are shown.
+}
 \end{table}
 
-The five most frequent pairs account for 222 of the 272 cases (81.6\%), showing that the disagreements are concentrated rather than evenly distributed across diagnostic directions. F41-to-F32 alone accounts for 158 cases (58.1\%), whereas the reverse F32-to-F41 direction occurs in only eleven cases. F32 is therefore the dominant committed destination among the largest disagreement pairs in this group.
+The five most frequent pairs account for 222 of the 272 cases (81.6\%), indicating that the disagreements are concentrated in a small number of diagnostic directions. F41-to-F32 alone accounts for 158 cases (58.1\%), whereas the reverse F32-to-F41 direction occurs in only eleven cases (4.0\%). F32 is therefore the dominant committed diagnosis among the most frequent disagreement directions in this group.
 
-Together, the rank and pair analyses identify a concentrated gap between candidate availability and committed-primary agreement: a benchmark gold parent is usually ranked immediately behind the leading candidate, yet the system frequently commits F32 instead.
+Within this 272-case group, the benchmark gold parent is usually ranked second, while the committed diagnosis is concentrated toward F32, especially in the F41-to-F32 direction.
 
 \section{Diagnostic-Set Construction Disagreements}
 \label{sec:ch8-diagnostic-set}
 
-The preceding analyses focus on whether the committed primary diagnosis agrees with at least one benchmark gold parent. Committed-primary agreement, however, does not guarantee that the complete emitted diagnosis set agrees with the complete benchmark label set.
+The preceding analyses focus on committed-primary agreement. However, a benchmark-consistent committed primary does not guarantee agreement between the complete emitted diagnosis set and the benchmark gold-label set.
 
-Among the 1,000 internal cases, HiED--DA selects a benchmark-consistent primary diagnosis in 518 cases. Exact agreement between the complete emitted diagnosis set and the benchmark label set is observed in 409 of these cases. The remaining 109 cases therefore have a benchmark-consistent primary diagnosis but a disagreement in diagnostic-set construction.
+Among the 1,000 internal held-out cases, HiED--DA commits a benchmark-consistent primary diagnosis in 518 cases. Of these, 409 also achieve exact agreement between the emitted diagnosis set and the benchmark gold-label set, leaving 109 cases with primary agreement but diagnostic-set disagreement, broken down into mutually exclusive types in Table~\ref{tab:ch8-diagnostic-set-errors}.
 
 \begin{table}[htbp]
 \centering
-\caption{Diagnostic-set disagreements among cases with a benchmark-consistent committed primary diagnosis.}
+\caption{Mutually exclusive diagnostic-set disagreement types among the 109 cases with a benchmark-consistent committed primary diagnosis.}
 \label{tab:ch8-diagnostic-set-errors}
 \small
-\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{4.2cm}|r|X|}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}X|r|r|}
 \hline
-Outcome & Cases & Interpretation\\
+\textbf{Diagnostic-set disagreement type} & \textbf{Cases} & \textbf{Share}\\
 \hline
-Correct committed primary & 518 & The committed primary matches at least one benchmark gold parent.\\
+Additional emitted diagnosis only & 55 & 50.5\%\\
 \hline
-Exact diagnostic-set agreement & 409 & The complete emitted diagnosis set matches the benchmark label set.\\
+Omitted benchmark gold diagnosis only & 52 & 47.7\%\\
 \hline
-Diagnostic-set disagreement & 109 & The primary is benchmark-consistent, but the complete emitted set differs from the benchmark set.\\
+Both additional and omitted diagnoses & 2 & 1.8\%\\
 \hline
-Additional predicted diagnosis & 57 & At least one emitted diagnosis is absent from the benchmark set.\\
-\hline
-Omitted benchmark gold diagnosis & 54 & At least one benchmark gold diagnosis is absent from the emitted set.\\
-\hline
-Both additional and omitted diagnoses & 2 & The case contains both types of set disagreement.\\
+Total & 109 & 100.0\%\\
 \hline
 \end{tabularx}
 \end{table}
 
-The additional-prediction and omission categories overlap in the two cases containing both error types and should therefore not be summed as mutually exclusive groups. These results show that primary selection and diagnostic-set construction represent different decisions. A system may select a benchmark-consistent primary while adding an unsupported secondary diagnosis or omitting a benchmark comorbidity.
+These results show that primary selection and diagnostic-set construction are distinct decisions. A system may commit a benchmark-consistent primary diagnosis while emitting an additional diagnosis absent from the benchmark gold-label set, omitting another benchmark gold diagnosis, or doing both.
 
-The 109 cases also show why set-level metrics capture a separate decision from committed Top-1: Exact Match, Macro-F1, and Weighted-F1 reflect diagnostic-set composition and output cardinality in addition to the committed primary diagnosis.
+This distinction also explains why committed Top-1 Accuracy and multilabel measures capture different aspects of system behavior. Exact Match evaluates complete set equality, whereas Macro-F1 and Weighted-F1 are influenced by which diagnoses are emitted or omitted across cases, in addition to the committed primary diagnosis.
 
-Diagnostic-scope limitations are analyzed separately in Chapter~\ref{ch:external}, because they concern whether a diagnosis is representable within the configured output space rather than how an available diagnosis is ranked, verified, or included in the final diagnostic set.
-
-\section[Criterion-State Patterns and Illustrative Stage-Wise Traces]{\raggedright Criterion-State Patterns and Illustrative Stage-Wise Traces}
+\section[Criterion-State Patterns and Illustrative Recorded-Output Traces]{\raggedright Criterion-State Patterns and Illustrative Recorded-Output Traces}
 \label{sec:ch8-criterion-evidence}
 
-This section examines whether aggregate Criterion Checker outputs distinguish the four mutually exclusive stage-wise groups defined in Section~\ref{sec:ch8-stagewise-taxonomy}. It first compares the size and criterion-state composition of the recorded criterion-compatible sets and then presents selected output summaries illustrating the corresponding disagreement locations.
+This section examines whether aggregate Criterion Checker outputs distinguish the four mutually exclusive recorded-output groups reported in Table~\ref{tab:d3rs-joint}. It first compares the size and criterion-state composition of the recorded criterion-compatible sets and then presents selected output summaries illustrating the corresponding disagreement locations.
 
 \subsection{Group-Level Compatibility and Criterion-State Patterns}
 
 The criterion-compatible set contains a median of six configured categories, with an interquartile range of five to six, in the 272-case group. The same values are observed among cases with committed-primary agreement. Compatible-set size therefore does not distinguish the two groups.
 
-Figure~\ref{fig:ch8-criterion-composition} compares the mean within-case proportions of \texttt{met}, \texttt{not\_met}, and \texttt{insufficient\_\allowbreak{}evidence} states across the four mutually exclusive groups. Each case is first summarized by its own criterion-state proportions before the group mean is calculated, preventing cases with more recorded criterion judgments from dominating the comparison. Exact case-level medians and interquartile ranges are reported in Appendix~\ref{app:supporting}, Table~\ref{tab:ch8-criterion-ratios}.
+Figure~\ref{fig:ch8-criterion-composition} compares the mean within-case proportions of \texttt{met}, \texttt{not\_met}, and \texttt{insufficient\_\allowbreak{}evidence} states across the four mutually exclusive groups. Each case is first summarized by its own criterion-state proportions before the group mean is calculated, preventing cases with more recorded criterion-state entries from dominating the comparison. Exact case-level medians and interquartile ranges are reported in Appendix~\ref{app:supporting}, Table~\ref{tab:ch8-criterion-ratios}.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.92\textwidth]{fig_ch8_criterion_state_composition.pdf}
-\caption{Mean within-case composition of recorded criterion states across the four mutually exclusive stage-wise groups among the 915 checker-eligible internal cases.}
+\caption{Mean within-case composition of recorded criterion states across the four mutually exclusive recorded-output groups among the 915 checker-eligible internal cases.}
 \label{fig:ch8-criterion-composition}
 \end{figure}
 
 The 272-case group and the committed-primary-agreement group show closely overlapping criterion-state compositions. Top-3 candidate misses also overlap broadly with committed-primary agreement because the Criterion Checker evaluates the complete configured diagnostic scope, including diagnoses outside the Diagnostician's Top-3. The 12-case group shows descriptively fewer \texttt{met} states and more unresolved states, but does not support a stable group-level inference.
 
-Together, the compatible-set and criterion-state analyses show that broad checker-derived quantities do not determine comparative primacy. The Checker records diagnosis-specific support, contradiction, unresolved evidence, and operational compatibility, but neither the number of criterion-compatible diagnoses nor the aggregate state composition indicates which compatible diagnosis should be committed as primary.
+The compatible-set size and aggregate criterion-state composition did not distinguish the 272-case group from committed-primary-agreement cases. These broad checker-derived summaries therefore did not identify which criterion-compatible diagnosis would be committed as primary in the evaluated trace.
 
-\subsection{Illustrative Stage-Wise Output Traces}
+\subsection{Illustrative Recorded-Output Traces}
 
 Table~\ref{tab:audit-trace-examples} presents three de-identified system-output summaries selected to illustrate the three disagreement groups. The examples contain no transcript text, have not been reviewed by psychiatrists, and are used only to demonstrate how the recorded artifacts localize benchmark disagreement.
 
 \begin{table}[htbp]
 \centering
-\caption{Illustrative stage-wise output summaries for three recorded disagreement locations.}
+\caption{Illustrative recorded-output summaries for three recorded disagreement locations.}
 \label{tab:audit-trace-examples}
 \scriptsize
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{|l|l|l|l|l|l|}
 \hline
-Recorded location & Benchmark parent & Diagnostician Top-3 & Criterion-compatible set & Committed primary & Unresolved benchmark criteria\\
+Recorded location & Benchmark parent & Diagnostician Top-3 & Criterion-compatible set & Committed primary & Benchmark criteria marked \texttt{insufficient\_\allowbreak{}evidence}\\
 \hline
 Top-3 candidate miss & F31 & F32, F39, F41 & F32, F39, F41, F43, F51, F98 & F32 & None recorded\\
 Ranked, absent from compatible set & F32 & F39, F32, F41 & F51, F98, Z71 & F39 & B1, C2, C5\\
@@ -1686,13 +1660,13 @@ Ranked and compatible, not selected & F32 & F20, F32, F41 & F20, F32, F39, F41, 
 \end{adjustbox}
 \end{table}
 
-The examples illustrate three distinct recorded conditions. In the first, the benchmark gold diagnosis is absent from both the ranked differential and the criterion-compatible set. In the second, it is ranked but absent from the criterion-compatible set. In the third, it is present in both output views but another diagnosis is committed as primary. In the table, ``none recorded'' means that no benchmark criterion was assigned the \texttt{insufficient\_\allowbreak{}evidence} state; it does not imply full support or clinical correctness.
+The examples illustrate three distinct recorded conditions. In the first, the benchmark gold diagnosis is absent from both the ranked differential and the criterion-compatible set. In the second, it is ranked but absent from the criterion-compatible set. In the third, it is present in both output views but another diagnosis is committed as primary. ``None recorded'' means that no benchmark criterion was assigned this state; it does not imply full support or clinical correctness.
 
-Together, these summaries show how the retained ranking, criterion, compatibility, and finalization artifacts localize benchmark disagreement across the recorded outputs.
+These examples illustrate how the retained ranking, criterion-state, compatibility, and finalization artifacts distinguish the three recorded disagreement profiles.
 
 \section{Chapter Summary}
 
-This chapter partitioned the 915 checker-eligible internal cases into four groups based on Top-3 candidate detection, gold-label inclusion, and committed-primary agreement, and separately examined diagnostic-set disagreements. The largest strict group contains a benchmark gold parent in both the Top-3 and criterion-compatible set but commits another diagnosis as primary. These disagreements concentrate in several directions, particularly F41-to-F32, while broad criterion-state composition and compatible-set size do not clearly distinguish them from committed-primary-agreement cases. External scope limitations are reported separately in Chapter~\ref{ch:external}.
+This chapter further characterized the internal recorded-output disagreements. In the largest 272-case group, the highest-ranked benchmark gold parent was usually second, and the disagreements were concentrated in the F41-to-F32 direction. A further 109 cases had a benchmark-consistent committed primary diagnosis but disagreed with the benchmark at the complete diagnostic-set level. Compatible-set size and aggregate criterion-state composition did not clearly distinguish the largest disagreement group from cases with committed-primary agreement.
 
 \chapter{Discussion}
 \label{ch:discussion}
@@ -1708,7 +1682,7 @@ Candidate detection, criterion verification, and primary selection answer differ
 
 This distinction is important because psychiatric disorders frequently share symptoms. Sleep disturbance, fatigue, impaired concentration, low mood, worry, avoidance, and functional impairment may support several diagnostic categories at the same time. A transcript may therefore be compatible with more than one diagnosis. Satisfying an individual compatibility rule does not establish whether a diagnosis is primary, secondary, comorbid, or less explanatory than another compatible alternative.
 
-The stage-wise analysis in Chapter~\ref{ch:error} makes this limitation visible. Cases in which a benchmark gold parent is ranked and criterion-compatible but not selected often place that diagnosis near the top of the differential. At the same time, compatible-set size and aggregate proportions of \texttt{met}, \texttt{not\_met}, and \texttt{insufficient\_\allowbreak{}evidence} states are similar between these cases and cases with a benchmark-consistent committed primary. Broad checker-derived quantities therefore do not provide a clear rule for choosing among compatible diagnoses.
+The recorded-output analysis in Chapter~\ref{ch:error} makes this limitation visible. Cases in which a benchmark gold parent is ranked and criterion-compatible but not selected often place that diagnosis near the top of the differential. At the same time, compatible-set size and aggregate proportions of \texttt{met}, \texttt{not\_met}, and \texttt{insufficient\_\allowbreak{}evidence} states are similar between these cases and cases with a benchmark-consistent committed primary. Broad checker-derived quantities therefore do not provide a clear rule for choosing among compatible diagnoses.
 
 Reliable primary selection requires comparative relations that independent criterion counts do not encode. These relations may include temporal order, illness course, episode structure, syndrome dominance, exclusionary causes, explanatory dependence, and comorbidity. For example, the system must distinguish whether anxiety symptoms form the main syndrome, occur within a depressive episode, represent an independent comorbidity, or remain insufficiently characterized by the available transcript.
 
