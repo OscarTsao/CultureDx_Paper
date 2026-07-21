@@ -2038,7 +2038,7 @@ Deterministic fusion & Validation-selected rule combining Diagnostician rank, co
 \endgroup
 
 \paragraph{Deterministic fusion.}
-The frozen E3 rule keeps the DA primary unless that diagnosis is absent from the criterion-compatible set. It considers criterion-compatible alternatives in the Diagnostician's Top-3 and replaces the DA primary only when an alternative's criterion met ratio exceeds the DA ratio by at least 0.20. The eligible diagnosis with the highest met ratio is selected; ties are resolved by Diagnostician rank, then the fixed category order in the diagnostic profile, and finally the diagnostic code.
+The rule keeps the DA primary unless that diagnosis is absent from the criterion-compatible set. It considers criterion-compatible alternatives in the Diagnostician's Top-3 and replaces the DA primary only when an alternative's criterion met ratio exceeds the DA ratio by at least 0.20. The eligible diagnosis with the highest met ratio is selected; ties are resolved by Diagnostician rank, then the fixed category order in the diagnostic profile, and finally the diagnostic code.
 
 \paragraph{Pairwise configurations.}
 Pairwise comparison begins with diagnoses whose criterion met ratio is at least 0.50. Candidates enter the close comparison cluster when the gap between adjacent met-ratio values is below 0.10. The pairwise Differential agent compares the eligible cluster, and a valid returned diagnosis is promoted according to the independent or forced-override contract. These runs use deterministic decoding (temperature 0, \texttt{top\_k}=1) and a 1,536-token output budget. Because the full HiED path is re-executed, the resulting ranking may differ from the recorded DA trace.
