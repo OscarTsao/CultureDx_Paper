@@ -949,16 +949,16 @@ The model-scale and MDD-5k analyses provide the main evidence for RQ5. Diagnosti
 \section{Complementary Clinical Evaluation Plan}
 \label{sec:clinical-evaluation-plan}
 
-Two ongoing studies provide complementary clinical evaluation outside the completed computational RQs: a blinded psychiatrist review of twenty selected LingxiDiag disagreement cases and a CGMH real-world validation. Because they use different populations and reference conditions, the two studies are analyzed separately.
+Two ongoing studies provide complementary clinical evaluation outside the completed computational RQs: a blinded psychiatrist review of 20 selected LingxiDiag disagreement cases and a CGMH real-world validation. Because they use different populations and reference conditions, the two studies are analyzed separately.
 
 \subsection{LingxiDiag Pilot Psychiatrist Review}
 \label{sec:lingxidiag-pilot-review}
 
 The LingxiDiag pilot evaluates the feasibility of the psychiatrist-review procedure and provides psychiatrist characterization of a selected synthetic disagreement population.
 
-Twenty cases are sampled without replacement from the 272-case primary-selection disagreement group defined in Section~\ref{sec:stage-wise-analysis-design}, satisfying $D_3=1$, $I=1$, and $S=0$. The random seed and selected case identifiers are fixed before psychiatrist review.
+The pilot samples 20 cases without replacement from the 272-case primary-selection disagreement group defined in Section~\ref{sec:stage-wise-analysis-design}, satisfying $D_3=1$, $I=1$, and $S=0$. The random seed and selected case identifiers are fixed before psychiatrist review.
 
-Two psychiatrists independently review all twenty cases in separately randomized orders. They remain blinded to the benchmark labels, HiED outputs, computational disagreement profile, case-selection rationale, and the other reviewer's responses.
+Two psychiatrists independently review all 20 cases in separately randomized orders. They remain blinded to the benchmark labels, HiED outputs, computational disagreement profile, case-selection rationale, and the other reviewer's responses.
 
 The review records both provisional and final diagnostic judgments. Reviewers first read the transcript and record whether the available information supports a unique primary diagnosis, their provisional primary diagnosis, possible comorbid diagnoses, and up to three ranked differential diagnoses. They then label the prespecified canonical evidence items and diagnosis-specific qualifiers as \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_evidence}. After completing the evidence annotation, reviewers may revise their diagnostic judgments. Both the provisional and final responses are retained.
 
@@ -966,7 +966,7 @@ Shared symptom and impairment concepts are annotated once, whereas diagnosis-spe
 
 After both reviewers complete their final independent assessments, the research team compares their provisional and final judgments with the LingxiDiag benchmark gold labels, HiED ranked and committed diagnoses, criterion states, and system-derived compatibility decisions.
 
-Pre-consensus inter-rater agreement is calculated from the independent responses. Any subsequent consensus or adjudication is conducted using the transcript and independent annotations while the benchmark labels and HiED outputs remain concealed. Planned analyses include agreement on the final transcript-only primary diagnosis, ranked-differential coverage, criterion-state agreement, pre-consensus inter-rater agreement, provisional-to-final diagnostic changes, and agreement between psychiatrist-evidence-derived and system-derived compatibility decisions. Because the pilot includes only twenty synthetic cases selected from one disagreement population, its findings are interpreted as feasibility and exploratory agreement evidence rather than as an estimate of population-level clinical accuracy.
+Pre-consensus inter-rater agreement is calculated from the independent responses. Any subsequent consensus or adjudication is conducted using the transcript and independent annotations while the benchmark labels and HiED outputs remain concealed. Planned analyses include agreement on the final transcript-only primary diagnosis, ranked-differential coverage, criterion-state agreement, pre-consensus inter-rater agreement, provisional-to-final diagnostic changes, and agreement between psychiatrist-evidence-derived and system-derived compatibility decisions. Because the pilot includes only 20 synthetic cases selected from one disagreement population, its findings are interpreted as feasibility and exploratory agreement evidence rather than as an estimate of population-level clinical accuracy.
 
 \subsection{Ongoing CGMH Real-World Validation}
 \label{sec:cgmh-validation}
@@ -1006,7 +1006,7 @@ The published rows provide descriptive context under their original evaluation c
 
 \begin{table}[H]
 \centering
-\caption{Validation-selected thesis configurations and published LingxiDiagBench context for the 12-category diagnostic task~\citep{xu2026lingxidiagbench}.}
+\caption{Validation-selected thesis configurations and published LingxiDiagBench context for the twelve-category diagnostic task~\citep{xu2026lingxidiagbench}.}
 \label{tab:validation-configuration-matrix}
 \small
 \begin{adjustbox}{max width=\textwidth}
@@ -1567,9 +1567,9 @@ As shown in Table~\ref{tab:d3rs-joint}, 79 of the 113 checker-eligible candidate
 
 \subsection{Ranked but Absent from the Criterion-Compatible Set}
 
-Twenty-four checker-eligible cases contain a benchmark gold parent in the genuine Top-3 but not in the criterion-compatible set. Twelve nevertheless commit a benchmark-consistent primary diagnosis under DA, whereas the remaining twelve form the ranked-but-not-included disagreement group.
+In total, 24 checker-eligible cases contain a benchmark gold parent in the genuine Top-3 but not in the criterion-compatible set. Under DA, 12 of these cases nevertheless commit a benchmark-consistent primary diagnosis, whereas the remaining 12 form the ranked-but-not-included disagreement group.
 
-Because the disagreement group contains only twelve cases, its criterion-state composition is examined descriptively in Section~\ref{sec:ch8-criterion-evidence} rather than treated as evidence of a stable group-level pattern.
+Because the disagreement group contains only 12 cases, its criterion-state composition is examined descriptively in Section~\ref{sec:ch8-criterion-evidence} rather than treated as evidence of a stable group-level pattern.
 
 The 272-case group in which a benchmark gold parent is both ranked and criterion-compatible but not selected is characterized in the following section.
 
@@ -1607,7 +1607,7 @@ F51 & F32 & 9 & 3.3\%\\
 }
 \end{table}
 
-The five most frequent pairs account for 222 of the 272 cases (81.6\%), indicating that the disagreements are concentrated in a small number of diagnostic directions. F41-to-F32 alone accounts for 158 cases (58.1\%), whereas the reverse F32-to-F41 direction occurs in only eleven cases (4.0\%). F32 is therefore the dominant committed diagnosis among the most frequent disagreement directions in this group.
+The five most frequent pairs account for 222 of the 272 cases (81.6\%), indicating that the disagreements are concentrated in a small number of diagnostic directions. F41-to-F32 alone accounts for 158 cases (58.1\%), whereas the reverse F32-to-F41 direction occurs in only 11 cases (4.0\%). F32 is therefore the dominant committed diagnosis among the most frequent disagreement directions in this group.
 
 Within this 272-case group, the benchmark gold parent is usually ranked second, while the committed diagnosis is concentrated toward F32, especially in the F41-to-F32 direction.
 
