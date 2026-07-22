@@ -144,6 +144,14 @@ encouragement.
 \hline Abbreviation & Meaning\\ \hline
 AI & Artificial intelligence\\
 \hline
+HiED & Hybrid, evidence-grounded multi-agent system for differential diagnosis (proposed in this thesis)\\
+\hline
+CI & Confidence interval\\
+\hline
+LR & Logistic regression\\
+\hline
+RQ & Research question\\
+\hline
 SC & Self-consistency\\
 \hline
 CISC & Confidence-informed self-consistency\\
@@ -278,7 +286,7 @@ The remaining gap concerns the joint evaluation of these recorded outputs rather
 
 Criterion compatibility and primary-diagnosis selection answer different questions. Criterion compatibility asks whether each diagnosis is individually consistent with the available evidence under a defined rule. Because psychiatric disorders can share symptoms and more than one diagnosis may remain compatible, this process does not by itself determine whether a diagnosis is primary, comorbid, or a differential alternative. Selecting one committed primary therefore requires comparison among the remaining diagnoses rather than independent criterion satisfaction alone.
 
-Structured diagnostic knowledge offers mechanisms for organizing the evidence used in this comparison. MedKGI combines a medical knowledge graph, information-guided inquiry, and a structured dialogue state to obtain discriminative information during iterative diagnosis~\citep{wang2025medkgi}. DKEC constructs heterogeneous knowledge graphs from external medical sources and incorporates their relations into multi-label diagnosis prediction~\citep{ge2024dkec}. These systems show how structured representations can support evidence acquisition or label prediction, but their evaluated objectives differ from selecting one primary diagnosis among several criterion-compatible psychiatric alternatives in a fixed transcript.
+Structured diagnostic knowledge offers mechanisms for organizing the evidence used in this comparison. MedKGI combines a medical knowledge graph, information-guided inquiry, and a structured dialogue state to obtain discriminative information during iterative diagnosis~\citep{wang2025medkgi}. DKEC constructs heterogeneous knowledge graphs from external medical sources and incorporates their relations into multilabel diagnosis prediction~\citep{ge2024dkec}. These systems show how structured representations can support evidence acquisition or label prediction, but their evaluated objectives differ from selecting one primary diagnosis among several criterion-compatible psychiatric alternatives in a fixed transcript.
 
 A comparative selector may need to represent symptom--diagnosis relations together with temporal order, duration, illness course, exclusionary causes, syndrome dominance, explanatory dependence, and comorbidity. The reviewed structured methods may organize evidence or identify plausible labels, but they do not directly evaluate whether a criterion-compatible diagnosis remains available yet is not selected when one primary diagnosis is committed. This gap motivates evaluation that separates Top-3 candidate detection, gold-label inclusion in the criterion-compatible set, and committed-primary agreement.
 
