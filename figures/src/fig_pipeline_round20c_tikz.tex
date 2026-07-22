@@ -38,7 +38,7 @@
   legendswatch/.style={rectangle, minimum width=0.40cm, minimum height=0.23cm, inner sep=0pt, line width=0.8pt}
 ]
 
-\fill[bggray] (-0.35,-5.63) rectangle (24.05,4.45);
+\fill[bggray] (-0.35,-5.63) rectangle (21.72,4.45);
 
 % Shared input
 \node[io, minimum width=2.30cm] (transcript) at (1.15,0.10)
@@ -46,11 +46,11 @@
  \ModuleTitle{Input}};
 
 % ---- Swimlane background bands (drawn before nodes so nodes sit on top) ----
-\fill[lanefill, rounded corners=6pt] (3.07,1.91) rectangle (14.93,4.17);
+\fill[lanefill, rounded corners=6pt] (3.07,1.91) rectangle (17.78,4.17);
 \node[text=lanetext, anchor=north west] at (3.20,4.07) {\LaneLabel{CANDIDATE-GENERATION PATH}};
 
-\fill[lanefill, rounded corners=6pt] (3.07,-4.15) rectangle (16.78,-1.68);
-\node[text=lanetext, anchor=south east] at (16.65,-4.05) {\LaneLabel{CRITERION-VERIFICATION PATH}};
+\fill[lanefill, rounded corners=6pt] (3.07,-4.15) rectangle (17.78,-1.68);
+\node[text=lanetext, anchor=south east] at (17.65,-4.05) {\LaneLabel{CRITERION-VERIFICATION PATH}};
 
 % Candidate-generation path (top lane)
 \node[deterministic, minimum width=2.85cm] (retriever) at (4.50,2.90)
@@ -58,16 +58,16 @@
  \ModuleTitle{Retriever}\\[-1pt]
  \ModuleSub{Fixed retrieval}};
 
-\node[artifact, minimum width=1.95cm] (retrieved) at (7.31,2.90)
+\node[artifact, minimum width=1.95cm] (retrieved) at (8.26,2.90)
 {\ArtifactTitle{Retrieved}\\[-1pt]
  \ArtifactTitle{examples}};
 
-\node[llm, minimum width=2.65cm] (diagnostician) at (10.03,2.90)
+\node[llm, minimum width=2.65cm] (diagnostician) at (11.93,2.90)
 {\ModuleTitle{Diagnostician}\\[-1pt]
  \ModuleTitle{Agent}\\[-1pt]
  \ModuleSub{LLM}};
 
-\node[artifact, minimum width=3.15cm] (ranked) at (13.35,2.90)
+\node[artifact, minimum width=3.15cm] (ranked) at (16.20,2.90)
 {\ArtifactTitle{Ranked Top-5}\\[-1pt]
  \ArtifactSub{Emitted primary}\\[-1pt]
  \ArtifactSub{Optional comorbidity}};
@@ -78,28 +78,29 @@
  \ModuleTitle{Agents}\\[-1pt]
  \ModuleSub{LLM, all categories}};
 
-\node[artifact, minimum width=3.35cm, minimum height=1.48cm] (states) at (8.27,-2.70)
+\node[artifact, minimum width=3.35cm, minimum height=1.48cm] (states) at (8.60,-2.70)
 {\ArtifactTitle{Criterion states}\\[-1pt]
  \ArtifactSub{\texttt{met} / \texttt{not\_met}}\\[-1pt]
  \ArtifactSub{\texttt{insufficient\_evidence}}\\[-1pt]
  \ArtifactSub{Supporting text}};
 
-\node[deterministic, minimum width=2.85cm] (auditor) at (11.79,-2.70)
+\node[deterministic, minimum width=2.85cm] (auditor) at (12.45,-2.70)
 {\ModuleTitle{Compatibility}\\[-1pt]
  \ModuleTitle{Auditor}\\[-1pt]
  \ModuleSub{Rule aggregation}};
 
-\node[artifact, minimum width=3.15cm, minimum height=1.36cm] (compatible) at (15.21,-2.70)
+\node[artifact, minimum width=3.15cm, minimum height=1.36cm] (compatible) at (16.20,-2.70)
 {\ArtifactTitle{Criterion-compatible}\\[-1pt]
  \ArtifactTitle{set}\\[-1pt]
  \ArtifactSub{Compatibility-rule trace}};
 
-% Finalization and observed output (vertically centered between the two lanes)
-\node[deterministic, minimum width=2.95cm] (finalization) at (18.86,0.10)
+% Finalization sits on the shared right column, vertically centered between
+% the two lane artifacts so both recorded views converge symmetrically.
+\node[deterministic, minimum width=2.95cm] (finalization) at (16.20,0.10)
 {\ModuleTitle{Finalization}\\[-1pt]
  \ModuleSub{DA / NtS policy}};
 
-\node[output, minimum width=2.95cm] (committed) at (22.23,0.10)
+\node[output, minimum width=2.95cm] (committed) at (19.90,0.10)
 {\ArtifactTitle{Committed primary}\\[-1pt]
  \ArtifactSub{diagnosis}};
 
@@ -120,10 +121,11 @@
 \node[inputlabel] (criteria) at (4.62,-4.62) {Configured criteria for all categories};
 \draw[mainarrow] (criteria.north) -- (checker.south);
 
-% Both recorded output views are available to finalization. Orthogonal entry
-% at distinct heights on the west edge keeps the two arrows visually distinct.
-\draw[mainarrow] (ranked.south) |- ($(finalization.west)+(0,0.59)$);
-\draw[mainarrow] (compatible.north) |- ($(finalization.west)+(0,-0.59)$);
+% Ranked Top-5, Finalization, and the criterion-compatible set share one
+% column, so both recorded views enter finalization by straight vertical
+% arrows at its top and bottom centers.
+\draw[mainarrow] (ranked.south) -- (finalization.north);
+\draw[mainarrow] (compatible.north) -- (finalization.south);
 \draw[mainarrow] (finalization.east) -- (committed.west);
 
 % Compact legend. The caption provides the full explanation.
