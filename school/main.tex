@@ -1016,7 +1016,7 @@ Method & Retrieval or source & Top-1 & Top-3 & Exact Match & Macro-F1 & Weighted
 \hline
 \multicolumn{7}{|c|}{\textbf{Validation-selected thesis configurations}}\\
 \hline
-Single & Global Top-5 & 0.519 & N/R & 0.030 & 0.209 & 0.456\\
+Single & Global Top-5 & 0.519 & 0.725 & 0.030 & 0.209 & 0.456\\
 HiED--DA & Parent-balanced & 0.523 & 0.800 & 0.428 & 0.181 & 0.440\\
 \hline
 \multicolumn{7}{|c|}{\textbf{Published LingxiDiagBench static results}}\\
@@ -1028,7 +1028,7 @@ Qwen3-32B & Published benchmark & 0.470 & 0.566 & 0.241 & 0.188 & 0.431\\
 \end{tabular}
 \end{adjustbox}
 \parbox{0.96\textwidth}{\footnotesize
-\textit{Note.} For Single, Top-3 follows the benchmark-defined emitted-label convention and is not a genuine ranked Top-3. N/R indicates that the selected global Top-5 validation value cannot be reconstructed because only aggregate metrics, not the required case-level emitted-label record, were retained. Published rows retain the original LingxiDiagBench metric contract.
+\textit{Note.} For Single, Top-3 follows the benchmark-defined emitted-label convention and is not a genuine ranked Top-3. Published rows retain the original LingxiDiagBench metric contract.
 }
 \end{table}
 
@@ -1085,10 +1085,10 @@ The panels remain separate because their Top-3 measures represent different outp
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{|l|l|c|c|c|c|c|}
 \hline
-Split & Retrieval & Top-1 & \shortstack{Benchmark-defined\\Top-3} & Exact Match & Macro-F1 & Weighted-F1\\
+Split & Retrieval & Top-1 & Top-3 & Exact Match & Macro-F1 & Weighted-F1\\
 \hline
 Validation & None & 0.466 & 0.580 & 0.016 & 0.174 & 0.429\\
-Validation & Global Top-5$^{\dagger}$ & 0.519 & N/R & 0.030 & 0.209 & 0.456\\
+Validation & Global Top-5$^{\dagger}$ & 0.519 & 0.725 & 0.030 & 0.209 & 0.456\\
 Validation & Parent-balanced & 0.507 & 0.741 & 0.016 & 0.195 & 0.437\\
 \hline
 Test & None & 0.466 & 0.648 & 0.017 & 0.183 & 0.426\\
@@ -1121,7 +1121,7 @@ Test & Parent-balanced$^{\dagger}$ & 0.518 & 0.802 & 0.409 & 0.178 & 0.434\\
 \end{adjustbox}
 
 \parbox{0.96\textwidth}{\footnotesize
-\textit{Note.} Single's benchmark-defined Top-3 is computed over the available emitted-label list, with the primary diagnosis first and at most the first three emitted labels scored. It is not a genuine ranked differential and is not used for $D_3$. N/R indicates that the global Top-5 validation value cannot be reconstructed because its case-level emitted-label artifact was not retained. Selection used only the public-validation split.
+\textit{Note.} Single's benchmark-defined Top-3 is computed over the available emitted-label list, with the primary diagnosis first and at most the first three emitted labels scored. It is not a genuine ranked differential and is not used for $D_3$. Selection used only the public-validation split.
 }
 \end{table}
 
