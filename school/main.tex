@@ -703,9 +703,9 @@ Table~\ref{tab:class-distribution} provides a descriptive view of the label comp
 \begin{tabular}{|l|l|r|r|r|}
 \hline
 Scoring label & Label description &
-\shortstack{Internal test\\($N=1000$)} &
-\shortstack{MDD-5k in-scope\\($N=878$)} &
-\shortstack{MDD-5k out-of-scope\\($N=47$)}\\
+\shortstack{\rule{0pt}{2.4ex}Internal test\\($N=1000$)} &
+\shortstack{\rule{0pt}{2.4ex}MDD-5k in-scope\\($N=878$)} &
+\shortstack{\rule{0pt}{2.4ex}MDD-5k out-of-scope\\($N=47$)}\\
 \hline
 F20 & Schizophrenia & 5 & 3 & 0\\
 \hline
@@ -1372,7 +1372,7 @@ Table~\ref{tab:external-summary-rewrite} reports the external predictive results
 \setlength{\tabcolsep}{3.5pt}
 \begin{tabularx}{\textwidth}{|X|r|r|r|r|r|r|r|}
 \hline
-Evaluation set & $N$ & Top-1 & Top-3 & Exact Match & Macro-F1 & Weighted-F1 & \shortstack{Majority\\Top-1}\\
+Evaluation set & $N$ & Top-1 & Top-3 & Exact Match & Macro-F1 & Weighted-F1 & \shortstack{\rule{0pt}{2.4ex}Majority\\Top-1}\\
 \hline
 MDD-5k full & 925 & 0.5708 & 0.8508 & 0.3881 & 0.2101 & 0.5188 & 0.4432\\
 MDD-5k in scope & 878 & 0.6014 & 0.8964 & 0.4089 & 0.2488 & 0.5609 & 0.4670\\
@@ -1383,7 +1383,7 @@ MDD-5k in scope & 878 & 0.6014 & 0.8964 & 0.4089 & 0.2488 & 0.5609 & 0.4670\\
 \textbf{Panel B: Restricted F32/F41 evaluation}\\[3pt]
 \begin{tabular}{|l|r|r|r|r|r|r|r|}
 \hline
-Binary subset & $N$ & Accuracy & \shortstack{Majority\\accuracy} & Macro-F1 & Weighted-F1 & F32 F1 & F41 F1\\
+Binary subset & $N$ & Accuracy & \shortstack{\rule{0pt}{2.4ex}Majority\\accuracy} & Macro-F1 & Weighted-F1 & F32 F1 & F41 F1\\
 \hline
 MDD pure F32/F41 & 490 & 0.9082 & 0.7837 & 0.8814 & 0.9163 & 0.9429 & 0.8200\\
 \hline
@@ -1410,7 +1410,7 @@ To examine whether the internal recorded-output profile recurs across synthetic 
 \setlength{\tabcolsep}{4pt}
 \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}X|>{\centering\arraybackslash}p{3.5cm}|>{\centering\arraybackslash}p{3.5cm}|}
 \hline
-\textbf{Recorded-output profile} & \shortstack{\textbf{Internal, $N=915$}\\$n$ (\%; 95\% CI)} & \shortstack{\textbf{MDD-5k, $N=878$}\\$n$ (\%; 95\% CI)} \\
+\textbf{Recorded-output profile} & \shortstack{\rule{0pt}{2.4ex}\textbf{Internal, $N=915$}\\$n$ (\%; 95\% CI)} & \shortstack{\rule{0pt}{2.4ex}\textbf{MDD-5k, $N=878$}\\$n$ (\%; 95\% CI)} \\
 \hline
 Committed-primary agreement ($S=1$) & 518 (56.6; 53.4--59.8) & 528 (60.1; 56.9--63.3) \\
 \hline
@@ -1511,7 +1511,7 @@ A separate configuration-only experiment expands the diagnostic profile from 14 
 \small
 \begin{tabularx}{\textwidth}{|p{2.4cm}|c|c|X|c|}
 \hline
-Configuration & Categories & Scoring parents & Newly representable cases & \shortstack{Top-1\\recovery}\\
+Configuration & Categories & Scoring parents & Newly representable cases & \shortstack{\rule{0pt}{2.4ex}Top-1\\recovery}\\
 \hline
 Original & 14 & 11 & --- & ---\\
 Expanded & 33 & 30 & 58 & 0/58\\
@@ -1931,11 +1931,11 @@ The rules in this appendix are study-specific operationalizations informed by IC
 \caption{Configured diagnostic categories, scoring-parent projections, configured checker-item counts, and study-specific operational compatibility rules.}
 \label{tab:configured-profile}\\
 \hline
-\shortstack{ICD-10\\code} & \shortstack{Scoring\\parent} & Diagnostic category & \shortstack{\scriptsize Configured\\\scriptsize checker\\\scriptsize items} & Operational compatibility rule\\
+\shortstack{\rule{0pt}{2.4ex}ICD-10\\code} & \shortstack{\rule{0pt}{2.4ex}Scoring\\parent} & Diagnostic category & \shortstack{\rule{0pt}{2.4ex}\scriptsize Configured\\\scriptsize checker\\\scriptsize items} & Operational compatibility rule\\
 \hline
 \endfirsthead
 \hline
-\shortstack{ICD-10\\code} & \shortstack{Scoring\\parent} & Diagnostic category & \shortstack{\scriptsize Configured\\\scriptsize checker\\\scriptsize items} & Operational compatibility rule\\
+\shortstack{\rule{0pt}{2.4ex}ICD-10\\code} & \shortstack{\rule{0pt}{2.4ex}Scoring\\parent} & Diagnostic category & \shortstack{\rule{0pt}{2.4ex}\scriptsize Configured\\\scriptsize checker\\\scriptsize items} & Operational compatibility rule\\
 \hline
 \endhead
 F20 & F20 & Schizophrenia & 8 & $\geq$1 first-rank symptom, or $\geq$2 other symptoms; duration $\geq$1 month\\
