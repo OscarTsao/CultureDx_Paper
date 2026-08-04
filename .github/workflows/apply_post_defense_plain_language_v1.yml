@@ -1,0 +1,63 @@
+name: Apply post-defense plain-language rewrite v1
+
+on:
+  push:
+    branches:
+      - thesis/post-defense-plain-language-v1
+    paths:
+      - scripts/apply_post_defense_plain_language_v1.py
+      - .github/workflows/apply_post_defense_plain_language_v1.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out rewrite branch
+        uses: actions/checkout@v4
+        with:
+          ref: thesis/post-defense-plain-language-v1
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Apply the approved rewrite
+        run: python scripts/apply_post_defense_plain_language_v1.py
+
+      - name: Validate the edited source
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f school/main.tex ]]; then
+            target=school/main.tex
+          else
+            target=paper/school/HiED_school_version.tex
+          fi
+          git diff --check
+          grep -F "Same-corpus label accuracy, cross-corpus transfer" "$target"
+          grep -F "HiED is designed to support clinicians, not replace them." "$target"
+
+      - name: Commit the thesis edit
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f school/main.tex ]]; then
+            target=school/main.tex
+          else
+            target=paper/school/HiED_school_version.tex
+          fi
+          if git diff --quiet -- "$target"; then
+            echo "No thesis change to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$target"
+          git commit -m "Rewrite abstract and Chapter 1 in plain language"
+          git push origin HEAD:thesis/post-defense-plain-language-v1
