@@ -89,24 +89,28 @@ Common Mental Disorders in the Taiwanese Context\par}
 \pagenumbering{roman}
 \chapter*{中文摘要}
 \addcontentsline{toc}{chapter}{中文摘要}
-初診精神科晤談逐字稿中的鑑別診斷，本質上是一種在證據不完整條件下進行的比較式決策。多個疾病診斷可能同時與同一份逐字稿相容，但最終通常只能有一個被判定為主診斷。然而，用以區分病程、發病時序、排除病因與共病關係等關鍵鑑別資訊，未必會在單次初診晤談中被完整引出。大型語言模型雖然能流暢地閱讀並理解這類逐字稿，近期也已有大量研究嘗試將其應用於精神科診斷任務，但語言理解的流暢性並不等同於可靠的鑑別診斷能力。
+精神科初診逐字稿中的鑑別診斷，是在資訊不完整的情況下比較多個可能診斷的過程。同一份逐字稿可能同時支持多個疾病，但醫師仍需根據目前取得的資訊選擇一個主診斷。影響判斷的重要資訊，例如症狀持續時間、症狀出現的先後、病程變化、其他可能病因與共病關係，未必能在一次初診中完整取得。大型語言模型可以閱讀醫病對話並產生診斷結果，但一個看似合理的答案不代表診斷過程可以被檢查與分析。
 
-既有評測呈現出一致的落差：模型在粗粒度分類任務上往往表現良好，但一旦進入細粒度的疾病層級鑑別診斷，準確率便會大幅下降。這個落差促使本研究提出一套可稽核的系統架構，用以定位基準標籤分歧出現於哪一類系統輸出。模型可能生成一個合理且受到診斷準則支持的候選疾病，卻仍未將其選為與基準標籤一致的主診斷。候選診斷生成、依準則驗證，以及主診斷選擇三者之間的差異，通常會被單一準確率指標所掩蓋，使研究者難以判斷分歧記錄於哪個環節。
+現有精神科大型語言模型研究多以最終診斷準確率評估系統。然而，單一最終答案無法說明分歧發生在哪個階段。資料集標準答案可能沒有進入候選名單，可能進入候選但未通過準則核對，也可能已經同時出現在候選名單與準則相容集合中，最後卻沒有被選為主診斷。這些情況需要不同的改善方式，但只看最終準確率時會被混在一起。
 
-為了使這些不同的分歧位置能夠被分別觀察，並檢驗主診斷選擇是否構成主要瓶頸，本研究提出 HiED——一套面向中文精神科初診對話逐字稿的鑑別診斷框架。HiED 將候選診斷偵測、ICD-10 逐準則驗證，以及主診斷選擇保留為可分別分析的輸出，而非將整個流程簡化為單一分類事件。同時，系統會在每次預測時輸出逐準則的稽核軌跡，使研究者能夠檢視診斷依據並定位分歧位置。HiED 並非已完成臨床驗證的自主診斷工具，而是一項用於分析逐字稿式精神科診斷分歧的研究工具。
+本研究提出 HiED，一套面向中文精神科初診逐字稿的分階段決策支援架構。HiED 將診斷流程分為候選形成、準則核對與主診斷選擇三個階段，並使用兩條互補路徑保留不同資訊。診斷路徑產生排序後的候選診斷與建議主診斷；準則驗證路徑則檢查各診斷的準則，並將每一項標記為符合、不符合或資訊不足。系統另外保留準則相容集合與最後的選擇結果，使各階段可以分開分析。
 
-因此，本論文有兩項主要貢獻：其一，提出一套可稽核的多代理診斷架構，分別保存候選診斷排序、準則狀態、相容診斷集合與最終主診斷；其二，提供可重現的證據，指出在本研究評估的 HiED 設定與合成逐字稿基準評測中，主診斷選擇構成主要的已記錄瓶頸。換言之，在本研究之合成逐字稿設定下，系統的主要限制不僅在於能否生成合理的候選診斷，而更在於能否在多個皆具一定準則支持的候選之間，進行有效比較並判定最適合作為主診斷者。最後需說明，本文題目所稱之臺灣脈絡，指涉系統之設計動機與預期部署場域（繁體中文互動、本地端推論、面向臨床人員之稽核），而非已完成之臺灣真實病人臨床驗證；本文現階段的量化結論均來自合成中文逐字稿語料。臺灣真實病人資料之臨床驗證目前於長庚紀念醫院進行中，其結果不納入本論文現階段的量化結論。
+在 LingxiDiag-16K 內部測試集上，HiED 的 Top-1 Accuracy 為 51.8\%，genuine Top-3 Accuracy 為 80.2\%。TF--IDF 加邏輯迴歸在同一語料內的標籤預測表現較高，但跨語料測試時表現明顯下降，也不提供逐項準則狀態或診斷階段紀錄。在 915 個可進行準則分析的案例中，有 272 例（29.7\%）的資料集標準答案已進入前三個候選，也通過準則相容檢查，但最後未被選為主診斷。MDD-5k 的 878 個可分析案例中，也有 225 例（25.6\%）出現相同的主診斷選擇分歧。
+
+本研究的第一項貢獻，是提出一個能分別記錄與分析候選形成、準則核對與主診斷選擇的架構，並透過這個架構找出主診斷選擇是兩個合成資料集中的最大已記錄分歧類型。第二項貢獻，是提供排序後的候選診斷、逐項準則狀態、準則相容集合與資訊不足項目，供醫師篩選可能診斷與檢查仍需補充的資訊。HiED 的目的不是取代醫師，而是提供比單一診斷標籤更多的決策支援資訊。目前量化結果來自合成中文逐字稿；本論文唯一保留的臨床人員評估，是針對部分 LingxiDiag 案例進行的盲性精神科醫師標注。真實病人臨床評估不在本論文範圍內。
 
 \noindent\textbf{關鍵詞：}大型語言模型、多代理系統、精神科鑑別診斷、臨床決策支援、ICD-10、可稽核人工智慧
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
-Differential diagnosis from an initial-consultation psychiatric transcript is a comparative decision under incomplete evidence. Multiple disorders may be compatible with the same transcript, yet only one can typically be judged the primary diagnosis. Key discriminating information---illness course, onset timing, exclusionary causes, and comorbidity relationships---may not be fully elicited within a single initial consultation. Large language models can read such transcripts fluently, and recent research has applied them to psychiatric diagnostic tasks, but linguistic fluency does not equate to reliable differential diagnostic ability.
+Differential diagnosis from a first psychiatric interview transcript requires comparing several possible disorders with incomplete information. Several disorders may fit the same transcript, but a clinician still needs to choose a primary diagnosis. Important facts, such as how long symptoms have lasted, which symptoms started first, how the condition has changed, other possible causes, and comorbidity, may be missing from one visit. Large language models can read these conversations and produce diagnoses, but a reasonable answer does not make the diagnostic process visible.
 
-Existing evaluations show a consistent gap: models perform well on coarse-grained classification, but accuracy drops sharply on fine-grained, disorder-level differential diagnosis. This gap motivates an auditable architecture that locates where benchmark disagreement appears among the recorded system outputs. A model may identify a benchmark gold diagnosis as a plausible, criterion-compatible candidate but still select a different primary diagnosis. The distinction among candidate-diagnosis generation, criterion-based verification, and primary-diagnosis selection is usually obscured by a single accuracy metric.
+Most psychiatric LLM studies report final diagnosis accuracy. However, one final answer does not show where a disagreement occurs. A dataset reference diagnosis may be missing from the candidate list, may enter the list but fail the criterion check, or may appear in both the candidate list and the criterion-compatible set but still not be selected as primary. These cases need different improvements, but one final accuracy score combines them.
 
-To make these disagreement locations separately observable and to examine whether primary-diagnosis selection is a major bottleneck, we propose HiED, a differential-diagnosis framework for Chinese psychiatric initial-consultation transcripts. HiED records candidate detection, ICD-10 criterion verification, primary selection, and criterion-level evidence as separately analyzable views rather than reducing diagnosis to one classification event. It is a research instrument for analyzing transcript-based diagnostic disagreement, not a clinically validated autonomous diagnostic tool. The title's Taiwanese context denotes the intended deployment setting; ongoing real-patient validation at Chang Gung Memorial Hospital (CGMH) is outside the present quantitative conclusions.
+We propose HiED, a stage-wise decision-support framework for Chinese psychiatric interview transcripts. HiED separates the task into candidate generation, criterion checking, and primary diagnosis selection. It uses two complementary paths. The diagnosis path returns ranked candidate diagnoses and a proposed primary diagnosis. The criterion path checks each configured diagnosis and marks each criterion as \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_evidence}. The system also keeps the criterion-compatible set and the final selection so that each stage can be studied separately.
 
-This thesis makes two main contributions: an auditable architecture with recorded diagnostic artifacts, and reproducible evidence of a primary-selection bottleneck in the evaluated HiED configurations under synthetic transcript-only benchmarks. In these settings, the observed limitation lies not only in generating plausible candidates but also in comparing criterion-compatible alternatives and selecting one as the committed primary diagnosis.
+On the LingxiDiag-16K internal test set, HiED achieved 51.8\% Top-1 Accuracy and 80.2\% genuine Top-3 Accuracy. TF--IDF with logistic regression gave stronger label prediction when training and test data came from the same corpus, but its performance dropped when the corpus changed. It also did not provide criterion states or a record of the diagnostic stages. Among 915 internal cases available for criterion analysis, 272 cases (29.7\%) contained a dataset reference diagnosis in both the Top-3 and the criterion-compatible set, but another diagnosis was selected as primary. The same pattern appeared in 225 of 878 external MDD-5k cases (25.6\%).
+
+The first contribution of this thesis is an architecture that records and evaluates candidate generation, criterion checking, and primary diagnosis selection separately. This architecture shows that primary diagnosis selection is the largest recorded disagreement group in the two tested synthetic datasets. The second contribution is the structured information provided for clinical review: ranked candidates, criterion states, the criterion-compatible set, and missing information. These outputs are designed to help clinicians screen possible diagnoses and decide what information still needs to be collected. HiED is designed to support clinicians, not replace them. The quantitative results use synthetic Chinese transcripts. The only clinician-facing evaluation kept in this thesis is a blinded psychiatrist annotation study on selected LingxiDiag cases; real-patient clinical evaluation is outside the scope of this thesis.
 
 \noindent\textbf{Keywords:} Large language models, multi-agent systems, psychiatric differential diagnosis, clinical decision support, ICD-10, auditable AI
 
@@ -125,13 +129,13 @@ Director of the Department of Psychiatry at Linkou Chang Gung Memorial
 Hospital, who served as the clinical principal investigator for this
 research. Her deep expertise in psychiatric diagnosis and her clinical
 guidance shaped the design of the differential-diagnosis framework,
-and the protocol for the ongoing CGMH real-world validation study. I am
+and the design of the psychiatrist annotation study for selected LingxiDiag cases. I am
 sincerely thankful for her generosity with her time and for her
 commitment to bridging clinical psychiatry and computational methods.
 
 I thank the clinical team of the Division of Psychosomatic Medicine at
-Chang Gung Memorial Hospital for their collaboration on the study
-protocol and clinical review.
+Chang Gung Memorial Hospital for their clinical feedback and helpful
+discussions.
 
 I am grateful to members of the laboratory for their help and many
 helpful discussions.
@@ -155,8 +159,6 @@ RQ & Research question\\
 SC & Self-consistency\\
 \hline
 CISC & Confidence-informed self-consistency\\
-\hline
-CGMH & Chang Gung Memorial Hospital\\
 \hline
 DA & Direct-Answer\\
 \hline
@@ -195,42 +197,56 @@ vLLM & High-throughput LLM inference and serving framework\\
 
 \section{Background and Motivation}
 
-Psychiatric outpatient care in Taiwan is widely accessible, but this access also creates a heavy clinical workload. Under National Health Insurance, patients may visit different levels of medical facilities without referral, and large medical centers may receive more than ten thousand outpatient visits across departments in one day~\citep{lin2020outpatient}. A first psychiatric visit must cover history taking, mental-status observation, risk screening, and an initial diagnostic judgment within limited time. The resulting note or transcript often contains incomplete information about onset, duration, course, medical or substance-related causes, and previous treatment.
+Psychiatric outpatient care is easy to access in Taiwan, but large hospitals also face a heavy workload. During a first psychiatric visit, the clinician must collect the patient's history, understand the current symptoms, observe the mental state, check immediate risks, and form an initial diagnosis within limited time. Important facts may still be missing, such as when the symptoms began, how long they have lasted, how they have changed, and whether another cause may explain them~\citep{lin2020outpatient}.
 
-The evidence may also be indirect. In Chinese-speaking settings, patients often describe distress through insomnia, fatigue, dizziness, chest tightness, or gastrointestinal symptoms before using explicit mood or anxiety terms~\citep{kleinman1982neurasthenia,ryder2008somatic}. Taiwanese consultations may also mix Mandarin, Taiwanese expressions, and local clinical wording. The same condition can therefore be described in several ways within one visit.
+Patients may also describe emotional distress through everyday or physical complaints. In Chinese-speaking settings, they may first report poor sleep, fatigue, dizziness, chest tightness, or stomach problems instead of saying that they feel depressed or anxious~\citep{kleinman1982neurasthenia,ryder2008somatic}. The same symptom may also be described in different ways. The clinician must therefore turn a free-form conversation into clinical evidence while keeping the full context of the interview in view.
 
-Differential diagnosis remains difficult because common psychiatric disorders share many symptoms. Depression, anxiety, stress-related disorders, obsessive-compulsive disorder, somatic symptom disorders, and sleep disorders may all involve insomnia, fatigue, poor concentration, and impaired daily function. In diagnostic assessment, these symptoms are interpreted through disorder-specific criteria. These criteria do not treat every symptom independently or equally: depending on the disorder, a diagnosis may require particular core symptoms, a minimum number of additional symptoms, a specified duration, functional impairment, and the absence of exclusionary causes~\citep{who2019icd10}. Diagnostic assessment therefore involves matching the available evidence to a disorder-specific combination of requirements, rather than assigning a diagnosis from the presence of one symptom alone. Even when diagnostic criteria are applied, several disorders may remain compatible with the same transcript. Evidence for both depression and anxiety, for example, may reflect comorbidity or overlapping symptoms from one primary condition~\citep{brown2001comorbidity}. Even structured diagnostic studies report limited agreement for some common disorders~\citep{regier2013dsm5}.
+This task is difficult because common mental disorders share many symptoms. Depression, anxiety, stress-related disorders, obsessive-compulsive disorder, somatic symptom disorders, and sleep disorders may all involve poor sleep, fatigue, poor concentration, and reduced daily function. A diagnosis cannot be made from one symptom alone. Each disorder has its own rules for key symptoms, symptom count, duration, effects on daily life, and the exclusion of other causes~\citep{who2019icd10}.
 
-These features make first-visit psychiatric diagnosis a problem of comparative bookkeeping under incomplete evidence. The clinician must document a best-supported working diagnosis, keep plausible alternatives visible, and identify which missing information should be collected at follow-up. Time pressure can increase the risk of anchoring or premature closure when several disorders share the same symptoms~\citep{croskerry2003cognitive}.
+Even after these rules are checked, more than one diagnosis may still fit the same transcript. The symptoms may come from one main disorder, or more than one disorder may be present at the same time. This second case is called comorbidity~\citep{brown2001comorbidity}. In other cases, the available information may not be enough to choose one clear primary diagnosis. Structured diagnostic studies also report limited agreement for some common disorders~\citep{regier2013dsm5}.
+
+A first psychiatric visit is therefore a comparison among possible diagnoses under incomplete evidence. It includes three linked decisions: forming a list of possible diagnoses, checking whether the available evidence meets the diagnostic criteria, and selecting a primary diagnosis while also considering possible comorbidities. A mistake or uncertainty can appear at any of these steps. Time pressure may also increase the risk of focusing too early on one diagnosis~\citep{croskerry2003cognitive}.
+
+For this reason, a useful decision-support system should provide more information than one final diagnosis. It should show the ranked candidate diagnoses, the state of each diagnostic criterion, and the information that is still missing. These outputs are designed to help clinicians review the case, narrow the candidate list, and decide what should be checked next.
+
 \section{Problem Definition and Challenges}
 \label{sec:problem-definition}
 
-Large language models offer capabilities that are well aligned with psychiatric transcript analysis: they can process free-form dialogue, organize symptom evidence, retrieve relevant examples, and produce structured outputs. Medical multi-agent systems can further divide the diagnostic task among specialized roles and combine their outputs~\citep{li2024taiwan,raballo2025,sarma2025,tang2024medagents,kim2024mdagents}. However, these capabilities do not by themselves ensure reliable differential diagnosis from a fixed transcript.
+Large language models can process clinical dialogue and produce diagnostic outputs. Medical multi-agent systems can also assign different tasks to different model calls and combine their outputs~\citep{li2024taiwan,raballo2025,sarma2025,tang2024medagents,kim2024mdagents}. These methods are useful for psychiatric transcript analysis, but a final diagnosis alone does not show how the result was formed or where a disagreement occurred.
 
-Benchmark disagreement can arise at different points in the diagnostic process. A benchmark gold diagnosis may never enter the candidate set, may be absent from the criterion-compatible set, or may remain available but not be selected as the committed primary diagnosis. These disagreement patterns call for different system improvements, yet they are often summarized by a single final-label accuracy measure.
+A final disagreement can start at different stages. A dataset reference diagnosis may never enter the candidate list. It may enter the list but fail the criterion check. It may also appear in both the candidate list and the criterion-compatible set, but another diagnosis may still be selected as primary. These cases need different improvements, but one final accuracy score groups them together.
 
-This creates the central technical problem studied in this thesis: existing evaluation often does not reveal whether disagreement arises during candidate generation, criterion-based verification, or primary-diagnosis selection. Without separately observable outputs for these stages, it is difficult to determine whether better retrieval, evidence checking, or comparative selection is needed. The next section introduces HiED as a framework designed to make these distinctions observable.
+In this thesis, a benchmark or dataset reference label is a diagnosis supplied by the dataset for scoring. It is not an independently reviewed clinical diagnosis. The recorded outputs therefore show where HiED agrees or disagrees with the benchmark; they do not by themselves show which diagnosis is clinically correct.
+
+A high final accuracy score also needs careful interpretation. A text classifier may learn words and label patterns that are common in one corpus. It may score well when its training and test cases come from the same source, but its performance may fall when the data source changes. Same-corpus label prediction, cross-corpus transfer, and the amount of information provided for clinical review are different questions.
+
+The main technical problem studied in this thesis is how to make the three diagnostic decisions separately visible. This allows us to identify whether a benchmark disagreement appears during candidate generation, criterion checking, or primary diagnosis selection. Cross-corpus testing is used as an additional boundary analysis rather than as the main contribution of HiED.
 
 \section{Overview of HiED and Study Scope}
 
-To make disagreements in candidate generation, criterion verification, and primary selection separately observable, this thesis introduces HiED, a hybrid multi-agent framework for differential diagnosis using Chinese-language transcripts of initial psychiatric consultations. The system is motivated by the Taiwanese outpatient setting. However, the completed quantitative analyses reported in this thesis use synthetic Chinese dialogue datasets. The LingxiDiag psychiatrist pilot and CGMH real-world validation are ongoing complementary studies and are not included in the present quantitative conclusions.
+A Single LLM baseline reads a fixed transcript and directly returns a primary diagnosis. It may also return a comorbid diagnosis. However, it does not follow the same output contract as HiED: it does not provide the same genuine ranked candidate list or an independent criterion-level record for every configured diagnosis. Its output is therefore mainly used to evaluate the final diagnostic result.
 
-HiED combines two complementary diagnostic processes. An LLM-based Diagnostician produces a ranked differential diagnosis and an emitted primary diagnosis, while diagnosis-specific Criterion Checkers evaluate the same transcript against operationalized ICD-10-informed criteria. The deterministic Compatibility Auditor aggregates the criterion states produced by the Criterion Checkers into a criterion-compatible set, and a finalization policy converts the recorded outputs into a committed diagnosis. The ranked candidates, criterion states, compatibility decisions, and committed diagnosis are stored separately.
+This thesis proposes HiED, a hybrid, evidence-grounded multi-agent decision-support framework for Chinese psychiatric interview transcripts. HiED uses two connected paths. The diagnosis path ranks possible diagnoses and proposes a primary diagnosis. The criterion path checks every configured diagnosis against study-specific criteria informed by ICD-10. Each criterion is marked as \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_evidence}.
 
-This separation supports stage-wise analysis of candidate generation, criterion verification, and primary selection. It allows the study to distinguish a diagnosis that was not proposed, one that was not included in the criterion-compatible set, and one that remained available but was not selected as the committed primary diagnosis.
+A Compatibility Auditor then forms the criterion-compatible set, and a finalization policy records the committed primary diagnosis. All methods in this study receive a fixed transcript and cannot ask the patient follow-up questions. The two paths therefore examine the same available evidence from different views.
+
+HiED keeps the ranked candidate list, model-generated criterion states, supporting text, criterion-compatible set, and final selection as separate outputs. These records support two uses. First, they allow candidate generation, criterion checking, and primary diagnosis selection to be studied separately. Second, they provide structured information for clinical review. A clinician can inspect the possible diagnoses, check which criteria are supported or contradicted, and see which information is still missing.
+
+In this thesis, \emph{auditable} means that these outputs are kept and can be checked after the system finishes. It does not mean that the criterion states, supporting text, compatible diagnoses, or final diagnosis are clinically correct. These outputs remain model-generated records until they are reviewed by clinicians.
+
+HiED is motivated by Chinese-language psychiatric care in the Taiwanese outpatient setting. The completed quantitative experiments use synthetic Chinese dialogue datasets. The only clinician-facing evaluation kept in this thesis is a blinded psychiatrist annotation study on selected LingxiDiag cases. Real-patient clinical evaluation is outside the scope of this thesis. HiED is designed to support clinical review, not to replace the clinician.
 
 \section{Contributions}
 
 This thesis makes two main contributions.
 
-First, it presents an auditable hybrid architecture that combines LLM-based diagnosis, structured criterion-level checking against operationalized ICD-10-informed criteria, and deterministic compatibility rules. The system records criterion states, checker-generated supporting text, and compatibility-rule outcomes instead of relying only on a free-form rationale. These artifacts support inspection and deterministic replay without being treated as hidden reasoning or clinical ground truth~\citep{turpin2023unfaithful}.
+First, it presents a two-path and stage-wise architecture for psychiatric decision support. Compared with a Single LLM that mainly returns a final diagnostic output, HiED separately records the ranked candidate list, criterion-checking results, criterion-compatible set, and committed primary diagnosis. This design allows candidate generation, criterion checking, and primary diagnosis selection to be studied separately. Using these outputs, this thesis finds that primary diagnosis selection is the largest recorded disagreement group in the two tested synthetic datasets. This is a benchmark finding under the evaluated settings, not a claim about the true clinical primary diagnosis in every case.
 
-Second, it presents a recorded-output evaluation framework that separates candidate detection, criterion verification, and primary selection, empirically identifies the primary-selection bottleneck, and tests whether criterion-based finalization and several primary-selection methods close the observed gap under declared comparison contracts.
+Second, HiED provides structured diagnostic information for clinical review instead of only one final diagnosis. It returns ranked possible diagnoses and marks each diagnostic criterion as \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_evidence}. It also keeps the criterion-compatible set and the final selection record. These outputs are designed to help clinicians screen possible diagnoses, review supporting or conflicting evidence, and identify what information is still missing. Their effect on clinical speed, accuracy, and safety still requires direct clinical evaluation.
 
 \section{Thesis Organization}
 
-Chapter~\ref{ch:related} reviews related psychiatric LLM, multi-agent, and auditable diagnosis research. Chapter~\ref{ch:architecture} describes HiED. Chapter~\ref{ch:data} defines the datasets and metrics, and Chapter~\ref{ch:experimental} explains the experiments. Chapters~\ref{ch:results} and~\ref{ch:external} report the internal and external synthetic results. Chapter~\ref{ch:error} examines disagreement patterns. Chapters~\ref{ch:discussion}--\ref{ch:conclusion} discuss the findings, limitations, conclusions, and future work.
-
+Chapter~\ref{ch:related} reviews related work on psychiatric large language models, medical multi-agent systems, criterion-based diagnosis, and auditable decision support. Chapter~\ref{ch:architecture} compares the Single LLM and HiED study architectures and follows a complete transcript through the recorded outputs. Chapter~\ref{ch:data} defines the datasets, label mapping, output views, evaluation measures, and statistical methods. Chapter~\ref{ch:experimental} describes retrieval settings, primary diagnosis selection methods, external synthetic evaluation, and the LingxiDiag psychiatrist annotation study. Chapters~\ref{ch:results} and~\ref{ch:external} report the internal and external synthetic results. Chapter~\ref{ch:error} examines the main recorded disagreement patterns. Chapters~\ref{ch:discussion}--\ref{ch:conclusion} discuss the findings, limitations, conclusions, and future work.
 
 \chapter{Related Work}
 \label{ch:related}
@@ -368,11 +384,11 @@ Taken together, the reviewed literature leaves five unresolved questions that ar
 This thesis therefore uses five research questions:
 
 \begin{description}[style=nextline,leftmargin=1.5cm,labelwidth=1.1cm,itemsep=0pt,parsep=0pt,topsep=0pt,partopsep=0pt]
-\item[RQ1] How does HiED compare with conventional and single-model baselines under the same data split, label mapping, and primary evaluation metric?
-\item[RQ2] How often does a benchmark gold label appear among the ranked candidates or in the criterion-compatible set without being selected as the committed primary diagnosis?
-\item[RQ3] How do no retrieval, global Top-5 retrieval, and parent-balanced retrieval compare in matched Single and HiED pipelines?
-\item[RQ4] Under the evaluated settings, do criterion-based re-selection or the tested primary-selection methods improve committed Top-1 agreement over Direct-Answer?
-\item[RQ5] To what extent do the main findings persist across model sizes, external synthetic corpora, and changes in the configured diagnostic scope, and which error patterns characterize the remaining disagreements?
+\item[RQ1] How does HiED perform compared with conventional classification methods and Single LLM baselines under the same evaluation settings?
+\item[RQ2] Where do benchmark disagreements occur across candidate generation, criterion checking, and primary diagnosis selection?
+\item[RQ3] How do different similar-case retrieval strategies affect diagnostic outputs in Single LLM and HiED?
+\item[RQ4] Can alternative primary diagnosis selection strategies reduce selection disagreement after candidate generation and criterion checking?
+\item[RQ5] Do the observed stage-wise disagreement patterns remain under another synthetic dataset and different diagnostic settings?
 \end{description}
 These RQs define computational analyses on synthetic benchmark data. RQ3 first compares retrieval configurations on the public-validation split and freezes the selected settings, whereas RQ1 evaluates the selected configurations on the fixed internal held-out set. RQ5 comprises complementary model-scale, external synthetic, diagnostic-scope, cross-corpus transfer, and error-pattern analyses rather than a single statistical hypothesis.
 
@@ -841,15 +857,7 @@ This chapter defines the experimental sequence, study populations, and compariso
 \section{Evaluation Overview}
 \label{sec:experimental-overview}
 
-Figure~\ref{fig:evidence-sequence} presents the sequence of the completed computational analyses. Retrieval configurations are first compared on the public-validation split and selected separately for Single and HiED--DA (RQ3). The selected configurations are then frozen and evaluated on the internal held-out set for same-split benchmark positioning (RQ1). The validation-selected HiED--DA trace is subsequently used for stage-wise disagreement localization (RQ2), primary-selection interventions (RQ4), and sensitivity and transfer analyses (RQ5).
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.98\textwidth]{fig_evidence_sequence.pdf}
-\caption{Empirical sequence of the completed computational analyses and ongoing complementary clinical studies. Retrieval-configuration selection under RQ3 precedes the frozen held-out evaluation under RQ1. The clinical studies are shown separately and are not part of the completed computational results.}
-\label{fig:evidence-sequence}
-\end{figure}
-\FloatBarrier
+The completed computational study includes validation-based retrieval selection, internal benchmark comparison, stage-wise disagreement analysis, primary-selection interventions, and external synthetic evaluation. These analyses use fixed transcript inputs and do not include real-patient data. A separate blinded psychiatrist annotation study on selected LingxiDiag cases is described at the end of this chapter.
 
 \section{Retrieval-Configuration Selection and Benchmark Positioning}
 \label{sec:benchmark-retrieval-design}
@@ -954,12 +962,11 @@ Remaining benchmark disagreements are characterized using a first-listed-label c
 
 The model-scale and MDD-5k analyses provide the main evidence for RQ5. Diagnostic-scope expansion, cross-corpus lexical transfer, and descriptive disagreement-pattern analyses provide supporting evidence about the evaluated boundary conditions.
 
-\section{Complementary Clinical Evaluation Plan}
+\section{LingxiDiag Psychiatrist Annotation Study}
 \label{sec:clinical-evaluation-plan}
 
 Two ongoing studies provide complementary clinical evaluation outside the completed computational RQs: a blinded psychiatrist review of 20 selected LingxiDiag disagreement cases and a CGMH real-world validation. Because they use different populations and reference conditions, the two studies are analyzed separately.
 
-\subsection{LingxiDiag Pilot Psychiatrist Review}
 \label{sec:lingxidiag-pilot-review}
 
 The LingxiDiag pilot evaluates the feasibility of the psychiatrist-review procedure and provides psychiatrist characterization of a selected synthetic disagreement population.
@@ -975,27 +982,6 @@ Shared symptom and impairment concepts are annotated once, whereas diagnosis-spe
 After both reviewers complete their final independent assessments, the research team compares their provisional and final judgments with the LingxiDiag benchmark gold labels, HiED ranked and committed diagnoses, criterion states, and system-derived compatibility decisions.
 
 Pre-consensus inter-rater agreement is calculated from the independent responses. Any subsequent consensus or adjudication is conducted using the transcript and independent annotations while the benchmark labels and HiED outputs remain concealed. Planned analyses include agreement on the final transcript-only primary diagnosis, ranked-differential coverage, criterion-state agreement, pre-consensus inter-rater agreement, provisional-to-final diagnostic changes, and agreement between psychiatrist-evidence-derived and system-derived compatibility decisions. Because the pilot includes only 20 synthetic cases selected from one disagreement population, its findings are interpreted as feasibility and exploratory agreement evidence rather than as an estimate of population-level clinical accuracy.
-
-\subsection{Ongoing CGMH Real-World Validation}
-\label{sec:cgmh-validation}
-
-The CGMH study is an ongoing real-world validation using psychiatric consultations included under prespecified clinical eligibility criteria. Cases are not selected according to whether HiED agrees with the recorded diagnosis. The model checkpoint, prompts, retrieval configuration, diagnostic scope, criterion definitions, compatibility rules, transcript-preprocessing procedure, and evaluation implementation are fixed before outcome analysis.
-
-The CGMH evaluation contains three separate analyses.
-
-First, HiED predictions are compared with diagnoses recorded during routine clinical care. This analysis measures agreement with the routine clinical record. The recorded diagnosis may incorporate information unavailable in the transcript provided to HiED, including prior history, longitudinal follow-up, collateral information, laboratory findings, and other clinical observations. Disagreement is therefore not automatically interpreted as a system error.
-
-Second, two psychiatrists independently review the same transcript version and diagnostic scope provided to HiED. They remain blinded to the recorded clinical diagnosis, HiED outputs, and each other's responses. As in the LingxiDiag pilot, provisional diagnostic judgments are recorded before the evidence annotation, and reviewers may revise them afterward. Both provisional and final judgments are retained.
-
-After independent review, disagreements are resolved through a prespecified consensus or adjudication procedure while the recorded clinical diagnosis and HiED outputs remain concealed. This process produces a psychiatrist transcript-only reference under an information condition more closely matched to the system input.
-
-HiED is compared separately with each independent reviewer and with the transcript-only reference. Planned outcomes include committed-primary agreement, ranked-differential coverage, comorbidity agreement, inter-rater agreement, provisional-to-final diagnostic changes, criterion-state agreement, diagnostic-scope coverage, and agreement between system-derived and psychiatrist-evidence-derived compatibility decisions.
-
-Third, an exploratory audit-assisted review examines how psychiatrists assess the HiED ranked differential, criterion states, supporting text, compatibility decisions, and committed diagnosis after completing the blinded transcript-only assessment and consensus or adjudication. The recorded clinical diagnosis remains concealed during this review. Reviewers assess the consistency of the trace with the transcript, identify criterion-level errors when present, and record whether exposure to HiED changes the diagnosis established during the blinded review.
-
-Post-disclosure judgments are analyzed separately as exploratory human--AI review and usability evidence. They are not treated as independent reference diagnoses or as evidence that the audit trace improves diagnostic accuracy.
-
-Results from the three information conditions are reported separately rather than combined into a single overall agreement estimate.
 
 \chapter{Internal Evaluation Results}
 \label{ch:results}
@@ -1847,7 +1833,7 @@ Reproduction requires preservation of the complete evaluation contract, includin
 
 The computational analyses localize disagreement across diagnostic scope, candidate ranking, criterion compatibility, and primary commitment. They cannot determine whether an individual disagreement arises from the system, incomplete transcript evidence, or limitations of the benchmark gold labels themselves. The benchmark gold diagnoses have not been independently adjudicated as unique clinical primaries, and the recorded criterion states and supporting text remain model-generated rather than clinician-validated evidence. The recorded-output groups must therefore be interpreted as computational benchmark-disagreement profiles rather than psychiatrist-confirmed diagnostic errors.
 
-The blinded LingxiDiag pilot and CGMH real-world validation described in Section~\ref{sec:clinical-evaluation-plan} remain ongoing and contribute no completed clinical evidence to this thesis. The LingxiDiag pilot concerns a selected synthetic disagreement sample rather than a representative clinical population, and post-disclosure CGMH judgments are analyzed separately from independent transcript-only reference assessments.
+The blinded LingxiDiag psychiatrist annotation study described in Section~ef{sec:clinical-evaluation-plan} is the only clinician-facing evaluation included in this thesis. Until completed, it contributes no clinical outcome evidence. The study uses a selected synthetic disagreement sample rather than a representative clinical population.
 
 HiED does not implement a validated mechanism for identifying unknown or out-of-scope presentations. The \texttt{Others} label is assigned only during evaluation when none of the benchmark gold diagnoses is represented in the scoring space; it is not available as a system output. The current confidence fields are not calibrated to diagnostic correctness or clinical risk, and no clinically validated abstention, referral, or targeted follow-up policy has been evaluated.
 
@@ -1860,63 +1846,57 @@ Auditability and reproducibility do not establish clinical validity. An inspecta
 
 \section{Summary of Findings}
 
-This thesis introduced HiED, an auditable multi-stage framework for differential diagnosis using Chinese-language transcripts of initial psychiatric consultations. Rather than reducing diagnosis to a single final label, HiED preserves the ranked differential diagnosis, criterion states, criterion-compatible set, compatibility-rule trace, and committed primary diagnosis as separately inspectable artifacts. Its main contribution is therefore a system and evaluation framework for analyzing benchmark disagreement across recorded outputs rather than an overall predictive advantage.
+This thesis proposed HiED, a stage-wise decision-support framework for psychiatric differential diagnosis from Chinese interview transcripts. Instead of treating diagnosis as one classification output, HiED separates candidate generation, criterion checking, and primary diagnosis selection. It keeps ranked candidate diagnoses, criterion states, the criterion-compatible set, and the committed diagnosis as separate outputs.
 
-On the fixed internal held-out set, HiED did not outperform the strongest same-split predictor, but its recorded artifacts exposed a persistent gap between candidate availability, gold-label inclusion, and committed-primary agreement. The largest disagreement profile involved cases in which a benchmark gold parent appeared in both the genuine Top-3 and the criterion-compatible set but was not committed as primary. Detailed analyses further showed that these disagreements were concentrated in particular ranks and diagnostic directions, while compatible-set size and aggregate criterion-state composition provided limited separation from cases with committed-primary agreement. Separate diagnostic-set disagreements also remained in some cases despite a benchmark-consistent committed primary.
+The main value of HiED is not only its final prediction. The recorded outputs also show where a benchmark disagreement appears. On the internal synthetic benchmark, many dataset reference diagnoses were already present in the candidate list and passed the criterion-compatible check. The largest recorded disagreement group appeared at primary diagnosis selection: 272 of 915 checker-eligible cases contained a reference diagnosis in both the Top-3 and the criterion-compatible set, but another diagnosis was selected as primary.
 
-No evaluated primary-selection intervention reliably closed this gap, and the gap remained observable across the evaluated Qwen3 sizes and on MDD-5k. Under the evaluated HiED configuration and synthetic benchmark contract, primary selection therefore emerged as the dominant recorded bottleneck. HiED's completed contribution is to make candidate generation, criterion verification, compatibility, and commitment separately observable and auditable; clinical validity remains to be established through the ongoing psychiatrist review and real-world validation.
+The tested selection methods did not consistently improve committed-primary agreement. The same broad pattern also appeared on MDD-5k, where 225 of 878 checker-eligible cases were ranked and criterion-compatible but not selected. These results show a repeated benchmark pattern across two synthetic datasets. They do not show that the dataset label is the only clinically correct diagnosis or that primary selection is the main difficulty in all clinical settings.
+
+Beyond the final diagnosis, HiED provides structured information for review. Ranked candidates, criterion states, compatible diagnoses, and missing information can help a clinician inspect possible diagnoses and decide what should be checked next. HiED is therefore designed as a decision-support framework rather than an autonomous diagnostic system.
 
 \section{Answers to the Research Questions}
 
-The following answers are restricted to the evaluated synthetic benchmarks, declared output contracts, and recorded system artifacts.
+The answers below are limited to the tested synthetic datasets, label mappings, and recorded system outputs.
 
 \begin{description}[style=nextline,leftmargin=1.5cm,labelwidth=1.1cm,itemsep=0.2em,parsep=0pt]
 
-\item[RQ1] \textbf{How does HiED compare with conventional and single-model baselines under the same data split, label mapping, and primary evaluation metric?}
+\item[RQ1] \textbf{How does HiED perform compared with conventional classification methods and Single LLM baselines under the same evaluation settings?}
 
-HiED did not outperform the strongest same-split predictor. TF--IDF with logistic regression achieved the highest Committed Top-1 Accuracy, while the validation-selected Single and HiED--DA configurations achieved nearly identical committed-primary benchmark agreement. HiED's distinct empirical value lies in the ranked differential diagnosis, criterion states, criterion-compatible set, compatibility-rule trace, and finalization record that enable recorded-output analysis rather than in an overall accuracy advantage.
+TF--IDF with logistic regression achieved the strongest same-corpus label prediction on the internal test set. Single LLM and HiED had similar committed-primary Top-1 values. HiED did not provide an overall accuracy advantage, but it provided a genuine ranked differential, criterion states, a criterion-compatible set, and a final selection record that supported stage-wise analysis.
 
-\item[RQ2] \textbf{How often does a benchmark gold label appear among the ranked candidates or in the criterion-compatible set without being selected as the committed primary diagnosis?}
+\item[RQ2] \textbf{Where do benchmark disagreements occur across candidate generation, criterion checking, and primary diagnosis selection?}
 
-Among the 915 checker-eligible cases, 272 satisfied $D_3=1$, $I=1$, and $S=0$: a benchmark gold parent appeared in both the genuine Top-3 and the criterion-compatible set, but another diagnosis was committed as primary. This was the largest committed-primary-disagreement group and supports primary selection as the dominant recorded bottleneck under the evaluated HiED configuration and benchmark contract.
+The largest recorded disagreement group occurred after candidate generation and criterion checking. Among 915 checker-eligible internal cases, 272 contained a dataset reference diagnosis in both the genuine Top-3 and the criterion-compatible set, but another diagnosis was selected as primary. This result identifies primary diagnosis selection as the main recorded bottleneck under the tested HiED setting.
 
-\item[RQ3] \textbf{How do no retrieval, global Top-5 retrieval, and parent-balanced retrieval compare in matched Single and HiED pipelines?}
+\item[RQ3] \textbf{How do different similar-case retrieval strategies affect diagnostic outputs in Single LLM and HiED?}
 
-Retrieval benefited Single more consistently than HiED. Global Top-5 achieved the strongest values across the prespecified validation metrics for Single and was therefore selected. For HiED--DA, global Top-5 won only two of the five prespecified metrics, so parent-balanced retrieval was retained under the majority rule. Global Top-5 nevertheless produced higher held-out point estimates across the reported HiED metrics, showing that the validation-selected ordering did not persist on the internal held-out set.
+Retrieval gave a clearer benefit for Single LLM than for HiED. Global Top-5 retrieval improved the Single baseline over no retrieval. For HiED, the differences among no retrieval, global Top-5, and parent-balanced retrieval were smaller and did not show a stable gain for one retrieval setting across the reported comparisons.
 
-\item[RQ4] \textbf{Under the evaluated settings, do criterion-based re-selection or the tested primary-selection methods improve committed Top-1 agreement over Direct-Answer?}
+\item[RQ4] \textbf{Can alternative primary diagnosis selection strategies reduce selection disagreement after candidate generation and criterion checking?}
 
-No evaluated intervention produced a clear improvement over Direct-Answer. NtS provided the most controlled finalization comparison because it reused the same ranked candidates, criterion states, and criterion-compatible set, but it reduced committed Top-1 agreement under all three retrieval conditions. Deterministic fusion, pairwise comparison, debate, self-consistency, and confidence-informed self-consistency likewise produced either lower point estimates or statistically uncertain differences under the evaluated configurations.
+None of the tested methods gave a clear and stable improvement over Direct-Answer. Criterion-based re-selection reduced Top-1 under all three internal retrieval settings, and the other tested rules, comparisons, debate, and repeated sampling also did not consistently close the selection gap. These results apply to the tested methods and do not rule out other selection designs.
 
-\item[RQ5] \textbf{To what extent do the main findings persist across model sizes, external synthetic corpora, and changes in the configured diagnostic scope, and which error patterns characterize the remaining disagreements?}
+\item[RQ5] \textbf{Do the observed stage-wise disagreement patterns remain under another synthetic dataset and different diagnostic settings?}
 
-The gap between candidate availability and committed-primary agreement remained observable across the evaluated Qwen3 sizes and on MDD-5k. Among 878 checker-eligible MDD-5k cases, 225 contained a benchmark gold parent in both the genuine Top-3 and the criterion-compatible set but committed another diagnosis as primary. Diagnostic-scope expansion increased output-space representability without producing committed-primary recovery, while cross-corpus TF--IDF performance degraded substantially.
-
-In the internal 272-case disagreement group, the highest-ranked benchmark gold parent was usually second, and the disagreements were concentrated in the F41-to-F32 direction. Compatible-set size and aggregate criterion-state composition did not clearly distinguish this group from cases with committed-primary agreement.
+The broad pattern appeared again on MDD-5k: candidate coverage and criterion inclusion were higher than committed-primary agreement, and the largest disagreement group again contained a reference diagnosis that was ranked and criterion-compatible but not selected. The group proportions were not identical, and the result remains limited to synthetic data.
 
 \end{description}
 
 \section{Future Work}
 
-\paragraph{Completion and reporting of the planned clinical evaluations.}
+\paragraph{Complete the LingxiDiag psychiatrist annotation study.}
 
-The blinded LingxiDiag pilot and CGMH real-world validation should be completed under the frozen protocols defined in Section~\ref{sec:clinical-evaluation-plan}. The LingxiDiag pilot should be reported as feasibility and exploratory agreement evidence for a selected synthetic disagreement population. The CGMH study should separately report agreement with routine clinical diagnoses, the blinded transcript-only psychiatrist reference, and post-disclosure audit-assisted judgments because these comparisons use different information conditions.
+The next clinical-facing step is the blinded psychiatrist annotation of selected LingxiDiag disagreement cases. Psychiatrists will judge whether each transcript supports one primary diagnosis or remains insufficient, rank possible diagnoses, and mark the relevant criterion states. This study can compare psychiatrist judgments with the dataset labels and HiED outputs without treating either source as automatic clinical truth. Real-patient clinical evaluation is outside the scope of this thesis.
 
-\paragraph{Comparative primary selection and diagnostic-set construction.}
+\paragraph{Model comparative primary diagnosis selection.}
 
-Future primary-selection methods should explicitly compare plausible diagnoses rather than rely only on independent criterion satisfaction, compatible-set membership, ranking position, or criterion counts. Relevant comparative relations include temporal order, illness course, episode structure, syndrome dominance, exclusionary causes, explanatory dependence, and the distinction among a primary diagnosis, a comorbid diagnosis, and a differential alternative. Primary selection and diagnostic-set construction should be modeled and evaluated as separate decisions, with explicit output roles for each type of diagnosis.
+The current criterion path mainly asks whether each diagnosis is compatible with the transcript. It does not fully represent why one compatible diagnosis should be selected before another. Future methods should model direct relations among candidates, including which symptoms started first, illness course, episode structure, other possible causes, comorbidity, and which diagnosis best explains the available evidence.
 
-Where possible, new finalization methods should be evaluated using fixed upstream artifacts so that changes in commitment can be separated from changes in candidate generation, prompting, or inference budget. Complete paired case-level records should be preserved to support gain--loss analysis, uncertainty estimation, and reproducible error review.
+\paragraph{Ask for missing evidence.}
 
-\paragraph{Targeted evidence acquisition, abstention, and broader validation.}
+A fixed transcript may not contain enough information to separate the leading diagnoses. Future decision-support systems should identify the unresolved difference and suggest targeted follow-up questions about duration, timing, previous episodes, substance use, medical causes, and effects on daily life. When the missing information cannot be obtained, the system should also support an explicit insufficient-information outcome instead of forcing one primary diagnosis.
 
-When the available transcript does not contain the information required to distinguish the leading diagnoses, future systems should identify the unresolved comparison and request targeted follow-up evidence. Relevant questions may address symptom duration, temporal sequence, previous episodes, substance exposure, medical explanations, functional impairment, or the relationships among mood, anxiety, trauma, and sleep symptoms.
-
-When additional evidence cannot be obtained, insufficient-evidence, abstention, and referral outputs should be evaluated as alternatives to forcing a unique primary diagnosis. This work requires calibrated uncertainty and validated detection of unknown or out-of-scope presentations.
-
-Broader technical evaluation should include unrelated model families, independently collected corpora, naturally occurring clinical transcripts, complete ranked and compatibility artifacts, and explicit evaluation of diagnostic-set construction. Clinical development should assess clinician interaction, automation bias, review burden, subgroup performance, privacy, governance, patient safety, and prospective clinical outcomes before any deployment claim is made.
-
-HiED shows that candidate availability and criterion compatibility do not by themselves guarantee committed-primary benchmark agreement. Its current contribution is to make this gap observable and auditable; improving comparative selection and establishing clinical validity and safe use remain central directions for future work.
+HiED shows that candidate availability and criterion compatibility do not always lead to committed-primary benchmark agreement. Its current contribution is to make this gap visible and to provide structured information for review. Better comparative selection and clinical assessment of the recorded outputs remain the main directions for future work.
 
 \appendix
 \titleformat{\chapter}[display]{\raggedright\bfseries\LARGE}{Appendix \thechapter}{0.5em}{}
