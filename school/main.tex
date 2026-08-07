@@ -97,7 +97,7 @@ Common Mental Disorders in the Taiwanese Context\par}
 
 在 LingxiDiag-16K 內部測試集上，HiED 的 Top-1 Accuracy 為 51.8\%，genuine Top-3 Accuracy 為 80.2\%。TF--IDF 加邏輯迴歸在同一語料內的標籤預測表現較高，但跨語料測試時表現明顯下降，也不提供逐項準則狀態或診斷階段紀錄。在 915 個可進行準則分析的案例中，有 272 例（29.7\%）的資料集標準答案已進入前三個候選，也通過準則相容檢查，但最後未被選為主診斷。MDD-5k 的 878 個可分析案例中，也有 225 例（25.6\%）出現相同的主診斷選擇分歧。
 
-本研究的第一項貢獻，是提出一個能分別記錄與分析候選形成、準則核對與主診斷選擇的架構，並透過這個架構找出主診斷選擇是兩個合成資料集中的最大已記錄分歧類型。第二項貢獻，是提供排序後的候選診斷、逐項準則狀態、準則相容集合與資訊不足項目，供醫師篩選可能診斷與檢查仍需補充的資訊。HiED 的目的不是取代醫師，而是提供比單一診斷標籤更多的決策支援資訊。目前量化結果來自合成中文逐字稿；本論文唯一保留的臨床人員評估，是針對部分 LingxiDiag 案例進行的盲性精神科醫師標注。真實病人臨床評估不在本論文範圍內。
+本研究的第一項貢獻，是提出一個能分別記錄與分析候選形成、準則核對與主診斷選擇的架構，並透過這個架構找出主診斷選擇是兩個合成資料集中的最大已記錄分歧類型。第二項貢獻，是提供排序後的候選診斷、逐項準則狀態、準則相容集合與資訊不足項目，供醫師篩選可能診斷與檢查仍需補充的資訊。HiED 的目的不是取代醫師，而是提供比單一診斷標籤更多的決策支援資訊。目前量化結果來自合成中文逐字稿；本論文唯一納入的臨床人員評估，是針對部分 LingxiDiag 案例進行的盲性精神科醫師標注。真實病人臨床評估不在本論文範圍內。
 
 \noindent\textbf{關鍵詞：}大型語言模型、多代理系統、精神科鑑別診斷、臨床決策支援、ICD-10、可稽核人工智慧
 \chapter*{Abstract}
@@ -110,7 +110,7 @@ We propose HiED, a stage-wise decision-support framework for Chinese psychiatric
 
 On the LingxiDiag-16K internal test set, HiED achieved 51.8\% Top-1 Accuracy and 80.2\% genuine Top-3 Accuracy. TF--IDF with logistic regression gave stronger label prediction when training and test data came from the same corpus, but its performance dropped when the corpus changed. It also did not provide criterion states or a record of the diagnostic stages. Among 915 internal cases available for criterion analysis, 272 cases (29.7\%) contained a dataset reference diagnosis in both the Top-3 and the criterion-compatible set, but another diagnosis was selected as primary. The same pattern appeared in 225 of 878 external MDD-5k cases (25.6\%).
 
-The first contribution of this thesis is an architecture that records and evaluates candidate generation, criterion checking, and primary diagnosis selection separately. This architecture shows that primary diagnosis selection is the largest recorded disagreement group in the two tested synthetic datasets. The second contribution is the structured information provided for clinical review: ranked candidates, criterion states, the criterion-compatible set, and missing information. These outputs are designed to help clinicians screen possible diagnoses and decide what information still needs to be collected. HiED is designed to support clinicians, not replace them. The quantitative results use synthetic Chinese transcripts. The only clinician-facing evaluation kept in this thesis is a blinded psychiatrist annotation study on selected LingxiDiag cases; real-patient clinical evaluation is outside the scope of this thesis.
+The first contribution of this thesis is an architecture that records and evaluates candidate generation, criterion checking, and primary diagnosis selection separately. This architecture shows that primary diagnosis selection is the largest recorded disagreement group in the two tested synthetic datasets. The second contribution is the structured information provided for clinical review: ranked candidates, criterion states, the criterion-compatible set, and missing information. These outputs are designed to help clinicians screen possible diagnoses and decide what information still needs to be collected. HiED is designed to support clinicians, not replace them. The quantitative results use synthetic Chinese transcripts. The only clinician-facing evaluation included in this thesis is a blinded psychiatrist annotation study on selected LingxiDiag cases; real-patient clinical evaluation is outside the scope of this thesis.
 
 \noindent\textbf{Keywords:} Large language models, multi-agent systems, psychiatric differential diagnosis, clinical decision support, ICD-10, auditable AI
 
@@ -128,8 +128,8 @@ I owe special thanks to Dr.\ Yu-Shu Huang (黃玉書), Professor and
 Director of the Department of Psychiatry at Linkou Chang Gung Memorial
 Hospital, who served as the clinical principal investigator for this
 research. Her deep expertise in psychiatric diagnosis and her clinical
-guidance shaped the design of the differential-diagnosis framework,
-and the design of the psychiatrist annotation study for selected LingxiDiag cases. I am
+guidance shaped both the differential-diagnosis framework and the
+psychiatrist annotation study for selected LingxiDiag cases. I am
 sincerely thankful for her generosity with her time and for her
 commitment to bridging clinical psychiatry and computational methods.
 
@@ -234,7 +234,7 @@ HiED keeps the ranked candidate list, model-generated criterion states, supporti
 
 In this thesis, \emph{auditable} means that these outputs are kept and can be checked after the system finishes. It does not mean that the criterion states, supporting text, compatible diagnoses, or final diagnosis are clinically correct. These outputs remain model-generated records until they are reviewed by clinicians.
 
-HiED is motivated by Chinese-language psychiatric care in the Taiwanese outpatient setting. The completed quantitative experiments use synthetic Chinese dialogue datasets. The only clinician-facing evaluation kept in this thesis is a blinded psychiatrist annotation study on selected LingxiDiag cases. Real-patient clinical evaluation is outside the scope of this thesis. HiED is designed to support clinical review, not to replace the clinician.
+HiED is motivated by Chinese-language psychiatric care in the Taiwanese outpatient setting. The completed quantitative experiments use synthetic Chinese dialogue datasets. The only clinician-facing evaluation included in this thesis is a blinded psychiatrist annotation study on selected LingxiDiag cases. Real-patient clinical evaluation is outside the scope of this thesis. HiED is designed to support clinical review, not to replace the clinician.
 
 \section{Contributions}
 
@@ -965,7 +965,7 @@ The model-scale and MDD-5k analyses provide the main evidence for RQ5. Diagnosti
 \section{LingxiDiag Psychiatrist Annotation Study}
 \label{sec:clinical-evaluation-plan}
 
-Two ongoing studies provide complementary clinical evaluation outside the completed computational RQs: a blinded psychiatrist review of 20 selected LingxiDiag disagreement cases and a CGMH real-world validation. Because they use different populations and reference conditions, the two studies are analyzed separately.
+The blinded psychiatrist annotation of 20 selected LingxiDiag disagreement cases is the only clinician-facing evaluation included in this thesis. It uses a selected synthetic disagreement sample and is analyzed separately from the completed computational RQs.
 
 \label{sec:lingxidiag-pilot-review}
 
@@ -1833,7 +1833,8 @@ Reproduction requires preservation of the complete evaluation contract, includin
 
 The computational analyses localize disagreement across diagnostic scope, candidate ranking, criterion compatibility, and primary commitment. They cannot determine whether an individual disagreement arises from the system, incomplete transcript evidence, or limitations of the benchmark gold labels themselves. The benchmark gold diagnoses have not been independently adjudicated as unique clinical primaries, and the recorded criterion states and supporting text remain model-generated rather than clinician-validated evidence. The recorded-output groups must therefore be interpreted as computational benchmark-disagreement profiles rather than psychiatrist-confirmed diagnostic errors.
 
-The blinded LingxiDiag psychiatrist annotation study described in Section~ef{sec:clinical-evaluation-plan} is the only clinician-facing evaluation included in this thesis. Until completed, it contributes no clinical outcome evidence. The study uses a selected synthetic disagreement sample rather than a representative clinical population.
+The blinded LingxiDiag psychiatrist annotation study described in Section~
+ef{sec:clinical-evaluation-plan} is the only clinician-facing evaluation included in this thesis. Until completed, it contributes no clinical outcome evidence. The study uses a selected synthetic disagreement sample rather than a representative clinical population.
 
 HiED does not implement a validated mechanism for identifying unknown or out-of-scope presentations. The \texttt{Others} label is assigned only during evaluation when none of the benchmark gold diagnoses is represented in the scoring space; it is not available as a system output. The current confidence fields are not calibrated to diagnostic correctness or clinical risk, and no clinically validated abstention, referral, or targeted follow-up policy has been evaluated.
 
