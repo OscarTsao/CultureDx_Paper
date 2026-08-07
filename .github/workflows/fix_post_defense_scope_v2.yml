@@ -1,0 +1,62 @@
+name: Fix post-defense clinical scope v2
+
+on:
+  push:
+    branches:
+      - thesis/post-defense-rewrite-v2
+    paths:
+      - scripts/fix_post_defense_scope_v2.py
+      - .github/workflows/fix_post_defense_scope_v2.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: thesis/post-defense-rewrite-v2
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Apply cleanup
+        run: python scripts/fix_post_defense_scope_v2.py
+
+      - name: Validate
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f school/main.tex ]]; then
+            target=school/main.tex
+          else
+            target=paper/school/HiED_school_version.tex
+          fi
+          git diff --check
+          if grep -Fq "CGMH" "$target"; then
+            echo "CGMH evaluation wording remains" >&2
+            exit 1
+          fi
+          grep -F "The blinded psychiatrist annotation of 20 selected LingxiDiag disagreement cases" "$target"
+
+      - name: Commit cleanup only
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f school/main.tex ]]; then
+            target=school/main.tex
+          else
+            target=paper/school/HiED_school_version.tex
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$target"
+          git rm scripts/fix_post_defense_scope_v2.py
+          git rm .github/workflows/fix_post_defense_scope_v2.yml
+          git commit -m "Remove obsolete CGMH evaluation references"
+          git push origin HEAD:thesis/post-defense-rewrite-v2
