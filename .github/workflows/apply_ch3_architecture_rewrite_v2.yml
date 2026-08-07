@@ -1,0 +1,76 @@
+name: Apply Chapter 3 architecture rewrite v2
+
+on:
+  push:
+    branches:
+      - thesis/post-defense-rewrite-v2
+    paths:
+      - scripts/apply_ch3_architecture_rewrite_v2.py
+      - .github/workflows/apply_ch3_architecture_rewrite_v2.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out rewrite branch
+        uses: actions/checkout@v4
+        with:
+          ref: thesis/post-defense-rewrite-v2
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Apply Chapter 3 rewrite
+        run: python scripts/apply_ch3_architecture_rewrite_v2.py
+
+      - name: Validate thesis source
+        shell: bash
+        run: |
+          set -euo pipefail
+          target=school/main.tex
+          git diff --check
+          grep -F '\chapter{Study Architectures and Diagnostic Workflow}' "$target"
+          grep -F '\label{fig:single-vs-hied-architecture}' "$target"
+          grep -F '\label{fig:worked-example-flow}' "$target"
+          grep -F 'not a patient record, a case copied from LingxiDiag, or an exported model trace' "$target"
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          text = Path('school/main.tex').read_text(encoding='utf-8')
+          labels = re.findall(r'\\label\{([^}]+)\}', text)
+          refs = []
+          for pat in [r'\\ref\{([^}]+)\}', r'\\cref\{([^}]+)\}', r'\\Cref\{([^}]+)\}', r'\\pageref\{([^}]+)\}']:
+              refs.extend(re.findall(pat, text))
+          missing = sorted(set(refs) - set(labels))
+          duplicates = sorted({label for label in labels if labels.count(label) > 1})
+          if missing or duplicates:
+              raise SystemExit(f'missing labels={missing}; duplicate labels={duplicates}')
+          start = text.index(r'\chapter{Study Architectures and Diagnostic Workflow}')
+          end = text.index(r'\chapter{Datasets, Label Projection, and Evaluation Protocol}', start)
+          chapter = text[start:end]
+          for forbidden in ['Inference backend', 'Structured JSON', 'Checker recovery', 'Vector search', '8,192-token context', 'Qwen3-32B with 4-bit AWQ']:
+              if forbidden in chapter:
+                  raise SystemExit(f'Implementation detail remains in Chapter 3: {forbidden}')
+          PY
+
+      - name: Commit thesis rewrite
+        shell: bash
+        run: |
+          set -euo pipefail
+          target=school/main.tex
+          if git diff --quiet -- "$target"; then
+            echo "No Chapter 3 change to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$target"
+          git commit -m "Rewrite Chapter 3 around study architectures and diagnostic outputs"
+          git push origin HEAD:thesis/post-defense-rewrite-v2
