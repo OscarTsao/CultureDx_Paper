@@ -1833,8 +1833,7 @@ Reproduction requires preservation of the complete evaluation contract, includin
 
 The computational analyses localize disagreement across diagnostic scope, candidate ranking, criterion compatibility, and primary commitment. They cannot determine whether an individual disagreement arises from the system, incomplete transcript evidence, or limitations of the benchmark gold labels themselves. The benchmark gold diagnoses have not been independently adjudicated as unique clinical primaries, and the recorded criterion states and supporting text remain model-generated rather than clinician-validated evidence. The recorded-output groups must therefore be interpreted as computational benchmark-disagreement profiles rather than psychiatrist-confirmed diagnostic errors.
 
-The blinded LingxiDiag psychiatrist annotation study described in Section~
-ef{sec:clinical-evaluation-plan} is the only clinician-facing evaluation included in this thesis. Until completed, it contributes no clinical outcome evidence. The study uses a selected synthetic disagreement sample rather than a representative clinical population.
+The blinded LingxiDiag psychiatrist annotation study described in Section~\ref{sec:clinical-evaluation-plan} is the only clinician-facing evaluation included in this thesis. Until completed, it contributes no clinical outcome evidence. The study uses a selected synthetic disagreement sample rather than a representative clinical population.
 
 HiED does not implement a validated mechanism for identifying unknown or out-of-scope presentations. The \texttt{Others} label is assigned only during evaluation when none of the benchmark gold diagnoses is represented in the scoring space; it is not available as a system output. The current confidence fields are not calibrated to diagnostic correctness or clinical risk, and no clinically validated abstention, referral, or targeted follow-up policy has been evaluated.
 
