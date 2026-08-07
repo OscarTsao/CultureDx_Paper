@@ -31,8 +31,15 @@ jobs:
       - name: Install figure dependency
         run: python -m pip install --disable-pip-version-check matplotlib
 
-      - name: Rewrite Chapter 3
-        run: python scripts/apply_chapter3_rewrite_v2.py
+      - name: Rewrite Chapter 3 when needed
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -Fq '\chapter{HiED System Architecture}' school/main.tex; then
+            python scripts/apply_chapter3_rewrite_v2.py
+          else
+            echo 'Chapter 3 is already in the rewritten form.'
+          fi
 
       - name: Generate Chapter 3 figures
         run: python figures/src/make_ch3_architecture_figures.py
@@ -82,5 +89,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add school/main.tex figures/fig_single_vs_hied_architecture.pdf figures/fig_worked_example_flow.pdf
-          git commit -m 'Rewrite Chapter 3 around compared study architectures'
+          git commit -m 'Refine Chapter 3 architecture figures'
           git push origin HEAD:thesis/post-defense-rewrite-v2
