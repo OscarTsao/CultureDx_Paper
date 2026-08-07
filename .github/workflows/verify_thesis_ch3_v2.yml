@@ -28,17 +28,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             latexmk texlive-xetex texlive-latex-extra texlive-fonts-recommended \
-            fonts-noto-cjk poppler-utils
-
-      - name: Compile thesis
-        run: |
-          latexmk -xelatex -interaction=nonstopmode -halt-on-error -file-line-error school/main.tex
+            texlive-lang-chinese fonts-noto-cjk poppler-utils
 
       - name: Render Chapter 3 figures
         run: |
           mkdir -p verification_renders
           pdftoppm -png -r 180 -singlefile figures/fig_single_vs_hied_architecture.pdf verification_renders/fig_single_vs_hied_architecture
           pdftoppm -png -r 180 -singlefile figures/fig_worked_example_flow.pdf verification_renders/fig_worked_example_flow
+
+      - name: Compile thesis
+        run: |
+          latexmk -xelatex -interaction=nonstopmode -halt-on-error -file-line-error school/main.tex
 
       - name: Record build diagnostics
         shell: bash
@@ -53,6 +53,7 @@ jobs:
           pdfinfo figures/fig_worked_example_flow.pdf > verification_renders/fig2_pdfinfo.txt
 
       - name: Upload verification artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: thesis-ch3-verification-v2
@@ -60,5 +61,5 @@ jobs:
             main.pdf
             main.log
             verification_renders/
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 7
