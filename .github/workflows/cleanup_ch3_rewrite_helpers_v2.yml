@@ -1,0 +1,33 @@
+name: Clean up Chapter 3 rewrite helpers v2
+
+on:
+  push:
+    branches:
+      - thesis/post-defense-rewrite-v2
+    paths:
+      - .github/workflows/cleanup_ch3_rewrite_helpers_v2.yml
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out rewrite branch
+        uses: actions/checkout@v4
+        with:
+          ref: thesis/post-defense-rewrite-v2
+          fetch-depth: 0
+
+      - name: Remove one-time helper files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm -f scripts/apply_ch3_architecture_rewrite_v2.py
+          git rm -f .github/workflows/apply_ch3_architecture_rewrite_v2.yml
+          git rm -f .github/workflows/cleanup_ch3_rewrite_helpers_v2.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Remove one-time Chapter 3 rewrite helpers"
+          git push origin HEAD:thesis/post-defense-rewrite-v2
