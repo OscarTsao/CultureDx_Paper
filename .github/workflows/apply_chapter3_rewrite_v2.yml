@@ -1,0 +1,86 @@
+name: Apply Chapter 3 architecture rewrite v2
+
+on:
+  push:
+    branches:
+      - thesis/post-defense-rewrite-v2
+    paths:
+      - .github/workflows/apply_chapter3_rewrite_v2.yml
+      - scripts/apply_chapter3_rewrite_v2.py
+      - figures/src/make_ch3_architecture_figures.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rewrite:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out thesis branch
+        uses: actions/checkout@v4
+        with:
+          ref: thesis/post-defense-rewrite-v2
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install figure dependency
+        run: python -m pip install --disable-pip-version-check matplotlib
+
+      - name: Rewrite Chapter 3
+        run: python scripts/apply_chapter3_rewrite_v2.py
+
+      - name: Generate Chapter 3 figures
+        run: python figures/src/make_ch3_architecture_figures.py
+
+      - name: Validate Chapter 3 source and figures
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s figures/fig_single_vs_hied_architecture.pdf
+          test -s figures/fig_worked_example_flow.pdf
+          grep -F '\chapter{Study Architectures and Diagnostic Workflow}' school/main.tex
+          grep -F '\section{Compared Study Architectures}' school/main.tex
+          grep -F '\section{Complete Worked Example}' school/main.tex
+          grep -F 'The transcript is written for this thesis.' school/main.tex
+          git diff --check
+          python - <<'PY'
+          from pathlib import Path
+          text = Path('school/main.tex').read_text(encoding='utf-8')
+          start = text.index(r'\chapter{Study Architectures and Diagnostic Workflow}')
+          end = text.index(r'\chapter{Datasets, Label Projection, and Evaluation Protocol}', start)
+          chapter = text[start:end]
+          forbidden = ['Qwen3-32B', '4-bit AWQ', 'vLLM', 'FAISS', 'guided decoding', 'Structured JSON', 'Checker recovery', '8,192-token']
+          bad = [token for token in forbidden if token in chapter]
+          if bad:
+              raise SystemExit(f'Implementation details remain in Chapter 3: {bad}')
+          required = [
+              r'\label{fig:single-vs-hied-architecture}',
+              r'\label{fig:worked-example-flow}',
+              r'\label{sec:retrieval}',
+              r'\label{sec:running-example}',
+              r'\label{tab:configured-profile-summary}',
+          ]
+          missing = [token for token in required if token not in chapter]
+          if missing:
+              raise SystemExit(f'Missing preserved labels: {missing}')
+          print('Chapter 3 static validation passed')
+          PY
+
+      - name: Commit rewritten chapter and generated figures
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- school/main.tex figures/fig_single_vs_hied_architecture.pdf figures/fig_worked_example_flow.pdf; then
+            echo 'No Chapter 3 changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add school/main.tex figures/fig_single_vs_hied_architecture.pdf figures/fig_worked_example_flow.pdf
+          git commit -m 'Rewrite Chapter 3 around compared study architectures'
+          git push origin HEAD:thesis/post-defense-rewrite-v2
