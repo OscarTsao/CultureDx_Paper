@@ -1,4 +1,5 @@
 name: Verify Chapter 3 thesis build v2
+# Re-run after the refined Chapter 3 figure PDFs were generated.
 
 on:
   push:
