@@ -1,0 +1,179 @@
+\chapter{Discussion}
+\label{ch:discussion}
+
+The results support a stage-wise interpretation of HiED rather than an accuracy-leading claim. TF--IDF with logistic regression is the strongest same-source label predictor in the main internal comparison, and Single and HiED have almost the same committed Top-1 result. HiED's distinct contribution is the set of recorded outputs that makes candidate generation, criterion checking, compatibility analysis, and primary commitment separately visible.
+
+The internal and external analyses show the same broad type of benchmark disagreement: a reference diagnosis can be present in the ranked candidates and the criterion-compatible set, while another diagnosis is committed as primary. The size of this profile differs across datasets and archived traces. The framework for asking the stage-wise questions therefore transfers more clearly than the numerical rates themselves.
+
+\section{Compatibility and Primary Selection in the Evaluated Trace}
+\label{sec:discussion-primary-selection}
+
+Candidate generation, criterion checking, and primary selection answer different questions. Candidate generation asks which diagnoses remain plausible. Criterion checking asks whether the fixed transcript supports each configured diagnosis under the study rules. Primary selection asks which diagnosis should be committed after comparing the plausible alternatives.
+
+Common mental disorders share many symptoms. Poor sleep, fatigue, poor concentration, low mood, worry, avoidance, and reduced daily function may support several categories at the same time. A diagnosis can therefore pass its own compatibility rule without being the best primary explanation. It may instead be secondary, comorbid, less specific, or still uncertain.
+
+Criterion checking makes this problem easier to inspect, but broad compatibility does not solve the final comparison. The internal compatible set contains a median of six configured categories, and its size and overall criterion-state composition do not clearly separate committed-primary agreement from the largest disagreement group. External results also show that compatibility is not a sufficient condition for selection and is not a necessary condition for a benchmark-consistent DA commitment.
+
+The 272 internal cases and 225 external cases with a ranked and compatible reference diagnosis that is not selected are therefore best described as the largest recorded benchmark-disagreement profiles. They show that available upstream records do not automatically determine the final commitment. They do not prove that the finalizer alone caused the disagreement or that primary selection is the largest clinical difficulty in all settings.
+
+A stronger primary selector would need direct comparisons among candidates. Useful information may include symptom timing, illness course, episode structure, syndrome dominance, exclusionary causes, explanatory dependence, and comorbidity. The current criterion path mainly checks diagnoses one at a time and does not fully represent these relations.
+
+\section{Why the Tested Selection Methods Did Not Close the Gap}
+\label{sec:discussion-selection-strategies}
+
+DA versus NtS is the clearest matched finalization comparison because both policies reuse the same ranked candidates, criterion states, and criterion-compatible set. NtS lowers committed Top-1 under all three internal retrieval settings. A simple rule that prefers compatible candidates can correct some disagreements, but it can also replace an initially benchmark-consistent DA choice. This is expected when several diagnoses pass broad compatibility rules.
+
+Deterministic fusion uses another fixed summary of the same records and also does not provide a clear gain. Pairwise comparison, debate, and repeated generation make the comparison more explicit, but they also add new prompts, model calls, context arrangements, or sampling budgets. Their results must therefore be read as complete-configuration results rather than isolated tests of one finalization component.
+
+All tested methods use the same fixed transcript. More inference can reorganize the available evidence, but it cannot recover facts that were never recorded, such as symptom onset, previous episodes, exclusionary medical causes, or the relation between anxiety and mood symptoms. Sampling also measures preference stability rather than clinical validity. A model can repeat the same answer because it has a stable interpretation, or because it has a stable corpus prior or bias.
+
+The observed Top-3--Top-1 gap is therefore decision headroom, not demonstrated automatic recoverability. The experiments show that the tested prompts, rules, and inference budgets did not reliably convert candidate availability into better committed-primary agreement. They do not show that every future comparative selector must fail.
+
+\section{Boundaries Beyond Primary Selection}
+\label{sec:discussion-set-scope-transfer}
+
+Primary commitment is only one part of a diagnostic output. Diagnostic-set construction determines which additional diagnoses are emitted. Chapter~\ref{ch:error} shows 109 cases in which the committed primary agrees with the benchmark but the complete emitted set does not. This is why Top-1, Exact Match, Macro-F1, and Weighted-F1 must remain separate.
+
+Diagnostic scope is another boundary. A diagnosis that is absent from the configured output space cannot be ranked or emitted. An earlier F60 scope-expansion result could not be linked to a preserved source artifact, so this revision makes no numerical claim from that experiment. The supported point is only that representability is necessary but does not by itself guarantee correct ranking or selection.
+
+Distribution shift is a third boundary. The external MDD-5k analysis preserves the same stage-wise questions, but its compatibility inclusion and profile rates differ from the internal trace and vary across archived MDD-5k lineages. The TF--IDF transfer matrix also shows large source effects. These findings support a synthetic cross-corpus boundary analysis, not real-patient or cross-hospital generalization.
+
+Taken together, the results show several separate problems: missing candidates, broad or trace-sensitive compatibility, primary commitment, complete-set construction, diagnostic scope, and source-specific prediction. They should not all be renamed as one finalization problem.
+
+\section{Implications for Auditable Decision Support}
+\label{sec:discussion-clinical-implications}
+
+HiED preserves a ranked differential, criterion states, short evidence notes, a criterion-compatible set, and the finalization source. A reviewer can inspect whether a diagnosis was absent from the ranking, absent from the compatible set, or available in both views but not committed. This is more informative than a final label alone.
+
+Inspectability is not correctness. The saved criterion states and evidence notes are model-generated. They may contain unsupported evidence, a wrong criterion state, or an inappropriate diagnosis. They also do not reveal the model's hidden reasoning. Auditability in this thesis means that observable outputs are retained for review and analysis; it does not mean that the system has been clinically validated.
+
+The outputs are designed to support clinician review by showing possible diagnoses and information gaps. Their effect on clinical time, accuracy, safety, or treatment decisions has not been measured. The only clinician-facing study retained in this thesis is the blinded psychiatrist annotation of selected LingxiDiag cases, and it uses synthetic transcripts rather than a representative clinical population.
+
+Future decision support should also help collect missing evidence. When leading diagnoses differ in duration, temporal order, previous episodes, exclusionary causes, or comorbidity, the system could state the unresolved difference and suggest a focused follow-up question. When enough evidence cannot be obtained, an explicit insufficient-information, abstention, or referral output may be safer than forcing one primary diagnosis. These behaviors were not evaluated here.
+
+Overall, HiED demonstrates how to make several diagnostic output views visible under synthetic benchmark conditions. Clinical reliability still requires independent clinician review, natural clinical data, workflow evaluation, safety testing, privacy and governance controls, and continued monitoring.
+
+\chapter{Limitations and Threats to Validity}
+\label{ch:limitations}
+
+This chapter states how far the reported findings can be interpreted. The main limits concern the benchmark labels and metrics, synthetic datasets, complete-system comparisons, artifact and statistical coverage, and the absence of real-patient clinical validation.
+
+\section{Benchmark and Measurement Limitations}
+
+The computational results measure agreement with dataset-provided diagnoses after the parent-label projection defined in Chapter~\ref{ch:data}. They do not measure agreement with independently adjudicated clinical diagnoses. The internal benchmark contains one projected parent in 912 cases, two in 83 cases, and three in five cases. Committed Top-1 counts a case as correct when the committed primary matches any projected benchmark parent. The first-listed parent is used only in clearly marked single-label descriptions, such as the confusion matrix.
+
+The metrics describe different output views. Top-1 evaluates the committed primary. Genuine Top-3 evaluates an ordered candidate list. Exact Match and F1 evaluate the complete emitted set and are affected by output cardinality. Single's emitted-label hit@3 is not the same as HiED's genuine ranked Top-3. These measures should not be merged into one general accuracy claim.
+
+The $D_3$, $I$, and $S$ indicators also describe different recorded views. They are not a chronological or causal funnel. The criterion-compatible set is an operational result under study-specific rules, not a ranked primary-diagnosis recommendation. The gold-informed oracle directly uses benchmark labels and is a non-deployable optimistic bound rather than an evaluated selector.
+
+The framework can show where disagreement is recorded, but not why it occurred. It cannot reveal hidden model reasoning, identify the uniquely correct clinical primary diagnosis, or prove that a localized disagreement is automatically recoverable.
+
+\section{Dataset and Generalizability Limitations}
+
+LingxiDiag-16K and MDD-5k contain synthetic Chinese psychiatric dialogues. They are useful for controlled evaluation, but they may have regular wording, simplified ambiguity, clearer symptom cues, limited comorbidity, and less longitudinal or conversational complexity than natural psychiatric interviews. Similar findings across them may reflect shared properties of synthetic generation rather than general properties of clinical diagnosis.
+
+The main internal set is a fixed 1,000-case held-out subset sampled from the LingxiDiag training source because the official test split was unavailable. Case identifiers were excluded from training and retrieval, but the held-out cases still share the source generator, language style, label distribution, and annotation process with development data. A complete semantic near-duplicate audit was not performed. The result is therefore same-source held-out performance, not independent external validation.
+
+The public-validation split was used for prompt development, rule refinement, sensitivity work, and retrieval selection. It is development evidence rather than an independent estimate. The reversal between validation and held-out retrieval ordering shows the uncertainty of selecting a configuration from one limited split.
+
+MDD-5k provides a second synthetic source, not a clinical cohort. The archived MDD-5k outputs also contain more than one trace lineage. The matched method-comparison trace, canonical rescore, and historical output are not interchangeable. The main external claims use one matched trace, while the canonical trace is reported only as sensitivity evidence. Mixing fields across these traces would not reproduce one system run.
+
+The cross-corpus TF--IDF results show that same-source prediction can depend strongly on wording and label priors. The completed evidence therefore supports same-source held-out analysis and a bounded second-synthetic-source test. It does not establish generalization to real psychiatric consultations, independent hospitals, spontaneous or code-switched Taiwanese conversations, or Taiwanese coding practice.
+
+\section{Model and Experimental-Comparison Limitations}
+\label{sec:model-comparison-limitations}
+
+Most comparisons change more than one component. The main table compares complete TF--IDF, Single, and HiED configurations on the same cases and label mapping, but the methods differ in training, retrieval, prompts, model calls, intermediate outputs, and output contract. Their performance differences cannot be assigned only to multi-agent orchestration.
+
+Retrieval comparisons are controlled within each architecture, but global Top-5 and parent-balanced retrieval still differ in example count, composition, ordering, similarity, label balance, and prompt length. Single and HiED also selected their retrieval settings separately on validation, so their main configurations are not retrieval matched.
+
+DA versus NtS is the most controlled finalization comparison because the upstream HiED records are shared. Even so, it tests one NtS rule rather than all criterion-based selectors. DA may also emit a comorbid diagnosis while NtS emits one primary diagnosis, so their set-based metrics do not isolate primary re-selection.
+
+Deterministic fusion applies one fixed rule. Pairwise comparison, debate, self-consistency, and confidence-informed self-consistency change prompts, inference calls, context, aggregation, or budget. They are complete-configuration comparisons. The model-scale analysis is limited to the tested Qwen3 family and does not establish robustness across unrelated models or deployment settings.
+
+No supported quantitative conclusion is drawn from the earlier F60 scope-expansion experiment because its source artifact was not preserved in the frozen repository snapshot.
+
+\section{Statistical, Artifact, and Reproducibility Limitations}
+\label{sec:statistical-reproducibility-limitations}
+
+Confidence intervals and tests describe uncertainty over the observed cases under fixed outputs. They do not include uncertainty from benchmark validity, prompt design, model selection, synthetic generation, or a future population. A confidence interval that includes zero is not evidence of equivalence. A difference with an interval that excludes zero still does not identify a causal component when several parts of a configuration changed.
+
+Some groups are small or imbalanced. In particular, the 12-case $D_3=1,I=0,S=0$ group cannot support a stable class-specific conclusion. The repeated F41-to-F32 direction is a benchmark-relative pattern, not a clinically adjudicated confusion mechanism.
+
+Artifact completeness also differs across analyses. The internal HiED headline row, the internal $D_3/I/S$ profiles, the paired DA--NtS comparison, and the matched external trace have case-level support. Several baseline and supporting results remain available only as aggregate summaries or incomplete records. These results cannot support new paired confidence intervals, case-overlap claims, or claims about which individual cases changed.
+
+Reproduction requires the full evaluation contract: data split, model and prompt, retrieval configuration, diagnostic scope, recorded output lineage, label projection, eligible population, output-view definition, and statistical procedure. A similar number obtained with a different Top-3 definition, denominator, trace lineage, or compatibility rule is not the same result.
+
+\section{Clinical Validity and Deployment Boundaries}
+\label{sec:clinical-deployment-boundaries}
+
+The benchmark-disagreement profiles cannot determine whether a mismatch comes from the system, missing transcript evidence, or the dataset label. The benchmark diagnoses have not been independently adjudicated as unique clinical primaries, and the criterion states and evidence notes remain model-generated.
+
+The blinded LingxiDiag psychiatrist annotation study described in Section~\ref{sec:clinical-evaluation-plan} is the only clinician-facing study retained in this thesis. It uses a selected synthetic disagreement sample and, until completed, provides no clinical outcome evidence. Real-patient evaluation is outside the completed thesis scope.
+
+HiED does not have a clinically validated unknown-class detector, abstention rule, referral policy, confidence calibration, or targeted follow-up policy. The \emph{Others} class is used only for evaluation and cannot be emitted by the current system. No claim is made about treatment decisions, patient outcomes, subgroup fairness, hospital workflow, clinician workload, or safety.
+
+HiED is motivated by the Taiwanese psychiatric context, but its effectiveness has not been demonstrated in Taiwan or elsewhere. It should remain an offline research and review framework until independent clinical adjudication, natural clinical data, prospective workflow and safety evaluation, privacy and governance controls, and monitoring and revalidation plans are available.
+
+\chapter{Conclusions and Future Work}
+\label{ch:conclusion}
+
+\section{Summary of Findings}
+
+This thesis presented HiED, a stage-wise decision-support framework for Chinese psychiatric interview transcripts. HiED keeps candidate generation, criterion checking, compatibility analysis, and primary commitment as separate recorded outputs. The framework is designed to show more than one final label: it provides ranked candidates, criterion states, a criterion-compatible set, missing-information records, and the final selection source.
+
+HiED does not establish the best final-label accuracy. On the internal held-out set, TF--IDF with logistic regression is the strongest same-source label predictor, while Single and HiED have almost identical committed Top-1 results. HiED's main technical value is that its recorded outputs allow benchmark disagreement to be divided into different profiles.
+
+The largest internal benchmark-disagreement profile contains 272 of 915 checker-eligible cases. A benchmark-reference diagnosis is present in both the genuine Top-3 and the criterion-compatible set, but another diagnosis is committed as primary. A corresponding profile contains 225 of 878 checker-eligible cases in the matched MDD-5k trace. The repeated pattern supports the use of stage-wise analysis across two synthetic sources, but the rates are not identical and change across archived trace lineages.
+
+The tested selection methods do not give a clear and attributable improvement over DA. In particular, NtS lowers committed Top-1 under all three internal retrieval conditions. The results show that candidate availability and broad compatibility do not provide a simple rule for choosing the primary diagnosis.
+
+HiED's clinician-facing value remains a design goal rather than a demonstrated clinical effect. The outputs are intended to support review by showing possible diagnoses and missing information. The thesis does not show improved clinical speed, accuracy, safety, or patient outcomes.
+
+\section{Answers to the Research Questions}
+
+The answers below apply only to the tested synthetic datasets, label mappings, output contracts, and preserved result traces.
+
+\begin{description}[style=nextline,leftmargin=1.5cm,labelwidth=1.1cm,itemsep=0.2em,parsep=0pt]
+
+\item[RQ1] \textbf{How does HiED perform relative to conventional classification and a Single LLM on the same internal split and parent-label evaluation?}
+
+TF--IDF with logistic regression provides the strongest same-source final-label prediction. Single and HiED have almost identical committed Top-1 values. HiED does not establish an overall accuracy advantage, but it provides a genuine ranked differential, criterion states, a criterion-compatible set, and a final selection record for stage-wise analysis.
+
+\item[RQ2] \textbf{Where is benchmark disagreement recorded across candidate generation, criterion checking, compatibility analysis, and primary commitment?}
+
+The largest internal disagreement profile contains 272 checker-eligible cases in which a benchmark-reference diagnosis is present in both the genuine Top-3 and the criterion-compatible set but another diagnosis is committed as primary. This is the largest recorded primary-commitment profile under the tested HiED configuration. It is not proof of a universal clinical bottleneck or a causal failure of the finalizer alone.
+
+\item[RQ3] \textbf{How do similar-case retrieval strategies affect Single and HiED?}
+
+Retrieval gives a clear Top-1 benefit for Single. For HiED, the differences among no retrieval, global Top-5, and parent-balanced retrieval are smaller and depend on split and metric. Parent-balanced retrieval is retained by the predefined validation procedure, while global Top-5 has higher post-selection held-out point estimates. The study does not establish one retrieval policy as universally best for HiED.
+
+\item[RQ4] \textbf{Do the tested primary-selection strategies reduce the recorded selection disagreement?}
+
+No tested strategy provides a clear and attributable improvement over DA. Matched criterion-based re-selection with NtS reduces internal Top-1, and the other fixed-rule, pairwise, debate, and repeated-generation configurations do not consistently close the gap. This result is limited to the tested methods and budgets.
+
+\item[RQ5] \textbf{Does the stage-wise analysis remain useful under a second synthetic source?}
+
+Yes, the same output views can be applied to MDD-5k, and the largest external disagreement profile also contains a ranked and compatible reference diagnosis that is not selected. However, the profile rates and compatibility inclusion differ from the internal trace and across archived MDD-5k lineages. The result supports portability of the analysis framework, not stable numerical behavior or clinical generalization.
+
+\end{description}
+
+\section{Future Work}
+
+\paragraph{Complete the LingxiDiag psychiatrist annotation study.}
+
+The next clinician-facing step is the blinded psychiatrist annotation of selected LingxiDiag disagreement cases. Psychiatrists will judge whether the synthetic transcript supports one primary diagnosis or remains insufficient, rank possible diagnoses, and mark relevant criterion states. Their judgments can be compared with the dataset labels and HiED records without treating either source as automatic clinical truth.
+
+\paragraph{Model direct comparisons among candidates.}
+
+Future selectors should represent why one plausible diagnosis should be primary rather than only whether each diagnosis passes its own rule. Important relations include timing, illness course, episode structure, exclusionary causes, syndrome dominance, explanatory dependence, and comorbidity. These relations should be evaluated with controlled comparisons that keep the upstream evidence fixed.
+
+\paragraph{Support missing-information and abstention decisions.}
+
+A fixed transcript may not contain enough evidence to separate the leading diagnoses. Future systems should identify the unresolved distinction, suggest a focused follow-up question, and allow an explicit insufficient-information, abstention, or referral result rather than forcing one diagnosis.
+
+\paragraph{Evaluate natural clinical data in a separate future study.}
+
+Real-patient evaluation, workflow impact, safety, fairness, and governance require a separate clinical protocol and are outside this thesis. Such work should compare system records with independent clinician judgment and should not assume that benchmark agreement is clinical correctness.
+
+HiED's current contribution is to make several diagnostic decisions and information gaps visible. Better comparative selection and direct clinical assessment of these records remain the main next steps.
