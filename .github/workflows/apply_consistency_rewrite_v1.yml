@@ -1,0 +1,171 @@
+name: Apply thesis consistency rewrite v1
+
+on:
+  push:
+    branches:
+      - thesis/post-defense-rewrite-v2
+    paths:
+      - .github/workflows/apply_consistency_rewrite_v1.yml
+      - scripts/apply_consistency_rewrite_v1.py
+      - scripts/consistency_v1/chapter8.tex
+      - scripts/consistency_v1/endmatter.tex
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: thesis-consistency-rewrite-v1
+  cancel-in-progress: false
+
+jobs:
+  rewrite-and-verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out thesis branch
+        uses: actions/checkout@v4
+        with:
+          ref: thesis/post-defense-rewrite-v2
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Apply consistency rewrite
+        run: python scripts/apply_consistency_rewrite_v1.py school/main.tex
+
+      - name: Validate source contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          target=school/main.tex
+          git diff --check -- "$target"
+          grep -F '\chapter{Characterization of Recorded-Output Disagreements}' "$target"
+          grep -F '\chapter{Discussion}' "$target"
+          grep -F '\chapter{Limitations and Threats to Validity}' "$target"
+          grep -F '\chapter{Conclusions and Future Work}' "$target"
+          grep -F 'Criterion checking makes this problem easier to inspect, but broad compatibility does not solve the final comparison.' "$target"
+          grep -F '272 of 915 checker-eligible cases' "$target"
+          grep -F '225 of 878 checker-eligible cases' "$target"
+          grep -F 'The only clinician-facing study retained in this thesis' "$target"
+          grep -F 'Real-patient evaluation is outside the completed thesis scope.' "$target"
+          ! grep -Fq 'clinical principal investigator for this research' "$target"
+          ! grep -Fq 'CGMH real-world validation' "$target"
+          ! grep -Fq 'real-patient validation is ongoing' "$target"
+          ! grep -Fq 'scope-expansion experiment in Chapter' "$target"
+
+      - name: Install complete XeLaTeX toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            latexmk texlive-xetex texlive-latex-extra texlive-fonts-recommended \
+            texlive-lang-chinese texlive-publishers fonts-noto-cjk \
+            fonts-urw-base35 poppler-utils
+
+      - name: Compile complete thesis
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd school
+          latexmk -xelatex -interaction=nonstopmode -halt-on-error -file-line-error main.tex
+          test -s main.pdf
+          pdfinfo main.pdf | tee /tmp/main_pdfinfo.txt
+          pdftotext -layout main.pdf /tmp/main.txt
+          grep -F 'Characterization of Recorded-Output Disagreements' /tmp/main.txt
+          grep -F 'Compatibility and Primary Selection in the Evaluated Trace' /tmp/main.txt
+          grep -F 'Benchmark and Measurement Limitations' /tmp/main.txt
+          grep -F 'Answers to the Research Questions' /tmp/main.txt
+          if grep -Eiq 'undefined references|undefined citations|Citation .* undefined|Reference .* undefined' main.log; then
+            echo 'Unresolved references or citations found.' >&2
+            exit 1
+          fi
+          grep -E 'Overfull|Underfull|Warning' main.log > /tmp/main_warnings.txt || true
+          cat /tmp/main_warnings.txt
+
+      - name: Reject overfull boxes in rewritten end matter
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          source = Path('school/main.tex').read_text(encoding='utf-8')
+          log = Path('school/main.log').read_text(encoding='utf-8', errors='replace')
+          start_pos = source.index(r'\chapter{Characterization of Recorded-Output Disagreements}')
+          end_pos = source.index(r'\appendix', start_pos)
+          start_line = source[:start_pos].count('\n') + 1
+          end_line = source[:end_pos].count('\n') + 1
+          offenders = []
+          for match in re.finditer(r'Overfull .*? at lines (\d+)(?:--(\d+))?', log):
+              lo = int(match.group(1))
+              hi = int(match.group(2) or lo)
+              if not (hi < start_line or lo > end_line):
+                  offenders.append(match.group(0))
+          if offenders:
+              raise SystemExit('Overfull boxes in rewritten chapters: ' + '; '.join(offenders))
+          print(f'Rewritten line range {start_line}-{end_line} has no overfull boxes')
+          PY
+
+      - name: Render chapter-opening pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p verification_renders
+          pages=$(pdfinfo school/main.pdf | awk '/^Pages:/ {print $2}')
+          find_page() {
+            local needle="$1"
+            for page in $(seq 1 "$pages"); do
+              pdftotext -f "$page" -l "$page" -layout school/main.pdf /tmp/page.txt
+              if grep -Fq "$needle" /tmp/page.txt; then
+                echo "$page"
+                return 0
+              fi
+            done
+            return 1
+          }
+          for item in \
+            'ch8:Characterization of Recorded-Output Disagreements' \
+            'discussion:Discussion' \
+            'limitations:Limitations and Threats to Validity' \
+            'conclusion:Conclusions and Future Work'; do
+            name=${item%%:*}
+            needle=${item#*:}
+            page=$(find_page "$needle")
+            last=$((page + 2))
+            if [ "$last" -gt "$pages" ]; then last="$pages"; fi
+            pdftoppm -png -r 145 -f "$page" -l "$last" school/main.pdf "verification_renders/${name}"
+            printf '%s pages %s-%s\n' "$name" "$page" "$last" >> /tmp/rendered_pages.txt
+          done
+          cat /tmp/rendered_pages.txt
+
+      - name: Commit verified thesis rewrite
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add school/main.tex
+          if git diff --cached --quiet; then
+            echo 'No thesis change to commit.'
+            exit 0
+          fi
+          git commit -m 'Align thesis claims from abstract through conclusion'
+          git push origin HEAD:thesis/post-defense-rewrite-v2
+
+      - name: Upload verification artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: thesis-consistency-rewrite-v1
+          path: |
+            school/main.pdf
+            school/main.log
+            verification_renders/*.png
+            /tmp/main_pdfinfo.txt
+            /tmp/main_warnings.txt
+            /tmp/rendered_pages.txt
+          if-no-files-found: warn
+          retention-days: 7
