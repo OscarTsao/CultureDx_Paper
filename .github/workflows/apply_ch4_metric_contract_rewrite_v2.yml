@@ -1,0 +1,119 @@
+name: Apply Chapter 4 metric-contract rewrite v2
+
+on:
+  push:
+    branches:
+      - thesis/post-defense-rewrite-v2
+    paths:
+      - scripts/apply_ch4_metric_contract_rewrite_v2.py
+      - .github/workflows/apply_ch4_metric_contract_rewrite_v2.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rewrite-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out thesis branch
+        uses: actions/checkout@v4
+        with:
+          ref: thesis/post-defense-rewrite-v2
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Normalize helper marker newlines
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('scripts/apply_ch4_metric_contract_rewrite_v2.py')
+          text = p.read_text(encoding='utf-8')
+          needle = '''    if text.count(start_marker) != 1:\n        raise RuntimeError(f"Expected exactly one start marker for {description}")\n'''
+          replacement = '''    start_marker = start_marker.replace(r"\\n", "\\n")\n    end_marker = end_marker.replace(r"\\n", "\\n")\n    if text.count(start_marker) != 1:\n        raise RuntimeError(f"Expected exactly one start marker for {description}")\n'''
+          if text.count(needle) != 1:
+              raise SystemExit('Could not normalize replace_between marker handling')
+          p.write_text(text.replace(needle, replacement, 1), encoding='utf-8')
+          PY
+
+      - name: Apply Chapter 4 rewrite
+        run: python scripts/apply_ch4_metric_contract_rewrite_v2.py
+
+      - name: Restore one-time helper source
+        run: git checkout -- scripts/apply_ch4_metric_contract_rewrite_v2.py
+
+      - name: Validate metric contracts and source integrity
+        shell: bash
+        run: |
+          set -euo pipefail
+          target=school/main.tex
+          git diff --check -- "$target"
+          grep -F '\label{sec:metric-audit-boundary}' "$target"
+          grep -F 'Emitted-label hit@3' "$target"
+          grep -F 'zero\_division=0' "$target"
+          grep -F '0.177577' "$target"
+          grep -F '864 cases and two diagnoses for 136 cases' "$target"
+          grep -F 'Split & Retrieval & Top-1 & Emitted hit@3' "$target"
+          grep -F 'Split & Retrieval & Top-1 & Ranked Top-3' "$target"
+          ! grep -Fq 'the same prompt-budget rule defined in Chapter~\ref{ch:architecture}' "$target"
+          ! grep -Fq 'benchmark-defined emitted-label Top-3' "$target"
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          text = Path('school/main.tex').read_text(encoding='utf-8')
+          labels = re.findall(r'\\label\{([^}]+)\}', text)
+          refs = []
+          for pattern in [r'\\ref\{([^}]+)\}', r'\\cref\{([^}]+)\}', r'\\Cref\{([^}]+)\}', r'\\pageref\{([^}]+)\}']:
+              refs.extend(re.findall(pattern, text))
+          missing = sorted(set(refs) - set(labels))
+          duplicates = sorted({label for label in labels if labels.count(label) > 1})
+          if missing or duplicates:
+              raise SystemExit(f'missing labels={missing}; duplicate labels={duplicates}')
+          chapter_start = text.index(r'\chapter{Datasets, Label Projection, and Evaluation Protocol}')
+          chapter_end = text.index(r'\chapter{Experimental Design}', chapter_start)
+          chapter = text[chapter_start:chapter_end]
+          required = [
+              r'\item The \emph{emitted-label sequence}, $E_3(x)$',
+              r'\mathrm{Ranked\ Top\text{-}3\ Accuracy}',
+              r'\mathrm{Emitted\text{-}label\ hit@3}',
+              r'\mathrm{Macro\text{-}F1}',
+              r'\mathrm{Weighted\text{-}F1}',
+          ]
+          missing_ch4 = [token for token in required if token not in chapter]
+          if missing_ch4:
+              raise SystemExit(f'Missing Chapter 4 contract definitions: {missing_ch4}')
+          print('Chapter 4 static validation passed')
+          PY
+
+      - name: Install XeLaTeX and rendering tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            latexmk texlive-xetex texlive-latex-extra texlive-fonts-recommended \
+            texlive-lang-chinese fonts-noto-cjk fonts-urw-base35 poppler-utils
+
+      - name: Compile complete thesis
+        run: |
+          latexmk -xelatex -interaction=nonstopmode -halt-on-error -file-line-error school/main.tex
+          test -s main.pdf
+          pdfinfo main.pdf | tee /tmp/main_pdfinfo.txt
+          grep -E 'Overfull|Underfull|Warning' main.log > /tmp/latex_warnings.txt || true
+          cat /tmp/latex_warnings.txt
+
+      - name: Commit verified Chapter 4 rewrite
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- school/main.tex; then
+            echo 'No Chapter 4 change to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add school/main.tex
+          git commit -m 'Clarify Chapter 4 metric contracts and recalculation boundary'
+          git push origin HEAD:thesis/post-defense-rewrite-v2
