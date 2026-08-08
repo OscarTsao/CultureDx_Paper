@@ -45,11 +45,21 @@ jobs:
           grep -F '\paragraph{Internal contribution to RQ5.}' "$target"
           grep -F 'not estimates of clinical diagnostic accuracy' "$target"
           grep -F 'does not establish an overall Top-1 advantage' "$target"
-          grep -F 'does not identify the finalizer as the sole causal source' "$target" || true
+          grep -F 'does not prove that the finalizer alone caused the disagreement' "$target"
           ! grep -Fq 'Under the five-metric majority rule' "$target"
           ! grep -Fq 'Forced pairwise override & 0.443' "$target"
-          ! grep -Fq 'serving setup' "$target"
-          ! grep -Fq 'parse-recovery events' "$target"
+          python - <<'PY'
+          from pathlib import Path
+          text = Path('school/main.tex').read_text(encoding='utf-8')
+          start = text.index(r'\chapter{Internal Evaluation Results}')
+          end = text.index(r'\chapter{External Synthetic Evaluation}', start)
+          chapter = text[start:end]
+          forbidden = ['AWQ', 'vLLM', 'FAISS', 'guided decoding', 'JSON schema', 'serving setup', 'parse-recovery events']
+          bad = [item for item in forbidden if item in chapter]
+          if bad:
+              raise SystemExit(f'Implementation details remain in Chapter 6: {bad}')
+          print('Chapter 6 scoped implementation-detail check passed')
+          PY
 
       - name: Install complete XeLaTeX toolchain
         run: |
