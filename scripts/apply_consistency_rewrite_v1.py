@@ -85,8 +85,13 @@ text = text[:discussion_start] + ENDMATTER + "\n\n" + text[appendix_start:]
 if comment_counts != (text.count(r"\ct{"), text.count(r"\wl{")):
     raise SystemExit("Advisor-comment counts changed")
 
-# Global label/reference integrity.
-labels = re.findall(r"\\label\{([^}]+)\}", text)
+# Global label/reference integrity. \ThesisFigure stores its label as the fourth argument.
+literal_labels = re.findall(r"\\label\{([^}]+)\}", text)
+macro_labels = re.findall(
+    r"\\ThesisFigure(?:\[[^\]]*\])?\{[^\n]*\}\{[^\n]*\}\{([^}]+)\}",
+    text,
+)
+labels = literal_labels + macro_labels
 refs: list[str] = []
 for pattern in [r"\\ref\{([^}]+)\}", r"\\cref\{([^}]+)\}", r"\\Cref\{([^}]+)\}", r"\\pageref\{([^}]+)\}"]:
     refs.extend(re.findall(pattern, text))
@@ -98,7 +103,7 @@ if missing_refs or duplicate_labels:
 required = [
     r"\chapter{Characterization of Recorded-Output Disagreements}",
     r"\label{tab:ch8-joint-profiles}",
-    r"\label{fig:ch8-reference-rank}",
+    "fig:ch8-reference-rank",
     r"\label{tab:ch8-selection-pairs}",
     r"\label{tab:ch8-diagnostic-set-errors}",
     r"\label{fig:ch8-criterion-composition}",
