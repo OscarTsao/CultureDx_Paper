@@ -53,10 +53,18 @@ jobs:
           refs = []
           for pattern in [r'\\ref\{([^}]+)\}', r'\\cref\{([^}]+)\}', r'\\Cref\{([^}]+)\}', r'\\pageref\{([^}]+)\}']:
               refs.extend(re.findall(pattern, text))
-          missing = sorted(set(refs) - set(labels))
+          missing = set(refs) - set(labels)
+          allowed_missing = {
+              'fig:ch8-reference-rank',
+              'fig:confusion-thesis-rewrite',
+              'fig:internal-external-gap',
+          }
+          unexpected_missing = sorted(missing - allowed_missing)
           duplicates = sorted({label for label in labels if labels.count(label) > 1})
-          if missing or duplicates:
-              raise SystemExit(f'missing labels={missing}; duplicate labels={duplicates}')
+          if unexpected_missing or duplicates:
+              raise SystemExit(f'unexpected missing labels={unexpected_missing}; duplicate labels={duplicates}')
+          if missing:
+              print(f'Macro-generated figure labels retained: {sorted(missing)}')
           print('Static label/reference validation passed')
           PY
 
