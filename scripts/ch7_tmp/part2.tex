@@ -1,0 +1,45 @@
+\section{External Recorded-Output Profiles}
+\label{sec:external-stagewise}
+
+Table~\ref{tab:external-disagreement-profiles} reports the complete joint distribution of genuine Top-3 detection (\(D_3\)), benchmark-gold inclusion in the criterion-compatible set (\(I\)), and committed-primary agreement (\(S\)) on the 878 checker-eligible cases.
+
+\begin{table}[htbp]
+\centering
+\caption{Joint distribution of \(D_3\), \(I\), and \(S\) on the matched 878-case external trace.}
+\label{tab:external-disagreement-profiles}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{|c|c|c|r|>{\raggedright\arraybackslash}X|}
+\hline
+\(\boldsymbol{D_3}\) & \(\boldsymbol{I}\) & \(\boldsymbol{S}\) & \textbf{Cases, \(n\) (\%)} & \textbf{Recorded-output profile}\\
+\hline
+0 & 0 & 0 & 20 (2.3\%) & Gold parent absent from both the genuine Top-3 and compatible set\\
+\hline
+0 & 1 & 0 & 71 (8.1\%) & Gold parent appears in the compatible set but not in the genuine Top-3\\
+\hline
+1 & 0 & 0 & 34 (3.9\%) & Gold parent is ranked but absent from the compatible set, and another primary is committed\\
+\hline
+1 & 0 & 1 & 134 (15.3\%) & A benchmark-consistent primary is committed even though the gold parent is absent from the compatible set\\
+\hline
+1 & 1 & 0 & 225 (25.6\%) & Gold parent is ranked and compatible but is not committed as primary\\
+\hline
+1 & 1 & 1 & 394 (44.9\%) & Gold parent is ranked, compatible, and committed\\
+\hline
+\end{tabularx}
+\parbox{0.96\textwidth}{\footnotesize
+\textit{Note.} The table uses one matched trace and the complete projected gold-label set. Rows with \(D_3=0\) and \(S=1\) do not occur under the recorded DA ranking contract. Percentages may not sum to exactly 100\% because of rounding.}
+\end{table}
+
+The 878 cases can also be summarized into four mutually exclusive outcome groups:
+
+\begin{itemize}
+    \item 528 cases (60.1\%) have committed-primary agreement;
+    \item 91 cases (10.4\%) disagree and contain no benchmark gold parent in the genuine Top-3;
+    \item 34 cases (3.9\%) disagree after the gold parent is ranked but remains absent from the compatible set; and
+    \item 225 cases (25.6\%) contain a benchmark gold parent in both the genuine Top-3 and compatible set but commit another diagnosis.
+\end{itemize}
+
+The last group is the largest recorded disagreement profile, so a primary-selection difference remains visible on the second synthetic corpus. However, the full joint table also shows an important limitation: 134 benchmark-consistent committed primaries occur even though the corresponding gold parent is absent from the compatible set. Criterion compatibility is therefore neither necessary nor sufficient for the DA commitment in this trace.
+
+A benchmark gold parent appears in both the genuine Top-3 and compatible set in 619 cases. Of these, 394 commit a benchmark-consistent primary, or 63.7\%. The remaining 225 cases form the ranked-and-compatible nonselection group. This result localizes a recorded disagreement; it does not prove that the finalizer alone caused it.
+
