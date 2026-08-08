@@ -1,0 +1,98 @@
+name: Apply Chapter 5 experimental-design rewrite v3
+
+on:
+  push:
+    branches:
+      - thesis/post-defense-rewrite-v2
+    paths:
+      - scripts/apply_ch5_experimental_design_rewrite_v3.py
+      - .github/workflows/apply_ch5_experimental_design_rewrite_v3.yml
+
+permissions:
+  contents: write
+
+jobs:
+  rewrite-and-verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out thesis branch
+        uses: actions/checkout@v4
+        with:
+          ref: thesis/post-defense-rewrite-v2
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Apply Chapter 5 rewrite and provenance corrections
+        run: python scripts/apply_ch5_experimental_design_rewrite_v3.py
+
+      - name: Validate source contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          target=school/main.tex
+          git diff --check -- "$target"
+          grep -F '\label{tab:analysis-populations}' "$target"
+          grep -F 'strictly higher on all five headline validation measures' "$target"
+          grep -F 'No internal forced-override result is reported' "$target"
+          grep -F 'no paired confidence interval or McNemar test is reported for this contrast' "$target"
+          grep -F '\label{tab:selection-method-provenance}' "$target"
+          ! grep -Fq 'prespecified majority-based promotion rule' "$target"
+          ! grep -Fq 'Forced pairwise override & 0.443' "$target"
+          ! grep -Fq 'TF--IDF + LR versus HiED--DA & 229 & 115' "$target"
+          ! grep -Fq 'DA versus forced pairwise override & 107 & 32' "$target"
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          text = Path('school/main.tex').read_text(encoding='utf-8')
+          labels = re.findall(r'\\label\{([^}]+)\}', text)
+          refs = []
+          for pattern in [r'\\ref\{([^}]+)\}', r'\\cref\{([^}]+)\}', r'\\Cref\{([^}]+)\}', r'\\pageref\{([^}]+)\}']:
+              refs.extend(re.findall(pattern, text))
+          missing = sorted(set(refs) - set(labels))
+          duplicates = sorted({label for label in labels if labels.count(label) > 1})
+          if missing or duplicates:
+              raise SystemExit(f'missing labels={missing}; duplicate labels={duplicates}')
+          print('Static label/reference validation passed')
+          PY
+
+      - name: Install complete XeLaTeX toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            latexmk texlive-xetex texlive-latex-extra texlive-fonts-recommended \
+            texlive-lang-chinese texlive-publishers fonts-noto-cjk \
+            fonts-urw-base35 poppler-utils
+
+      - name: Compile complete thesis from source directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd school
+          latexmk -xelatex -interaction=nonstopmode -halt-on-error -file-line-error main.tex
+          test -s main.pdf
+          pdfinfo main.pdf | tee /tmp/main_pdfinfo.txt
+          grep -E 'Overfull|Underfull|Warning' main.log > /tmp/main_warnings.txt || true
+          cat /tmp/main_warnings.txt
+          if grep -Eiq 'undefined references|undefined citations|Citation .* undefined|Reference .* undefined' main.log; then
+            echo 'The complete build contains unresolved references or citations.' >&2
+            exit 1
+          fi
+
+      - name: Commit verified thesis source
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- school/main.tex; then
+            echo 'No Chapter 5 source change to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add school/main.tex
+          git commit -m 'Rewrite Chapter 5 experimental design and correct provenance boundaries'
+          git push origin HEAD:thesis/post-defense-rewrite-v2
