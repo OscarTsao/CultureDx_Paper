@@ -113,19 +113,25 @@ jobs:
           mkdir -p verification_renders
           pages=$(pdfinfo school/main.pdf | awk '/^Pages:/ {print $2}')
           start_page=''
-          end_page=''
+          chapter3_page=''
           for page in $(seq 1 "$pages"); do
             pdftotext -f "$page" -l "$page" -layout school/main.pdf /tmp/page.txt
-            if [ -z "$start_page" ] && grep -Fq 'Related Work' /tmp/page.txt; then
+            if [ -z "$start_page" ] && \
+               grep -Eq '^[[:space:]]*Chapter[[:space:]]+2[.]?[[:space:]]*$' /tmp/page.txt && \
+               grep -Eq '^[[:space:]]*Related Work[[:space:]]*$' /tmp/page.txt; then
               start_page="$page"
+              continue
             fi
-            if [ -n "$start_page" ] && grep -Fq 'Study Architectures and Diagnostic Workflow' /tmp/page.txt; then
-              end_page=$((page - 1))
+            if [ -n "$start_page" ] && \
+               grep -Eq '^[[:space:]]*Chapter[[:space:]]+3[.]?[[:space:]]*$' /tmp/page.txt; then
+              chapter3_page="$page"
               break
             fi
           done
           test -n "$start_page"
-          test -n "$end_page"
+          test -n "$chapter3_page"
+          end_page=$((chapter3_page - 1))
+          test "$end_page" -ge "$start_page"
           pdftoppm -png -r 150 -f "$start_page" -l "$end_page" school/main.pdf verification_renders/ch2
           printf 'Chapter 2 physical PDF pages: %s-%s\n' "$start_page" "$end_page" | tee /tmp/ch2_pages.txt
           test "$(find verification_renders -name 'ch2-*.png' | wc -l)" -ge 3
