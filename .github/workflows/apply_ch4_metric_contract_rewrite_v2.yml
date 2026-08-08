@@ -27,12 +27,25 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Normalize helper marker newlines
+      - name: Repair and normalize one-time helper
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
+
           p = Path('scripts/apply_ch4_metric_contract_rewrite_v2.py')
           text = p.read_text(encoding='utf-8')
+
+          pattern = re.compile(
+              r'    (validation_start|main_start|retrieval_start) = r"(\\begin\{table\}\[H\]\n\\centering\n\\caption\{[^\"]+)"'
+          )
+          text, repaired = pattern.subn(
+              lambda m: f'    {m.group(1)} = r"""{m.group(2)}"""',
+              text,
+          )
+          if repaired != 3:
+              raise SystemExit(f'Expected to repair 3 multiline marker literals; repaired {repaired}')
+
           needle = '''    if text.count(start_marker) != 1:\n        raise RuntimeError(f"Expected exactly one start marker for {description}")\n'''
           replacement = '''    start_marker = start_marker.replace(r"\\n", "\\n")\n    end_marker = end_marker.replace(r"\\n", "\\n")\n    if text.count(start_marker) != 1:\n        raise RuntimeError(f"Expected exactly one start marker for {description}")\n'''
           if text.count(needle) != 1:
@@ -44,6 +57,7 @@ jobs:
         run: python scripts/apply_ch4_metric_contract_rewrite_v2.py
 
       - name: Restore one-time helper source
+        if: always()
         run: git checkout -- scripts/apply_ch4_metric_contract_rewrite_v2.py
 
       - name: Validate metric contracts and source integrity
