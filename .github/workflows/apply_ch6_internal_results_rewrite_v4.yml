@@ -1,0 +1,107 @@
+name: Apply Chapter 6 internal-results rewrite v4
+
+on:
+  push:
+    branches:
+      - thesis/post-defense-rewrite-v2
+    paths:
+      - .github/workflows/apply_ch6_internal_results_rewrite_v4.yml
+      - scripts/apply_ch6_internal_results_rewrite_v4.py
+      - scripts/ch6_tmp/**
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rewrite-and-verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out thesis branch
+        uses: actions/checkout@v4
+        with:
+          ref: thesis/post-defense-rewrite-v2
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Apply Chapter 6 rewrite
+        run: python scripts/apply_ch6_internal_results_rewrite_v4.py
+
+      - name: Validate source contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          target=school/main.tex
+          git diff --check -- "$target"
+          grep -F '\section{Retrieval-Configuration Results}' "$target"
+          grep -F '\paragraph{Answer to RQ1.}' "$target"
+          grep -F '\paragraph{Answer to RQ2.}' "$target"
+          grep -F '\paragraph{Answer to RQ3.}' "$target"
+          grep -F '\paragraph{Answer to RQ4.}' "$target"
+          grep -F '\paragraph{Internal contribution to RQ5.}' "$target"
+          grep -F 'not estimates of clinical diagnostic accuracy' "$target"
+          grep -F 'does not establish an overall Top-1 advantage' "$target"
+          grep -F 'does not identify the finalizer as the sole causal source' "$target" || true
+          ! grep -Fq 'Under the five-metric majority rule' "$target"
+          ! grep -Fq 'Forced pairwise override & 0.443' "$target"
+          ! grep -Fq 'serving setup' "$target"
+          ! grep -Fq 'parse-recovery events' "$target"
+
+      - name: Install complete XeLaTeX toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            latexmk texlive-xetex texlive-latex-extra texlive-fonts-recommended \
+            texlive-lang-chinese texlive-publishers fonts-noto-cjk \
+            fonts-urw-base35 poppler-utils
+
+      - name: Compile and inspect complete thesis
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd school
+          latexmk -xelatex -interaction=nonstopmode -halt-on-error -file-line-error main.tex
+          test -s main.pdf
+          pdfinfo main.pdf | tee /tmp/main_pdfinfo.txt
+          pdftotext -layout main.pdf /tmp/main.txt
+          grep -F 'Retrieval-Configuration Results' /tmp/main.txt
+          grep -F 'Answer to RQ3' /tmp/main.txt
+          grep -F 'Benchmark Positioning and Main Internal Performance' /tmp/main.txt
+          grep -F 'Primary-Selection Intervention Results' /tmp/main.txt
+          if grep -Eiq 'undefined references|undefined citations|Citation .* undefined|Reference .* undefined' main.log; then
+            echo 'The complete build contains unresolved references or citations.' >&2
+            exit 1
+          fi
+          grep -E 'Overfull|Underfull|Warning' main.log > /tmp/main_warnings.txt || true
+          cat /tmp/main_warnings.txt
+
+      - name: Commit verified thesis source
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- school/main.tex; then
+            echo 'No Chapter 6 source change to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add school/main.tex
+          git commit -m 'Rewrite Chapter 6 internal results and RQ interpretations'
+          git push origin HEAD:thesis/post-defense-rewrite-v2
+
+      - name: Upload build verification
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chapter6-internal-results-verification-v4
+          path: |
+            school/main.pdf
+            school/main.log
+            /tmp/main_pdfinfo.txt
+            /tmp/main_warnings.txt
+          if-no-files-found: warn
+          retention-days: 7
