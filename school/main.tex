@@ -1647,243 +1647,248 @@ The internal results give five main answers. Retrieval improves the Single basel
 \chapter{External Synthetic Evaluation}
 \label{ch:external}
 
-This chapter addresses the external cross-dataset component of RQ5 by testing whether the selection gap identified under RQ2 and the primary-selection findings from RQ4 remain observable on MDD-5k, a second Chinese synthetic dataset with different generation procedures, label distributions, and diagnostic coverage.
+This chapter examines whether the main recorded-output patterns remain visible when HiED is applied to a second synthetic Chinese dialogue corpus. The external corpus is MDD-5k. It was produced through a different data-generation process from LingxiDiag and therefore provides a cross-corpus boundary test. It does not provide real-patient or prospective clinical validation.
 
-\section[External Candidate Availability and Committed-Primary Agreement]{\raggedright External Candidate Availability and Committed-Primary Agreement}
-\label{sec:mdd-multiway}
-\label{sec:external-ranking-gap}
+The frozen repository contains several MDD-5k result lineages. They were created for different purposes and do not contain identical case outputs. This chapter therefore keeps three questions separate:
 
-This section reports MDD-5k predictive performance and compares its recorded-output profiles with the internal evaluation.
+\begin{enumerate}
+    \item How does one matched 925-case HiED trace perform under the thesis-wide any-gold scoring contract?
+    \item Do the same \(D_3\), \(I\), and \(S\) output profiles remain observable on its 878 checker-eligible cases?
+    \item How do alternative primary-selection methods compare when they reuse or extend that matched trace?
+\end{enumerate}
 
-Table~\ref{tab:external-inventory} distinguishes the populations used in the external analyses. The full 925-case set supports multi-way performance and common-trace primary-selection analyses. The 878-case in-scope subset excludes cases for which none of the benchmark gold diagnoses can be emitted under HiED's main configured output space. The 47 remaining cases are retained in the full-set estimate because diagnostic-scope limitations are part of the evaluated system. The restricted 490-case F32/F41 subset is a separate binary task and is not directly comparable with the multi-way evaluation.
+A separate canonical-rescore trace is reported only as a sensitivity analysis. It is not merged with the matched method-comparison trace.
+
+\section{External Populations and Trace Lineages}
+\label{sec:external-populations}
+
+Table~\ref{tab:external-inventory} summarizes the external populations and their roles.
 
 \begin{table}[htbp]
 \centering
-\caption{External analysis populations and their roles.}
+\caption{External MDD-5k populations and evidence lineages used in this chapter.}
 \label{tab:external-inventory}
 \small
-\renewcommand{\arraystretch}{1.10}
-\begin{tabularx}{\textwidth}{|X|>{\centering\arraybackslash}p{1.2cm}|X|}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{3.5cm}|c|>{\raggedright\arraybackslash}X|}
 \hline
-Analysis population & $N$ & Role\\
+\textbf{Population or lineage} & \textbf{Cases} & \textbf{Role and boundary}\\
 \hline
-MDD-5k full evaluation set & 925 & Multi-way performance and common-trace primary-selection analyses\\
+Matched method-comparison trace, all cases & 925 & Main external HiED result and common source for the selector comparisons in Section~\ref{sec:mdd-multiway}.\\
 \hline
-In-scope subset & 878 & Performance when a gold diagnosis is representable\\
+Matched method-comparison trace, checker-eligible cases & 878 & Cases with at least one benchmark gold diagnosis represented by the configured non-\emph{Others} checker scope. Used for \(D_3\), \(I\), and \(S\).\\
 \hline
-Out-of-scope cases & 47 & Diagnostic-scope limitation\\
+Canonical-rescore trace & 925 total; 878 checker-eligible & Separately archived trace rescored under the thesis-wide any-gold contract. Used only to show trace sensitivity; not combined with the matched method-comparison trace.\\
 \hline
-Restricted F32/F41 subset & 490 & Separate binary task\\
-\hline
-Lexical-transfer holdout & 185 & Corpus-portability analysis\\
-\hline
-Scope-expansion sample & 58 & Newly representable diagnoses\\
+F32--F41 binary subset & 490 & Narrow scope-restricted sensitivity population retained in the archived rescore material. It is not used for the main multiway stage-wise claim.\\
 \hline
 \end{tabularx}
-\renewcommand{\arraystretch}{1.0}
 \end{table}
 
-Table~\ref{tab:external-summary-rewrite} reports the external predictive results. On both the full and in-scope multi-way populations, HiED exceeds the corresponding majority baseline. Excluding out-of-scope cases improves every reported system metric, showing that output-space representability contributes to the full-set performance loss. Weighted-F1 remains higher than Macro-F1, consistent with the strong influence of frequent labels in the external corpus.
+The main results below use the matched method-comparison trace in
+\texttt{results/mdd\_variant\_matrix/da/predictions.jsonl}. For each case, the benchmark gold diagnoses, committed primary diagnosis, Diagnostician ranking, and criterion-compatible set are taken from the same record. All labels are projected to the paper parent space. A case is counted as correct when the committed primary matches any projected benchmark gold parent, following the metric contract in Chapter~\ref{ch:data}.
+
+This distinction matters because older external summaries mixed values from different traces or used the first listed gold diagnosis instead of the complete projected gold set. The recalculation used here does not combine those contracts.
+
+\section{Main External Performance}
+\label{sec:external-main-performance}
+
+Table~\ref{tab:external-summary-rewrite} compares the validation-selected internal HiED--DA result with the matched external trace. The internal and external rows are descriptive results from different synthetic corpora; they are not paired observations.
 
 \begin{table}[htbp]
 \centering
-\caption{External predictive performance. Panel A reports multi-way evaluation; Panel B reports the separate restricted F32/F41 task.}
+\caption{Internal and external HiED--DA results under the thesis-wide any-gold contract. External values come from one matched method-comparison trace.}
 \label{tab:external-summary-rewrite}
 \small
-\textbf{Panel A: Multi-way evaluation}\\[3pt]
-\setlength{\tabcolsep}{3.5pt}
-\begin{tabularx}{\textwidth}{|X|r|r|r|r|r|r|r|}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{3.2cm}|c|c|c|c|c|}
 \hline
-Evaluation set & $N$ & Top-1 & Top-3 & Exact Match & Macro-F1 & Weighted-F1 & \shortstack{\rule{0pt}{2.4ex}Majority\\Top-1}\\
+\textbf{Population} & \textbf{Cases} & \textbf{Top-1} & \textbf{Genuine Top-3} & \textbf{Gold in compatible set} & \textbf{Median compatible-set size}\\
 \hline
-MDD-5k full & 925 & 0.5708 & 0.8508 & 0.3881 & 0.2101 & 0.5188 & 0.4432\\
-MDD-5k in scope & 878 & 0.6014 & 0.8964 & 0.4089 & 0.2488 & 0.5609 & 0.4670\\
+LingxiDiag internal held-out & 1,000 & 0.518 & 0.802 & 0.937$^{*}$ & 6\\
 \hline
-\end{tabularx}
-\vspace{7pt}
-
-\textbf{Panel B: Restricted F32/F41 evaluation}\\[3pt]
-\begin{tabular}{|l|r|r|r|r|r|r|r|}
+MDD-5k, all cases & 925 & 0.571 & 0.851 & --- & ---\\
 \hline
-Binary subset & $N$ & Accuracy & \shortstack{\rule{0pt}{2.4ex}Majority\\accuracy} & Macro-F1 & Weighted-F1 & F32 F1 & F41 F1\\
-\hline
-MDD pure F32/F41 & 490 & 0.9082 & 0.7837 & 0.8814 & 0.9163 & 0.9429 & 0.8200\\
-\hline
-\end{tabular}
-\end{table}
-
-The restricted F32/F41 task produces substantially higher performance than the multi-way evaluation. It is a separate coarse binary contrast, is dominated by F32 cases, and shows stronger class-specific performance for F32 than for F41.
-
-Figure~\ref{fig:internal-external-gap} compares committed Top-1 agreement with genuine Top-3 candidate coverage on the internal and external synthetic corpora. On the full MDD-5k set, a benchmark gold parent appears in the genuine Top-3 in 0.8508 of cases but is selected as the committed primary in 0.5708. The difference corresponds to 259 of the 925 cases in which a benchmark gold parent is ranked among the leading candidates but another diagnosis is committed as primary.
-
-\ThesisFigure[0.92\textwidth]{fig_internal_external_gap.pdf}{Committed Top-1 agreement and genuine Top-3 gold-label coverage on the internal and MDD-5k synthetic evaluation sets. A benchmark gold parent is ranked but not selected as the committed primary in 284 of 1,000 internal cases and 259 of 925 external cases. This figure visualizes candidate availability and committed-primary agreement; the external $D_3$--$I$--$S$ results are reported below.}{fig:internal-external-gap}
-\FloatBarrier
-
-\subsection{Cross-Corpus Comparison of Recorded-Output Profiles}
-\label{sec:external-output-profiles}
-
-To examine whether the internal recorded-output profile recurs across synthetic corpora, the $D_3$, $I$, and $S$ indicators defined in Section~\ref{sec:case-level-indicators} were recomputed for the 878 checker-eligible MDD-5k cases. Table~\ref{tab:external-disagreement-profiles} compares the four mutually exclusive profiles with the 915-case internal evaluation.
-
-\begin{table}[htbp]
-\centering
-\caption{Recorded-output profiles in the internal and MDD-5k checker-eligible evaluations.}
-\label{tab:external-disagreement-profiles}
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}X|>{\centering\arraybackslash}p{3.5cm}|>{\centering\arraybackslash}p{3.5cm}|}
-\hline
-\textbf{Recorded-output profile} & \shortstack{\rule{0pt}{2.4ex}\textbf{Internal, $N=915$}\\$n$ (\%; 95\% CI)} & \shortstack{\rule{0pt}{2.4ex}\textbf{MDD-5k, $N=878$}\\$n$ (\%; 95\% CI)} \\
-\hline
-Committed-primary agreement ($S=1$) & 518 (56.6; 53.4--59.8) & 528 (60.1; 56.9--63.3) \\
-\hline
-Top-3 candidate miss ($S=0,\ D_3=0$) & 113 (12.3; 10.4--14.6) & 91 (10.4; 8.5--12.6) \\
-\hline
-Gold label ranked but not included ($S=0,\ D_3=1,\ I=0$) & 12 (1.3; 0.8--2.3) & 34 (3.9; 2.8--5.4) \\
-\hline
-Gold label ranked and included but not selected ($S=0,\ D_3=1,\ I=1$) & 272 (29.7; 26.9--32.8) & 225 (25.6; 22.8--28.6) \\
+MDD-5k, checker-eligible & 878 & 0.601 & 0.896 & 0.786 & 6\\
 \hline
 \end{tabularx}
 \parbox{0.96\textwidth}{\footnotesize
-\textit{Note.} Confidence intervals are 95\% Wilson intervals for profile proportions. Percentages use the checker-eligible population of each corpus.
-}
+\textit{Note.} $^{*}$The internal compatibility value uses the 915 checker-eligible LingxiDiag cases rather than all 1,000 cases. MDD-5k compatibility is reported only for the 878 checker-eligible cases.}
 \end{table}
 
-On MDD-5k, Top-3 candidate detection was observed in 787 of 878 cases (89.6\%), gold-label inclusion in 690 cases (78.6\%), and committed-primary agreement in 528 cases (60.1\%). The same broad qualitative profile recurred across the two synthetic corpora: candidate detection and gold-label inclusion both exceeded committed-primary agreement, and the largest disagreement group contained a gold label that was ranked and included but not selected.
+On all 925 MDD-5k cases, HiED--DA commits a benchmark-consistent primary diagnosis in 528 cases, giving Top-1 Accuracy of 0.571. A benchmark gold parent appears in the genuine Top-3 in 787 cases, giving Top-3 Accuracy of 0.851.
 
-The profile proportions were not identical. The ranked-but-not-included group was larger externally than internally (3.9\% versus 1.3\%), whereas the ranked-and-included-but-not-selected group was smaller (25.6\% versus 29.7\%). These are descriptive cross-corpus comparisons, and no equivalence test was performed.
+The 47 cases outside the configured checker scope cannot contribute a gold-parent criterion-inclusion result. After these cases are removed, the same 528 committed-primary agreements give Top-1 Accuracy of 0.601 on 878 cases. Genuine Top-3 coverage is 787 of 878, or 0.896. The criterion-compatible set contains at least one benchmark gold parent in 690 cases, or 0.786, and its median parent-collapsed size is six.
 
-\section{External Primary-Selection Strategy Results}
-\label{sec:mdd-retrieval-finalization}
+The external result therefore does not show that criterion inclusion remains unchanged across corpora. Candidate coverage is high, but compatibility inclusion is lower than in the internal analysis. The main transferable observation is narrower: candidate availability, compatibility, and primary commitment remain measurably different output views.
 
-Using the common 925-case MDD-5k trace defined in Section~\ref{sec:mdd-multiway}, Table~\ref{tab:mdd-finalization-results} compares the available primary-selection strategies with Direct-Answer (DA). Committed Top-1 Accuracy is the common evaluation metric. A validated matched bundle for external retrieval-policy comparison was unavailable, so retrieval-policy transfer remains unresolved.
+Figure~\ref{fig:internal-external-gap} compares the three recorded views on the internal and external checker-eligible populations.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.9\textwidth]{fig_internal_external_gap.pdf}
+\caption{Committed Top-1 agreement, genuine Top-3 coverage, and benchmark-gold inclusion in the criterion-compatible set for the internal and matched external traces. The denominators differ: internal Top-1 and Top-3 use 1,000 cases, internal compatibility uses 915 checker-eligible cases, and all three external values use the stated 878-case checker-eligible population except the all-case external headline reported separately in Table~\ref{tab:external-summary-rewrite}.}
+\label{fig:internal-external-gap}
+\end{figure}
+\FloatBarrier
+
+\section{External Recorded-Output Profiles}
+\label{sec:external-stagewise}
+
+Table~\ref{tab:external-disagreement-profiles} reports the complete joint distribution of genuine Top-3 detection (\(D_3\)), benchmark-gold inclusion in the criterion-compatible set (\(I\)), and committed-primary agreement (\(S\)) on the 878 checker-eligible cases.
 
 \begin{table}[htbp]
 \centering
-\caption{External primary-selection strategies relative to Direct-Answer on the common 925-case MDD-5k trace. Differences and paired-bootstrap confidence intervals are reported in percentage points.}
+\caption{Joint distribution of \(D_3\), \(I\), and \(S\) on the matched 878-case external trace.}
+\label{tab:external-disagreement-profiles}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{|c|c|c|r|>{\raggedright\arraybackslash}X|}
+\hline
+\(\boldsymbol{D_3}\) & \(\boldsymbol{I}\) & \(\boldsymbol{S}\) & \textbf{Cases, \(n\) (\%)} & \textbf{Recorded-output profile}\\
+\hline
+0 & 0 & 0 & 20 (2.3\%) & Gold parent absent from both the genuine Top-3 and compatible set\\
+\hline
+0 & 1 & 0 & 71 (8.1\%) & Gold parent appears in the compatible set but not in the genuine Top-3\\
+\hline
+1 & 0 & 0 & 34 (3.9\%) & Gold parent is ranked but absent from the compatible set, and another primary is committed\\
+\hline
+1 & 0 & 1 & 134 (15.3\%) & A benchmark-consistent primary is committed even though the gold parent is absent from the compatible set\\
+\hline
+1 & 1 & 0 & 225 (25.6\%) & Gold parent is ranked and compatible but is not committed as primary\\
+\hline
+1 & 1 & 1 & 394 (44.9\%) & Gold parent is ranked, compatible, and committed\\
+\hline
+\end{tabularx}
+\parbox{0.96\textwidth}{\footnotesize
+\textit{Note.} The table uses one matched trace and the complete projected gold-label set. Rows with \(D_3=0\) and \(S=1\) do not occur under the recorded DA ranking contract. Percentages may not sum to exactly 100\% because of rounding.}
+\end{table}
+
+The 878 cases can also be summarized into four mutually exclusive outcome groups:
+
+\begin{itemize}
+    \item 528 cases (60.1\%) have committed-primary agreement;
+    \item 91 cases (10.4\%) disagree and contain no benchmark gold parent in the genuine Top-3;
+    \item 34 cases (3.9\%) disagree after the gold parent is ranked but remains absent from the compatible set; and
+    \item 225 cases (25.6\%) contain a benchmark gold parent in both the genuine Top-3 and compatible set but commit another diagnosis.
+\end{itemize}
+
+The last group is the largest recorded disagreement profile, so a primary-selection difference remains visible on the second synthetic corpus. However, the full joint table also shows an important limitation: 134 benchmark-consistent committed primaries occur even though the corresponding gold parent is absent from the compatible set. Criterion compatibility is therefore neither necessary nor sufficient for the DA commitment in this trace.
+
+A benchmark gold parent appears in both the genuine Top-3 and compatible set in 619 cases. Of these, 394 commit a benchmark-consistent primary, or 63.7\%. The remaining 225 cases form the ranked-and-compatible nonselection group. This result localizes a recorded disagreement; it does not prove that the finalizer alone caused it.
+
+\section{Matched Primary-Selection Comparisons}
+\label{sec:mdd-multiway}
+
+The primary-selection comparisons in this section use the same 925-case variant battery. Direct-Answer (DA) is the reference. The methods differ in what they reuse and whether they introduce new model inference, so the evidence contract is stated in the table.
+
+\begin{table}[htbp]
+\centering
+\caption{External primary-selection methods on the common 925-case matched trace. Differences and confidence intervals are relative to DA.}
 \label{tab:mdd-finalization-results}
 \small
-\renewcommand{\arraystretch}{1.08}
-\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{4.0cm}|>{\raggedright\arraybackslash}p{3.0cm}|c|X|}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{3.3cm}|>{\raggedright\arraybackslash}p{4.5cm}|c|c|}
 \hline
-Method & Comparison contract & Top-1 & Difference vs DA (95\% CI), pp\\
+\textbf{Method} & \textbf{Evidence contract} & \textbf{Top-1} & \(\boldsymbol{\Delta}\) \textbf{vs DA, pp (95\% CI)}\\
 \hline
-\multicolumn{4}{|c|}{\textbf{Reference and recorded-output methods}}\\
+Direct-Answer & Reference committed primary & 57.08\% & ---\\
 \hline
-Direct-Answer & Reference output & 57.08\% & ---\\
+Nominate-then-Select & Same upstream trace; deterministic compatibility-based re-selection & 40.65\% & \(-16.43\) [\(-19.5\), \(-13.5\)]\\
 \hline
-Nominate-then-Select & Same upstream trace; deterministic finalization & 40.65\% & $-16.43$ [$-19.5$, $-13.5$]\\
+Deterministic fusion & Same upstream trace; deterministic fusion of recorded outputs & 47.14\% & \(-9.95\) [\(-12.4\), \(-7.5\)]\\
 \hline
-Deterministic fusion & Same upstream trace; recorded-output fusion & 47.14\% & $-9.95$ [$-12.4$, $-7.5$]\\
+Posthoc fixed-trace forced-commit sweep & Reuses saved pairwise preferences; not an independently rerun system & 54.59\% & \(-2.49\) [\(-4.1\), \(-1.1\)]\\
 \hline
-\multicolumn{4}{|c|}{\textbf{Fixed-trace replay}}\\
+Independent pairwise & Separate full-pipeline configuration & 57.08\% & \(0.00\) [0.0, 0.0]\\
 \hline
-Forced pairwise override & Deterministic replay of recorded pairwise preferences & 54.59\% & $-2.49$ [$-3.7$, $-1.3$]\\
+Two-view debate & Separate full-pipeline configuration & 37.84\% & \(-19.24\) [\(-22.1\), \(-16.4\)]\\
 \hline
-\multicolumn{4}{|c|}{\textbf{New-inference methods}}\\
+Self-consistency, \(K=3\) & Repeated-generation summary record & 57.84\% & \(+0.76\) [\(-0.5\), 2.1]\\
 \hline
-Independent pairwise & Complete new-inference configuration & 57.08\% & $0.00$ (no committed changes)\\
+Self-consistency, \(K=5\) & Repeated-generation summary record & 58.16\% & \(+1.08\) [\(-0.1\), 2.4]\\
 \hline
-Two-view debate & Complete new-inference configuration & 37.84\% & $-19.24$ [$-22.6$, $-16.0$]\\
+Confidence-informed SC, \(K=3\) & Repeated-generation summary record & 57.84\% & \(+0.76\) [\(-0.5\), 2.1]\\
 \hline
-\multicolumn{4}{|c|}{\textbf{Sampling-based methods}}\\
-\hline
-Self-consistency ($K=3$) & Majority aggregation over repeated samples & 57.84\% & $+0.76$ [$-0.9$, 2.4]\\
-\hline
-Self-consistency ($K=5$) & Majority aggregation over repeated samples & 58.16\% & $+1.08$ [$-0.5$, 2.7]\\
-\hline
-Confidence-informed SC ($K=3$) & Confidence-weighted aggregation & 57.84\% & $+0.76$ [$-0.9$, 2.4]\\
-\hline
-Confidence-informed SC ($K=5$) & Confidence-weighted aggregation & 58.16\% & $+1.08$ [$-0.5$, 2.7]\\
+Confidence-informed SC, \(K=5\) & Repeated-generation summary record & 58.16\% & \(+1.08\) [\(-0.1\), 2.4]\\
 \hline
 \end{tabularx}
-\renewcommand{\arraystretch}{1.0}
 \end{table}
 
-\paragraph{Recorded-output methods.}
+NtS and deterministic fusion both reduce committed Top-1 agreement. This is consistent with the joint profile table: the criterion-compatible set omits a benchmark gold parent in 168 cases whose gold parent is nevertheless ranked, including 134 cases that DA commits correctly. Replacing the proposed primary with a compatibility-based choice can therefore overturn benchmark-consistent decisions as well as disagreements.
 
-Nominate-then-Select and deterministic fusion both reduce Top-1 agreement, and their confidence intervals exclude zero. The external results therefore reinforce the internal finding that high candidate coverage and criterion support do not by themselves provide a sufficiently selective signal for deterministic primary re-selection. Reusing the criterion-compatible set or combining the recorded signals changes benchmark-consistent decisions as well as disagreements.
+The posthoc forced-commit sweep also lowers Top-1. Its name describes the replay rule, not an independently executed pairwise system. It promotes preferences already stored in the matched pairwise trace and should be interpreted only as a fixed-trace policy sensitivity.
 
-\paragraph{Pairwise replay and new-inference methods.}
+Independent pairwise produces the same committed Top-1 as DA. The comparison stage was active, but under this output contract it reordered candidates without replacing the committed primary. Two-view debate lowers agreement. Self-consistency and confidence-informed self-consistency have small positive point estimates, but their intervals include zero and only summary-level records are retained. None of the evaluated methods therefore provides a clear and attributable external improvement over DA.
 
-Independent pairwise reproduces the DA result exactly. The pairwise stage was active on this trace: an eligible comparison cluster formed in 89 cases and a valid in-cluster preference was promoted in 68. Under the committed-primary output contract, however, a promoted preference reorders the candidate ranking only, whereas the committed primary diagnosis is taken from the Diagnostician's emitted primary. No committed decision therefore changes, and the zero difference reflects the output contract rather than a property of the comparison itself.
+Detailed discordant counts and exact McNemar tests are reported in Appendix~\ref{app:supporting}, Table~\ref{tab:external-paired-tests}.
 
-Forced pairwise override promotes every valid in-cluster preference to the committed primary diagnosis and reduces Top-1 by 2.49 percentage points, with a confidence interval that excludes zero. This row is a deterministic replay of the recorded pairwise preferences on the same trace rather than a separate pipeline execution, so it isolates the effect of acting on those preferences while holding the upstream trace fixed.
+\section{Trace-Lineage and Diagnostic-Scope Boundaries}
+\label{sec:external-lineage-sensitivity}
 
-Two-view debate performs below DA. As specified in Section~\ref{sec:primary-selection-intervention-design}, this is a complete-configuration comparison.
-
-\paragraph{Sampling-based methods.}
-
-Self-consistency and confidence-informed self-consistency produce small positive point estimates relative to DA at both sampling budgets. However, all corresponding confidence intervals include zero, so the observed differences do not provide clear evidence of an external improvement.
-
-SC and CISC produce identical committed predictions in the retained external records; confidence weighting therefore changes no case-level decision in these runs.
-
-Taken together, none of the evaluated strategies provides a clear and reliable improvement over DA on MDD-5k. Recorded-output re-selection substantially reduces benchmark agreement, debate also performs below the reference configuration, and sampling-based aggregation yields only small and statistically uncertain point estimates. The tested selectors therefore do not recover the external gap identified in Section~\ref{sec:mdd-multiway}.
-
-Detailed discordant counts, exact McNemar tests, and paired-bootstrap results are reported in Appendix~\ref{app:supporting}, Table~\ref{tab:external-paired-tests}.
-
-\section{Diagnostic Scope and Cross-Corpus Transfer}
-\label{sec:scope-coverage}
-
-This section reports the diagnostic-scope and cross-corpus lexical-transfer analyses defined in Section~\ref{sec:sensitivity-transfer-design}.
-
-\paragraph{Diagnostic-scope expansion.}
-
-The 47 out-of-scope cases identified in Section~\ref{sec:mdd-multiway} illustrate the diagnostic-coverage limitation motivating the configuration-only scope-expansion analysis below.
-
-A separate configuration-only experiment expands the diagnostic profile from 14 to 33 configured categories and from 11 to 30 scoring parents. This expansion changes the available diagnostic scope and category-specific checker definitions without modifying the model weights.
+The matched method-comparison trace is not the only archived MDD-5k output. Table~\ref{tab:external-trace-sensitivity} shows how the same any-gold recalculation changes when it is applied to a separately archived canonical-rescore trace.
 
 \begin{table}[htbp]
 \centering
-\caption{Diagnostic-scope expansion and committed Top-1 recovery among cases whose benchmark gold diagnoses become newly representable.}
+\caption{Sensitivity of external results to the archived trace lineage under the same any-gold scoring contract.}
+\label{tab:external-trace-sensitivity}
 \label{tab:scope-expansion-results}
 \small
-\begin{tabularx}{\textwidth}{|p{2.4cm}|c|c|X|c|}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{4.1cm}|c|c|c|c|}
 \hline
-Configuration & Categories & Scoring parents & Newly representable cases & \shortstack{\rule{0pt}{2.4ex}Top-1\\recovery}\\
+\textbf{Trace and population} & \textbf{Cases} & \textbf{Top-1} & \textbf{Genuine Top-3} & \textbf{Gold in compatible set}\\
 \hline
-Original & 14 & 11 & --- & ---\\
-Expanded & 33 & 30 & 58 & 0/58\\
+Matched method-comparison, all cases & 925 & 0.571 & 0.851 & ---\\
+\hline
+Canonical rescore, all cases & 925 & 0.587 & 0.857 & ---\\
+\hline
+Matched method-comparison, checker-eligible & 878 & 0.601 & 0.896 & 0.786\\
+\hline
+Canonical rescore, checker-eligible & 878 & 0.618 & 0.903 & 0.959\\
 \hline
 \end{tabularx}
 \end{table}
 
-As shown in Table~\ref{tab:scope-expansion-results}, the expanded profile makes the benchmark gold diagnoses of 58 sampled cases representable, but none becomes the committed Top-1 diagnosis. The experiment therefore demonstrates successful output-space expansion without corresponding behavioral recovery.
+The two traces have the same nominal case counts but different stored outputs. Their Top-1 values differ by 1.6 percentage points, and their criterion-inclusion rates differ much more. This sensitivity is why the chapter does not combine a primary diagnosis from one trace with the ranking or compatibility set from another.
 
-Representability alone was insufficient under the evaluated configuration: adding a category to the prompt and checker profile did not cause the Diagnostician to rank or commit it in these cases. A paired preservation analysis for previously in-scope cases was unavailable.
+A previously cited F60 scope-expansion result could not be linked to a preserved source artifact in the frozen repository snapshot. Its numerical values are therefore not reported in this revision. The underlying methodological point remains: a diagnosis cannot be recovered if it is absent from the configured output space, but expanding that space does not by itself establish accurate selection.
 
-\paragraph{Cross-corpus lexical transfer.}
+\section{Cross-Corpus Lexical Transfer}
+\label{sec:external-lexical-transfer}
 
-Table~\ref{tab:lexical-transfer-rewrite} reports the cross-corpus lexical-transfer results.
+The lexical transfer analysis uses a separately preserved full-corpus TF--IDF with logistic-regression matrix. Table~\ref{tab:lexical-transfer-rewrite} reports Top-1 and genuine Top-3 values under that artifact's twelve-class parent-label contract.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
-\caption{Within-corpus and cross-corpus TF--IDF Top-1 performance. The MDD-5k evaluations use the same 185-case transfer holdout; the results belong to a separate transfer experiment rather than the main same-split baseline.}
+\caption{Full-corpus cross-source transfer of TF--IDF with logistic regression.}
 \label{tab:lexical-transfer-rewrite}
-\renewcommand{\arraystretch}{1.08}
-\begin{tabularx}{\textwidth}{|l|l|r|c|>{\raggedright\arraybackslash}X|}
+\small
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{3.3cm}|>{\raggedright\arraybackslash}p{3.3cm}|c|c|c|}
 \hline
-Training corpus & Evaluation corpus & $N$ & Top-1 & Interpretation\\
+\textbf{Training source} & \textbf{Evaluation source} & \textbf{Cases} & \textbf{Top-1} & \textbf{Top-3}\\
 \hline
-LingxiDiag & LingxiDiag & 1000 & 0.610 & within-corpus fit\\
+LingxiDiag-16K & LingxiDiag held-out & 1,000 & 0.602 & 0.935\\
 \hline
-LingxiDiag & MDD-5k & 185 & 0.049 & cross-corpus degradation\\
+LingxiDiag-16K & MDD-5k & 925 & 0.059 & 0.613\\
 \hline
-MDD-5k & LingxiDiag & 1000 & 0.485 & reverse degradation\\
+MDD-5k & MDD-5k & 925 & 0.632 & 0.842\\
 \hline
-MDD-5k & MDD-5k & 185 & 0.692 & within-MDD fit\\
+MDD-5k & LingxiDiag held-out & 1,000 & 0.476 & 0.676\\
 \hline
 \end{tabularx}
-\renewcommand{\arraystretch}{1.0}
+\parbox{0.96\textwidth}{\footnotesize
+\textit{Note.} These are full-corpus transfer runs. They are not the previously reported F32--F41 subset values and should not be interpreted as that binary experiment.}
 \end{table}
 
-Within-corpus performance is substantially higher than cross-corpus performance in both directions. A classifier trained on LingxiDiag achieves a Top-1 Accuracy of 0.610 on LingxiDiag but only 0.049 on the matched MDD-5k transfer holdout. Conversely, the MDD-trained classifier achieves 0.692 within MDD-5k but 0.485 when evaluated on LingxiDiag.
+The classifier is strongest when training and evaluation use the same corpus. Training on LingxiDiag and testing on MDD-5k reduces Top-1 from 0.602 to 0.059. The reverse transfer is less severe but still lower than within-MDD evaluation: 0.476 instead of 0.632. The asymmetric drop shows that lexical regularities and label distributions differ across the two synthetic generation processes.
 
-The 0.610 LingxiDiag result belongs to the separate development and transfer experiment and should not be confused with the 0.632 same-split lexical baseline reported in Chapter~\ref{ch:results}. The two results use different experimental lineages and answer different questions.
+This result does not show that an LLM architecture automatically generalizes clinically. It shows that a strong same-corpus lexical score should not be treated as evidence of source-independent diagnosis performance.
 
-The large within-corpus and cross-corpus differences indicate that the evaluated lexical classifier relies strongly on corpus-specific wording, synthetic generation patterns, and label distributions, sharply limiting portability across the two generation processes.
+\section{Answer to RQ5 and Chapter Summary}
 
-Taken together, the scope and transfer analyses identify two distinct barriers to external use. First, a diagnosis must be represented in the configured output space, but representability alone does not produce recovery. Second, predictive lexical signals learned within one synthetic corpus may degrade sharply when transferred to another. These findings support explicit diagnostic-scope evaluation and cross-corpus testing.
+\paragraph{Answer to RQ5.}
+The stage-wise output pattern remains observable on MDD-5k, but it is not identical to the internal pattern. In the matched 878-case external trace, 225 cases (25.6\%) contain a benchmark gold parent in both the genuine Top-3 and the criterion-compatible set but commit another diagnosis as primary. This is the largest recorded disagreement profile. At the same time, external compatibility inclusion is lower than the internal value, and the exact rates change across archived trace lineages. The external evidence therefore supports the portability of the stage-wise analysis framework, not universal stability of the numerical results.
 
+The matched selection experiments also reproduce the main negative finding: deterministic re-selection from the recorded compatibility outputs does not improve DA. Additional pairwise, debate, or repeated-generation configurations do not provide a clear and attributable improvement.
+
+Finally, the lexical transfer matrix shows large source effects. Together, these results establish a synthetic cross-corpus boundary for the study. They do not establish real-patient validity, a uniquely correct clinical primary diagnosis, or improved clinical efficiency.
 
 \chapter{Characterization of Recorded-Output Disagreements}
 \label{ch:error}
