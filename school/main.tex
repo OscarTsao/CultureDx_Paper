@@ -1684,8 +1684,7 @@ F32--F41 binary subset & 490 & Narrow scope-restricted sensitivity population re
 \end{tabularx}
 \end{table}
 
-The main results below use the matched method-comparison trace in
-\texttt{results/mdd\_variant\_matrix/da/predictions.jsonl}. For each case, the benchmark gold diagnoses, committed primary diagnosis, Diagnostician ranking, and criterion-compatible set are taken from the same record. All labels are projected to the paper parent space. A case is counted as correct when the committed primary matches any projected benchmark gold parent, following the metric contract in Chapter~\ref{ch:data}.
+The main results below use one matched 925-case method-comparison trace. For every case, the benchmark gold diagnoses, committed primary diagnosis, Diagnostician ranking, and criterion-compatible set come from the same recorded output. All labels are projected to the paper parent space. A case is counted as correct when the committed primary matches any projected benchmark gold parent, following the metric contract in Chapter~\ref{ch:data}.
 
 This distinction matters because older external summaries mixed values from different traces or used the first listed gold diagnosis instead of the complete projected gold set. The recalculation used here does not combine those contracts.
 
@@ -1699,9 +1698,10 @@ Table~\ref{tab:external-summary-rewrite} compares the validation-selected intern
 \caption{Internal and external HiED--DA results under the thesis-wide any-gold contract. External values come from one matched method-comparison trace.}
 \label{tab:external-summary-rewrite}
 \small
-\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{3.2cm}|c|c|c|c|c|}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{|l|c|c|c|c|c|}
 \hline
-\textbf{Population} & \textbf{Cases} & \textbf{Top-1} & \textbf{Genuine Top-3} & \textbf{Gold in compatible set} & \textbf{Median compatible-set size}\\
+\textbf{Population} & \textbf{Cases} & \textbf{Top-1} & \shortstack{\textbf{Genuine}\\\textbf{Top-3}} & \shortstack{\textbf{Gold in}\\\textbf{compatible set}} & \shortstack{\textbf{Median compatible-}\\\textbf{set size}}\\
 \hline
 LingxiDiag internal held-out & 1,000 & 0.518 & 0.802 & 0.937$^{*}$ & 6\\
 \hline
@@ -1709,7 +1709,8 @@ MDD-5k, all cases & 925 & 0.571 & 0.851 & --- & ---\\
 \hline
 MDD-5k, checker-eligible & 878 & 0.601 & 0.896 & 0.786 & 6\\
 \hline
-\end{tabularx}
+\end{tabular}
+\end{adjustbox}
 \parbox{0.96\textwidth}{\footnotesize
 \textit{Note.} $^{*}$The internal compatibility value uses the 915 checker-eligible LingxiDiag cases rather than all 1,000 cases. MDD-5k compatibility is reported only for the 878 checker-eligible cases.}
 \end{table}
@@ -1729,7 +1730,6 @@ Figure~\ref{fig:internal-external-gap} compares the three recorded views on the 
 \label{fig:internal-external-gap}
 \end{figure}
 \FloatBarrier
-
 \section{External Recorded-Output Profiles}
 \label{sec:external-stagewise}
 
