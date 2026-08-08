@@ -1,0 +1,45 @@
+\section{Matched Primary-Selection Comparisons}
+\label{sec:mdd-multiway}
+
+The primary-selection comparisons in this section use the same 925-case variant battery. Direct-Answer (DA) is the reference. The methods differ in what they reuse and whether they introduce new model inference, so the evidence contract is stated in the table.
+
+\begin{table}[htbp]
+\centering
+\caption{External primary-selection methods on the common 925-case matched trace. Differences and confidence intervals are relative to DA.}
+\label{tab:mdd-finalization-results}
+\small
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{3.3cm}|>{\raggedright\arraybackslash}p{4.5cm}|c|c|}
+\hline
+\textbf{Method} & \textbf{Evidence contract} & \textbf{Top-1} & \(\boldsymbol{\Delta}\) \textbf{vs DA, pp (95\% CI)}\\
+\hline
+Direct-Answer & Reference committed primary & 57.08\% & ---\\
+\hline
+Nominate-then-Select & Same upstream trace; deterministic compatibility-based re-selection & 40.65\% & \(-16.43\) [\(-19.5\), \(-13.5\)]\\
+\hline
+Deterministic fusion & Same upstream trace; deterministic fusion of recorded outputs & 47.14\% & \(-9.95\) [\(-12.4\), \(-7.5\)]\\
+\hline
+Posthoc fixed-trace forced-commit sweep & Reuses saved pairwise preferences; not an independently rerun system & 54.59\% & \(-2.49\) [\(-4.1\), \(-1.1\)]\\
+\hline
+Independent pairwise & Separate full-pipeline configuration & 57.08\% & \(0.00\) [0.0, 0.0]\\
+\hline
+Two-view debate & Separate full-pipeline configuration & 37.84\% & \(-19.24\) [\(-22.1\), \(-16.4\)]\\
+\hline
+Self-consistency, \(K=3\) & Repeated-generation summary record & 57.84\% & \(+0.76\) [\(-0.5\), 2.1]\\
+\hline
+Self-consistency, \(K=5\) & Repeated-generation summary record & 58.16\% & \(+1.08\) [\(-0.1\), 2.4]\\
+\hline
+Confidence-informed SC, \(K=3\) & Repeated-generation summary record & 57.84\% & \(+0.76\) [\(-0.5\), 2.1]\\
+\hline
+Confidence-informed SC, \(K=5\) & Repeated-generation summary record & 58.16\% & \(+1.08\) [\(-0.1\), 2.4]\\
+\hline
+\end{tabularx}
+\end{table}
+
+NtS and deterministic fusion both reduce committed Top-1 agreement. This is consistent with the joint profile table: the criterion-compatible set omits a benchmark gold parent in 168 cases whose gold parent is nevertheless ranked, including 134 cases that DA commits correctly. Replacing the proposed primary with a compatibility-based choice can therefore overturn benchmark-consistent decisions as well as disagreements.
+
+The posthoc forced-commit sweep also lowers Top-1. Its name describes the replay rule, not an independently executed pairwise system. It promotes preferences already stored in the matched pairwise trace and should be interpreted only as a fixed-trace policy sensitivity.
+
+Independent pairwise produces the same committed Top-1 as DA. The comparison stage was active, but under this output contract it reordered candidates without replacing the committed primary. Two-view debate lowers agreement. Self-consistency and confidence-informed self-consistency have small positive point estimates, but their intervals include zero and only summary-level records are retained. None of the evaluated methods therefore provides a clear and attributable external improvement over DA.
+
+Detailed discordant counts and exact McNemar tests are reported in Appendix~\ref{app:supporting}, Table~\ref{tab:external-paired-tests}.
+
