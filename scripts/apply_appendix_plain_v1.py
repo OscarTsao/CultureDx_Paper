@@ -42,8 +42,13 @@ text = text[:start] + APPENDICES + "\n\n" + text[end:]
 if comment_counts != (text.count(r"\ct{"), text.count(r"\wl{")):
     raise SystemExit("Advisor-comment counts changed")
 
-# Preserve required labels and references.
-labels = re.findall(r"\\label\{([^}]+)\}", text)
+# Preserve required labels and references. ThesisFigure stores its label in argument four.
+literal_labels = re.findall(r"\\label\{([^}]+)\}", text)
+macro_labels = re.findall(
+    r"\\ThesisFigure(?:\[[^\]]*\])?\{[^\n]*\}\{[^\n]*\}\{([^}]+)\}",
+    text,
+)
+labels = literal_labels + macro_labels
 refs: list[str] = []
 for pattern in [r"\\ref\{([^}]+)\}", r"\\cref\{([^}]+)\}", r"\\Cref\{([^}]+)\}", r"\\pageref\{([^}]+)\}"]:
     refs.extend(re.findall(pattern, text))
