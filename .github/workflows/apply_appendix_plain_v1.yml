@@ -1,0 +1,167 @@
+name: Apply appendix plain-English rewrite v1
+
+on:
+  push:
+    branches:
+      - thesis/post-defense-rewrite-v2
+    paths:
+      - .github/workflows/apply_appendix_plain_v1.yml
+      - scripts/apply_appendix_plain_v1.py
+      - scripts/appendix_plain_v1/appendices.tex
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: appendix-plain-english-v1
+  cancel-in-progress: false
+
+jobs:
+  rewrite-and-verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out thesis branch
+        uses: actions/checkout@v4
+        with:
+          ref: thesis/post-defense-rewrite-v2
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Apply appendix rewrite and Chapter 3 table fix
+        run: python scripts/apply_appendix_plain_v1.py school/main.tex
+
+      - name: Validate source and readability
+        shell: bash
+        run: |
+          set -euo pipefail
+          target=school/main.tex
+          git diff --check -- "$target"
+          grep -F '\chapter{Configured Diagnostic Categories and Operational Compatibility Rules}' "$target"
+          grep -F '\chapter{Supporting Experimental Configurations and Statistical Details}' "$target"
+          grep -F 'These are study rules based on ICD-10 descriptions' "$target"
+          grep -F 'It does not repeat the complete software implementation.' "$target"
+          grep -F 'The final column records execution events rather than clinical outcomes.' "$target"
+          grep -F '\shortstack{\texttt{insufficient\_}\\\texttt{evidence}}' "$target"
+          ! grep -Fq 'This appendix reports the supporting information required to interpret the auxiliary experiments' "$target"
+          ! grep -Fq 'Forced pairwise override & External-only deterministic replay' "$target"
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          text = Path('school/main.tex').read_text(encoding='utf-8')
+          start = text.index(r'\appendix')
+          end = text.index(r'\renewcommand{\bibname}{References}', start)
+          appendix = text[start:end]
+          appendix = re.sub(r'\\begin\{(?:longtable|table|tabularx|tabular|adjustbox)\}.*?\\end\{(?:longtable|table|tabularx|tabular|adjustbox)\}', ' ', appendix, flags=re.S)
+          appendix = re.sub(r'\\cite[pt]?\{[^}]+\}', '', appendix)
+          appendix = re.sub(r'\\[A-Za-z@]+(?:\[[^\]]*\])?\{([^{}]*)\}', r'\1', appendix)
+          appendix = re.sub(r'\\[A-Za-z@]+', ' ', appendix)
+          appendix = re.sub(r'[$&%#_{}|~^]', ' ', appendix)
+          sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', appendix) if 5 <= len(s.split()) <= 100]
+          lengths = sorted(len(s.split()) for s in sentences)
+          if not lengths:
+              raise SystemExit('No appendix prose found for readability check')
+          median = lengths[len(lengths)//2]
+          p90 = lengths[min(len(lengths)-1, int(0.9 * len(lengths)))]
+          print(f'Appendix prose sentences={len(lengths)}, median words={median}, p90 words={p90}, max words={max(lengths)}')
+          if median > 22 or p90 > 36:
+              raise SystemExit('Appendix sentence lengths remain above the plain-English target')
+          PY
+
+      - name: Install complete XeLaTeX toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            latexmk texlive-xetex texlive-latex-extra texlive-fonts-recommended \
+            texlive-lang-chinese texlive-publishers fonts-noto-cjk \
+            fonts-urw-base35 poppler-utils
+
+      - name: Compile complete thesis
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd school
+          latexmk -xelatex -interaction=nonstopmode -halt-on-error -file-line-error main.tex
+          test -s main.pdf
+          pdfinfo main.pdf | tee /tmp/main_pdfinfo.txt
+          pdftotext -layout main.pdf /tmp/main.txt
+          grep -F 'Configured Diagnostic Categories and Operational Compatibility Rules' /tmp/main.txt
+          grep -F 'Supporting Experimental Configurations and Statistical Details' /tmp/main.txt
+          if grep -Eiq 'undefined references|undefined citations|Citation .* undefined|Reference .* undefined' main.log; then
+            echo 'Unresolved references or citations found.' >&2
+            exit 1
+          fi
+          grep -E 'Overfull|Underfull|Warning' main.log > /tmp/main_warnings.txt || true
+          cat /tmp/main_warnings.txt
+
+      - name: Require zero overfull boxes
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -Fq 'Overfull \hbox' school/main.log; then
+            echo 'Overfull box remains after Chapter 3 and appendix polish:' >&2
+            grep -F 'Overfull \hbox' school/main.log >&2
+            exit 1
+          fi
+          echo 'No overfull boxes remain in the thesis.'
+
+      - name: Render worked-example and appendix pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p verification_renders
+          pages=$(pdfinfo school/main.pdf | awk '/^Pages:/ {print $2}')
+          find_page() {
+            local needle="$1"
+            for page in $(seq 1 "$pages"); do
+              pdftotext -f "$page" -l "$page" -layout school/main.pdf /tmp/page.txt
+              if grep -Fq "$needle" /tmp/page.txt; then
+                echo "$page"
+                return 0
+              fi
+            done
+            return 1
+          }
+          worked=$(find_page 'Selected illustrative criterion states')
+          appa=$(find_page 'Configured Diagnostic Categories and Operational Compatibility Rules')
+          appb=$(find_page 'Supporting Experimental Configurations and Statistical Details')
+          pdftoppm -png -r 155 -f "$worked" -l "$worked" school/main.pdf verification_renders/worked-example
+          appa_last=$((appa + 2)); if [ "$appa_last" -gt "$pages" ]; then appa_last="$pages"; fi
+          appb_last=$((appb + 5)); if [ "$appb_last" -gt "$pages" ]; then appb_last="$pages"; fi
+          pdftoppm -png -r 155 -f "$appa" -l "$appa_last" school/main.pdf verification_renders/appendix-a
+          pdftoppm -png -r 155 -f "$appb" -l "$appb_last" school/main.pdf verification_renders/appendix-b
+          printf 'worked example page %s\nappendix A pages %s-%s\nappendix B pages %s-%s\n' "$worked" "$appa" "$appa_last" "$appb" "$appb_last" | tee /tmp/rendered_pages.txt
+
+      - name: Commit verified thesis polish
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add school/main.tex
+          if git diff --cached --quiet; then
+            echo 'No appendix change to commit.'
+            exit 0
+          fi
+          git commit -m 'Rewrite appendices in plain English and fix table overflow'
+          git push origin HEAD:thesis/post-defense-rewrite-v2
+
+      - name: Upload appendix verification artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: appendix-plain-english-v1
+          path: |
+            school/main.pdf
+            school/main.log
+            verification_renders/*.png
+            /tmp/main_pdfinfo.txt
+            /tmp/main_warnings.txt
+            /tmp/rendered_pages.txt
+          if-no-files-found: warn
+          retention-days: 7
