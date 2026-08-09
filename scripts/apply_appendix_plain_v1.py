@@ -12,7 +12,7 @@ text = TARGET.read_text(encoding="utf-8")
 original = text
 comment_counts = (text.count(r"\ct{"), text.count(r"\wl{"))
 
-# Give the worked-example state column enough room for a two-line monospace value.
+# Give the worked-example state column enough room for a compact two-line value.
 old_geometry = r"\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{4.0cm}|>{\centering\arraybackslash}p{2.6cm}|>{\raggedright\arraybackslash}X|}"
 new_geometry = r"\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{3.7cm}|>{\centering\arraybackslash}p{2.9cm}|>{\raggedright\arraybackslash}X|}"
 geometry_count = text.count(old_geometry)
@@ -20,12 +20,13 @@ if geometry_count != 1:
     raise SystemExit(f"Expected one worked-example table geometry, found {geometry_count}")
 text = text.replace(old_geometry, new_geometry, 1)
 
-# Split the two long state cells across two lines.
+# Split the two long state cells across two smaller-font lines.
+compact_state = r"\shortstack{\scriptsize\texttt{insufficient\_}\\\scriptsize\texttt{evidence}}"
 replacements = {
     r"F41.1 & Required duration & \texttt{insufficient\_\allowbreak{}evidence} & The patient cannot state when the worry began.\\":
-        r"F41.1 & Required duration & \shortstack{\texttt{insufficient\_}\\\texttt{evidence}} & The patient cannot state when the worry began.\\",
+        rf"F41.1 & Required duration & {compact_state} & The patient cannot state when the worry began.\\",
     r"F41.1 & Associated anxiety symptoms & \texttt{insufficient\_\allowbreak{}evidence} & Some tension and increased heartbeat are reported, but their pattern and frequency remain unclear.\\":
-        r"F41.1 & Associated anxiety symptoms & \shortstack{\texttt{insufficient\_}\\\texttt{evidence}} & Some tension and increased heartbeat are reported, but their pattern and frequency remain unclear.\\",
+        rf"F41.1 & Associated anxiety symptoms & {compact_state} & Some tension and increased heartbeat are reported, but their pattern and frequency remain unclear.\\",
 }
 for old, new in replacements.items():
     count = text.count(old)
@@ -75,7 +76,7 @@ required = [
     r"\label{tab:external-paired-tests}",
     r"\label{tab:qwen-size-results}",
     new_geometry,
-    r"\shortstack{\texttt{insufficient\_}\\\texttt{evidence}}",
+    compact_state,
     "These are study rules based on ICD-10 descriptions",
     "It does not repeat the complete software implementation.",
     "The final column records execution events rather than clinical outcomes.",
