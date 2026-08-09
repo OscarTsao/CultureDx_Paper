@@ -1,0 +1,236 @@
+\appendix
+\titleformat{\chapter}[display]{\raggedright\bfseries\LARGE}{Appendix \thechapter}{0.5em}{}
+
+\chapter{Configured Diagnostic Categories and Operational Compatibility Rules}
+\label{app:configured-profile}
+
+The evaluated HiED setup contains fourteen ICD-10 diagnostic categories. Each category has one Criterion Checker and one fixed compatibility rule. F41 and F43 subtypes are mapped to shared parent labels only for scoring. Criterion checking and rule application remain at the configured category level. The item counts and thresholds below match the frozen ontology used by the rule engine.
+
+These are study rules based on ICD-10 descriptions~\citep{who2019icd10}. They are not copied verbatim from the ICD-10 manual, have not been independently validated by clinicians, and are not clinical diagnostic standards. Passing a rule means only that the recorded criterion states satisfy that rule for the available transcript. It does not show that the diagnosis is clinically correct or should be selected as primary.
+
+\begingroup
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{2.3cm}|>{\raggedright\arraybackslash}p{1.4cm}|>{\raggedright\arraybackslash}p{3.1cm}|>{\centering\arraybackslash}p{1.5cm}|>{\raggedright\arraybackslash}p{5.1cm}|}
+\caption{Configured diagnostic categories, scoring-parent projections, criterion-item counts, and study-specific compatibility rules.}
+\label{tab:configured-profile}\\
+\hline
+\shortstack{\rule{0pt}{2.4ex}ICD-10\\code} & \shortstack{\rule{0pt}{2.4ex}Scoring\\parent} & Diagnostic category & \shortstack{\rule{0pt}{2.4ex}\scriptsize Criterion\\\scriptsize items} & Compatibility rule\\
+\hline
+\endfirsthead
+\hline
+\shortstack{\rule{0pt}{2.4ex}ICD-10\\code} & \shortstack{\rule{0pt}{2.4ex}Scoring\\parent} & Diagnostic category & \shortstack{\rule{0pt}{2.4ex}\scriptsize Criterion\\\scriptsize items} & Compatibility rule\\
+\hline
+\endhead
+F20 & F20 & Schizophrenia & 8 & $\geq$1 first-rank symptom, or $\geq$2 other symptoms; duration $\geq$1 month\\
+\hline
+F31 & F31 & Bipolar affective disorder & 8 & $\geq$2 episodes, at least one manic\\
+\hline
+F32 & F32 & Depressive episode & 11 & $\geq$2 core symptoms and $\geq$4 total symptoms; duration $\geq$2 weeks\\
+\hline
+F39 & F39 & Unspecified mood disorder & 6 & $\geq$3 configured items met\\
+\hline
+F41.0 & F41 & Panic disorder & 5 & $\geq$3 attacks/month, $\geq$4 symptoms per attack\\
+\hline
+F41.1 & F41 & Generalized anxiety disorder & 5 & $\geq$4 symptoms; duration $\geq$6 months\\
+\hline
+F41.2 & F41 & Mixed anxiety and depressive disorder & 4 & $\geq$2 total symptoms; anxious and depressive criteria required\\
+\hline
+F42 & F42 & Obsessive-compulsive disorder & 4 & duration $\geq$2 weeks; distress or functional impairment required\\
+\hline
+F43.1 & F43 & Post-traumatic stress disorder & 4 & trauma exposure required; onset within 6 months\\
+\hline
+F43.2 & F43 & Adjustment disorders & 5 & onset within 1 month of stressor; duration $\leq$6 months\\
+\hline
+F45 & F45 & Somatoform disorders & 5 & $\geq$2 somatic symptom groups; duration $\geq$2 years\\
+\hline
+F51 & F51 & Nonorganic sleep disorders & 4 & $\geq$3 nights/week; duration $\geq$1 month\\
+\hline
+F98 & F98 & Other behavioral and emotional disorders & 6 & $\geq$3 configured items met\\
+\hline
+Z71 & Z71 & Counseling & 3 & $\geq$2 configured indicators met; exclusion of a diagnosable disorder required\\
+\hline
+\end{longtable}
+\endgroup
+
+This table defines the rules used in the criterion-checking and compatibility analyses. The complete machine-readable criterion definitions, prompts, and rule-engine configuration remain in the versioned project repository.
+
+F41 and F43 subtype predictions are mapped to their parent labels only for evaluation. Together with the nine other configured parent labels and \emph{Others}, they form the twelve scored classes defined in Chapter~\ref{ch:data}. \emph{Others} is used only for scoring; HiED cannot emit it.
+
+Several categories may pass their rules for the same transcript. The criterion-compatible set is therefore not a mutually exclusive diagnosis set, a psychiatrist-reviewed judgment, or a ranking of which diagnosis should be primary.
+
+\chapter{Supporting Experimental Configurations and Statistical Details}
+\label{app:supporting}
+
+This appendix gives details needed to read the supporting experiments. It lists the main differences among the tested primary-selection methods, the full paired-comparison statistics, and the exact model-scale results that are shortened in the main chapters.
+
+It does not repeat the complete software implementation. Full prompts, case-level outputs, seed schedules, evaluation scripts, and executable configurations remain in the versioned project repository.
+
+{\footnotesize
+\noindent\textit{TF--IDF baseline configuration:} The model is trained on 13,000 source cases. It uses character-boundary 1--2-grams, at most 10,000 features, \texttt{min\_df=2}, \texttt{max\_df=0.95}, and sublinear term frequency. Twelve class-balanced one-vs-rest L-BFGS logistic-regression classifiers use $C=1.0$ and a 2,000-iteration limit. Their probabilities define the ranked labels and thresholded multilabel output.
+\par}
+
+The internal held-out set was created by largest-remainder allocation and sampling without replacement with NumPy seed 42. Its ordered case-ID fingerprint is \texttt{317a7633a339ae9a}.
+
+Table~\ref{tab:ch8-criterion-ratios} reports case-level distributions for Figure~\ref{fig:ch8-criterion-composition}. The 77,998 diagnosis-by-criterion states are not independent observations. In Table~\ref{tab:qwen-size-results}, parse recovery removes duplicate or invalid checker items while keeping valid records. Abstention and recovery are execution events, not diagnostic recovery. The model-scale analysis is limited to the Qwen3 family.
+
+\begin{table}[htbp]
+\centering
+\caption{Case-level criterion-state proportions in the four mutually exclusive recorded-output groups. Values are median percentages with interquartile ranges in brackets.}
+\label{tab:ch8-criterion-ratios}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.08}
+\begin{tabularx}{\textwidth}{|X|r|c|c|c|}
+\hline
+Group & $N$ & \texttt{met} & \texttt{not\_met} & \shortstack{\texttt{insufficient\_}\\\texttt{evidence}}\\
+\hline
+Committed-primary agreement & 518 & 50.0 [46.2, 52.6] & 23.1 [19.2, 26.9] & 26.9 [23.1, 30.8]\\
+\hline
+Top-3 candidate miss & 113 & 48.7 [43.6, 52.6] & 21.8 [17.9, 26.9] & 28.2 [23.1, 35.9]\\
+\hline
+Ranked, absent from compatible set & 12 & 41.0 [33.0, 47.4] & 27.6 [21.5, 33.0] & 27.6 [22.8, 37.2]\\
+\hline
+Ranked and compatible, not selected & 272 & 50.0 [46.2, 53.8] & 21.8 [19.2, 26.9] & 26.9 [21.8, 32.1]\\
+\hline
+\end{tabularx}
+\renewcommand{\arraystretch}{1.0}
+\end{table}
+
+\section{Auxiliary Primary-Selection Configurations}
+
+Table~\ref{tab:additional-inference-configs} lists the settings used by the supporting primary-selection analyses. These methods do not use the same inference path or compute budget. Their results are therefore comparisons of the full stated configurations, not one common component ablation.
+
+\begingroup
+\small
+\begin{longtable}{|>{\raggedright\arraybackslash}p{3.2cm}|>{\raggedright\arraybackslash}p{6.0cm}|>{\raggedright\arraybackslash}p{5.0cm}|}
+\caption{Auxiliary primary-selection configurations used in supporting analyses.}
+\label{tab:additional-inference-configs}\\
+\hline
+Analysis & Configuration & Interpretation boundary\\
+\hline
+\endfirsthead
+\hline
+Analysis & Configuration & Interpretation boundary\\
+\hline
+\endhead
+Independent pairwise comparison & Re-runs the HiED pipeline with a pairwise stage after criterion checking. Candidates need a met ratio of at least 0.50 and enter comparison when an adjacent support gap is below 0.10. & Upstream outputs are regenerated, so this is a complete-configuration comparison.\\
+\hline
+Posthoc forced-commit sweep & External-only deterministic replay that promotes each valid preference already stored in the matched MDD-5k pairwise trace. & Fixed-trace policy replay; not a separately executed model configuration and not reported as an internal result.\\
+\hline
+Two-view debate & Uses at most two advocate rounds and a judge when needed, with a 24,576-token external context window. & Uses more calls and a larger context budget than DA.\\
+\hline
+Self-consistency & Uses $K=3$ and $K=5$ Diagnostician samples at temperature 0.7 under fixed seed schedules. The primary is selected by majority vote. & Samples only the Diagnostician and does not reproduce the full HiED pipeline.\\
+\hline
+Confidence-informed self-consistency & Uses the same samples but weights each primary vote by reported confidence clipped to $[0,1]$. Missing confidence receives weight 1. & Reported confidence is not a calibrated probability.\\
+\hline
+Deterministic fusion & Uses a validation-selected rule that combines rank, compatibility, and criterion met ratio. It changes the DA primary only when that diagnosis is not compatible and a compatible Top-3 alternative exceeds its ratio by at least 0.20. & Evaluates one selected fixed rule on held-out cases.\\
+\hline
+\end{longtable}
+\endgroup
+
+\paragraph{Deterministic fusion.}
+The rule keeps the DA primary unless that diagnosis is absent from the criterion-compatible set. It then checks compatible alternatives in the Diagnostician Top-3. An alternative replaces the DA primary only when its criterion met ratio is at least 0.20 higher. The diagnosis with the highest eligible ratio is selected. Ties are broken by Diagnostician rank, then the fixed category order, and then the diagnostic code.
+
+\paragraph{Pairwise configurations.}
+Pairwise comparison starts with diagnoses whose criterion met ratio is at least 0.50. A diagnosis enters the close comparison cluster when the gap to the next met-ratio value is below 0.10. The pairwise Differential agent compares that cluster. Independent pairwise analysis re-runs the HiED path with deterministic decoding (temperature 0, \texttt{top\_k}=1) and a 1,536-token output budget. Its upstream ranking may therefore differ from the saved DA trace.
+
+The posthoc forced-commit result is different. It replays valid preferences already stored in the matched MDD-5k pairwise trace and adds no model call. It is not a separately executed pipeline, and no matching internal result is reported.
+
+\paragraph{Two-view debate.}
+The debate pool is the union of the Diagnostician Top-5 and the criterion-compatible diagnoses. One advocate receives the ranking, reasoning summary, and retrieval gist. The other receives the criterion evidence. The advocates run for at most two rounds. Agreement sets the primary diagnosis; otherwise a judge decides. A case uses at most four advocate calls and one judge call, not counting malformed-output reasks. Decoding uses temperature 0, \texttt{top\_k}=1, and a 1,536-token output budget. The internal and external context windows are 8,192 and 24,576 tokens.
+
+\paragraph{Repeated-generation configurations.}
+Self-consistency and confidence-informed self-consistency use $K=3$ and $K=5$ Diagnostician samples, temperature 0.7, \texttt{top\_p}=1.0, a 768-token output budget, and seeds 424200--424204. Standard self-consistency counts each primary vote equally. Confidence-informed self-consistency weights each vote by the reported confidence after clipping it to $[0,1]$; missing confidence receives weight 1. Primary ties are broken by weighted score, raw vote count, earliest sample, and diagnostic code. Ranked lists are combined with weighted Borda-style points over the first five positions. Remaining ties are broken by earliest occurrence and then diagnostic code.
+
+\section{Detailed Paired-Comparison Statistics}
+
+Tables~\ref{tab:internal-paired-tests} and~\ref{tab:external-paired-tests} report the discordant correctness counts and $p$-values that are omitted from the main chapters. ``A only'' means that A is correct and B is not. ``B only'' means that B is correct and A is not. When B replaces A, these counts are losses and gains, respectively.
+
+\noindent\begin{minipage}{\textwidth}
+The prespecified retrieval-by-finalization analysis tests whether the effect of replacing DA with NtS changes across retrieval settings. The difference-in-differences contrasts are global minus parent-balanced, $-0.1$ percentage points (95\% CI [$-1.3$, 1.0]); no retrieval minus parent-balanced, 0.0 (95\% CI [$-1.2$, 1.2]); and global minus no retrieval, $-0.1$ (95\% CI [$-1.1$, 0.9]).
+\end{minipage}
+
+\begin{table}[htbp]
+\centering
+\caption{Detailed internal paired-test results. Adjusted rows follow the prespecified comparison families; rows marked exact use unadjusted two-sided exact McNemar tests.}
+\label{tab:internal-paired-tests}
+\footnotesize
+\renewcommand{\arraystretch}{1.08}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}X|r|r|p{2.7cm}|p{2.8cm}|}
+\hline
+Comparison (A versus B) & A only & B only & Reported $p$-value & Test status\\
+\hline
+HiED--DA global versus parent-balanced retrieval (validation) & 29 & 27 & 0.894 & Exact\\
+\hline
+DA versus NtS, no retrieval & 37 & 9 & $<0.001$ & Holm-adjusted\\
+\hline
+DA versus NtS, global Top-5 & 44 & 15 & $<0.001$ & Holm-adjusted\\
+\hline
+DA versus NtS, parent-balanced & 45 & 17 & $<0.001$ & Holm-adjusted\\
+\hline
+DA versus independent pairwise & 30 & 36 & 0.539 & Exact\\
+\hline
+DA versus two-view debate & 49 & 16 & $5.08\times10^{-5}$ & Exact\\
+\hline
+\end{tabularx}
+\renewcommand{\arraystretch}{1.0}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Detailed external paired-test results on the common 925-case MDD-5k trace. All $p$-values are unadjusted two-sided exact McNemar tests.}
+\label{tab:external-paired-tests}
+\footnotesize
+\renewcommand{\arraystretch}{1.08}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}X|r|r|p{3.0cm}|}
+\hline
+Comparison (A versus B) & A only & B only & Exact $p$-value\\
+\hline
+DA versus NtS & 190 & 38 & $1.7\times10^{-25}$\\
+\hline
+DA versus deterministic fusion & 122 & 30 & $2.3\times10^{-14}$\\
+\hline
+DA versus independent pairwise & 0 & 0 & $1.00$\\
+\hline
+DA versus posthoc forced-commit sweep & 28 & 5 & $6.6\times10^{-5}$\\
+\hline
+DA versus two-view debate & 230 & 52 & $7.0\times10^{-28}$\\
+\hline
+DA versus self-consistency ($K=3$) & 27 & 34 & 0.44\\
+\hline
+DA versus self-consistency ($K=5$) & 23 & 33 & 0.23\\
+\hline
+DA versus confidence-informed SC ($K=3$) & 27 & 34 & 0.44\\
+\hline
+DA versus confidence-informed SC ($K=5$) & 23 & 33 & 0.23\\
+\hline
+\end{tabularx}
+\renewcommand{\arraystretch}{1.0}
+\end{table}
+
+\section{Exact Model-Scale Results}
+
+Table~\ref{tab:qwen-size-results} reports the exact model-scale values used in the internal sensitivity analysis. The final column records execution events rather than clinical outcomes.
+
+\begin{table}[H]
+\centering
+\caption{Qwen3 model-scale results on the same 1,000 internal cases.}
+\label{tab:qwen-size-results}
+\small
+\renewcommand{\arraystretch}{1.10}
+\begin{tabularx}{\textwidth}{|c|c|c|c|>{\raggedright\arraybackslash}X|}
+\hline
+Size & Single Top-1 & HiED--DA Top-1 & HiED Top-3 & Recorded execution event\\
+\hline
+4B & 0.143 & 0.538 & 0.807 & 17 Single abstentions; 164 HiED checker parse-recovery events\\
+\hline
+8B & 0.175 & 0.520 & 0.818 & None\\
+\hline
+14B & 0.391 & 0.497 & 0.803 & None\\
+\hline
+32B & 0.465 & 0.518 & 0.803 & None\\
+\hline
+\end{tabularx}
+\renewcommand{\arraystretch}{1.0}
+\end{table}
