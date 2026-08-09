@@ -251,68 +251,68 @@ Chapter~\ref{ch:related} reviews related work on psychiatric large language mode
 \chapter{Related Work}
 \label{ch:related}
 
-This chapter reviews five areas that are directly related to this thesis: psychiatric LLM diagnosis, retrieval with similar examples, medical multi-agent systems, criterion-grounded audit records, and primary-diagnosis selection. The goal is not to rank the reviewed systems. The goal is to show which parts of the diagnostic process they evaluate and which questions remain open.
+This chapter reviews five groups of earlier work that are closely related to this thesis: psychiatric LLM diagnosis, retrieval with similar examples, medical multi-agent systems, criterion-level records that can be checked, and primary-diagnosis selection. The goal is not to rank the systems. The goal is to show what part of diagnosis each system studies, what outputs it keeps, and what questions are still open.
 
 \section{Psychiatric LLM Diagnosis}
 
-Psychiatric LLM studies cover several different tasks. Some test psychiatric knowledge or licensing questions. Others use short clinical vignettes, focus on one disorder, detect depression from text, diagnose from a fixed record, or support an interactive consultation~\citep{qiu2023largeai,li2024taiwan,raballo2025,sarma2025,li2025addreview,mcduff2025amie}. These tasks should not be treated as the same problem. They differ in the evidence provided to the model, the number of possible diagnoses, the required output, and the reference used for scoring.
+Psychiatric LLM studies cover many different tasks. Some test psychiatric knowledge or licensing questions. Others use short clinical cases, focus on one disorder, detect depression from text, diagnose from a fixed record, or support an interactive consultation~\citep{qiu2023largeai,li2024taiwan,raballo2025,sarma2025,li2025addreview,mcduff2025amie}. These tasks are not the same. They differ in the evidence given to the model, the number of possible diagnoses, the required output, and the reference used for scoring.
 
-Screening is also different from fine-grained differential diagnosis. Detecting a strong depression or anxiety signal is easier than choosing one primary diagnosis among several disorders that share symptoms. A disorder-level decision may depend on symptom duration, which symptoms began first, illness course, exclusion conditions, and comorbidity. LingxiDiagBench shows this difference: performance falls as the task moves from broad depression--anxiety classification to comorbidity recognition and twelve-category diagnosis~\citep{xu2026lingxidiagbench}. MDD-5k provides another synthetic Chinese dialogue resource generated from anonymized patient cases~\citep{yin2024mdd5k}. Both datasets support repeatable experiments, but neither replaces evaluation on natural clinical conversations.
+Screening is also different from choosing among several similar diagnoses. A screening system may only need to find a broad depression or anxiety signal. A differential-diagnosis system must compare disorders that share symptoms and still choose one primary diagnosis. This choice may depend on symptom duration, which symptoms started first, illness course, other possible causes, and comorbidity. LingxiDiagBench shows this difference: performance falls as the task moves from broad depression--anxiety classification to comorbidity recognition and twelve-category diagnosis~\citep{xu2026lingxidiagbench}. MDD-5k is another synthetic Chinese dialogue resource generated from anonymized patient cases~\citep{yin2024mdd5k}. Both datasets support repeatable experiments, but neither replaces testing on natural clinical conversations.
 
-Another important difference is whether the system can ask for more information. MIND, WiseMind/ProAI, MAGI, DSM5AgentFlow, and conversational diagnostic AI study interactive workflows that can ask questions during the assessment~\citep{li2026mind,wu2026wisemind,bi2025magi,ozgun2025dsm5agentflow,tu2025conversational}. MentalSeek-Dx and MoodAngels instead focus on information that is already available in a record or transcript~\citep{sun2026mentalseek,xiao2025moodangels}. Interactive systems combine evidence collection with diagnosis. Fixed-input systems must work with the same possibly incomplete record. The fixed-input setting used in this thesis therefore tests how the model uses the available transcript without giving it credit for asking additional questions.
+Another key difference is whether the system can ask more questions. MIND, WiseMind/ProAI, MAGI, DSM5AgentFlow, and conversational diagnostic AI study interactive workflows that can ask questions during the assessment~\citep{li2026mind,wu2026wisemind,bi2025magi,ozgun2025dsm5agentflow,tu2025conversational}. MentalSeek-Dx and MoodAngels instead work with information that is already present in a record or transcript~\citep{sun2026mentalseek,xiao2025moodangels}. These settings test different abilities. An interactive system can collect new evidence. A fixed-input system must work with the same possibly incomplete record. This thesis uses the fixed-input setting, so the model receives no credit for asking follow-up questions.
 
-Most published evaluations still focus on the final diagnosis. They provide less information about whether a benchmark disagreement began because a diagnosis was never proposed, did not pass a criterion rule, or remained available but was not selected as primary. This gap motivates a stage-wise evaluation rather than final-label accuracy alone.
+Most published studies still focus on the final diagnosis. A final score does not show whether a reference diagnosis was never proposed, failed a criterion rule, or remained available but was not selected as primary. This gap motivates a stage-wise evaluation instead of final-label accuracy alone.
 
-\section{Retrieval-Augmented Diagnostic Reasoning}
+\section{Retrieval with Similar Cases}
 
-Retrieval can play two different roles. Knowledge retrieval brings in documents, guidelines, or other factual sources~\citep{lewis2020rag}. Demonstration retrieval selects labeled examples or similar cases and places them in the prompt for in-context learning~\citep{liu2022incontext}. This thesis uses the second role. Retrieved cases are examples from the training source, not medical evidence about the current patient.
+Retrieval can have two different roles. Knowledge retrieval adds documents, guidelines, or other factual sources~\citep{lewis2020rag}. Example retrieval selects labeled examples or similar cases and places them in the prompt for in-context learning~\citep{liu2022incontext}. This thesis uses example retrieval. The retrieved cases come from the training source. They are examples for the model, not medical evidence about the current patient.
 
-Similar examples can show common wording, expected output format, possible labels, and frequent symptom--diagnosis patterns. However, in-context learning depends strongly on which examples are selected~\citep{liu2022incontext}. A retrieved case describes another patient or synthetic case. It may guide the model, but it should not be treated as evidence that the current patient has the same diagnosis.
+Similar examples can show common wording, the expected output format, possible labels, and common symptom--diagnosis patterns. However, in-context learning depends strongly on which examples are selected~\citep{liu2022incontext}. A retrieved case describes another patient or synthetic case. It may guide the model, but it does not show that the current patient has the same diagnosis.
 
-Retrieval is not always helpful. The retrieved examples reflect the wording and label distribution of the indexed corpus. Frequent classes may appear many times. Strong lexical overlap may encourage shortcuts, and a weakly related example may distract the model. Retrieval should therefore be tested as a configuration rather than assumed to improve diagnosis.
+Retrieval can also hurt performance. The examples reflect the wording and label balance of the source corpus. Frequent classes may appear many times. Very similar wording may encourage shortcuts, while a weakly related example may distract the model. Retrieval should therefore be tested as one complete setting rather than assumed to improve diagnosis.
 
-A label-aware policy may show a wider range of diagnoses and reduce repeated examples from frequent classes. However, balancing changes more than label frequency. It may also change the number, order, similarity, total length, and mix of examples. A comparison between global similarity retrieval and a balanced policy is therefore a comparison between complete retrieval settings, not a clean estimate of the effect of label balance alone.
+A label-aware policy may show a wider range of diagnoses and reduce repeated examples from frequent classes. However, balancing also changes the number, order, similarity, total length, and mix of examples. A comparison between global similarity retrieval and a balanced policy is therefore a comparison between two complete retrieval settings. It is not a clean test of label balance alone.
 
-Prior work shows that example choice matters for in-context learning, but it does not establish which retrieval policy works best for fine-grained psychiatric diagnosis. Retrieval policies should therefore be compared within the same architecture and evaluation contract.
+Earlier work shows that example choice matters for in-context learning, but it does not show which retrieval policy is best for fine-grained psychiatric diagnosis. Retrieval policies should therefore be compared within the same architecture and scoring contract.
 
-\section{Medical Multi-Agent Reasoning}
+\section{Medical Multi-Agent Systems}
 
-Medical multi-agent systems organize several model calls in different ways. Some assign separate roles for diagnosis, evidence extraction, criticism, or final decision-making. Others use consultation, debate, voting, or consensus. Verification-oriented systems produce an answer and then ask another component to check or revise it. MedAgents uses several role-based medical experts, and MDAgents changes the collaboration structure according to estimated task difficulty~\citep{tang2024medagents,kim2024mdagents}. Multi-agent debate is a related general method in which agents exchange and revise competing answers~\citep{du2024debate}.
+A medical multi-agent system uses several model calls and gives them different roles. One call may propose a diagnosis, another may extract evidence, another may criticize an answer, and another may make the final decision. Other systems use consultation, debate, voting, or consensus. MedAgents uses several role-based medical experts, while MDAgents changes the collaboration plan according to estimated task difficulty~\citep{tang2024medagents,kim2024mdagents}. Multi-agent debate is a related method in which agents exchange and revise competing answers~\citep{du2024debate}.
 
-These designs can be useful. A narrow role may focus on one subtask. A second model call may find missing evidence. Cross-checking may compare a diagnosis with criteria, and a structured workflow can save intermediate outputs for review. These are possible benefits, not guarantees. More agents or more discussion rounds do not automatically produce better diagnostic accuracy.
+These designs may help. A narrow role can focus on one task. A second model call may find missing evidence. A checker may compare a diagnosis with criteria, and a structured workflow can save intermediate outputs for review. These are possible benefits, not guarantees. More agents or more discussion rounds do not automatically lead to better diagnostic accuracy.
 
-Multi-agent systems can also repeat the same mistakes. Agents that use the same backbone model, similar prompts, and the same evidence may have correlated errors. A wrong candidate or unsupported evidence statement can pass into later stages. Free-form discussion may change several parts of the workflow at once, and the final component may still choose the wrong answer even when a useful alternative was mentioned earlier.
+Multi-agent systems can also repeat the same mistake. Agents that use the same model family, similar prompts, and the same evidence may fail in similar ways. A wrong candidate or an unsupported evidence statement can pass into later steps. Free-form discussion may change several parts of the workflow at once, and the last component may still choose the wrong answer even when a useful alternative was mentioned earlier.
 
-This creates an attribution problem. When the candidate generator, evidence representation, discussion process, and final aggregation all change together, a difference in final accuracy is a complete-system effect. It does not show which component caused the difference. A comparison with a Single LLM may also change prompt structure, context, model-call count, and compute.
+This makes the source of a performance change hard to identify. If the candidate generator, evidence record, discussion process, and final rule all change together, a higher or lower final score is a result of the whole system. It does not show which part caused the change. A comparison with a Single LLM may also change the prompt, context, number of model calls, and compute.
 
-For this reason, candidate generation, criterion checking, and final commitment should be recorded separately. This does not make the components statistically independent, but it allows the observed disagreement to be located more precisely.
+For this reason, candidate generation, criterion checking, and final commitment should be saved and evaluated separately. This does not make the components independent, but it shows more clearly where the recorded disagreement appears.
 
-\section{Auditability and Criterion Grounding}
+\section{Auditability and Criterion-Level Records}
 \label{sec:auditability-definition}
 
-A fluent explanation is not proof that the explanation reflects the factors that produced the answer. Model-generated reasoning can sound clear while still being unfaithful~\citep{turpin2023unfaithful}. In this thesis, \emph{explainability} means a human-facing account of a decision. \emph{Interpretability} means how directly a person can understand the decision process. \emph{Faithfulness} asks whether the stated account reflects the factors that produced the output. \emph{Auditability} means that an external record is saved and can be inspected or replayed. These properties are different and should be evaluated separately in healthcare~\citep{rudin2019stop,huang2024xiai}.
+An explanation that sounds clear may still fail to match the factors that led to the answer~\citep{turpin2023unfaithful}. This thesis uses four related terms. \emph{Explainability} means the account shown to a person. \emph{Interpretability} means how easy the decision process is to understand. \emph{Faithfulness} asks whether the account matches the factors that produced the output. \emph{Auditability} means that an external record is saved and can be checked or replayed. These properties are different and should be evaluated separately in healthcare~\citep{rudin2019stop,huang2024xiai}.
 
-Diagnostic-chain and symptom-based methods can show intermediate hypotheses, confidence values, or clinically motivated features~\citep{chen2025cod,lee2026interpretable,lyu2026depllm}. Psychiatric systems may also connect outputs to guidelines, structured interviews, symptom-to-criterion mappings, and supporting or conflicting evidence~\citep{li2026mind,bi2025magi,ozgun2025dsm5agentflow}. Constraint-logic methods make the rule layer more visible by translating diagnostic criteria into inspectable programs~\citep{kim2025clp}.
+Diagnostic-chain and symptom-based methods can show intermediate diagnoses, confidence values, or clinically motivated features~\citep{chen2025cod,lee2026interpretable,lyu2026depllm}. Psychiatric systems may also connect outputs to guidelines, structured interviews, symptom-to-criterion links, and supporting or conflicting evidence~\citep{li2026mind,bi2025magi,ozgun2025dsm5agentflow}. Constraint-logic methods make the rule layer easier to inspect by turning diagnostic criteria into explicit programs~\citep{kim2025clp}.
 
-These records are useful only if the underlying criteria and evidence mapping are reasonable. A model may generate an unsupported evidence note. A criterion may be represented incorrectly, and an inspectable rule may still contain a poor clinical assumption. Expert review of model-generated diagnostic rules remains necessary~\citep{kim2025clp}. Criterion-grounded outputs are therefore reviewable model records, not clinician-validated evidence or clinical truth.
+These records are useful only when the criteria and evidence links are reasonable. A model may write an unsupported evidence note. A criterion may be represented poorly, and a visible rule may still contain a weak clinical assumption. Expert review of model-generated diagnostic rules is still needed~\citep{kim2025clp}. Criterion-level outputs are therefore model records that can be reviewed. They are not clinician-validated evidence or clinical truth.
 
-An auditable system should keep the source evidence, criterion states, rule results, intermediate diagnoses, and final decision. This record still does not reveal hidden model reasoning. A criterion layer may be used only for review, or it may take part in final selection. These two roles should be evaluated separately because good evidence recording or high compatibility inclusion does not guarantee a good primary diagnosis.
+An auditable system should keep the source evidence, criterion states, rule results, intermediate diagnoses, and final decision. Even then, the record does not reveal hidden model reasoning. A criterion layer may be used only for review, or it may also affect final selection. These two roles should be tested separately because good evidence recording or high compatibility inclusion does not guarantee a good primary diagnosis.
 
-The remaining research gap is therefore not only whether intermediate records exist. It is whether candidate availability, criterion compatibility, and final commitment are evaluated together on the same cases.
+The remaining gap is therefore not only whether a system keeps intermediate records. The records must also be evaluated together on the same cases: Was the diagnosis available as a candidate? Did it enter the compatible set? Was it finally committed as primary?
 
-\section{Primary-Diagnosis Selection}
+\section{Primary Diagnosis Selection}
 
-Criterion compatibility and primary-diagnosis selection answer different questions. Compatibility asks whether one diagnosis fits the available transcript under a defined rule. Because several psychiatric disorders can share symptoms, more than one diagnosis may pass its own rule. Compatibility alone does not show whether a diagnosis should be primary, comorbid, secondary, or only a differential alternative.
+Criterion compatibility and primary-diagnosis selection answer different questions. Compatibility asks whether one diagnosis fits the available transcript under a defined rule. Because psychiatric disorders share symptoms, more than one diagnosis may pass its own rule. Compatibility alone does not show whether a diagnosis should be primary, comorbid, secondary, or only a differential alternative.
 
-Structured medical knowledge can help organize evidence. MedKGI combines a medical knowledge graph, guided questioning, and a structured dialogue state to seek useful information during diagnosis~\citep{wang2025medkgi}. DKEC builds heterogeneous knowledge graphs from external medical sources and uses their relations for multilabel diagnosis prediction~\citep{ge2024dkec}. These studies show how structured representations can support evidence collection or label prediction. Their evaluated goals are different from selecting one primary diagnosis among several criterion-compatible psychiatric candidates in a fixed transcript.
+Structured medical knowledge can help organize evidence. MedKGI combines a medical knowledge graph, guided questions, and a structured dialogue state to seek useful information during diagnosis~\citep{wang2025medkgi}. DKEC builds knowledge graphs from outside medical sources and uses their links for multilabel diagnosis prediction~\citep{ge2024dkec}. These studies show how structured information can help collect evidence or predict labels. Their tested goals are different from choosing one primary diagnosis among several criterion-compatible psychiatric candidates in a fixed transcript.
 
-A primary selector may need direct comparisons among candidates. Important relations include symptom timing, duration, illness course, previous episodes, exclusionary causes, syndrome dominance, explanatory dependence, and comorbidity. The reviewed methods can organize evidence or identify plausible labels, but they do not directly test the case in which a benchmark-reference diagnosis remains both ranked and criterion-compatible while another diagnosis is committed as primary.
+A primary selector may need to compare the candidates directly. Useful information may include symptom timing, duration, illness course, past episodes, other possible causes, which syndrome explains the case best, and whether more than one disorder is present. The reviewed methods can organize evidence or find plausible labels, but they do not directly test the case in which a benchmark-reference diagnosis remains ranked and criterion-compatible while another diagnosis is committed as primary.
 
-This gap motivates separate measurement of genuine Top-3 candidate coverage, benchmark-reference inclusion in the criterion-compatible set, and committed-primary agreement.
+This gap motivates three separate measures: genuine Top-3 candidate coverage, benchmark-reference inclusion in the criterion-compatible set, and committed-primary agreement.
 
 \section{Research Gap and Research Questions}
 
-The reviewed work exposes different parts of the diagnostic process. Some systems produce hypotheses, some record criterion-related evidence, and some return only a final diagnosis. Table~\ref{tab:related-work-matrix} summarizes the outputs reported in representative studies. The table describes published evaluation contracts. It does not rank overall system quality or clinical ability.
+The reviewed work shows different parts of the diagnostic process. Some systems produce possible diagnoses. Some save criterion-related evidence. Others mainly return one final diagnosis. Table~\ref{tab:related-work-matrix} summarizes the outputs reported in representative studies. It describes the published evaluation of each study. It does not rank overall system quality or clinical ability.
 
 \begin{table}[htbp]
 \centering
@@ -322,17 +322,17 @@ The reviewed work exposes different parts of the diagnostic process. Some system
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{2.7cm}|>{\raggedright\arraybackslash}p{3.1cm}|>{\raggedright\arraybackslash}p{4.3cm}|>{\centering\arraybackslash}p{2.0cm}|}
 \hline
-Study or system & Evidence setting & Ranked candidates & Criterion or evidence representation & Stage-wise evaluation\\
+Study or system & Evidence setting & Ranked candidates & Criterion or evidence record & Stage-wise evaluation\\
 \hline
-MIND~\citep{li2026mind} & Interactive consultation & No ranked evaluation reported & Criteria-grounded rationales and process rewards & No\\
+MIND~\citep{li2026mind} & Interactive consultation & No ranked evaluation reported & Criterion-based rationales and process rewards & No\\
 \hline
 WiseMind/\allowbreak ProAI~\citep{wu2026wisemind} & Interactive consultation & No ranked evaluation reported & Structured DSM-guided action states & Partial\\
 \hline
-MAGI~\citep{bi2025magi} & Interactive MINI-guided interview & No ranked evaluation reported & Symptom and dialogue evidence mapped to criteria & Partial\\
+MAGI~\citep{bi2025magi} & Interactive MINI-guided interview & No ranked evaluation reported & Symptom and dialogue evidence linked to criteria & Partial\\
 \hline
-DSM5Agent\allowbreak Flow~\citep{ozgun2025dsm5agentflow} & Interactive questionnaire & No ranked evaluation reported & Utterance-level supporting and contradictory criteria & Partial\\
+DSM5Agent\allowbreak Flow~\citep{ozgun2025dsm5agentflow} & Interactive questionnaire & No ranked evaluation reported & Utterance-level supporting and conflicting criteria & Partial\\
 \hline
-MentalSeek-Dx~\citep{sun2026mentalseek} & Fixed clinical record & Hypotheses generated; ranking not evaluated & Criteria-guided staged reasoning & Partial\\
+MentalSeek-Dx~\citep{sun2026mentalseek} & Fixed clinical record & Possible diagnoses generated; ranking not evaluated & Criteria-guided staged reasoning & Partial\\
 \hline
 Mood\allowbreak Angels~\citep{xiao2025moodangels} & Fixed records and assessment scales & No ranked evaluation reported & DSM-5 retrieval and symptom matching & Partial\\
 \hline
@@ -349,17 +349,17 @@ Constraint-logic CDSS~\citep{kim2025clp} & Structured patient facts & None & Ins
 \end{table}
 \FloatBarrier
 
-The reviewed literature leaves five questions that are directly related to this thesis:
+The reviewed work leaves five questions that are directly related to this thesis:
 
 \begin{enumerate}
-    \item Complete-system comparisons are difficult because conventional classifiers, Single LLMs, and multi-stage systems often use different prompts, model calls, retrieval settings, and output contracts.
+    \item Conventional classifiers, Single LLMs, and multi-stage systems often use different prompts, model calls, retrieval settings, and output contracts. A final score therefore compares complete systems, not one isolated component.
     \item Final-label accuracy does not show whether a reference diagnosis was missing from the candidates, absent from the criterion-compatible set, or available in both views but not committed as primary.
-    \item Demonstration retrieval depends on which examples are selected, so global similarity retrieval and label-aware balancing should be compared within each architecture.
-    \item Multi-agent and criterion-based selection methods often change several parts of the workflow at once, which limits causal claims about one final-selection component.
-    \item A stage-wise analysis should be checked on a second synthetic source because one corpus cannot show whether the same output views remain useful after the data source changes.
+    \item Example retrieval depends on which examples are selected. Global similarity retrieval and label-aware balancing should therefore be compared within each architecture.
+    \item Multi-agent and criterion-based selection methods often change several parts of the workflow at once. This makes it hard to claim that one final-selection component caused the result.
+    \item A stage-wise analysis should be checked on a second synthetic source. One corpus cannot show whether the same output views remain useful after the data source changes.
 \end{enumerate}
 
-HiED addresses these questions by saving the ranked candidates, criterion states, criterion-compatible set, and final commitment under declared comparison contracts.
+HiED addresses these questions by saving the ranked candidates, criterion states, criterion-compatible set, and final commitment under clear comparison rules.
 
 This thesis uses the following research questions:
 
@@ -371,7 +371,7 @@ This thesis uses the following research questions:
 \item[RQ5] Does the stage-wise analysis remain useful under a second synthetic source?
 \end{description}
 
-RQ3 first compares retrieval settings on the public-validation split and freezes the selected settings. RQ1 then evaluates those selected settings on the fixed internal held-out split. RQ2 uses the internal HiED trace to locate recorded disagreement. RQ4 compares the tested primary-selection methods. RQ5 applies the same output views to MDD-5k and uses the cross-corpus analyses to define the synthetic-source boundary.
+RQ3 first compares retrieval settings on the public-validation split and freezes the selected settings. RQ1 then tests those settings on the fixed internal held-out split. RQ2 uses the internal HiED trace to locate recorded disagreement. RQ4 compares the tested primary-selection methods. RQ5 applies the same output views to MDD-5k and uses the cross-corpus results to define the synthetic-source boundary.
 
 \chapter{Study Architectures and Diagnostic Workflow}
 \label{ch:architecture}
