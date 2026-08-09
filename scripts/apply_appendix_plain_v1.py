@@ -12,7 +12,15 @@ text = TARGET.read_text(encoding="utf-8")
 original = text
 comment_counts = (text.count(r"\ct{"), text.count(r"\wl{"))
 
-# Fix the two long state cells in the Chapter 3 worked-example table.
+# Give the worked-example state column enough room for a two-line monospace value.
+old_geometry = r"\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{4.0cm}|>{\centering\arraybackslash}p{2.6cm}|>{\raggedright\arraybackslash}X|}"
+new_geometry = r"\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{3.7cm}|>{\centering\arraybackslash}p{2.9cm}|>{\raggedright\arraybackslash}X|}"
+geometry_count = text.count(old_geometry)
+if geometry_count != 1:
+    raise SystemExit(f"Expected one worked-example table geometry, found {geometry_count}")
+text = text.replace(old_geometry, new_geometry, 1)
+
+# Split the two long state cells across two lines.
 replacements = {
     r"F41.1 & Required duration & \texttt{insufficient\_\allowbreak{}evidence} & The patient cannot state when the worry began.\\":
         r"F41.1 & Required duration & \shortstack{\texttt{insufficient\_}\\\texttt{evidence}} & The patient cannot state when the worry began.\\",
@@ -66,6 +74,7 @@ required = [
     r"\label{tab:internal-paired-tests}",
     r"\label{tab:external-paired-tests}",
     r"\label{tab:qwen-size-results}",
+    new_geometry,
     r"\shortstack{\texttt{insufficient\_}\\\texttt{evidence}}",
     "These are study rules based on ICD-10 descriptions",
     "It does not repeat the complete software implementation.",
