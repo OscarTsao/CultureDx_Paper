@@ -1,4 +1,4 @@
-name: Apply Problem Definition cleanup v1
+name: Apply Introduction focus cleanup v1
 
 on:
   push:
@@ -13,7 +13,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: problem-definition-cleanup-v1
+  group: introduction-focus-cleanup-v1
   cancel-in-progress: false
 
 jobs:
@@ -31,7 +31,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Apply approved Section 1.2 cleanup
+      - name: Apply approved Introduction cleanup
         run: python scripts/apply_problem_definition_cleanup_v1.py
 
       - name: Validate source wording
@@ -43,9 +43,12 @@ jobs:
           grep -F 'A gold label may never enter the candidate list.' "$target"
           grep -F 'The main technical problem studied in this thesis is how to make these three diagnostic decisions separately visible.' "$target"
           grep -F 'It also allows different types of disagreement to be studied without treating every final-label mismatch as the same problem.' "$target"
+          grep -F '\section{Overview of HiED and Study Scope}' "$target"
+          grep -F 'This thesis proposes HiED, a hybrid, evidence-grounded multi-agent decision-support framework for Chinese psychiatric interview transcripts.' "$target"
           ! grep -Fq 'In this thesis, a benchmark or dataset reference label is a diagnosis supplied by the dataset for scoring.' "$target"
           ! grep -Fq 'A high final accuracy score also needs careful interpretation.' "$target"
           ! grep -Fq 'Cross-corpus testing is used as an additional boundary analysis rather than as the main contribution of HiED.' "$target"
+          ! grep -Fq 'A Single LLM baseline reads a fixed transcript and directly returns a primary diagnosis.' "$target"
 
       - name: Install complete XeLaTeX toolchain
         run: |
@@ -63,9 +66,16 @@ jobs:
           latexmk -xelatex -interaction=nonstopmode -halt-on-error -file-line-error main.tex
           test -s main.pdf
           pdfinfo main.pdf | tee /tmp/main_pdfinfo.txt
-          pdftotext -layout main.pdf /tmp/main.txt
-          grep -F 'A gold label may never enter the candidate list.' /tmp/main.txt
-          grep -F 'without treating every final-label mismatch as the same problem.' /tmp/main.txt
+
+          # Extract only the Chapter 1 pages. This avoids the known legacy
+          # background-resource warning on the cover while still checking the
+          # rendered Introduction wording.
+          pdftotext -f 13 -l 17 -layout main.pdf /tmp/chapter1.txt
+          grep -F 'A gold label may never enter the candidate list.' /tmp/chapter1.txt
+          grep -F 'without treating every final-label mismatch as the same problem.' /tmp/chapter1.txt
+          grep -F 'This thesis proposes HiED, a hybrid, evidence-grounded multi-agent decision-support framework' /tmp/chapter1.txt
+          ! grep -Fq 'A Single LLM baseline reads a fixed transcript' /tmp/chapter1.txt
+
           if grep -Eiq 'undefined references|undefined citations|Citation .* undefined|Reference .* undefined' main.log; then
             echo 'Unresolved references or citations found.' >&2
             exit 1
@@ -77,7 +87,7 @@ jobs:
           fi
           grep -E 'Underfull|Warning' main.log > /tmp/main_warnings.txt || true
 
-      - name: Commit verified Section 1.2 cleanup
+      - name: Commit verified Introduction cleanup
         shell: bash
         run: |
           set -euo pipefail
@@ -88,17 +98,18 @@ jobs:
             echo 'No thesis change to commit.'
             exit 0
           fi
-          git commit -m 'Keep the problem definition focused on stage-wise disagreement'
+          git commit -m 'Keep the Introduction focused on the problem and HiED'
           git push origin HEAD:thesis/post-defense-rewrite-v2
 
       - name: Upload verification artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: problem-definition-cleanup-v1
+          name: introduction-focus-cleanup-v1
           path: |
             school/main.pdf
             school/main.log
+            /tmp/chapter1.txt
             /tmp/main_pdfinfo.txt
             /tmp/main_warnings.txt
           if-no-files-found: warn
