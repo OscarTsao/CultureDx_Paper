@@ -209,17 +209,11 @@ For this reason, a useful decision-support system should provide more informatio
 
 Large language models can process clinical dialogue and produce diagnostic outputs. Medical multi-agent systems can also assign different tasks to different model calls and combine their outputs~\citep{li2024taiwan,raballo2025,sarma2025,tang2024medagents,kim2024mdagents}. These methods are useful for psychiatric transcript analysis, but a final diagnosis alone does not show how the result was formed or where a disagreement occurred.
 
-A final disagreement can start at different stages. A dataset reference diagnosis may never enter the candidate list. It may enter the list but fail the criterion check. It may also appear in both the candidate list and the criterion-compatible set, but another diagnosis may still be selected as primary. These cases need different improvements, but one final accuracy score groups them together.
+A final disagreement can start at different stages. A gold label may never enter the candidate list. It may enter the list but fail the criterion check. It may also appear in both the candidate list and the criterion-compatible set, but another diagnosis may still be selected as primary. These cases need different improvements, but one final accuracy score groups them together.
 
-In this thesis, a benchmark or dataset reference label is a diagnosis supplied by the dataset for scoring. It is not an independently reviewed clinical diagnosis. The recorded outputs therefore show where HiED agrees or disagrees with the benchmark; they do not by themselves show which diagnosis is clinically correct.
-
-A high final accuracy score also needs careful interpretation. A text classifier may learn words and label patterns that are common in one corpus. It may score well when its training and test cases come from the same source, but its performance may fall when the data source changes. Same-corpus label prediction, cross-corpus transfer, and the amount of information provided for clinical review are different questions.
-
-The main technical problem studied in this thesis is how to make the three diagnostic decisions separately visible. This allows us to identify whether a benchmark disagreement appears during candidate generation, criterion checking, or primary diagnosis selection. Cross-corpus testing is used as an additional boundary analysis rather than as the main contribution of HiED.
+The main technical problem studied in this thesis is how to make these three diagnostic decisions separately visible. This allows us to identify whether a disagreement appears during candidate generation, criterion checking, or primary diagnosis selection. It also allows different types of disagreement to be studied without treating every final-label mismatch as the same problem.
 
 \section{Overview of HiED and Study Scope}
-
-A Single LLM baseline reads a fixed transcript and directly returns a primary diagnosis. It may also return a comorbid diagnosis. However, it does not follow the same output contract as HiED: it does not provide the same genuine ranked candidate list or an independent criterion-level record for every configured diagnosis. Its output is therefore mainly used to evaluate the final diagnostic result.
 
 This thesis proposes HiED, a hybrid, evidence-grounded multi-agent decision-support framework for Chinese psychiatric interview transcripts. HiED uses two connected paths. The diagnosis path ranks possible diagnoses and proposes a primary diagnosis. The criterion-checking path checks every configured diagnosis against study-specific criteria informed by ICD-10. Each criterion is marked as \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_evidence}.
 
