@@ -1,0 +1,137 @@
+name: Apply approved abstract and Introduction wording v1
+
+on:
+  push:
+    branches:
+      - thesis/post-defense-rewrite-v2
+    paths:
+      - .github/workflows/apply_abstract_intro_v1.yml
+      - scripts/apply_abstract_intro_v1.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: abstract-intro-rewrite-v1
+  cancel-in-progress: false
+
+jobs:
+  apply-and-verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out thesis branch
+        uses: actions/checkout@v4
+        with:
+          ref: thesis/post-defense-rewrite-v2
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Apply approved wording
+        run: python scripts/apply_abstract_intro_v1.py school/main.tex
+
+      - name: Validate source wording
+        shell: bash
+        run: |
+          set -euo pipefail
+          target=school/main.tex
+          git diff --check -- "$target"
+          grep -F 'Many psychiatric LLM systems are diagnosis-centered' "$target"
+          grep -F '272 cases in LingxiDiag-16K and 225 cases in MDD-5k' "$target"
+          grep -F 'at least one gold label was already in the Top-3' "$target"
+          grep -F "HiED's main contribution is therefore not higher diagnostic accuracy" "$target"
+          grep -F 'HiED is a decision-support research framework, not an autonomous diagnostic system' "$target"
+          grep -F '分階段分析顯示，兩個資料集中最多的已記錄分歧都出現在主診斷選擇階段' "$target"
+          grep -F 'LingxiDiag-16K 有 272 例，MDD-5k 有 225 例' "$target"
+          grep -F '至少一個資料集標準答案已進入前三個候選' "$target"
+          grep -F 'These outputs are designed to support faster clinical review by helping clinicians screen candidate diagnoses' "$target"
+
+      - name: Install complete XeLaTeX toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            latexmk texlive-xetex texlive-latex-extra texlive-fonts-recommended \
+            texlive-lang-chinese texlive-publishers fonts-noto-cjk \
+            fonts-urw-base35 poppler-utils
+
+      - name: Compile complete thesis
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd school
+          latexmk -xelatex -interaction=nonstopmode -halt-on-error -file-line-error main.tex
+          test -s main.pdf
+          pdfinfo main.pdf | tee /tmp/main_pdfinfo.txt
+          if grep -Eiq 'undefined references|undefined citations|Citation .* undefined|Reference .* undefined' main.log; then
+            echo 'Unresolved references or citations found.' >&2
+            exit 1
+          fi
+          grep -E 'Overfull|Underfull|Warning' main.log > /tmp/main_warnings.txt || true
+          cat /tmp/main_warnings.txt
+
+      - name: Verify both abstracts fit one page
+        shell: bash
+        run: |
+          set -euo pipefail
+          pages=$(pdfinfo school/main.pdf | awk '/^Pages:/ {print $2}')
+          find_first_page() {
+            local needle="$1"
+            for page in $(seq 1 "$pages"); do
+              pdftotext -f "$page" -l "$page" -layout school/main.pdf /tmp/page.txt
+              if grep -Fxq "$needle" /tmp/page.txt; then
+                echo "$page"
+                return 0
+              fi
+            done
+            return 1
+          }
+          zh=$(find_first_page '中文摘要')
+          en=$(find_first_page 'Abstract')
+          ack=$(find_first_page 'Acknowledgements')
+          printf 'Chinese abstract page: %s\nEnglish abstract page: %s\nAcknowledgements page: %s\n' "$zh" "$en" "$ack" | tee /tmp/abstract_pages.txt
+          test "$en" -eq $((zh + 1))
+          test "$ack" -eq $((en + 1))
+          mkdir -p verification_renders
+          pdftoppm -png -r 180 -f "$zh" -l "$ack" school/main.pdf verification_renders/frontmatter
+
+      - name: Require zero overfull boxes
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -q 'Overfull \\hbox' school/main.log; then
+            grep 'Overfull \\hbox' school/main.log >&2
+            exit 1
+          fi
+
+      - name: Commit verified wording
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add school/main.tex
+          if git diff --cached --quiet; then
+            echo 'No thesis change to commit.'
+            exit 0
+          fi
+          git commit -m 'Refocus abstracts on clinical decision support'
+          git push origin HEAD:thesis/post-defense-rewrite-v2
+
+      - name: Upload verification artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: abstract-intro-rewrite-v1
+          path: |
+            school/main.pdf
+            school/main.log
+            verification_renders/*.png
+            /tmp/main_pdfinfo.txt
+            /tmp/main_warnings.txt
+            /tmp/abstract_pages.txt
+          if-no-files-found: warn
+          retention-days: 7
