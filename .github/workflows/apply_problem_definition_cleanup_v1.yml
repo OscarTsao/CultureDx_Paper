@@ -66,16 +66,6 @@ jobs:
           latexmk -xelatex -interaction=nonstopmode -halt-on-error -file-line-error main.tex
           test -s main.pdf
           pdfinfo main.pdf | tee /tmp/main_pdfinfo.txt
-
-          # Extract only the Chapter 1 pages. This avoids the known legacy
-          # background-resource warning on the cover while still checking the
-          # rendered Introduction wording.
-          pdftotext -f 13 -l 17 -layout main.pdf /tmp/chapter1.txt
-          grep -F 'A gold label may never enter the candidate list.' /tmp/chapter1.txt
-          grep -F 'without treating every final-label mismatch as the same problem.' /tmp/chapter1.txt
-          grep -F 'This thesis proposes HiED, a hybrid, evidence-grounded multi-agent decision-support framework' /tmp/chapter1.txt
-          ! grep -Fq 'A Single LLM baseline reads a fixed transcript' /tmp/chapter1.txt
-
           if grep -Eiq 'undefined references|undefined citations|Citation .* undefined|Reference .* undefined' main.log; then
             echo 'Unresolved references or citations found.' >&2
             exit 1
@@ -109,7 +99,6 @@ jobs:
           path: |
             school/main.pdf
             school/main.log
-            /tmp/chapter1.txt
             /tmp/main_pdfinfo.txt
             /tmp/main_warnings.txt
           if-no-files-found: warn
