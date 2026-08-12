@@ -18,17 +18,14 @@ jobs:
       - name: Check out paper
         uses: actions/checkout@v4
 
-      - name: Install CJK fonts
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y fonts-noto-cjk fonts-liberation fonts-urw-base35
-
       - name: Compile with XeLaTeX
         uses: xu-cheng/latex-action@v3
         with:
           root_file: main.tex
           working_directory: school
           latexmk_use_xelatex: true
+          extra_system_packages: "font-liberation font-urw-base35 font-noto-cjk"
+          pre_compile: "fc-cache -f && fc-match 'Liberation Serif' && fc-match 'Nimbus Sans' && fc-match 'Noto Serif CJK TC'"
           args: -file-line-error -halt-on-error -interaction=nonstopmode
 
       - name: Verify PDF
