@@ -20,8 +20,8 @@ def main() -> None:
 
     text = replace_once(
         text,
-        "Training source & 13,000 & Trains conventional baselines and builds the retrieval index; not used for final performance reporting\\\\",
-        "Route B training source & 13,000 & Required source for leakage-controlled conventional baselines and used to build the retrieval index; no retained TF--IDF Route B run is reported\\\\",
+        "Training source & 13,000 & Trains conventional baselines and builds the retrieval index; not used for final performance reporting",
+        "Route B training source & 13,000 & Required source for leakage-controlled conventional baselines and used to build the retrieval index; no retained TF--IDF Route B run is reported",
         "split-role table",
     )
 
@@ -34,8 +34,8 @@ def main() -> None:
 
     text = replace_once(
         text,
-        "Internal benchmark positioning (RQ1) & Fixed LingxiDiag internal held-out set, $N=1000$ & Main same-split comparison after configuration selection; complete architectures are compared descriptively\\\\",
-        "Internal benchmark positioning (RQ1) & Fixed LingxiDiag Route B held-out set, $N=1000$ & Descriptive comparison of Majority, Single, and HiED on Route B; the preserved TF--IDF result is reported separately on public validation\\\\",
+        "Internal benchmark positioning (RQ1) & Fixed LingxiDiag internal held-out set, $N=1000$ & Main same-split comparison after configuration selection; complete architectures are compared descriptively",
+        "Internal benchmark positioning (RQ1) & Fixed LingxiDiag Route B held-out set, $N=1000$ & Descriptive comparison of Majority, Single, and HiED on Route B; the preserved TF--IDF result is reported separately on public validation",
         "analysis-population table",
     )
 
