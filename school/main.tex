@@ -882,7 +882,7 @@ The 1,000-case internal held-out set was sampled from the 14,000-case training s
 \hline
 Split & $N$ & Role\\
 \hline
-Training source & 13,000 & Trains conventional baselines and builds the retrieval index; not used for final performance reporting\\
+Route B training source & 13,000 & Required source for leakage-controlled conventional baselines and used to build the retrieval index; no retained TF--IDF Route B run is reported\\
 \hline
 Public validation & 1,000 & Supports prompt, rule, sensitivity, and retrieval-configuration selection; reported only as descriptive development-set context\\
 \hline
@@ -891,7 +891,7 @@ Internal held-out set & 1,000 & Provides the main internal performance estimate 
 \end{tabularx}
 \end{table}
 
-All internal methods are evaluated on the same fixed 1,000-case held-out set. Because the public-validation split was used during system development, its results are not interpreted as an independent test estimate.
+All methods in the main Route B table are reported on the same fixed 1,000-case held-out set. The preserved TF--IDF analysis is explicitly separated because it evaluates the public-validation cases. Because the public-validation split was also used during system development, its results are descriptive development evidence rather than an independent test estimate.
 
 \subsection{MDD-5k}
 
@@ -1108,7 +1108,7 @@ Table~\ref{tab:analysis-populations} summarizes the role of each analysis popula
 \hline
 Retrieval-configuration selection (RQ3) & LingxiDiag public validation, $N=1000$ & Selects one retained retrieval configuration separately within Single and HiED; not treated as an independent performance estimate\\
 \hline
-Internal benchmark positioning (RQ1) & Fixed LingxiDiag internal held-out set, $N=1000$ & Main same-split comparison after configuration selection; complete architectures are compared descriptively\\
+Internal benchmark positioning (RQ1) & Fixed LingxiDiag Route B held-out set, $N=1000$ & Descriptive comparison of Majority, Single, and HiED on Route B; the preserved TF--IDF result is reported separately on public validation\\
 \hline
 Recorded-output and primary-selection analyses (RQ2--RQ4) & Same internal $N=1000$; analyses using $I$ are restricted to 915 checker-eligible cases & Localizes disagreement among recorded output views and tests primary-selection policies under stated artifact and inference contracts\\
 \hline
@@ -2104,12 +2104,12 @@ The public-validation split was used for prompt development, rule refinement, se
 
 MDD-5k provides a second synthetic source, not a clinical cohort. The archived MDD-5k outputs also contain more than one trace lineage. The matched method-comparison trace, canonical rescore, and historical output are not interchangeable. The main external claims use one matched trace, while the canonical trace is reported only as sensitivity evidence. Mixing fields across these traces would not reproduce one system run.
 
-The cross-corpus TF--IDF results show that same-source prediction can depend strongly on wording and label priors. The completed evidence therefore supports same-source held-out analysis and a bounded second-synthetic-source test. It does not establish generalization to real psychiatric consultations, independent hospitals, spontaneous or code-switched Taiwanese conversations, or Taiwanese coding practice.
+The cross-corpus TF--IDF results show that same-source prediction can depend strongly on wording and label priors. The lexical evidence supports a public-validation same-source sensitivity analysis and a bounded second-synthetic-source transfer test; it is not a Route B held-out estimate. The broader HiED evidence still supports a same-source Route B analysis. Neither line of evidence establishes generalization to real psychiatric consultations, independent hospitals, spontaneous or code-switched Taiwanese conversations, or Taiwanese coding practice.
 
 \section{Model and Experimental-Comparison Limitations}
 \label{sec:model-comparison-limitations}
 
-Most comparisons change more than one component. The main table compares complete TF--IDF, Single, and HiED configurations on the same cases and label mapping, but the methods differ in training, retrieval, prompts, model calls, intermediate outputs, and output contract. Their performance differences cannot be assigned only to multi-agent orchestration.
+Most comparisons change more than one component. The Route B table compares Majority, Single, and HiED aggregate configurations under the same intended case universe and label mapping, while the preserved TF--IDF analysis uses the disjoint public-validation population. Single and HiED differ in retrieval, prompts, model calls, intermediate outputs, and output contract, so their performance differences cannot be assigned only to multi-agent orchestration. No direct Route B performance difference between TF--IDF and HiED is estimated.
 
 Retrieval comparisons are controlled within each architecture, but global Top-5 and parent-balanced retrieval still differ in example count, composition, ordering, similarity, label balance, and prompt length. Single and HiED also selected their retrieval settings separately on validation, so their main configurations are not retrieval matched.
 
@@ -2126,7 +2126,7 @@ Confidence intervals and tests describe uncertainty over the observed cases unde
 
 Some groups are small or imbalanced. In particular, the 12-case $D_3=1,I=0,S=0$ group cannot support a stable class-specific conclusion. The repeated F41-to-F32 direction is a benchmark-relative pattern, not a clinically adjudicated confusion mechanism.
 
-Artifact completeness also differs across analyses. The internal HiED headline row, the internal $D_3/I/S$ profiles, the paired DA--NtS comparison, and the matched external trace have case-level support. Several baseline and supporting results remain available only as aggregate summaries or incomplete records. These results cannot support new paired confidence intervals, case-overlap claims, or claims about which individual cases changed.
+Artifact completeness also differs across analyses. The internal HiED headline row, the internal $D_3/I/S$ profiles, the paired DA--NtS comparison, and the matched external trace have case-level support. Several baseline and supporting results remain available only as aggregate summaries or incomplete records. The preserved TF--IDF case-level file covers public validation and has zero case-ID overlap with Route B; the legacy TF--IDF aggregate headline row is not reproduced by that file. These results cannot support new paired confidence intervals, same-split case-overlap claims, or claims about which individual cases changed.
 
 Reproduction requires the full evaluation contract: data split, model and prompt, retrieval configuration, diagnostic scope, recorded output lineage, label projection, eligible population, output-view definition, and statistical procedure. A similar number obtained with a different Top-3 definition, denominator, trace lineage, or compatibility rule is not the same result.
 
