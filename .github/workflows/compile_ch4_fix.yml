@@ -1,0 +1,44 @@
+name: Compile corrected thesis source
+
+on:
+  push:
+    branches:
+      - fix/ch4-metric-contract-paper
+    paths:
+      - .github/workflows/compile_ch4_fix.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out paper
+        uses: actions/checkout@v4
+
+      - name: Install CJK fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-noto-cjk fonts-liberation fonts-urw-base35
+
+      - name: Compile with XeLaTeX
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: main.tex
+          working_directory: school
+          latexmk_use_xelatex: true
+          args: -file-line-error -halt-on-error -interaction=nonstopmode
+
+      - name: Verify PDF
+        run: |
+          test -s school/main.pdf
+          pdfinfo school/main.pdf | sed -n '1,20p'
+
+      - name: Upload compiled PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: corrected-thesis-pdf
+          path: school/main.pdf
+          if-no-files-found: error
