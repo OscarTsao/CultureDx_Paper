@@ -1,0 +1,63 @@
+name: Audit Chapter 4 metric passages
+
+on:
+  push:
+    branches:
+      - fix/ch4-metric-contract-paper
+    paths:
+      - .github/workflows/audit_ch4_metric_context.yml
+      - school/main.tex
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  context:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out paper
+        uses: actions/checkout@v4
+
+      - name: Print relevant contexts
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("school/main.tex")
+          lines = path.read_text(encoding="utf-8").splitlines()
+          needles = (
+              "0.632",
+              "TF--IDF with logistic regression",
+              "same-split",
+              "Exact Match",
+              "Macro-F1",
+              "Weighted-F1",
+              "complete emitted",
+              "prediction set",
+              "internal held-out",
+          )
+          matches = sorted(
+              {
+                  i
+                  for i, line in enumerate(lines)
+                  if any(needle in line for needle in needles)
+              }
+          )
+          groups = []
+          for index in matches:
+              start = max(0, index - 8)
+              end = min(len(lines), index + 9)
+              if groups and start <= groups[-1][1]:
+                  groups[-1] = (groups[-1][0], max(groups[-1][1], end))
+              else:
+                  groups.append((start, end))
+
+          print(f"file={path} lines={len(lines)} matches={len(matches)}")
+          for start, end in groups:
+              print("\n" + "=" * 88)
+              print(f"CONTEXT {start + 1}-{end}")
+              print("=" * 88)
+              for i in range(start, end):
+                  print(f"{i + 1:05d}: {lines[i]}")
+          PY
