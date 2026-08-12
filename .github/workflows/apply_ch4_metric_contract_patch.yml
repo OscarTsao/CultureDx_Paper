@@ -1,0 +1,72 @@
+name: Apply Chapter 4 metric-contract correction
+
+on:
+  push:
+    branches:
+      - fix/ch4-metric-contract-paper
+    paths:
+      - scripts/apply_ch4_metric_contract_patch.py
+      - .github/workflows/apply_ch4_metric_contract_patch.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out paper branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/ch4-metric-contract-paper
+          fetch-depth: 0
+
+      - name: Apply deterministic correction
+        run: python scripts/apply_ch4_metric_contract_patch.py
+
+      - name: Validate edited source
+        run: |
+          git diff --check
+          python - <<'PY'
+          from pathlib import Path
+
+          text = Path("school/main.tex").read_text(encoding="utf-8")
+          required = [
+              "Within a method, Exact Match, Macro-F1, and Weighted-F1 are computed from the identical multilabel set",
+              "zero case-ID overlap with Route B",
+              "Preserved TF--IDF metric-contract audit on the public-validation split",
+              "no retained TF--IDF output covers Route B",
+              "Required Route B TF--IDF protocol",
+          ]
+          missing = [item for item in required if item not in text]
+          if missing:
+              raise SystemExit(f"missing required corrections: {missing}")
+
+          forbidden = [
+              "TF--IDF + LR & None & Same-split lexical classifier",
+              "TF--IDF with logistic regression is the strongest same-corpus label predictor",
+              "The aggregate Top-1 difference between HiED--DA and TF--IDF",
+          ]
+          remaining = [item for item in forbidden if item in text]
+          if remaining:
+              raise SystemExit(f"unsupported claims remain: {remaining}")
+
+          if text.count("\\begin{table}") != text.count("\\end{table}"):
+              raise SystemExit("table environment count mismatch")
+          if text.count("\\begin{adjustbox}") != text.count("\\end{adjustbox}"):
+              raise SystemExit("adjustbox environment count mismatch")
+          print("Chapter 4 source checks passed")
+          PY
+
+      - name: Commit corrected thesis source
+        run: |
+          if git diff --quiet -- school/main.tex; then
+            echo "No source change was produced"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add school/main.tex
+          git commit -m "fix: correct Chapter 4 metric and split provenance"
+          git push origin HEAD:fix/ch4-metric-contract-paper
