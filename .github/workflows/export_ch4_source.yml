@@ -1,0 +1,24 @@
+name: Export corrected thesis source
+
+on:
+  push:
+    branches:
+      - fix/ch4-metric-contract-paper
+    paths:
+      - .github/workflows/export_ch4_source.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload source
+        uses: actions/upload-artifact@v4
+        with:
+          name: corrected-thesis-source
+          path: school/main.tex
+          if-no-files-found: error
