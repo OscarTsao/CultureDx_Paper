@@ -25,7 +25,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             latexmk texlive-xetex texlive-latex-extra texlive-lang-chinese \
-            texlive-fonts-recommended fonts-liberation fonts-noto-cjk poppler-utils
+            texlive-fonts-recommended fonts-liberation fonts-noto-cjk \
+            fonts-urw-base35 poppler-utils
+          fc-cache -f
 
       - name: Build thesis
         working-directory: school
