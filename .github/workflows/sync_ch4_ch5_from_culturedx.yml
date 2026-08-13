@@ -1,0 +1,51 @@
+name: Sync audited Chapters 4-5 from CultureDx
+
+on:
+  push:
+    branches:
+      - thesis/post-defense-rewrite-v2
+    paths:
+      - .github/workflows/sync_ch4_ch5_from_culturedx.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-thesis:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out paper branch
+        uses: actions/checkout@v4
+        with:
+          ref: thesis/post-defense-rewrite-v2
+          fetch-depth: 0
+
+      - name: Fetch pinned thesis source
+        run: |
+          curl -fsSL \
+            'https://raw.githubusercontent.com/OscarTsao/CultureDx/b8c77e62a0833c8eeefa3b75acdc938050b1768a/paper/school/HiED_school_version.tex' \
+            -o school/main.tex
+
+      - name: Validate synchronized source
+        run: |
+          grep -F '% CH4_METRIC_CONTRACT_AUDIT_V2' school/main.tex
+          grep -F '% CH5_EXPERIMENTAL_DESIGN_REWRITE_V1' school/main.tex
+          grep -F 'At the time of writing, the annotation remains' school/main.tex
+          grep -F 'What internal performance is supported for HiED' school/main.tex
+          test "$(grep -c '\\chapter{Experimental Design}' school/main.tex)" -eq 1
+          test "$(grep -c '\\chapter{Internal Evaluation Results}' school/main.tex)" -eq 1
+          sha256sum school/main.tex
+
+      - name: Commit synchronized thesis
+        run: |
+          git add school/main.tex
+          if git diff --cached --quiet; then
+            echo 'Paper thesis source is already synchronized.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'docs(thesis): sync audited Chapters 4 and 5'
+          git push origin HEAD:thesis/post-defense-rewrite-v2
