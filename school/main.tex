@@ -350,7 +350,7 @@ Constraint-logic CDSS~\citep{kim2025clp} & Structured patient facts & None & Ins
 \end{table}
 \FloatBarrier
 
-This thesis addresses the main gap through the stage-wise analysis in RQ2. The other research questions provide benchmark context or test supporting design choices. RQ1 compares complete systems on the same internal split. RQ3 studies similar-case retrieval within each architecture. RQ4 tests alternative primary-selection methods. RQ5 applies the same output views to a second synthetic source.
+This thesis addresses the main gap through the stage-wise analysis in RQ2. The other research questions provide benchmark context or test supporting design choices. RQ1 reports the retained HiED estimate and the baseline comparisons supported by the available evidence. RQ3 studies similar-case retrieval within each architecture. RQ4 tests alternative primary-selection methods. RQ5 applies the same output views to a second synthetic source.
 
 This thesis uses the following research questions:
 
@@ -362,7 +362,7 @@ This thesis uses the following research questions:
 \item[RQ5] Does the stage-wise analysis remain useful under a second synthetic source?
 \end{description}
 
-RQ2 is the main stage-wise analysis. RQ1 provides benchmark context for the complete systems. RQ3 examines retrieval as a supporting configuration. RQ4 tests whether alternative selection methods reduce the recorded disagreement. RQ5 examines whether the same analysis can be applied to a second synthetic source.
+RQ2 is the main stage-wise analysis. RQ1 provides internal benchmark context under the retained evidence boundary. RQ3 examines retrieval as a supporting configuration. RQ4 tests whether alternative selection methods reduce the recorded disagreement. RQ5 examines whether the same analysis can be applied to a second synthetic source.
 
 \chapter{HiED Architecture and Stage-Wise Diagnostic Workflow}
 \label{ch:architecture}
@@ -1520,7 +1520,7 @@ contracts.
 \chapter{Internal Evaluation Results}
 \label{ch:results}
 
-This chapter reports the internal results in the order needed to interpret the study. Retrieval configurations are selected first on the public-validation split (RQ3). The frozen configurations are then compared on the fixed internal held-out set (RQ1). The remaining sections localize disagreement across the recorded output views (RQ2), evaluate primary-selection interventions (RQ4), and report the internal model-scale and diagnostic-confusion analyses that contribute to RQ5. All results in this chapter measure agreement with projected benchmark labels on synthetic LingxiDiag dialogues; they are not estimates of clinical diagnostic accuracy.
+This chapter reports the internal results in the order needed to interpret the study. Retrieval configurations are selected first on the public-validation split (RQ3). The retained internal records are then interpreted under the evidence boundary defined in Chapters~\ref{ch:data} and~\ref{ch:experimental} (RQ1). The remaining sections localize disagreement across the recorded output views (RQ2), evaluate primary-selection interventions (RQ4), and report the internal model-scale and diagnostic-confusion analyses that contribute to RQ5. All results in this chapter measure agreement with projected benchmark labels on synthetic LingxiDiag dialogues; they are not estimates of clinical diagnostic accuracy.
 
 \section{Retrieval-Configuration Results}
 \label{sec:retrieval-results}
