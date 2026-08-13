@@ -1,0 +1,51 @@
+name: Sync Chapter 5 consistency update
+
+on:
+  push:
+    branches:
+      - thesis/post-defense-rewrite-v2
+    paths:
+      - .github/workflows/sync_ch5_consistency_from_culturedx.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-thesis:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out paper branch
+        uses: actions/checkout@v4
+        with:
+          ref: thesis/post-defense-rewrite-v2
+          fetch-depth: 0
+
+      - name: Fetch pinned synchronized thesis
+        run: |
+          curl -fsSL \
+            'https://raw.githubusercontent.com/OscarTsao/CultureDx/1995261022ab993749bc6391b751ba7282d59b90/paper/school/HiED_school_version.tex' \
+            -o school/main.tex
+
+      - name: Validate cross-chapter consistency
+        run: |
+          grep -F '% CH4_METRIC_CONTRACT_AUDIT_V2' school/main.tex
+          grep -F '% CH5_EXPERIMENTAL_DESIGN_REWRITE_V1' school/main.tex
+          grep -F 'RQ1 reports the retained HiED estimate' school/main.tex
+          grep -F 'RQ1 provides internal benchmark context' school/main.tex
+          grep -F 'The retained internal records are then interpreted under the evidence boundary' school/main.tex
+          grep -F 'At the time of writing, the annotation remains' school/main.tex
+          sha256sum school/main.tex
+
+      - name: Commit synchronized thesis
+        run: |
+          git add school/main.tex
+          if git diff --cached --quiet; then
+            echo 'Paper thesis source is already synchronized.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'docs(thesis): sync Chapter 5 evidence-contract wording'
+          git push origin HEAD:thesis/post-defense-rewrite-v2
