@@ -1,0 +1,55 @@
+name: Verify Chapter 5 thesis build
+
+on:
+  push:
+    branches:
+      - thesis/post-defense-rewrite-v2
+    paths:
+      - .github/workflows/verify_ch5_thesis_build.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-thesis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out thesis branch
+        uses: actions/checkout@v4
+        with:
+          ref: thesis/post-defense-rewrite-v2
+
+      - name: Install XeLaTeX and fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            latexmk texlive-xetex texlive-latex-extra texlive-lang-chinese \
+            texlive-fonts-recommended fonts-liberation fonts-noto-cjk poppler-utils
+
+      - name: Build thesis
+        working-directory: school
+        run: latexmk -xelatex -interaction=nonstopmode -halt-on-error main.tex
+
+      - name: Verify build log and PDF
+        working-directory: school
+        run: |
+          test -s main.pdf
+          ! grep -E 'LaTeX Warning: (There were undefined references|Citation .* undefined)' main.log
+          ! grep -F 'Overfull \\hbox' main.log
+          pdfinfo main.pdf | tee build_pdfinfo.txt
+          pdftotext main.pdf build_text.txt
+          grep -F 'Experimental Design' build_text.txt
+          grep -F 'Study Sequence and Evidence Classes' build_text.txt
+          grep -F 'Planned Blinded Psychiatrist Annotation Pilot' build_text.txt
+          grep -F 'At the time of writing, the annotation remains' build_text.txt
+
+      - name: Upload verified build
+        uses: actions/upload-artifact@v4
+        with:
+          name: chapter5-thesis-build
+          path: |
+            school/main.pdf
+            school/main.log
+            school/build_pdfinfo.txt
+          if-no-files-found: error
