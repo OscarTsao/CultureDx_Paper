@@ -1874,76 +1874,32 @@ Finally, the lexical transfer matrix shows large and asymmetric source effects: 
 \chapter{Characterization of Recorded-Output Disagreements}
 \label{ch:error}
 
-This chapter describes where HiED disagrees with the projected benchmark labels in one frozen internal held-out trace. It does not estimate clinical diagnostic error. LingxiDiag contains synthetic dialogues, the benchmark labels are dataset references rather than independently adjudicated clinical diagnoses, and the saved outputs do not reveal the model's hidden reasoning.
+This chapter characterizes the disagreements identified in Chapter~\ref{ch:results}. It does not repeat the internal performance comparison or estimate clinical diagnostic error. LingxiDiag contains synthetic dialogues, the benchmark labels are dataset references rather than independently adjudicated clinical diagnoses, and the saved outputs do not reveal the model's hidden reasoning.
 
-The analysis asks three simple questions. Was a benchmark-reference diagnosis present in the genuine Top-3? Was it present in the criterion-compatible set? Was a benchmark-reference diagnosis committed as primary? Keeping these views separate shows where disagreement is recorded, but it does not prove that one stage caused another stage to fail.
-
-\section{Analysis Population and Output Views}
+\section{Analysis Scope}
 \label{sec:ch8-stagewise-taxonomy}
 
-The internal held-out set contains 1,000 cases. Criterion-level analysis is available for 915 cases with at least one non-\emph{Others} benchmark parent represented by a configured Criterion Checker. For these cases, Chapter~\ref{ch:results} defines:
+Chapter~\ref{ch:results} divided the 915 checker-eligible cases into mutually exclusive groups using genuine Top-3 detection ($D_3$), benchmark-gold inclusion in the criterion-compatible set ($I$), and committed-primary agreement ($S$). This chapter focuses on characteristics that are not visible from the aggregate group counts: the rank of the benchmark-reference diagnosis, frequent reference-to-primary directions, disagreement in the complete emitted diagnosis set, and the composition of recorded criterion states.
 
-\begin{itemize}
-    \item $D_3=1$ when at least one benchmark-reference parent appears in the genuine Diagnostician Top-3;
-    \item $I=1$ when at least one benchmark-reference parent appears in the criterion-compatible set; and
-    \item $S=1$ when the committed primary diagnosis agrees with at least one benchmark-reference parent.
-\end{itemize}
+Particular attention is given to the 272 cases with $D_3=1$, $I=1$, and $S=0$. In these cases, a benchmark-reference diagnosis is present in both the genuine Top-3 and the criterion-compatible set, but no benchmark-reference parent is committed as the primary diagnosis. $S=0$ does not imply that every benchmark-reference diagnosis is absent from the optional comorbid output. The analysis therefore describes a primary-commitment disagreement rather than the complete removal of the reference diagnosis.
 
-Table~\ref{tab:ch8-joint-profiles} repeats the complete joint distribution because the six profiles are the basis of this chapter.
+The analysis uses one frozen 1,000-case internal held-out trace. The 349-case gold-informed oracle population reported in Chapter~\ref{ch:results} is not an observed system group and is not used here.
 
-\begin{table}[htbp]
-\centering
-\caption{Recorded $D_3/I/S$ profiles among the 915 checker-eligible internal cases.}
-\label{tab:ch8-joint-profiles}
-\small
-\begin{tabularx}{\textwidth}{|c|c|c|r|X|}
-\hline
-$D_3$ & $I$ & $S$ & Cases & Recorded interpretation\\
-\hline
-0 & 0 & 0 & 34 & Reference absent from both recorded upstream views\\
-\hline
-0 & 1 & 0 & 79 & Reference absent from Top-3 but present in compatible set\\
-\hline
-1 & 0 & 0 & 12 & Reference ranked, absent from compatible set, and not selected\\
-\hline
-1 & 0 & 1 & 12 & Benchmark-consistent primary despite compatibility absence\\
-\hline
-1 & 1 & 0 & 272 & Reference ranked and compatible but not selected\\
-\hline
-1 & 1 & 1 & 506 & Reference ranked, compatible, and selected\\
-\hline
-\end{tabularx}
-\end{table}
-
-The largest benchmark-disagreement profile is the 272-case group with $D_3=1$, $I=1$, and $S=0$. A benchmark-reference diagnosis is visible in both recorded upstream views, but another diagnosis is committed as primary. This is the strongest recorded profile of a primary-commitment disagreement under the tested HiED setting. It is not proof that finalization is a universal clinical bottleneck or the only cause of the disagreement.
-
-The table also shows that compatibility is neither sufficient nor necessary for benchmark-consistent commitment in this trace. There are 272 cases in which a benchmark-reference diagnosis is compatible but not committed, and 12 cases in which a benchmark-consistent primary is committed even though the reference diagnosis is absent from the compatible set.
-
-The 349-case gold-informed oracle population reported in Chapter~\ref{ch:results} is not an observed system group. It uses benchmark labels to define optimistic recoverability and is intentionally non-deployable. This chapter therefore describes only the outputs that the frozen system actually recorded.
-
-\section{Candidate and Compatibility Disagreement Profiles}
-
-Across all 1,000 internal cases, 198 contain no benchmark-reference parent in the genuine Top-3. Of these, 113 are checker-eligible and 85 are scored as the evaluation-only \emph{Others} category. Among the 113 checker-eligible Top-3 misses, 79 still contain a benchmark-reference parent in the criterion-compatible set, while 34 contain it in neither recorded view.
-
-A separate group of 24 checker-eligible cases contains a benchmark-reference parent in the genuine Top-3 but not in the criterion-compatible set. Twelve of these cases still commit a benchmark-consistent primary diagnosis, while 12 do not. Because the disagreement subgroup contains only 12 cases, its criterion-state pattern is treated as descriptive rather than stable evidence about a general failure mode.
-
-These results follow directly from the non-nested architecture. Criterion Checkers evaluate all configured categories rather than only the Diagnostician Top-3. A diagnosis can therefore be absent from the Top-3 but present in the compatible set, or ranked and committed even when its checker output does not place it in that set.
-
-\section{Ranked and Criterion-Compatible but Not Selected}
+\section{Rank and Diagnostic Direction within the Primary-Commitment Disagreement Group}
 \label{sec:ch8-primary-selection}
 
-The 272-case group is examined in more detail because it is the largest recorded benchmark-disagreement profile. Figure~\ref{fig:ch8-reference-rank} shows the position of the highest-ranked benchmark-reference parent.
+The 272-case group is examined in more detail because it is the largest mutually exclusive disagreement group among the checker-eligible cases. Figure~\ref{fig:ch8-reference-rank} shows the position of the highest-ranked benchmark-reference parent.
 
-\ThesisFigure[0.72\textwidth]{fig_ch8_reference_rank.pdf}{Rank of the highest-ranked benchmark-reference parent among the 272 cases with $D_3=1$, $I=1$, and $S=0$.}{fig:ch8-reference-rank}
+\ThesisFigure[0.72\textwidth]{fig_ch8_reference_rank.pdf}{Rank of the highest-ranked benchmark-reference parent among the 272 cases with $D_3=1$, $I=1$, and $S=0$, in which no benchmark-reference parent is committed as primary.}{fig:ch8-reference-rank}
 \FloatBarrier
 
-The benchmark-reference parent is ranked second in 171 cases (62.9\%) and third in 101 cases (37.1\%). In most cases it is therefore the closest recorded alternative to the leading diagnosis, but rank proximity alone does not explain why another diagnosis is committed.
+The benchmark-reference parent is ranked second in 171 cases (62.9\%) and third in 101 cases (37.1\%). In this group, the reference can only occupy rank two or three because another diagnosis is committed as primary and the reference is required to appear in the Top-3. The result therefore shows that the reference is more often the immediate alternative at rank two than a rank-three candidate; it does not explain why the primary commitment differs.
 
 Table~\ref{tab:ch8-selection-pairs} reports the most frequent benchmark-reference-to-committed-primary directions.
 
 \begin{table}[htbp]
 \centering
-\caption{Most frequent benchmark-reference-to-committed-primary pairs in the 272-case group.}
+\caption{Most frequent benchmark-reference-to-committed-primary directions in the 272-case primary-commitment disagreement group.}
 \label{tab:ch8-selection-pairs}
 \small
 \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}p{3.2cm}|r|r|}
@@ -1958,15 +1914,15 @@ F51 & F32 & 9 & 3.3\%\\
 \hline
 \end{tabularx}
 \parbox{0.96\textwidth}{\footnotesize
-\textit{Note.} Each case contributes one pair based on its highest-ranked benchmark-reference parent. Percentages use the 272-case group as the denominator; only the five most frequent pairs are shown.}
+\textit{Note.} Each case contributes one pair based on its highest-ranked benchmark-reference parent. Percentages use the 272-case group as the denominator; only the five most frequent pairs are shown. These raw counts are not normalized by class prevalence and therefore describe frequent directions rather than class-specific error rates.}
 \end{table}
 
 The five pairs account for 222 cases (81.6\%), and F41-to-F32 alone accounts for 158 cases (58.1\%). These are directional benchmark disagreements under the paper's parent-label projection. They are not psychiatrist-confirmed misdiagnoses. Their concentration may reflect several factors, including class frequency, synthetic wording, overlapping symptom descriptions, parent-label projection, and model preference. The frozen trace cannot separate these causes.
 
-\section{Diagnostic-Set Construction Disagreements}
+\section{Diagnostic-Set Disagreement after Primary Agreement}
 \label{sec:ch8-diagnostic-set}
 
-Committed-primary agreement does not guarantee agreement between the complete emitted diagnosis set and the benchmark-reference set. Among the 1,000 internal cases, HiED--DA commits a benchmark-consistent primary diagnosis in 518 cases. Exact set agreement occurs in 409 cases, leaving 109 cases with primary agreement but diagnostic-set disagreement.
+Committed-primary agreement does not guarantee agreement between the complete emitted diagnosis set and the benchmark-reference set. Among the 1,000 internal cases, HiED--DA commits a benchmark-consistent primary diagnosis in 518 cases. Exact set agreement occurs in 409 cases, leaving 109 cases (21.0\% of the 518 primary-agreement cases) with primary agreement but diagnostic-set disagreement. Primary agreement therefore does not imply agreement on comorbidity or additional diagnostic labels.
 
 \begin{table}[htbp]
 \centering
@@ -1993,7 +1949,7 @@ The benchmark contains one projected parent in 912 cases, two in 83 cases, and t
 \section{Criterion-State Composition}
 \label{sec:ch8-criterion-evidence}
 
-The Criterion Checker records each item as \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_\allowbreak{}evidence}. Figure~\ref{fig:ch8-criterion-composition} compares mean within-case proportions across the four mutually exclusive analysis groups. Each case is summarized before group averaging so that cases with more recorded criterion items do not receive more weight. The corresponding medians and interquartile ranges are reported in Appendix~\ref{app:supporting}, Table~\ref{tab:ch8-criterion-ratios}.
+The Criterion Checker records each item as \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_\allowbreak{}evidence}. Figure~\ref{fig:ch8-criterion-composition} compares mean within-case proportions across the four mutually exclusive analysis groups. For each case, the states are aggregated across all fourteen configured Criterion Checkers; the frozen trace contains 77,998 diagnosis-by-criterion states. Each case is summarized before group averaging so that cases with more recorded criterion items do not receive more weight. The corresponding medians and interquartile ranges are reported in Appendix~\ref{app:supporting}, Table~\ref{tab:ch8-criterion-ratios}.
 
 \begin{figure}[htbp]
 \centering
@@ -2003,49 +1959,19 @@ The Criterion Checker records each item as \texttt{met}, \texttt{not\_met}, or \
 \end{figure}
 \FloatBarrier
 
-The 272-case group and the committed-primary-agreement group have closely overlapping criterion-state compositions. Top-3 candidate misses are also broadly similar. The 12-case ranked-but-not-compatible disagreement group has fewer \texttt{met} states and more unresolved evidence on average, but its small size does not support a stable group-level conclusion.
+At this coarse aggregate level, no clear separation is visible between the committed-primary-agreement group and the 272-case primary-commitment disagreement group. Their mean proportions of \texttt{met}, \texttt{not\_met}, and \texttt{insufficient\_\allowbreak{}evidence} states are similar. Top-3 candidate misses are also broadly similar. The 12-case ranked-but-not-compatible disagreement group has fewer \texttt{met} states and more unresolved evidence on average, but its small size does not support a stable group-level conclusion.
 
-Criterion checking makes the problem easier to inspect, but broad compatibility does not solve the final comparison. Compatible-set size and aggregate criterion-state proportions do not identify which compatible diagnosis will be committed as primary in this trace. These summaries are descriptive associations, not evidence that one criterion-state pattern caused the final commitment.
+Because this analysis aggregates criterion states across all fourteen configured diagnoses, it may conceal diagnosis-specific or candidate-pair-specific differences. The result shows the limitation of a global state-composition summary; it does not show that criterion-level evidence is uninformative. Compatible-set size and aggregate criterion-state proportions do not identify which compatible diagnosis will be committed as primary in this trace, and these summaries do not establish that one state pattern caused the final commitment.
 
-\section{Selected Frozen-Output Examples}
-\label{sec:ch8-trace-boundaries}
-
-Table~\ref{tab:audit-trace-examples} presents four deterministic examples from the same frozen internal trace. For each profile, the example is the first matching source record. No transcript text or checker evidence text is reproduced. The rows illustrate the meaning of the recorded profiles; they do not support population estimates or clinical conclusions.
-
-\begingroup
-\footnotesize
-\setlength{\tabcolsep}{3pt}
-\renewcommand{\arraystretch}{1.08}
-\begin{longtable}{|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{3.0cm}|>{\raggedright\arraybackslash}p{8.0cm}|}
-\caption{Deterministically selected examples from four recorded $D_3/I/S$ profiles.}
-\label{tab:audit-trace-examples}\\
-\hline
-Profile & Frozen record & Recorded outputs\\
-\hline
-\endfirsthead
-\hline
-Profile & Frozen record & Recorded outputs\\
-\hline
-\endhead
-$D_3=0,I=0,S=0$ & Source line 6\newline Case \texttt{302945002} & Benchmark parent F31; Top-3 F32, F39, F41; compatible parents F43, F51, F32, F39, F98, F41; committed primary F32; no F31 criterion was marked \texttt{insufficient\_\allowbreak{}evidence}.\\
-\hline
-$D_3=1,I=0,S=0$ & Source line 26\newline Case \texttt{396572486} & Benchmark parent F32; Top-3 F39, F32, F41; compatible parents F51, Z71, F98; committed primary F39; F32 criteria B1, C2, C5, and C7 were marked \texttt{insufficient\_\allowbreak{}evidence}.\\
-\hline
-$D_3=1,I=0,S=1$ & Source line 46\newline Case \texttt{393127297} & Benchmark parent F32; Top-3 F32, F39, F51; compatible parents F51, F98, F39, F41; committed primary F32; all eleven recorded F32 criteria were marked \texttt{insufficient\_\allowbreak{}evidence}.\\
-\hline
-$D_3=1,I=1,S=0$ & Source line 25\newline Case \texttt{342807095} & Benchmark parent F32; Top-3 F20, F32, F41; compatible parents F43, F20, F32, F41, F39; committed primary F20; F32 criteria C2 and C7 were marked \texttt{insufficient\_\allowbreak{}evidence}.\\
-\hline
-\end{longtable}
-\endgroup
-
-The examples show why the recorded views must remain separate. Compatibility does not force selection, and compatibility absence does not prevent DA from keeping a benchmark-consistent proposed primary. Criterion IDs are study-rule identifiers, not independent clinical annotations. The examples also do not reveal why the language model produced its ranking or primary choice.
+\paragraph{Frozen-record examples.}
+Deterministically selected examples from four recorded-output profiles are provided in Appendix~\ref{app:supporting}, Table~\ref{tab:audit-trace-examples}. These examples document how the indicators map to individual frozen records without treating them as representative clinical cases.
 
 \section{Chapter Summary}
 \label{sec:ch8-summary}
 
-The largest internal benchmark-disagreement profile contains 272 cases in which a benchmark-reference diagnosis is present in both the genuine Top-3 and the criterion-compatible set but another diagnosis is committed as primary. The reference is usually ranked second, and several disagreement directions occur repeatedly. Diagnostic-set and criterion-state analyses add further detail, while the selected frozen examples show how the recorded views can disagree within one case.
+The detailed analysis adds four findings to the stage-wise results reported in Chapter~\ref{ch:results}. First, among the 272 cases in which a benchmark-reference diagnosis is ranked and criterion-compatible but no benchmark-reference parent is committed as primary, the reference is more often ranked second than third. Second, the disagreement directions are concentrated, especially from F41 to F32, although these raw counts are influenced by class prevalence and are not class-specific error rates. Third, committed-primary agreement does not guarantee complete-set agreement: 109 of 518 primary-agreement cases (21.0\%) still differ from the benchmark diagnosis set. Fourth, the aggregate composition of criterion states is similar between the primary-agreement group and the largest primary-commitment disagreement group, indicating that global proportions of \texttt{met}, \texttt{not\_met}, and \texttt{insufficient\_\allowbreak{}evidence} states do not by themselves explain the final commitment.
 
-These findings support the thesis claim that candidate generation, criterion checking, compatibility analysis, and primary commitment should be recorded and evaluated separately. They do not establish an overall accuracy advantage for HiED, a universal finalization bottleneck, a clinically validated confusion pattern, or a causal effect of criterion states. Those stronger conclusions require clinician adjudication or controlled experiments beyond the synthetic frozen-output analysis.
+These findings characterize the recorded outputs but do not identify clinically adjudicated errors, establish a universal finalization bottleneck, or prove a causal effect of criterion states. Diagnosis-specific comparisons and clinician review are needed to determine whether the observed benchmark disagreements reflect system error, missing transcript information, or ambiguity in the reference labels.
 
 \chapter{Discussion}
 \label{ch:discussion}
@@ -2320,11 +2246,44 @@ Top-3 candidate miss & 113 & 48.7 [43.6, 52.6] & 21.8 [17.9, 26.9] & 28.2 [23.1,
 \hline
 Ranked, absent from compatible set & 12 & 41.0 [33.0, 47.4] & 27.6 [21.5, 33.0] & 27.6 [22.8, 37.2]\\
 \hline
-Ranked and compatible, not selected & 272 & 50.0 [46.2, 53.8] & 21.8 [19.2, 26.9] & 26.9 [21.8, 32.1]\\
+Ranked and compatible, not primary & 272 & 50.0 [46.2, 53.8] & 21.8 [19.2, 26.9] & 26.9 [21.8, 32.1]\\
 \hline
 \end{tabularx}
 \renewcommand{\arraystretch}{1.0}
 \end{table}
+
+\section{Selected Frozen-Output Examples}
+\label{sec:ch8-trace-boundaries}
+
+Table~\ref{tab:audit-trace-examples} presents four deterministic examples from the same frozen internal trace. For each profile, the example is the first matching source record. No transcript text or checker evidence text is reproduced. The rows illustrate the meaning of the recorded profiles; they do not support population estimates or clinical conclusions.
+
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.08}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{3.0cm}|>{\raggedright\arraybackslash}p{8.0cm}|}
+\caption{Deterministically selected examples from four recorded $D_3/I/S$ profiles.}
+\label{tab:audit-trace-examples}\\
+\hline
+Profile & Frozen record & Recorded outputs\\
+\hline
+\endfirsthead
+\hline
+Profile & Frozen record & Recorded outputs\\
+\hline
+\endhead
+$D_3=0,I=0,S=0$ & Source line 6\newline Case \texttt{302945002} & Benchmark parent F31; Top-3 F32, F39, F41; compatible parents F43, F51, F32, F39, F98, F41; committed primary F32; no F31 criterion was marked \texttt{insufficient\_\allowbreak{}evidence}.\\
+\hline
+$D_3=1,I=0,S=0$ & Source line 26\newline Case \texttt{396572486} & Benchmark parent F32; Top-3 F39, F32, F41; compatible parents F51, Z71, F98; committed primary F39; F32 criteria B1, C2, C5, and C7 were marked \texttt{insufficient\_\allowbreak{}evidence}.\\
+\hline
+$D_3=1,I=0,S=1$ & Source line 46\newline Case \texttt{393127297} & Benchmark parent F32; Top-3 F32, F39, F51; compatible parents F51, F98, F39, F41; committed primary F32; all eleven recorded F32 criteria were marked \texttt{insufficient\_\allowbreak{}evidence}.\\
+\hline
+$D_3=1,I=1,S=0$ & Source line 25\newline Case \texttt{342807095} & Benchmark parent F32; Top-3 F20, F32, F41; compatible parents F43, F20, F32, F41, F39; committed primary F20; F32 criteria C2 and C7 were marked \texttt{insufficient\_\allowbreak{}evidence}.\\
+\hline
+\end{longtable}
+\endgroup
+
+The examples show why the recorded views must remain separate. Compatibility does not force selection, and compatibility absence does not prevent DA from keeping a benchmark-consistent proposed primary. Criterion IDs are study-rule identifiers, not independent clinical annotations. The examples also do not reveal why the language model produced its ranking or primary choice.
 
 \section{Auxiliary Primary-Selection Configurations}
 
