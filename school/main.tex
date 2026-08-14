@@ -1211,7 +1211,7 @@ Top-3 candidate miss & 0 & 0 & -- \\
 \hline
 Gold label ranked but absent from the criterion-compatible set & 0 & 1 & 0 \\
 \hline
-Gold label ranked and criterion-compatible but not selected & 0 & 1 & 1 \\
+Gold label ranked and criterion-compatible but not committed as primary & 0 & 1 & 1 \\
 \hline
 \end{tabularx}
 \parbox{0.96\textwidth}{\footnotesize
@@ -1493,7 +1493,7 @@ Yes & No & No & 12 (1.3\%) & Ranked; absent from compatible set\\
 \hline
 Yes & No & Yes & 12 (1.3\%) & Agreement; absent from compatible set\\
 \hline
-Yes & Yes & No & 272 (29.7\%) & Ranked and compatible; not selected\\
+Yes & Yes & No & 272 (29.7\%) & Ranked and compatible; not committed as primary\\
 \hline
 Yes & Yes & Yes & 506 (55.3\%) & Ranked, compatible, and selected\\
 \hline
@@ -1506,7 +1506,7 @@ Yes & Yes & Yes & 506 (55.3\%) & Ranked, compatible, and selected\\
 
 \ThesisFigure[0.98\textwidth]{fig_d3rs_flow.pdf}{Four mutually exclusive disagreement-localization groups among the 915 checker-eligible internal cases. Cases are first assigned by committed-primary agreement ($S$); cases with $S=0$ are then divided by Top-3 candidate detection ($D_3$) and gold-label inclusion ($I$). This analytical assignment order is not a runtime sequence.}{fig:d3rs-flow}
 
-The six profiles in Table~\ref{tab:d3rs-joint} form the four analytical groups defined in Chapter~\ref{ch:experimental}: 518 cases with committed-primary agreement, 113 Top-3 candidate misses, 12 cases in which a gold parent is ranked but absent from the compatible set and not selected, and 272 cases in which a gold parent is ranked and compatible but not selected. The 79 cases with $D_3=0$ and $I=1$ are possible because all configured categories are checked, not only the Diagnostician's Top-3.
+The six profiles in Table~\ref{tab:d3rs-joint} form the four analytical groups defined in Chapter~\ref{ch:experimental}: 518 cases with committed-primary agreement, 113 Top-3 candidate misses, 12 cases in which a gold parent is ranked but absent from the compatible set and another diagnosis is committed as primary, and 272 cases in which a gold parent is ranked and compatible but another diagnosis is committed as primary. The 79 cases with $D_3=0$ and $I=1$ are possible because all configured categories are checked, not only the Diagnostician's Top-3.
 
 Among the 802 checker-eligible cases with a benchmark gold parent in the genuine Top-3, 778 (97.0\%) also contain a gold parent in the criterion-compatible set. Of these 778 cases, 506 (65.0\%) commit a gold parent as primary and 272 (35.0\%) commit another diagnosis. The 272-case group is therefore the largest recorded disagreement group after the candidate and compatibility outputs are considered.
 
@@ -1989,7 +1989,7 @@ Common mental disorders share many symptoms. Poor sleep, fatigue, poor concentra
 
 Criterion checking makes this problem easier to inspect, but broad compatibility does not solve the final comparison. The internal compatible set contains a median of six configured categories, and its size and overall criterion-state composition do not clearly separate committed-primary agreement from the largest disagreement group. External results also show that compatibility is not a sufficient condition for selection and is not a necessary condition for a benchmark-consistent DA commitment.
 
-The 272 internal cases and 225 external cases with a ranked and compatible reference diagnosis that is not selected are therefore best described as the largest recorded benchmark-disagreement profiles. They show that available upstream records do not automatically determine the final commitment. They do not prove that the finalizer alone caused the disagreement or that primary selection is the largest clinical difficulty in all settings.
+The 272 internal cases and 225 external cases in which a reference diagnosis is ranked and compatible but no benchmark-reference parent is committed as primary are therefore best described as the largest recorded benchmark-disagreement profiles. They show that available upstream records do not automatically determine the final commitment. They do not prove that the finalizer alone caused the disagreement or that primary selection is the largest clinical difficulty in all settings.
 
 A stronger primary selector would need direct comparisons among candidates. Useful information may include symptom timing, illness course, episode structure, syndrome dominance, exclusionary causes, explanatory dependence, and comorbidity. The current criterion path mainly checks diagnoses one at a time and does not fully represent these relations.
 
@@ -2129,7 +2129,7 @@ No tested strategy provides a clear and attributable improvement over DA. Matche
 
 \item[RQ5] \textbf{Does the stage-wise analysis remain useful under a second synthetic source?}
 
-Yes, the same output views can be applied to MDD-5k, and the largest external disagreement profile also contains a ranked and compatible reference diagnosis that is not selected. However, the profile rates and compatibility inclusion differ from the internal trace and across archived MDD-5k lineages. The result supports portability of the analysis framework, not stable numerical behavior or clinical generalization.
+Yes, the same output views can be applied to MDD-5k, and the largest external disagreement profile also contains a ranked and compatible reference diagnosis while no benchmark-reference parent is committed as primary. However, the profile rates and compatibility inclusion differ from the internal trace and across archived MDD-5k lineages. The result supports portability of the analysis framework, not stable numerical behavior or clinical generalization.
 
 \end{description}
 
