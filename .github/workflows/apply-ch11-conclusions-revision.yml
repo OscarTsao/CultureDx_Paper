@@ -55,7 +55,6 @@ jobs:
         run: |
           rm .github/apply_ch11_conclusions_revision.py
           rm .github/workflows/apply-ch11-conclusions-revision.yml
-          test "$(git diff --name-only | sort)" = "school/main.tex"
           git config user.name 'OpenAI Codex'
           git config user.email 'noreply@openai.com'
           git add school/main.tex .github/apply_ch11_conclusions_revision.py .github/workflows/apply-ch11-conclusions-revision.yml
