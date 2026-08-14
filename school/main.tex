@@ -1693,7 +1693,7 @@ MDD-5k, checker-eligible & 878 & 0.601 & 0.896 & 0.786 & 6\\
 \end{tabular}
 \end{adjustbox}
 \parbox{0.96\textwidth}{\footnotesize
-\textit{Note.} $^{*}$The internal compatibility value uses the 915 checker-eligible LingxiDiag cases rather than all 1,000 cases. MDD-5k compatibility is reported only for the 878 checker-eligible cases.}
+\textit{Note.} $^{*}$The internal compatibility value uses the 915 checker-eligible LingxiDiag cases rather than all 1,000 cases. The MDD-5k all-case row uses all 925 cases, whereas the checker-eligible row excludes 47 cases whose benchmark diagnoses are outside the configured checker scope. The checker-eligible row is therefore a conditional analysis and should not be interpreted as a direct improvement over the all-case result.}
 \end{table}
 
 On all 925 MDD-5k cases, HiED--DA commits a benchmark-consistent primary diagnosis in 528 cases, giving Top-1 Accuracy of 0.571. A benchmark gold parent appears in the genuine Top-3 in 787 cases, giving Top-3 Accuracy of 0.851.
@@ -1707,7 +1707,7 @@ Figure~\ref{fig:internal-external-gap} compares the three recorded views on the 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{fig_internal_external_gap.pdf}
-\caption{Committed Top-1 agreement, genuine Top-3 coverage, and benchmark-gold inclusion in the criterion-compatible set for the internal and matched external traces. The denominators differ: internal Top-1 and Top-3 use 1,000 cases, internal compatibility uses 915 checker-eligible cases, and all three external values use the stated 878-case checker-eligible population except the all-case external headline reported separately in Table~\ref{tab:external-summary-rewrite}.}
+\caption{Committed Top-1 agreement, genuine Top-3 coverage, and benchmark-gold inclusion in the criterion-compatible set for the internal and matched external traces. The denominators differ: internal Top-1 and Top-3 use 1,000 cases, internal compatibility uses 915 checker-eligible cases, and all three external values use the stated 878-case checker-eligible population except the all-case external headline reported separately in Table~\ref{tab:external-summary-rewrite}. The rates use the stated eligible populations and should not be interpreted as consecutive stages of one common numerical funnel.}
 \label{fig:internal-external-gap}
 \end{figure}
 \FloatBarrier
@@ -1838,7 +1838,7 @@ Chapter~\ref{ch:results} showed that TF--IDF with logistic regression is a stron
 
 \begin{table}[htbp]
 \centering
-\caption{Full-corpus cross-source transfer of TF--IDF with logistic regression.}
+\caption{Cross-corpus transfer of TF--IDF with logistic regression under the preserved training and evaluation splits.}
 \label{tab:lexical-transfer-rewrite}
 \small
 \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{3.3cm}|>{\raggedright\arraybackslash}p{3.3cm}|c|c|c|}
@@ -1849,16 +1849,16 @@ LingxiDiag-16K & LingxiDiag held-out & 1,000 & 0.602 & 0.935\\
 \hline
 LingxiDiag-16K & MDD-5k & 925 & 0.059 & 0.613\\
 \hline
-MDD-5k & MDD-5k & 925 & 0.632 & 0.842\\
+MDD-5k training split & MDD-5k held-out split & 185 & 0.632 & 0.842\\
 \hline
-MDD-5k & LingxiDiag held-out & 1,000 & 0.476 & 0.676\\
+MDD-5k training split & LingxiDiag held-out & 1,000 & 0.476 & 0.676\\
 \hline
 \end{tabularx}
 \parbox{0.96\textwidth}{\footnotesize
-\textit{Note.} These are full-corpus transfer runs. They are not the previously reported F32--F41 subset values and should not be interpreted as that binary experiment.}
+\textit{Note.} The LingxiDiag-trained classifier is evaluated on the 1,000-case LingxiDiag held-out set and the full 925-case MDD-5k set. For the MDD-trained conditions, MDD-5k is divided into an 80/20 training and held-out split using seed 42; the source-matched MDD result therefore uses 185 held-out cases. The table compares source-matched and cross-source behavior rather than four identically constructed performance estimates. These runs are not the previously reported F32--F41 subset experiment.}
 \end{table}
 
-Within-corpus Top-1 is higher than cross-corpus Top-1 in both transfer directions. Training on LingxiDiag and evaluating on MDD-5k reduces Top-1 from 0.602 to 0.059. Training on MDD-5k and evaluating on LingxiDiag reduces it from 0.632 to 0.476. The asymmetric degradation indicates that the classifier relies substantially on source-specific lexical regularities, dialogue-generation patterns, and label distributions. Across these two synthetic corpora, TF--IDF with logistic regression therefore shows strong within-corpus performance but limited and asymmetric transfer.
+TF--IDF with logistic regression performs substantially better when the training and evaluation data come from the same corpus. The LingxiDiag-trained classifier reaches a Top-1 Accuracy of 0.602 on the LingxiDiag held-out set but only 0.059 on the full MDD-5k set. The MDD-trained classifier reaches 0.632 on the 185-case MDD held-out split and 0.476 on the LingxiDiag held-out set. The degradation appears in both transfer directions but is asymmetric, suggesting substantial dependence on source-specific wording, dialogue-generation patterns, and label distributions.
 
 These results do not support the absolute claim that TF--IDF with logistic regression cannot generalize, and they do not prove that HiED generalizes better. They show that a strong same-corpus lexical score should not be treated as evidence of source-independent diagnosis performance. They also do not establish clinical generalization for either architecture.
 
