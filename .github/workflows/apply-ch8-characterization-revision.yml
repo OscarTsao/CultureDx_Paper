@@ -1,5 +1,5 @@
 name: Apply Chapter 8 characterization revision
-# replacement-safe retry
+# chapter-scoped validation retry
 
 on:
   push:
@@ -38,9 +38,15 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           text = Path('school/main.tex').read_text(encoding='utf-8')
-          assert text.index(r'\appendix') < text.index(r'\section{Selected Frozen-Output Examples}')
-          assert text.index(r'\paragraph{Frozen-record examples.}') < text.index(r'\section{Chapter Summary}')
-          assert text.index(r'\section{Selected Frozen-Output Examples}') < text.index(r'\section{Auxiliary Primary-Selection Configurations}')
+          chapter8 = text.index(r'\chapter{Characterization of Recorded-Output Disagreements}')
+          pointer = text.index(r'\paragraph{Frozen-record examples.}', chapter8)
+          summary = text.index(r'\section{Chapter Summary}', pointer)
+          discussion = text.index(r'\chapter{Discussion}', summary)
+          assert chapter8 < pointer < summary < discussion
+          appendix = text.index(r'\appendix')
+          selected = text.index(r'\section{Selected Frozen-Output Examples}', appendix)
+          auxiliary = text.index(r'\section{Auxiliary Primary-Selection Configurations}', selected)
+          assert appendix < selected < auxiliary
           PY
           git diff --check
 
