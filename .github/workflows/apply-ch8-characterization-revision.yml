@@ -1,0 +1,55 @@
+name: Apply Chapter 8 characterization revision
+
+on:
+  push:
+    branches:
+      - agent/tfidf-cross-corpus-framing
+    paths:
+      - .github/workflows/apply-ch8-characterization-revision.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/tfidf-cross-corpus-framing
+          fetch-depth: 0
+
+      - name: Apply targeted thesis edits
+        run: python3 .github/apply_ch8_characterization_revision.py school/main.tex
+
+      - name: Validate Chapter 8 structure
+        run: |
+          grep -Fq '\section{Analysis Scope}' school/main.tex
+          grep -Fq '\section{Rank and Diagnostic Direction within the Primary-Commitment Disagreement Group}' school/main.tex
+          grep -Fq '109 cases (21.0\% of the 518 primary-agreement cases)' school/main.tex
+          grep -Fq '77,998 diagnosis-by-criterion states' school/main.tex
+          grep -Fq 'These raw counts are not normalized by class prevalence' school/main.tex
+          grep -Fq 'Deterministically selected examples from four recorded-output profiles are provided in Appendix' school/main.tex
+          test "$(grep -Fc '\section{Selected Frozen-Output Examples}' school/main.tex)" -eq 1
+          test "$(grep -Fc '\label{tab:audit-trace-examples}' school/main.tex)" -eq 1
+          ! grep -Fq '\label{tab:ch8-joint-profiles}' school/main.tex
+          python3 - <<'PY'
+          from pathlib import Path
+          text = Path('school/main.tex').read_text(encoding='utf-8')
+          assert text.index(r'\appendix') < text.index(r'\section{Selected Frozen-Output Examples}')
+          assert text.index(r'\paragraph{Frozen-record examples.}') < text.index(r'\section{Chapter Summary}')
+          assert text.index(r'\section{Selected Frozen-Output Examples}') < text.index(r'\section{Auxiliary Primary-Selection Configurations}')
+          PY
+          git diff --check
+
+      - name: Remove one-time files and commit
+        run: |
+          rm .github/apply_ch8_characterization_revision.py
+          rm .github/workflows/apply-ch8-characterization-revision.yml
+          git config user.name 'OpenAI Codex'
+          git config user.email 'noreply@openai.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'Refine Chapter 8 disagreement characterization'
+          git push origin HEAD:agent/tfidf-cross-corpus-framing
