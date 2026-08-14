@@ -1211,7 +1211,7 @@ Top-3 candidate miss & 0 & 0 & -- \\
 \hline
 Gold label ranked but absent from the criterion-compatible set & 0 & 1 & 0 \\
 \hline
-Gold label ranked and criterion-compatible but not selected & 0 & 1 & 1 \\
+Gold label ranked and criterion-compatible but not committed as primary & 0 & 1 & 1 \\
 \hline
 \end{tabularx}
 \parbox{0.96\textwidth}{\footnotesize
@@ -1410,13 +1410,13 @@ HiED--DA & Parent-balanced & Validation-selected proposed system & 0.518 & 0.802
 }
 \end{table}
 
-TF--IDF with logistic regression is the strongest same-corpus label predictor in Table~\ref{tab:matched-baselines-retrieval}. It reaches 0.632 committed Top-1 Accuracy and 0.923 genuine ranked Top-3 Accuracy. Single and HiED--DA have nearly identical committed Top-1 values of 0.517 and 0.518. HiED--DA therefore does not establish an overall Top-1 advantage over either the lexical baseline or the validation-selected Single baseline.
+TF--IDF with logistic regression provides the strongest same-corpus primary-label and class-level F1 performance in Table~\ref{tab:matched-baselines-retrieval}. It reaches 0.632 committed Top-1 Accuracy and 0.923 genuine ranked Top-3 Accuracy. Single and HiED--DA have nearly identical committed Top-1 values of 0.517 and 0.518. HiED--DA therefore does not establish an overall Top-1 advantage over either the lexical baseline or the validation-selected Single baseline. Because the TF--IDF training and evaluation cases come from the same source distribution, this result does not establish cross-corpus generalization.
 
 The set-based measures describe a different part of the output contract. HiED--DA reaches 0.409 Exact Match, compared with 0.029 for Single, but this difference cannot be attributed only to the use of multiple agents because the systems construct and emit diagnostic sets differently. Macro-F1 and Weighted-F1 are likewise interpreted as complete-output measures rather than isolated tests of primary selection.
 
 The aggregate Top-1 difference between HiED--DA and TF--IDF is $-0.114$. The frozen snapshot does not contain a TF--IDF case-level prediction file that matches the complete headline row, so no paired confidence interval, McNemar test, or case-overlap analysis is reported for this contrast. The case-level audit described in Section~\ref{sec:metric-audit-boundary} does reproduce the HiED--DA values in Table~\ref{tab:matched-baselines-retrieval} to the reported precision. Matching complete case-level files were not retained for the other three headline rows.
 
-The strong same-corpus lexical result is consistent with substantial predictive information in transcript wording, label frequency, and other corpus-specific regularities. Chapter~\ref{ch:external} separately tests whether lexical performance transfers across a second synthetic generation process. HiED's distinct empirical contribution in the internal analysis is not higher final-label accuracy, but the additional recorded artifacts: a genuine ranked differential, criterion states, a criterion-compatible set, and a committed-primary record.
+The strong same-corpus lexical result is consistent with substantial predictive information in transcript wording, label frequency, and other corpus-specific regularities. The cross-corpus analysis in Chapter~\ref{ch:external} tests whether this advantage persists when the source distribution changes. HiED's distinct empirical contribution in the internal analysis is not higher final-label accuracy, but the additional recorded artifacts: a genuine ranked differential, criterion states, a criterion-compatible set, and a committed-primary record.
 
 \paragraph{Published LingxiDiagBench context.}
 Table~\ref{tab:validation-configuration-matrix} places the retained thesis configurations beside representative published LingxiDiagBench results. The published rows follow the source paper's original evaluation contracts. Their Top-3 values are not reclassified as emitted-label hit@3 or genuine ranked Top-3 Accuracy. No direct statistical comparison is made with the thesis configurations.
@@ -1450,7 +1450,7 @@ Qwen3-32B & Published benchmark & 0.470 & 0.566 & 0.241 & 0.188 & 0.431\\
 \end{table}
 
 \paragraph{Answer to RQ1.}
-Under the common internal split and parent-label mapping, TF--IDF with logistic regression provides the strongest final label prediction. Single and HiED--DA have almost identical committed Top-1 performance. HiED does not establish an accuracy advantage, but it provides the diagnostic records needed for the stage-wise analyses below.
+Under the common internal split and parent-label mapping, TF--IDF with logistic regression provides the strongest same-corpus primary-label and class-level F1 performance. Single and HiED--DA have almost identical committed Top-1 performance. HiED does not establish an internal accuracy advantage, but it provides the diagnostic records needed for the stage-wise analyses below. Whether the lexical advantage persists across corpus sources is examined in Chapter~\ref{ch:external}.
 
 \section{Stage-Wise Disagreement Analysis}
 \label{sec:stage-wise-disagreement-results}
@@ -1493,7 +1493,7 @@ Yes & No & No & 12 (1.3\%) & Ranked; absent from compatible set\\
 \hline
 Yes & No & Yes & 12 (1.3\%) & Agreement; absent from compatible set\\
 \hline
-Yes & Yes & No & 272 (29.7\%) & Ranked and compatible; not selected\\
+Yes & Yes & No & 272 (29.7\%) & Ranked and compatible; not committed as primary\\
 \hline
 Yes & Yes & Yes & 506 (55.3\%) & Ranked, compatible, and selected\\
 \hline
@@ -1506,7 +1506,7 @@ Yes & Yes & Yes & 506 (55.3\%) & Ranked, compatible, and selected\\
 
 \ThesisFigure[0.98\textwidth]{fig_d3rs_flow.pdf}{Four mutually exclusive disagreement-localization groups among the 915 checker-eligible internal cases. Cases are first assigned by committed-primary agreement ($S$); cases with $S=0$ are then divided by Top-3 candidate detection ($D_3$) and gold-label inclusion ($I$). This analytical assignment order is not a runtime sequence.}{fig:d3rs-flow}
 
-The six profiles in Table~\ref{tab:d3rs-joint} form the four analytical groups defined in Chapter~\ref{ch:experimental}: 518 cases with committed-primary agreement, 113 Top-3 candidate misses, 12 cases in which a gold parent is ranked but absent from the compatible set and not selected, and 272 cases in which a gold parent is ranked and compatible but not selected. The 79 cases with $D_3=0$ and $I=1$ are possible because all configured categories are checked, not only the Diagnostician's Top-3.
+The six profiles in Table~\ref{tab:d3rs-joint} form the four analytical groups defined in Chapter~\ref{ch:experimental}: 518 cases with committed-primary agreement, 113 Top-3 candidate misses, 12 cases in which a gold parent is ranked but absent from the compatible set and another diagnosis is committed as primary, and 272 cases in which a gold parent is ranked and compatible but another diagnosis is committed as primary. The 79 cases with $D_3=0$ and $I=1$ are possible because all configured categories are checked, not only the Diagnostician's Top-3.
 
 Among the 802 checker-eligible cases with a benchmark gold parent in the genuine Top-3, 778 (97.0\%) also contain a gold parent in the criterion-compatible set. Of these 778 cases, 506 (65.0\%) commit a gold parent as primary and 272 (35.0\%) commit another diagnosis. The 272-case group is therefore the largest recorded disagreement group after the candidate and compatibility outputs are considered.
 
@@ -1623,7 +1623,7 @@ Within the evaluated Qwen3 family, HiED's ranked Top-3 coverage changes little a
 
 \section{Chapter Summary}
 
-The internal results give five main answers. Retrieval improves the Single baseline more clearly than HiED, and parent-balanced retrieval remains the primary HiED configuration because of the validation contract rather than the held-out ranking. TF--IDF with logistic regression is the strongest same-corpus label predictor, while Single and HiED have almost identical committed Top-1 performance. HiED nevertheless exposes a large difference between candidate availability, criterion compatibility, and committed-primary agreement: 272 of 915 checker-eligible cases contain a benchmark gold parent in both the Top-3 and compatible set but commit another diagnosis. The tested primary-selection interventions do not provide a clear attributable improvement over DA. Finally, HiED's Top-3 coverage is comparatively stable across the evaluated Qwen3 sizes, while the remaining disagreements are concentrated toward a small number of diagnostic directions. Chapter~\ref{ch:external} examines whether these patterns persist under external synthetic distribution shift.
+The internal results give five main answers. Retrieval improves the Single baseline more clearly than HiED, and parent-balanced retrieval remains the primary HiED configuration because of the validation contract rather than the held-out ranking. TF--IDF with logistic regression provides the strongest same-corpus primary-label and class-level F1 performance, while Single and HiED have almost identical committed Top-1 performance. HiED nevertheless exposes a large difference between candidate availability, criterion compatibility, and committed-primary agreement: 272 of 915 checker-eligible cases contain a benchmark gold parent in both the Top-3 and compatible set but commit another diagnosis. The tested primary-selection interventions do not provide a clear attributable improvement over DA. Finally, HiED's Top-3 coverage is comparatively stable across the evaluated Qwen3 sizes, while the remaining disagreements are concentrated toward a small number of diagnostic directions. Chapter~\ref{ch:external} examines whether these patterns persist under external synthetic distribution shift.
 
 \chapter{External Synthetic Evaluation}
 \label{ch:external}
@@ -1693,7 +1693,7 @@ MDD-5k, checker-eligible & 878 & 0.601 & 0.896 & 0.786 & 6\\
 \end{tabular}
 \end{adjustbox}
 \parbox{0.96\textwidth}{\footnotesize
-\textit{Note.} $^{*}$The internal compatibility value uses the 915 checker-eligible LingxiDiag cases rather than all 1,000 cases. MDD-5k compatibility is reported only for the 878 checker-eligible cases.}
+\textit{Note.} $^{*}$The internal compatibility value uses the 915 checker-eligible LingxiDiag cases rather than all 1,000 cases. The MDD-5k all-case row uses all 925 cases, whereas the checker-eligible row excludes 47 cases whose benchmark diagnoses are outside the configured checker scope. The checker-eligible row is therefore a conditional analysis and should not be interpreted as a direct improvement over the all-case result.}
 \end{table}
 
 On all 925 MDD-5k cases, HiED--DA commits a benchmark-consistent primary diagnosis in 528 cases, giving Top-1 Accuracy of 0.571. A benchmark gold parent appears in the genuine Top-3 in 787 cases, giving Top-3 Accuracy of 0.851.
@@ -1707,7 +1707,7 @@ Figure~\ref{fig:internal-external-gap} compares the three recorded views on the 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{fig_internal_external_gap.pdf}
-\caption{Committed Top-1 agreement, genuine Top-3 coverage, and benchmark-gold inclusion in the criterion-compatible set for the internal and matched external traces. The denominators differ: internal Top-1 and Top-3 use 1,000 cases, internal compatibility uses 915 checker-eligible cases, and all three external values use the stated 878-case checker-eligible population except the all-case external headline reported separately in Table~\ref{tab:external-summary-rewrite}.}
+\caption{Committed Top-1 agreement, genuine Top-3 coverage, and benchmark-gold inclusion in the criterion-compatible set for the internal and matched external traces. The denominators differ: internal Top-1 and Top-3 use 1,000 cases, internal compatibility uses 915 checker-eligible cases, and all three external values use the stated 878-case checker-eligible population except the all-case external headline reported separately in Table~\ref{tab:external-summary-rewrite}. The rates use the stated eligible populations and should not be interpreted as consecutive stages of one common numerical funnel.}
 \label{fig:internal-external-gap}
 \end{figure}
 \FloatBarrier
@@ -1831,14 +1831,14 @@ The two traces have the same nominal case counts but different stored outputs. T
 
 A previously cited F60 scope-expansion result could not be linked to a preserved source artifact in the frozen repository snapshot. Its numerical values are therefore not reported in this revision. The underlying methodological point remains: a diagnosis cannot be recovered if it is absent from the configured output space, but expanding that space does not by itself establish accurate selection.
 
-\section{Cross-Corpus Lexical Transfer}
+\section{Cross-Corpus Transfer of the TF--IDF + LR Baseline}
 \label{sec:external-lexical-transfer}
 
-The lexical transfer analysis uses a separately preserved full-corpus TF--IDF with logistic-regression matrix. Table~\ref{tab:lexical-transfer-rewrite} reports Top-1 and genuine Top-3 values under that artifact's twelve-class parent-label contract.
+Chapter~\ref{ch:results} showed that TF--IDF with logistic regression is a strong same-corpus lexical classifier on LingxiDiag. This section tests whether that advantage persists when the training and evaluation sources differ. The analysis uses a separately preserved full-corpus TF--IDF with logistic-regression matrix. Table~\ref{tab:lexical-transfer-rewrite} reports Top-1 and genuine Top-3 values under that artifact's twelve-class parent-label contract. Because this matrix comes from a separate transfer artifact, its within-corpus cells are used to interpret source sensitivity and are not substituted for the main internal headline row.
 
 \begin{table}[htbp]
 \centering
-\caption{Full-corpus cross-source transfer of TF--IDF with logistic regression.}
+\caption{Cross-corpus transfer of TF--IDF with logistic regression under the preserved training and evaluation splits.}
 \label{tab:lexical-transfer-rewrite}
 \small
 \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{3.3cm}|>{\raggedright\arraybackslash}p{3.3cm}|c|c|c|}
@@ -1849,18 +1849,18 @@ LingxiDiag-16K & LingxiDiag held-out & 1,000 & 0.602 & 0.935\\
 \hline
 LingxiDiag-16K & MDD-5k & 925 & 0.059 & 0.613\\
 \hline
-MDD-5k & MDD-5k & 925 & 0.632 & 0.842\\
+MDD-5k training split & MDD-5k held-out split & 185 & 0.632 & 0.842\\
 \hline
-MDD-5k & LingxiDiag held-out & 1,000 & 0.476 & 0.676\\
+MDD-5k training split & LingxiDiag held-out & 1,000 & 0.476 & 0.676\\
 \hline
 \end{tabularx}
 \parbox{0.96\textwidth}{\footnotesize
-\textit{Note.} These are full-corpus transfer runs. They are not the previously reported F32--F41 subset values and should not be interpreted as that binary experiment.}
+\textit{Note.} The LingxiDiag-trained classifier is evaluated on the 1,000-case LingxiDiag held-out set and the full 925-case MDD-5k set. For the MDD-trained conditions, MDD-5k is divided into an 80/20 training and held-out split using seed 42; the source-matched MDD result therefore uses 185 held-out cases. The table compares source-matched and cross-source behavior rather than four identically constructed performance estimates. These runs are not the previously reported F32--F41 subset experiment.}
 \end{table}
 
-The classifier is strongest when training and evaluation use the same corpus. Training on LingxiDiag and testing on MDD-5k reduces Top-1 from 0.602 to 0.059. The reverse transfer is less severe but still lower than within-MDD evaluation: 0.476 instead of 0.632. The asymmetric drop shows that lexical regularities and label distributions differ across the two synthetic generation processes.
+TF--IDF with logistic regression performs substantially better when the training and evaluation data come from the same corpus. The LingxiDiag-trained classifier reaches a Top-1 Accuracy of 0.602 on the LingxiDiag held-out set but only 0.059 on the full MDD-5k set. The MDD-trained classifier reaches 0.632 on the 185-case MDD held-out split and 0.476 on the LingxiDiag held-out set. The degradation appears in both transfer directions but is asymmetric, suggesting substantial dependence on source-specific wording, dialogue-generation patterns, and label distributions.
 
-This result does not show that an LLM architecture automatically generalizes clinically. It shows that a strong same-corpus lexical score should not be treated as evidence of source-independent diagnosis performance.
+These results do not support the absolute claim that TF--IDF with logistic regression cannot generalize, and they do not prove that HiED generalizes better. They show that a strong same-corpus lexical score should not be treated as evidence of source-independent diagnosis performance. They also do not establish clinical generalization for either architecture.
 
 \section{Answer to RQ5 and Chapter Summary}
 
@@ -1869,81 +1869,37 @@ The stage-wise output pattern remains observable on MDD-5k, but it is not identi
 
 The matched selection experiments also reproduce the main negative finding: deterministic re-selection from the recorded compatibility outputs does not improve DA. Additional pairwise, debate, or repeated-generation configurations do not provide a clear and attributable improvement.
 
-Finally, the lexical transfer matrix shows large source effects. Together, these results establish a synthetic cross-corpus boundary for the study. They do not establish real-patient validity, a uniquely correct clinical primary diagnosis, or improved clinical efficiency.
+Finally, the lexical transfer matrix shows large and asymmetric source effects: the strong within-corpus TF--IDF performance does not persist under either transfer direction. Together, these results establish a synthetic cross-corpus boundary for the study. They do not establish superior generalization by HiED, real-patient validity, a uniquely correct clinical primary diagnosis, or improved clinical efficiency.
 
 \chapter{Characterization of Recorded-Output Disagreements}
 \label{ch:error}
 
-This chapter describes where HiED disagrees with the projected benchmark labels in one frozen internal held-out trace. It does not estimate clinical diagnostic error. LingxiDiag contains synthetic dialogues, the benchmark labels are dataset references rather than independently adjudicated clinical diagnoses, and the saved outputs do not reveal the model's hidden reasoning.
+This chapter characterizes the disagreements identified in Chapter~\ref{ch:results}. It does not repeat the internal performance comparison or estimate clinical diagnostic error. LingxiDiag contains synthetic dialogues, the benchmark labels are dataset references rather than independently adjudicated clinical diagnoses, and the saved outputs do not reveal the model's hidden reasoning.
 
-The analysis asks three simple questions. Was a benchmark-reference diagnosis present in the genuine Top-3? Was it present in the criterion-compatible set? Was a benchmark-reference diagnosis committed as primary? Keeping these views separate shows where disagreement is recorded, but it does not prove that one stage caused another stage to fail.
-
-\section{Analysis Population and Output Views}
+\section{Analysis Scope}
 \label{sec:ch8-stagewise-taxonomy}
 
-The internal held-out set contains 1,000 cases. Criterion-level analysis is available for 915 cases with at least one non-\emph{Others} benchmark parent represented by a configured Criterion Checker. For these cases, Chapter~\ref{ch:results} defines:
+Chapter~\ref{ch:results} divided the 915 checker-eligible cases into mutually exclusive groups using genuine Top-3 detection ($D_3$), benchmark-gold inclusion in the criterion-compatible set ($I$), and committed-primary agreement ($S$). This chapter focuses on characteristics that are not visible from the aggregate group counts: the rank of the benchmark-reference diagnosis, frequent reference-to-primary directions, disagreement in the complete emitted diagnosis set, and the composition of recorded criterion states.
 
-\begin{itemize}
-    \item $D_3=1$ when at least one benchmark-reference parent appears in the genuine Diagnostician Top-3;
-    \item $I=1$ when at least one benchmark-reference parent appears in the criterion-compatible set; and
-    \item $S=1$ when the committed primary diagnosis agrees with at least one benchmark-reference parent.
-\end{itemize}
+Particular attention is given to the 272 cases with $D_3=1$, $I=1$, and $S=0$. In these cases, a benchmark-reference diagnosis is present in both the genuine Top-3 and the criterion-compatible set, but no benchmark-reference parent is committed as the primary diagnosis. $S=0$ does not imply that every benchmark-reference diagnosis is absent from the optional comorbid output. The analysis therefore describes a primary-commitment disagreement rather than the complete removal of the reference diagnosis.
 
-Table~\ref{tab:ch8-joint-profiles} repeats the complete joint distribution because the six profiles are the basis of this chapter.
+The analysis uses one frozen 1,000-case internal held-out trace. The 349-case gold-informed oracle population reported in Chapter~\ref{ch:results} is not an observed system group and is not used here.
 
-\begin{table}[htbp]
-\centering
-\caption{Recorded $D_3/I/S$ profiles among the 915 checker-eligible internal cases.}
-\label{tab:ch8-joint-profiles}
-\small
-\begin{tabularx}{\textwidth}{|c|c|c|r|X|}
-\hline
-$D_3$ & $I$ & $S$ & Cases & Recorded interpretation\\
-\hline
-0 & 0 & 0 & 34 & Reference absent from both recorded upstream views\\
-\hline
-0 & 1 & 0 & 79 & Reference absent from Top-3 but present in compatible set\\
-\hline
-1 & 0 & 0 & 12 & Reference ranked, absent from compatible set, and not selected\\
-\hline
-1 & 0 & 1 & 12 & Benchmark-consistent primary despite compatibility absence\\
-\hline
-1 & 1 & 0 & 272 & Reference ranked and compatible but not selected\\
-\hline
-1 & 1 & 1 & 506 & Reference ranked, compatible, and selected\\
-\hline
-\end{tabularx}
-\end{table}
-
-The largest benchmark-disagreement profile is the 272-case group with $D_3=1$, $I=1$, and $S=0$. A benchmark-reference diagnosis is visible in both recorded upstream views, but another diagnosis is committed as primary. This is the strongest recorded profile of a primary-commitment disagreement under the tested HiED setting. It is not proof that finalization is a universal clinical bottleneck or the only cause of the disagreement.
-
-The table also shows that compatibility is neither sufficient nor necessary for benchmark-consistent commitment in this trace. There are 272 cases in which a benchmark-reference diagnosis is compatible but not committed, and 12 cases in which a benchmark-consistent primary is committed even though the reference diagnosis is absent from the compatible set.
-
-The 349-case gold-informed oracle population reported in Chapter~\ref{ch:results} is not an observed system group. It uses benchmark labels to define optimistic recoverability and is intentionally non-deployable. This chapter therefore describes only the outputs that the frozen system actually recorded.
-
-\section{Candidate and Compatibility Disagreement Profiles}
-
-Across all 1,000 internal cases, 198 contain no benchmark-reference parent in the genuine Top-3. Of these, 113 are checker-eligible and 85 are scored as the evaluation-only \emph{Others} category. Among the 113 checker-eligible Top-3 misses, 79 still contain a benchmark-reference parent in the criterion-compatible set, while 34 contain it in neither recorded view.
-
-A separate group of 24 checker-eligible cases contains a benchmark-reference parent in the genuine Top-3 but not in the criterion-compatible set. Twelve of these cases still commit a benchmark-consistent primary diagnosis, while 12 do not. Because the disagreement subgroup contains only 12 cases, its criterion-state pattern is treated as descriptive rather than stable evidence about a general failure mode.
-
-These results follow directly from the non-nested architecture. Criterion Checkers evaluate all configured categories rather than only the Diagnostician Top-3. A diagnosis can therefore be absent from the Top-3 but present in the compatible set, or ranked and committed even when its checker output does not place it in that set.
-
-\section{Ranked and Criterion-Compatible but Not Selected}
+\section{Rank and Diagnostic Direction within the Primary-Commitment Disagreement Group}
 \label{sec:ch8-primary-selection}
 
-The 272-case group is examined in more detail because it is the largest recorded benchmark-disagreement profile. Figure~\ref{fig:ch8-reference-rank} shows the position of the highest-ranked benchmark-reference parent.
+The 272-case group is examined in more detail because it is the largest mutually exclusive disagreement group among the checker-eligible cases. Figure~\ref{fig:ch8-reference-rank} shows the position of the highest-ranked benchmark-reference parent.
 
-\ThesisFigure[0.72\textwidth]{fig_ch8_reference_rank.pdf}{Rank of the highest-ranked benchmark-reference parent among the 272 cases with $D_3=1$, $I=1$, and $S=0$.}{fig:ch8-reference-rank}
+\ThesisFigure[0.72\textwidth]{fig_ch8_reference_rank.pdf}{Rank of the highest-ranked benchmark-reference parent among the 272 cases with $D_3=1$, $I=1$, and $S=0$, in which no benchmark-reference parent is committed as primary.}{fig:ch8-reference-rank}
 \FloatBarrier
 
-The benchmark-reference parent is ranked second in 171 cases (62.9\%) and third in 101 cases (37.1\%). In most cases it is therefore the closest recorded alternative to the leading diagnosis, but rank proximity alone does not explain why another diagnosis is committed.
+The benchmark-reference parent is ranked second in 171 cases (62.9\%) and third in 101 cases (37.1\%). In this group, the reference can only occupy rank two or three because another diagnosis is committed as primary and the reference is required to appear in the Top-3. The result therefore shows that the reference is more often the immediate alternative at rank two than a rank-three candidate; it does not explain why the primary commitment differs.
 
 Table~\ref{tab:ch8-selection-pairs} reports the most frequent benchmark-reference-to-committed-primary directions.
 
 \begin{table}[htbp]
 \centering
-\caption{Most frequent benchmark-reference-to-committed-primary pairs in the 272-case group.}
+\caption{Most frequent benchmark-reference-to-committed-primary directions in the 272-case primary-commitment disagreement group.}
 \label{tab:ch8-selection-pairs}
 \small
 \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}p{3.2cm}|r|r|}
@@ -1958,15 +1914,15 @@ F51 & F32 & 9 & 3.3\%\\
 \hline
 \end{tabularx}
 \parbox{0.96\textwidth}{\footnotesize
-\textit{Note.} Each case contributes one pair based on its highest-ranked benchmark-reference parent. Percentages use the 272-case group as the denominator; only the five most frequent pairs are shown.}
+\textit{Note.} Each case contributes one pair based on its highest-ranked benchmark-reference parent. Percentages use the 272-case group as the denominator; only the five most frequent pairs are shown. These raw counts are not normalized by class prevalence and therefore describe frequent directions rather than class-specific error rates.}
 \end{table}
 
 The five pairs account for 222 cases (81.6\%), and F41-to-F32 alone accounts for 158 cases (58.1\%). These are directional benchmark disagreements under the paper's parent-label projection. They are not psychiatrist-confirmed misdiagnoses. Their concentration may reflect several factors, including class frequency, synthetic wording, overlapping symptom descriptions, parent-label projection, and model preference. The frozen trace cannot separate these causes.
 
-\section{Diagnostic-Set Construction Disagreements}
+\section{Diagnostic-Set Disagreement after Primary Agreement}
 \label{sec:ch8-diagnostic-set}
 
-Committed-primary agreement does not guarantee agreement between the complete emitted diagnosis set and the benchmark-reference set. Among the 1,000 internal cases, HiED--DA commits a benchmark-consistent primary diagnosis in 518 cases. Exact set agreement occurs in 409 cases, leaving 109 cases with primary agreement but diagnostic-set disagreement.
+Committed-primary agreement does not guarantee agreement between the complete emitted diagnosis set and the benchmark-reference set. Among the 1,000 internal cases, HiED--DA commits a benchmark-consistent primary diagnosis in 518 cases. Exact set agreement occurs in 409 cases, leaving 109 cases (21.0\% of the 518 primary-agreement cases) with primary agreement but diagnostic-set disagreement. Primary agreement therefore does not imply agreement on comorbidity or additional diagnostic labels.
 
 \begin{table}[htbp]
 \centering
@@ -1993,7 +1949,7 @@ The benchmark contains one projected parent in 912 cases, two in 83 cases, and t
 \section{Criterion-State Composition}
 \label{sec:ch8-criterion-evidence}
 
-The Criterion Checker records each item as \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_\allowbreak{}evidence}. Figure~\ref{fig:ch8-criterion-composition} compares mean within-case proportions across the four mutually exclusive analysis groups. Each case is summarized before group averaging so that cases with more recorded criterion items do not receive more weight. The corresponding medians and interquartile ranges are reported in Appendix~\ref{app:supporting}, Table~\ref{tab:ch8-criterion-ratios}.
+The Criterion Checker records each item as \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_\allowbreak{}evidence}. Figure~\ref{fig:ch8-criterion-composition} compares mean within-case proportions across the four mutually exclusive analysis groups. For each case, the states are aggregated across all fourteen configured Criterion Checkers; the frozen trace contains 77,998 diagnosis-by-criterion states. Each case is summarized before group averaging so that cases with more recorded criterion items do not receive more weight. The corresponding medians and interquartile ranges are reported in Appendix~\ref{app:supporting}, Table~\ref{tab:ch8-criterion-ratios}.
 
 \begin{figure}[htbp]
 \centering
@@ -2003,54 +1959,24 @@ The Criterion Checker records each item as \texttt{met}, \texttt{not\_met}, or \
 \end{figure}
 \FloatBarrier
 
-The 272-case group and the committed-primary-agreement group have closely overlapping criterion-state compositions. Top-3 candidate misses are also broadly similar. The 12-case ranked-but-not-compatible disagreement group has fewer \texttt{met} states and more unresolved evidence on average, but its small size does not support a stable group-level conclusion.
+At this coarse aggregate level, no clear separation is visible between the committed-primary-agreement group and the 272-case primary-commitment disagreement group. Their mean proportions of \texttt{met}, \texttt{not\_met}, and \texttt{insufficient\_\allowbreak{}evidence} states are similar. Top-3 candidate misses are also broadly similar. The 12-case ranked-but-not-compatible disagreement group has fewer \texttt{met} states and more unresolved evidence on average, but its small size does not support a stable group-level conclusion.
 
-Criterion checking makes the problem easier to inspect, but broad compatibility does not solve the final comparison. Compatible-set size and aggregate criterion-state proportions do not identify which compatible diagnosis will be committed as primary in this trace. These summaries are descriptive associations, not evidence that one criterion-state pattern caused the final commitment.
+Because this analysis aggregates criterion states across all fourteen configured diagnoses, it may conceal diagnosis-specific or candidate-pair-specific differences. The result shows the limitation of a global state-composition summary; it does not show that criterion-level evidence is uninformative. Compatible-set size and aggregate criterion-state proportions do not identify which compatible diagnosis will be committed as primary in this trace, and these summaries do not establish that one state pattern caused the final commitment.
 
-\section{Selected Frozen-Output Examples}
-\label{sec:ch8-trace-boundaries}
-
-Table~\ref{tab:audit-trace-examples} presents four deterministic examples from the same frozen internal trace. For each profile, the example is the first matching source record. No transcript text or checker evidence text is reproduced. The rows illustrate the meaning of the recorded profiles; they do not support population estimates or clinical conclusions.
-
-\begingroup
-\footnotesize
-\setlength{\tabcolsep}{3pt}
-\renewcommand{\arraystretch}{1.08}
-\begin{longtable}{|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{3.0cm}|>{\raggedright\arraybackslash}p{8.0cm}|}
-\caption{Deterministically selected examples from four recorded $D_3/I/S$ profiles.}
-\label{tab:audit-trace-examples}\\
-\hline
-Profile & Frozen record & Recorded outputs\\
-\hline
-\endfirsthead
-\hline
-Profile & Frozen record & Recorded outputs\\
-\hline
-\endhead
-$D_3=0,I=0,S=0$ & Source line 6\newline Case \texttt{302945002} & Benchmark parent F31; Top-3 F32, F39, F41; compatible parents F43, F51, F32, F39, F98, F41; committed primary F32; no F31 criterion was marked \texttt{insufficient\_\allowbreak{}evidence}.\\
-\hline
-$D_3=1,I=0,S=0$ & Source line 26\newline Case \texttt{396572486} & Benchmark parent F32; Top-3 F39, F32, F41; compatible parents F51, Z71, F98; committed primary F39; F32 criteria B1, C2, C5, and C7 were marked \texttt{insufficient\_\allowbreak{}evidence}.\\
-\hline
-$D_3=1,I=0,S=1$ & Source line 46\newline Case \texttt{393127297} & Benchmark parent F32; Top-3 F32, F39, F51; compatible parents F51, F98, F39, F41; committed primary F32; all eleven recorded F32 criteria were marked \texttt{insufficient\_\allowbreak{}evidence}.\\
-\hline
-$D_3=1,I=1,S=0$ & Source line 25\newline Case \texttt{342807095} & Benchmark parent F32; Top-3 F20, F32, F41; compatible parents F43, F20, F32, F41, F39; committed primary F20; F32 criteria C2 and C7 were marked \texttt{insufficient\_\allowbreak{}evidence}.\\
-\hline
-\end{longtable}
-\endgroup
-
-The examples show why the recorded views must remain separate. Compatibility does not force selection, and compatibility absence does not prevent DA from keeping a benchmark-consistent proposed primary. Criterion IDs are study-rule identifiers, not independent clinical annotations. The examples also do not reveal why the language model produced its ranking or primary choice.
+\paragraph{Frozen-record examples.}
+Deterministically selected examples from four recorded-output profiles are provided in Appendix~\ref{app:supporting}, Table~\ref{tab:audit-trace-examples}. These examples document how the indicators map to individual frozen records without treating them as representative clinical cases.
 
 \section{Chapter Summary}
 \label{sec:ch8-summary}
 
-The largest internal benchmark-disagreement profile contains 272 cases in which a benchmark-reference diagnosis is present in both the genuine Top-3 and the criterion-compatible set but another diagnosis is committed as primary. The reference is usually ranked second, and several disagreement directions occur repeatedly. Diagnostic-set and criterion-state analyses add further detail, while the selected frozen examples show how the recorded views can disagree within one case.
+The detailed analysis adds four findings to the stage-wise results reported in Chapter~\ref{ch:results}. First, among the 272 cases in which a benchmark-reference diagnosis is ranked and criterion-compatible but no benchmark-reference parent is committed as primary, the reference is more often ranked second than third. Second, the disagreement directions are concentrated, especially from F41 to F32, although these raw counts are influenced by class prevalence and are not class-specific error rates. Third, committed-primary agreement does not guarantee complete-set agreement: 109 of 518 primary-agreement cases (21.0\%) still differ from the benchmark diagnosis set. Fourth, the aggregate composition of criterion states is similar between the primary-agreement group and the largest primary-commitment disagreement group, indicating that global proportions of \texttt{met}, \texttt{not\_met}, and \texttt{insufficient\_\allowbreak{}evidence} states do not by themselves explain the final commitment.
 
-These findings support the thesis claim that candidate generation, criterion checking, compatibility analysis, and primary commitment should be recorded and evaluated separately. They do not establish an overall accuracy advantage for HiED, a universal finalization bottleneck, a clinically validated confusion pattern, or a causal effect of criterion states. Those stronger conclusions require clinician adjudication or controlled experiments beyond the synthetic frozen-output analysis.
+These findings characterize the recorded outputs but do not identify clinically adjudicated errors, establish a universal finalization bottleneck, or prove a causal effect of criterion states. Diagnosis-specific comparisons and clinician review are needed to determine whether the observed benchmark disagreements reflect system error, missing transcript information, or ambiguity in the reference labels.
 
 \chapter{Discussion}
 \label{ch:discussion}
 
-The results support a stage-wise interpretation of HiED rather than an accuracy-leading claim. TF--IDF with logistic regression is the strongest same-source label predictor in the main internal comparison, and Single and HiED have almost the same committed Top-1 result. HiED's distinct contribution is the set of recorded outputs that makes candidate generation, criterion checking, compatibility analysis, and primary commitment separately visible.
+The results support a stage-wise interpretation of HiED rather than an accuracy-leading claim. TF--IDF with logistic regression provides the strongest same-source primary-label and class-level F1 performance in the main internal comparison, and Single and HiED have almost the same committed Top-1 result. HiED's distinct contribution is the set of recorded outputs that makes candidate generation, criterion checking, compatibility analysis, and primary commitment separately visible.
 
 The internal and external analyses show the same broad type of benchmark disagreement: a reference diagnosis can be present in the ranked candidates and the criterion-compatible set, while another diagnosis is committed as primary. The size of this profile differs across datasets and archived traces. The framework for asking the stage-wise questions therefore transfers more clearly than the numerical rates themselves.
 
@@ -2063,7 +1989,7 @@ Common mental disorders share many symptoms. Poor sleep, fatigue, poor concentra
 
 Criterion checking makes this problem easier to inspect, but broad compatibility does not solve the final comparison. The internal compatible set contains a median of six configured categories, and its size and overall criterion-state composition do not clearly separate committed-primary agreement from the largest disagreement group. External results also show that compatibility is not a sufficient condition for selection and is not a necessary condition for a benchmark-consistent DA commitment.
 
-The 272 internal cases and 225 external cases with a ranked and compatible reference diagnosis that is not selected are therefore best described as the largest recorded benchmark-disagreement profiles. They show that available upstream records do not automatically determine the final commitment. They do not prove that the finalizer alone caused the disagreement or that primary selection is the largest clinical difficulty in all settings.
+The 272 internal cases and 225 external cases in which a reference diagnosis is ranked and compatible but no benchmark-reference parent is committed as primary are therefore best described as the largest recorded benchmark-disagreement profiles. They show that available upstream records do not automatically determine the final commitment. They do not prove that the finalizer alone caused the disagreement or that primary selection is the largest clinical difficulty in all settings.
 
 A stronger primary selector would need direct comparisons among candidates. Useful information may include symptom timing, illness course, episode structure, syndrome dominance, exclusionary causes, explanatory dependence, and comorbidity. The current criterion path mainly checks diagnoses one at a time and does not fully represent these relations.
 
@@ -2085,7 +2011,7 @@ Primary commitment is only one part of a diagnostic output. Diagnostic-set const
 
 Diagnostic scope is another boundary. A diagnosis that is absent from the configured output space cannot be ranked or emitted. An earlier F60 scope-expansion result could not be linked to a preserved source artifact, so this revision makes no numerical claim from that experiment. The supported point is only that representability is necessary but does not by itself guarantee correct ranking or selection.
 
-Distribution shift is a third boundary. The external MDD-5k analysis preserves the same stage-wise questions, but its compatibility inclusion and profile rates differ from the internal trace and vary across archived MDD-5k lineages. The TF--IDF transfer matrix also shows large source effects. These findings support a synthetic cross-corpus boundary analysis, not real-patient or cross-hospital generalization.
+Distribution shift is a third boundary. The external MDD-5k analysis preserves the same stage-wise questions, but its compatibility inclusion and profile rates differ from the internal trace and vary across archived MDD-5k lineages. The TF--IDF transfer matrix shows strong within-corpus performance but limited and asymmetric transfer across the two synthetic corpora. This finding does not by itself establish superior transfer by HiED. Together, these results support a synthetic cross-corpus boundary analysis, not real-patient or cross-hospital generalization.
 
 Taken together, the results show several separate problems: missing candidates, broad or trace-sensitive compatibility, primary commitment, complete-set construction, diagnostic scope, and source-specific prediction. They should not all be renamed as one finalization problem.
 
@@ -2171,7 +2097,7 @@ HiED is motivated by the Taiwanese psychiatric context, but its effectiveness ha
 
 This thesis presented HiED, a stage-wise decision-support framework for Chinese psychiatric interview transcripts. HiED keeps candidate generation, criterion checking, compatibility analysis, and primary commitment as separate recorded outputs. The framework is designed to show more than one final label: it provides ranked candidates, criterion states, a criterion-compatible set, missing-information records, and the final selection source.
 
-HiED does not establish the best final-label accuracy. On the internal held-out set, TF--IDF with logistic regression is the strongest same-source label predictor, while Single and HiED have almost identical committed Top-1 results. HiED's main technical value is that its recorded outputs allow benchmark disagreement to be divided into different profiles.
+HiED does not establish the best final-label accuracy. On the internal held-out set, TF--IDF with logistic regression provides the strongest same-source primary-label and class-level F1 performance, while Single and HiED have almost identical committed Top-1 results. HiED's main technical value is that its recorded outputs allow benchmark disagreement to be divided into different profiles.
 
 The largest internal benchmark-disagreement profile contains 272 of 915 checker-eligible cases. A benchmark-reference diagnosis is present in both the genuine Top-3 and the criterion-compatible set, but another diagnosis is committed as primary. A corresponding profile contains 225 of 878 checker-eligible cases in the matched MDD-5k trace. The repeated pattern supports the use of stage-wise analysis across two synthetic sources, but the rates are not identical and change across archived trace lineages.
 
@@ -2187,7 +2113,7 @@ The answers below apply only to the tested synthetic datasets, label mappings, o
 
 \item[RQ1] \textbf{How does HiED perform relative to conventional classification and a Single LLM on the same internal split and parent-label evaluation?}
 
-TF--IDF with logistic regression provides the strongest same-source final-label prediction. Single and HiED have almost identical committed Top-1 values. HiED does not establish an overall accuracy advantage, but it provides a genuine ranked differential, criterion states, a criterion-compatible set, and a final selection record for stage-wise analysis.
+TF--IDF with logistic regression provides the strongest same-source primary-label and class-level F1 performance. Single and HiED have almost identical committed Top-1 values. HiED does not establish an overall internal accuracy advantage, but it provides a genuine ranked differential, criterion states, a criterion-compatible set, and a final selection record for stage-wise analysis. The separate transfer analysis shows that the lexical advantage is source-sensitive rather than source-independent.
 
 \item[RQ2] \textbf{Where is benchmark disagreement recorded across candidate generation, criterion checking, compatibility analysis, and primary commitment?}
 
@@ -2203,7 +2129,7 @@ No tested strategy provides a clear and attributable improvement over DA. Matche
 
 \item[RQ5] \textbf{Does the stage-wise analysis remain useful under a second synthetic source?}
 
-Yes, the same output views can be applied to MDD-5k, and the largest external disagreement profile also contains a ranked and compatible reference diagnosis that is not selected. However, the profile rates and compatibility inclusion differ from the internal trace and across archived MDD-5k lineages. The result supports portability of the analysis framework, not stable numerical behavior or clinical generalization.
+Yes, the same output views can be applied to MDD-5k, and the largest external disagreement profile also contains a ranked and compatible reference diagnosis while no benchmark-reference parent is committed as primary. However, the profile rates and compatibility inclusion differ from the internal trace and across archived MDD-5k lineages. The result supports portability of the analysis framework, not stable numerical behavior or clinical generalization.
 
 \end{description}
 
@@ -2320,11 +2246,44 @@ Top-3 candidate miss & 113 & 48.7 [43.6, 52.6] & 21.8 [17.9, 26.9] & 28.2 [23.1,
 \hline
 Ranked, absent from compatible set & 12 & 41.0 [33.0, 47.4] & 27.6 [21.5, 33.0] & 27.6 [22.8, 37.2]\\
 \hline
-Ranked and compatible, not selected & 272 & 50.0 [46.2, 53.8] & 21.8 [19.2, 26.9] & 26.9 [21.8, 32.1]\\
+Ranked and compatible, not primary & 272 & 50.0 [46.2, 53.8] & 21.8 [19.2, 26.9] & 26.9 [21.8, 32.1]\\
 \hline
 \end{tabularx}
 \renewcommand{\arraystretch}{1.0}
 \end{table}
+
+\section{Selected Frozen-Output Examples}
+\label{sec:ch8-trace-boundaries}
+
+Table~\ref{tab:audit-trace-examples} presents four deterministic examples from the same frozen internal trace. For each profile, the example is the first matching source record. No transcript text or checker evidence text is reproduced. The rows illustrate the meaning of the recorded profiles; they do not support population estimates or clinical conclusions.
+
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.08}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{3.0cm}|>{\raggedright\arraybackslash}p{8.0cm}|}
+\caption{Deterministically selected examples from four recorded $D_3/I/S$ profiles.}
+\label{tab:audit-trace-examples}\\
+\hline
+Profile & Frozen record & Recorded outputs\\
+\hline
+\endfirsthead
+\hline
+Profile & Frozen record & Recorded outputs\\
+\hline
+\endhead
+$D_3=0,I=0,S=0$ & Source line 6\newline Case \texttt{302945002} & Benchmark parent F31; Top-3 F32, F39, F41; compatible parents F43, F51, F32, F39, F98, F41; committed primary F32; no F31 criterion was marked \texttt{insufficient\_\allowbreak{}evidence}.\\
+\hline
+$D_3=1,I=0,S=0$ & Source line 26\newline Case \texttt{396572486} & Benchmark parent F32; Top-3 F39, F32, F41; compatible parents F51, Z71, F98; committed primary F39; F32 criteria B1, C2, C5, and C7 were marked \texttt{insufficient\_\allowbreak{}evidence}.\\
+\hline
+$D_3=1,I=0,S=1$ & Source line 46\newline Case \texttt{393127297} & Benchmark parent F32; Top-3 F32, F39, F51; compatible parents F51, F98, F39, F41; committed primary F32; all eleven recorded F32 criteria were marked \texttt{insufficient\_\allowbreak{}evidence}.\\
+\hline
+$D_3=1,I=1,S=0$ & Source line 25\newline Case \texttt{342807095} & Benchmark parent F32; Top-3 F20, F32, F41; compatible parents F43, F20, F32, F41, F39; committed primary F20; F32 criteria C2 and C7 were marked \texttt{insufficient\_\allowbreak{}evidence}.\\
+\hline
+\end{longtable}
+\endgroup
+
+The examples show why the recorded views must remain separate. Compatibility does not force selection, and compatibility absence does not prevent DA from keeping a benchmark-consistent proposed primary. Criterion IDs are study-rule identifiers, not independent clinical annotations. The examples also do not reveal why the language model produced its ranking or primary choice.
 
 \section{Auxiliary Primary-Selection Configurations}
 
