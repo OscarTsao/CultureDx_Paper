@@ -1,4 +1,5 @@
 name: Apply Chapter 8 characterization revision
+# replacement-safe retry
 
 on:
   push:
