@@ -1410,13 +1410,13 @@ HiED--DA & Parent-balanced & Validation-selected proposed system & 0.518 & 0.802
 }
 \end{table}
 
-TF--IDF with logistic regression is the strongest same-corpus label predictor in Table~\ref{tab:matched-baselines-retrieval}. It reaches 0.632 committed Top-1 Accuracy and 0.923 genuine ranked Top-3 Accuracy. Single and HiED--DA have nearly identical committed Top-1 values of 0.517 and 0.518. HiED--DA therefore does not establish an overall Top-1 advantage over either the lexical baseline or the validation-selected Single baseline.
+TF--IDF with logistic regression provides the strongest same-corpus primary-label and class-level F1 performance in Table~\ref{tab:matched-baselines-retrieval}. It reaches 0.632 committed Top-1 Accuracy and 0.923 genuine ranked Top-3 Accuracy. Single and HiED--DA have nearly identical committed Top-1 values of 0.517 and 0.518. HiED--DA therefore does not establish an overall Top-1 advantage over either the lexical baseline or the validation-selected Single baseline. Because the TF--IDF training and evaluation cases come from the same source distribution, this result does not establish cross-corpus generalization.
 
 The set-based measures describe a different part of the output contract. HiED--DA reaches 0.409 Exact Match, compared with 0.029 for Single, but this difference cannot be attributed only to the use of multiple agents because the systems construct and emit diagnostic sets differently. Macro-F1 and Weighted-F1 are likewise interpreted as complete-output measures rather than isolated tests of primary selection.
 
 The aggregate Top-1 difference between HiED--DA and TF--IDF is $-0.114$. The frozen snapshot does not contain a TF--IDF case-level prediction file that matches the complete headline row, so no paired confidence interval, McNemar test, or case-overlap analysis is reported for this contrast. The case-level audit described in Section~\ref{sec:metric-audit-boundary} does reproduce the HiED--DA values in Table~\ref{tab:matched-baselines-retrieval} to the reported precision. Matching complete case-level files were not retained for the other three headline rows.
 
-The strong same-corpus lexical result is consistent with substantial predictive information in transcript wording, label frequency, and other corpus-specific regularities. Chapter~\ref{ch:external} separately tests whether lexical performance transfers across a second synthetic generation process. HiED's distinct empirical contribution in the internal analysis is not higher final-label accuracy, but the additional recorded artifacts: a genuine ranked differential, criterion states, a criterion-compatible set, and a committed-primary record.
+The strong same-corpus lexical result is consistent with substantial predictive information in transcript wording, label frequency, and other corpus-specific regularities. The cross-corpus analysis in Chapter~\ref{ch:external} tests whether this advantage persists when the source distribution changes. HiED's distinct empirical contribution in the internal analysis is not higher final-label accuracy, but the additional recorded artifacts: a genuine ranked differential, criterion states, a criterion-compatible set, and a committed-primary record.
 
 \paragraph{Published LingxiDiagBench context.}
 Table~\ref{tab:validation-configuration-matrix} places the retained thesis configurations beside representative published LingxiDiagBench results. The published rows follow the source paper's original evaluation contracts. Their Top-3 values are not reclassified as emitted-label hit@3 or genuine ranked Top-3 Accuracy. No direct statistical comparison is made with the thesis configurations.
@@ -1450,7 +1450,7 @@ Qwen3-32B & Published benchmark & 0.470 & 0.566 & 0.241 & 0.188 & 0.431\\
 \end{table}
 
 \paragraph{Answer to RQ1.}
-Under the common internal split and parent-label mapping, TF--IDF with logistic regression provides the strongest final label prediction. Single and HiED--DA have almost identical committed Top-1 performance. HiED does not establish an accuracy advantage, but it provides the diagnostic records needed for the stage-wise analyses below.
+Under the common internal split and parent-label mapping, TF--IDF with logistic regression provides the strongest same-corpus primary-label and class-level F1 performance. Single and HiED--DA have almost identical committed Top-1 performance. HiED does not establish an internal accuracy advantage, but it provides the diagnostic records needed for the stage-wise analyses below. Whether the lexical advantage persists across corpus sources is examined in Chapter~\ref{ch:external}.
 
 \section{Stage-Wise Disagreement Analysis}
 \label{sec:stage-wise-disagreement-results}
@@ -1623,7 +1623,7 @@ Within the evaluated Qwen3 family, HiED's ranked Top-3 coverage changes little a
 
 \section{Chapter Summary}
 
-The internal results give five main answers. Retrieval improves the Single baseline more clearly than HiED, and parent-balanced retrieval remains the primary HiED configuration because of the validation contract rather than the held-out ranking. TF--IDF with logistic regression is the strongest same-corpus label predictor, while Single and HiED have almost identical committed Top-1 performance. HiED nevertheless exposes a large difference between candidate availability, criterion compatibility, and committed-primary agreement: 272 of 915 checker-eligible cases contain a benchmark gold parent in both the Top-3 and compatible set but commit another diagnosis. The tested primary-selection interventions do not provide a clear attributable improvement over DA. Finally, HiED's Top-3 coverage is comparatively stable across the evaluated Qwen3 sizes, while the remaining disagreements are concentrated toward a small number of diagnostic directions. Chapter~\ref{ch:external} examines whether these patterns persist under external synthetic distribution shift.
+The internal results give five main answers. Retrieval improves the Single baseline more clearly than HiED, and parent-balanced retrieval remains the primary HiED configuration because of the validation contract rather than the held-out ranking. TF--IDF with logistic regression provides the strongest same-corpus primary-label and class-level F1 performance, while Single and HiED have almost identical committed Top-1 performance. HiED nevertheless exposes a large difference between candidate availability, criterion compatibility, and committed-primary agreement: 272 of 915 checker-eligible cases contain a benchmark gold parent in both the Top-3 and compatible set but commit another diagnosis. The tested primary-selection interventions do not provide a clear attributable improvement over DA. Finally, HiED's Top-3 coverage is comparatively stable across the evaluated Qwen3 sizes, while the remaining disagreements are concentrated toward a small number of diagnostic directions. Chapter~\ref{ch:external} examines whether these patterns persist under external synthetic distribution shift.
 
 \chapter{External Synthetic Evaluation}
 \label{ch:external}
@@ -1831,10 +1831,10 @@ The two traces have the same nominal case counts but different stored outputs. T
 
 A previously cited F60 scope-expansion result could not be linked to a preserved source artifact in the frozen repository snapshot. Its numerical values are therefore not reported in this revision. The underlying methodological point remains: a diagnosis cannot be recovered if it is absent from the configured output space, but expanding that space does not by itself establish accurate selection.
 
-\section{Cross-Corpus Lexical Transfer}
+\section{Cross-Corpus Transfer of the TF--IDF + LR Baseline}
 \label{sec:external-lexical-transfer}
 
-The lexical transfer analysis uses a separately preserved full-corpus TF--IDF with logistic-regression matrix. Table~\ref{tab:lexical-transfer-rewrite} reports Top-1 and genuine Top-3 values under that artifact's twelve-class parent-label contract.
+Chapter~\ref{ch:results} showed that TF--IDF with logistic regression is a strong same-corpus lexical classifier on LingxiDiag. This section tests whether that advantage persists when the training and evaluation sources differ. The analysis uses a separately preserved full-corpus TF--IDF with logistic-regression matrix. Table~\ref{tab:lexical-transfer-rewrite} reports Top-1 and genuine Top-3 values under that artifact's twelve-class parent-label contract. Because this matrix comes from a separate transfer artifact, its within-corpus cells are used to interpret source sensitivity and are not substituted for the main internal headline row.
 
 \begin{table}[htbp]
 \centering
@@ -1858,9 +1858,9 @@ MDD-5k & LingxiDiag held-out & 1,000 & 0.476 & 0.676\\
 \textit{Note.} These are full-corpus transfer runs. They are not the previously reported F32--F41 subset values and should not be interpreted as that binary experiment.}
 \end{table}
 
-The classifier is strongest when training and evaluation use the same corpus. Training on LingxiDiag and testing on MDD-5k reduces Top-1 from 0.602 to 0.059. The reverse transfer is less severe but still lower than within-MDD evaluation: 0.476 instead of 0.632. The asymmetric drop shows that lexical regularities and label distributions differ across the two synthetic generation processes.
+Within-corpus Top-1 is higher than cross-corpus Top-1 in both transfer directions. Training on LingxiDiag and evaluating on MDD-5k reduces Top-1 from 0.602 to 0.059. Training on MDD-5k and evaluating on LingxiDiag reduces it from 0.632 to 0.476. The asymmetric degradation indicates that the classifier relies substantially on source-specific lexical regularities, dialogue-generation patterns, and label distributions. Across these two synthetic corpora, TF--IDF with logistic regression therefore shows strong within-corpus performance but limited and asymmetric transfer.
 
-This result does not show that an LLM architecture automatically generalizes clinically. It shows that a strong same-corpus lexical score should not be treated as evidence of source-independent diagnosis performance.
+These results do not support the absolute claim that TF--IDF with logistic regression cannot generalize, and they do not prove that HiED generalizes better. They show that a strong same-corpus lexical score should not be treated as evidence of source-independent diagnosis performance. They also do not establish clinical generalization for either architecture.
 
 \section{Answer to RQ5 and Chapter Summary}
 
@@ -1869,7 +1869,7 @@ The stage-wise output pattern remains observable on MDD-5k, but it is not identi
 
 The matched selection experiments also reproduce the main negative finding: deterministic re-selection from the recorded compatibility outputs does not improve DA. Additional pairwise, debate, or repeated-generation configurations do not provide a clear and attributable improvement.
 
-Finally, the lexical transfer matrix shows large source effects. Together, these results establish a synthetic cross-corpus boundary for the study. They do not establish real-patient validity, a uniquely correct clinical primary diagnosis, or improved clinical efficiency.
+Finally, the lexical transfer matrix shows large and asymmetric source effects: the strong within-corpus TF--IDF performance does not persist under either transfer direction. Together, these results establish a synthetic cross-corpus boundary for the study. They do not establish superior generalization by HiED, real-patient validity, a uniquely correct clinical primary diagnosis, or improved clinical efficiency.
 
 \chapter{Characterization of Recorded-Output Disagreements}
 \label{ch:error}
@@ -2050,7 +2050,7 @@ These findings support the thesis claim that candidate generation, criterion che
 \chapter{Discussion}
 \label{ch:discussion}
 
-The results support a stage-wise interpretation of HiED rather than an accuracy-leading claim. TF--IDF with logistic regression is the strongest same-source label predictor in the main internal comparison, and Single and HiED have almost the same committed Top-1 result. HiED's distinct contribution is the set of recorded outputs that makes candidate generation, criterion checking, compatibility analysis, and primary commitment separately visible.
+The results support a stage-wise interpretation of HiED rather than an accuracy-leading claim. TF--IDF with logistic regression provides the strongest same-source primary-label and class-level F1 performance in the main internal comparison, and Single and HiED have almost the same committed Top-1 result. HiED's distinct contribution is the set of recorded outputs that makes candidate generation, criterion checking, compatibility analysis, and primary commitment separately visible.
 
 The internal and external analyses show the same broad type of benchmark disagreement: a reference diagnosis can be present in the ranked candidates and the criterion-compatible set, while another diagnosis is committed as primary. The size of this profile differs across datasets and archived traces. The framework for asking the stage-wise questions therefore transfers more clearly than the numerical rates themselves.
 
@@ -2085,7 +2085,7 @@ Primary commitment is only one part of a diagnostic output. Diagnostic-set const
 
 Diagnostic scope is another boundary. A diagnosis that is absent from the configured output space cannot be ranked or emitted. An earlier F60 scope-expansion result could not be linked to a preserved source artifact, so this revision makes no numerical claim from that experiment. The supported point is only that representability is necessary but does not by itself guarantee correct ranking or selection.
 
-Distribution shift is a third boundary. The external MDD-5k analysis preserves the same stage-wise questions, but its compatibility inclusion and profile rates differ from the internal trace and vary across archived MDD-5k lineages. The TF--IDF transfer matrix also shows large source effects. These findings support a synthetic cross-corpus boundary analysis, not real-patient or cross-hospital generalization.
+Distribution shift is a third boundary. The external MDD-5k analysis preserves the same stage-wise questions, but its compatibility inclusion and profile rates differ from the internal trace and vary across archived MDD-5k lineages. The TF--IDF transfer matrix shows strong within-corpus performance but limited and asymmetric transfer across the two synthetic corpora. This finding does not by itself establish superior transfer by HiED. Together, these results support a synthetic cross-corpus boundary analysis, not real-patient or cross-hospital generalization.
 
 Taken together, the results show several separate problems: missing candidates, broad or trace-sensitive compatibility, primary commitment, complete-set construction, diagnostic scope, and source-specific prediction. They should not all be renamed as one finalization problem.
 
@@ -2171,7 +2171,7 @@ HiED is motivated by the Taiwanese psychiatric context, but its effectiveness ha
 
 This thesis presented HiED, a stage-wise decision-support framework for Chinese psychiatric interview transcripts. HiED keeps candidate generation, criterion checking, compatibility analysis, and primary commitment as separate recorded outputs. The framework is designed to show more than one final label: it provides ranked candidates, criterion states, a criterion-compatible set, missing-information records, and the final selection source.
 
-HiED does not establish the best final-label accuracy. On the internal held-out set, TF--IDF with logistic regression is the strongest same-source label predictor, while Single and HiED have almost identical committed Top-1 results. HiED's main technical value is that its recorded outputs allow benchmark disagreement to be divided into different profiles.
+HiED does not establish the best final-label accuracy. On the internal held-out set, TF--IDF with logistic regression provides the strongest same-source primary-label and class-level F1 performance, while Single and HiED have almost identical committed Top-1 results. HiED's main technical value is that its recorded outputs allow benchmark disagreement to be divided into different profiles.
 
 The largest internal benchmark-disagreement profile contains 272 of 915 checker-eligible cases. A benchmark-reference diagnosis is present in both the genuine Top-3 and the criterion-compatible set, but another diagnosis is committed as primary. A corresponding profile contains 225 of 878 checker-eligible cases in the matched MDD-5k trace. The repeated pattern supports the use of stage-wise analysis across two synthetic sources, but the rates are not identical and change across archived trace lineages.
 
@@ -2187,7 +2187,7 @@ The answers below apply only to the tested synthetic datasets, label mappings, o
 
 \item[RQ1] \textbf{How does HiED perform relative to conventional classification and a Single LLM on the same internal split and parent-label evaluation?}
 
-TF--IDF with logistic regression provides the strongest same-source final-label prediction. Single and HiED have almost identical committed Top-1 values. HiED does not establish an overall accuracy advantage, but it provides a genuine ranked differential, criterion states, a criterion-compatible set, and a final selection record for stage-wise analysis.
+TF--IDF with logistic regression provides the strongest same-source primary-label and class-level F1 performance. Single and HiED have almost identical committed Top-1 values. HiED does not establish an overall internal accuracy advantage, but it provides a genuine ranked differential, criterion states, a criterion-compatible set, and a final selection record for stage-wise analysis. The separate transfer analysis shows that the lexical advantage is source-sensitive rather than source-independent.
 
 \item[RQ2] \textbf{Where is benchmark disagreement recorded across candidate generation, criterion checking, compatibility analysis, and primary commitment?}
 
