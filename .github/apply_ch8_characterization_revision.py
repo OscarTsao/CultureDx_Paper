@@ -6,7 +6,9 @@ from pathlib import Path
 
 
 def sub_once(text: str, pattern: str, replacement: str, label: str) -> str:
-    updated, count = re.subn(pattern, replacement, text, count=1, flags=re.DOTALL)
+    updated, count = re.subn(
+        pattern, lambda _match: replacement, text, count=1, flags=re.DOTALL
+    )
     if count != 1:
         raise RuntimeError(f"{label}: expected exactly one match, found {count}")
     return updated
