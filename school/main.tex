@@ -95,7 +95,7 @@ Common Mental Disorders in the Taiwanese Context\par}
 
 在 LingxiDiag-16K 內部測試集上，HiED 的 Top-1 Accuracy 為 51.8\%，genuine Top-3 Accuracy 為 80.2\%。TF--IDF 加邏輯迴歸在同語料內的標籤預測較強，但跨語料表現明顯下降，且不提供準則狀態或診斷階段紀錄。在 915 個可進行準則分析的案例中，有 272 例（29.7\%）的參考診斷已進入前三個候選並通過準則相容檢查，但沒有參考診斷被確立為主診斷；MDD-5k 的 878 個可分析案例中，也有 225 例（25.6\%）出現相同型態。
 
-HiED 的主要貢獻，是將候選形成、準則核對與主診斷選擇分開記錄，並提供排序候選、準則狀態、資訊不足項目與最終選擇，讓診斷分歧與待補資訊可被檢視。HiED 旨在支援而非取代醫師。量化結果來自合成中文逐字稿；針對部分 LingxiDiag 案例的盲性精神科醫師標注仍待完成，真實病人評估不在本論文範圍內。
+HiED 的主要貢獻，是將候選形成、準則核對與主診斷選擇分開記錄，並提供排序候選、準則狀態、資訊不足項目與最終選擇，讓診斷分歧與待補資訊可被檢視。HiED 旨在支援而非取代醫師。量化結果來自合成中文逐字稿；針對部分 LingxiDiag 合成案例的單一精神科醫師標籤一致性審查（初始診斷階段採盲性設計）列為後續工作，未納入本論文結果；真實病人評估亦不在本論文範圍內。
 
 \noindent\textbf{關鍵詞：}大型語言模型、多代理系統、精神科鑑別診斷、臨床決策支援、ICD-10、可稽核人工智慧
 \chapter*{Abstract}
@@ -106,7 +106,7 @@ We propose HiED, a stage-wise decision-support framework for Chinese psychiatric
 
 On the LingxiDiag-16K internal test set, HiED achieved 51.8\% Top-1 Accuracy and 80.2\% genuine Top-3 Accuracy. TF--IDF with logistic regression provided stronger same-corpus label prediction, but its performance dropped substantially across corpora and it did not provide criterion states or stage-wise records. Among 915 internal cases available for criterion analysis, 272 cases (29.7\%) contained a reference diagnosis in both the Top-3 and the criterion-compatible set, but no reference diagnosis was committed as primary. The same pattern appeared in 225 of 878 MDD-5k cases (25.6\%).
 
-HiED's main contribution is to record candidate generation, criterion checking, and primary commitment separately while providing ranked alternatives, criterion states, missing-information records, and the final decision for review. It is designed to support, not replace, clinicians. The quantitative evidence comes from synthetic Chinese transcripts. A blinded psychiatrist annotation study on selected LingxiDiag cases remains pending, and real-patient evaluation is outside the scope of this thesis.
+HiED's main contribution is to record candidate generation, criterion checking, and primary commitment separately while providing ranked alternatives, criterion states, missing-information records, and the final decision for review. It is designed to support, not replace, clinicians. The quantitative evidence comes from synthetic Chinese transcripts. A proposed single-psychiatrist benchmark-label alignment review with a blinded initial assessment is documented as future work and contributes no clinician-derived result to this thesis; real-patient evaluation is also outside its scope.
 
 \noindent\textbf{Keywords:} Large language models, multi-agent systems, psychiatric differential diagnosis, clinical decision support, ICD-10, auditable AI
 
@@ -125,7 +125,7 @@ Director of the Department of Psychiatry at Linkou Chang Gung Memorial
 Hospital, who provided clinical guidance for this
 research. Her deep expertise in psychiatric diagnosis and her clinical
 guidance shaped both the differential-diagnosis framework and the
-psychiatrist annotation study for selected LingxiDiag cases. I am
+proposed psychiatrist review protocol for selected LingxiDiag cases. I am
 sincerely thankful for her generosity with her time and for her
 commitment to bridging clinical psychiatry and computational methods.
 
@@ -1125,7 +1125,7 @@ Holm correction is applied when multiple prespecified tests belong to the same c
 \chapter{Experimental Design}
 \label{ch:experimental}
 
-This chapter separates configuration selection, held-out evaluation, supporting sensitivity analyses, and a pending clinician-review protocol. These parts use different populations and support different claims. Validation results select configurations; the internal held-out set provides the main internal estimate; MDD-5k provides the second-synthetic-source stage-wise analysis; and the pending psychiatrist protocol defines a planned review of a small, selected synthetic disagreement sample.
+This chapter describes the completed configuration-selection, held-out-evaluation, primary-selection, and supporting boundary analyses. These analyses use different populations and support different claims. Validation results select configurations; the internal held-out set provides the main internal estimate; and MDD-5k provides the second-synthetic-source stage-wise analysis. A separate final section documents a proposed post-thesis psychiatrist review protocol for selected synthetic cases. That protocol was not conducted within the thesis period and is not part of the completed evidence.
 
 \section{Study Sequence and Analysis Populations}
 \label{sec:experimental-overview}
@@ -1148,9 +1148,6 @@ Internal benchmark positioning (RQ1) & Fixed LingxiDiag internal held-out set, $
 Recorded-output and primary-selection analyses (RQ2--RQ4) & Same internal $N=1000$; analyses using $I$ are restricted to 915 checker-eligible cases & Localizes disagreement among recorded output views and tests primary-selection policies under stated artifact and inference contracts\\
 \hline
 External stage-wise portability (RQ5) and supporting boundary analyses & Internal $N=1000$; MDD-5k all cases $N=925$, in-scope cases $N=878$, and F32--F41 subset $N=490$ & RQ5 applies the same output views to MDD-5k; model scale, lexical transfer, and descriptive disagreement analyses provide supporting boundary evidence and do not establish real-patient validity\\
-\hline
-Pending blinded psychiatrist annotation protocol & Twenty cases to be sampled from the 272-case $D_3=1$, $I=1$, $S=0$ group & Pending protocol for a selected synthetic disagreement sample; no clinician results are included in the completed evidence\\
-\hline
 \end{tabularx}
 \end{table}
 
@@ -1286,21 +1283,23 @@ A first-listed-label confusion matrix, frequent reference-to-prediction pairs, a
 
 The MDD-5k stage-wise analysis provides the direct evidence for RQ5. Model-scale, lexical-transfer, and confusion-pattern analyses provide supporting evidence about the boundaries of the evaluated synthetic setting. The earlier scope-expansion run is excluded from quantitative claims because its source artifact was not preserved with sufficient provenance.
 
-\section{Blinded Psychiatrist Annotation Protocol (Pending)}
+\section{Proposed Single-Psychiatrist Review of Benchmark-Label Alignment (Future Work)}
 \label{sec:clinical-evaluation-plan}
 \label{sec:lingxidiag-pilot-review}
 
-The planned blinded annotation of 20 selected LingxiDiag cases is the only clinician-facing study protocol retained in this thesis. Case annotation and analysis remain pending. The protocol is designed to examine the feasibility of the review procedure and to characterize psychiatrist interpretation of one selected synthetic disagreement population.
+The following protocol is documented as future work and was not conducted within the thesis period. It contributes no clinician-derived result to the present thesis. Its purpose is to examine whether the benchmark diagnoses assigned to selected synthetic LingxiDiag transcripts are concordant with one psychiatrist's transcript-only diagnostic assessment. It is not designed to establish dataset-wide label validity, inter-rater reliability, clinical diagnostic accuracy, or clinical validation of HiED.
 
-Twenty cases will be sampled without replacement from the 272-case group satisfying $D_3=1$, $I=1$, and $S=0$. The random seed and case identifiers will be fixed before review. Two psychiatrists will independently review all cases in separately randomized orders. They will remain blinded to the benchmark labels, HiED outputs, computational disagreement profile, case-selection rationale, and the other reviewer's responses.
+Twenty cases will be sampled without replacement from the 272-case group satisfying $D_3=1$, $I=1$, and $S=0$. This purposive sample focuses on cases in which a benchmark-reference diagnosis is present in both the genuine Top-3 and the criterion-compatible set but is not committed as primary by HiED. The observations will therefore apply only to this selected disagreement subgroup and will not be interpreted as an estimate for the full LingxiDiag dataset.
 
-Reviewers will first read the transcript and record whether the available information supports a unique primary diagnosis, a provisional primary diagnosis, possible comorbid diagnoses, and up to three ranked differential diagnoses. They will then label prespecified canonical evidence items and diagnosis-specific qualifiers as \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_evidence}. After the evidence annotation, they may revise their diagnostic judgments. Both provisional and final responses will be retained.
+One psychiatrist will review the selected transcripts in a randomized order. During the initial diagnostic assessment, the reviewer will remain blinded to the LingxiDiag benchmark labels, HiED ranked and committed diagnoses, Criterion Checker outputs, the $D_3$--$I$--$S$ profile, and the case-selection rationale. The reviewer will not be restricted to HiED's fourteen configured diagnostic categories and may record another diagnosis or indicate that the transcript contains insufficient information.
 
-Shared symptom and impairment concepts are annotated once, while diagnosis-specific duration, frequency, temporal, relational, threshold, and exclusion conditions remain separate. The mapping between the physician-facing evidence items and the original Criterion Checker items is frozen before annotation.
+Before any benchmark label is shown, the psychiatrist will record whether the transcript supports a unique primary diagnosis, only a provisional primary diagnosis, or no sufficiently supported primary diagnosis. The reviewer will then record one primary diagnosis, up to three ranked differential diagnoses, possible comorbid diagnoses, diagnostic confidence, and a brief explanation of the evidence and missing information relevant to the judgment.
 
-After both reviewers complete their independent final assessments, the research team compares their responses with the LingxiDiag benchmark labels, HiED ranked and committed diagnoses, criterion states, and system-derived compatibility decisions. Pre-consensus inter-rater agreement is calculated from the independent responses. Any later consensus or adjudication uses the transcript and independent annotations while the benchmark labels and HiED outputs remain concealed.
+After the blinded transcript-only assessment is locked, the benchmark label or labels will be shown only for a second-stage label-appraisal question, while all HiED outputs remain concealed. For each benchmark label, the psychiatrist will classify it as aligned with the primary diagnosis, plausible as a comorbid or differential diagnosis but not primary, not supported by the transcript, or not judgeable because the transcript is insufficient.
 
-Planned analyses include final transcript-only primary-diagnosis agreement, ranked-differential coverage, criterion-state agreement, pre-consensus inter-rater agreement, provisional-to-final diagnostic changes, and agreement between psychiatrist-evidence-derived and system-derived compatibility decisions. Because the pilot contains only 20 synthetic cases selected from one disagreement group, it is interpreted as feasibility and exploratory agreement evidence rather than as an estimate of clinical accuracy or population prevalence.
+Descriptive analyses will report primary-diagnosis concordance, benchmark-label coverage in the ranked differential or comorbidity set, the second-stage plausibility classification, and the frequency of insufficient-information judgments. No inter-rater agreement, consensus adjudication, criterion-state validation, or population-level clinical-accuracy estimate will be reported.
+
+Because the review contains only twenty purposively selected synthetic cases and one psychiatrist, it will be interpreted as a preliminary single-expert benchmark-label audit rather than as independent clinical validation of the dataset or the system.
 
 \chapter{Internal Evaluation Results}
 \label{ch:results}
@@ -2088,7 +2087,7 @@ Reproduction requires the full evaluation contract: data split, model and prompt
 
 The benchmark-disagreement profiles cannot determine whether a mismatch comes from the system, missing transcript evidence, or the dataset label. The benchmark diagnoses have not been independently adjudicated as unique clinical primaries, and the criterion states and evidence notes remain model-generated.
 
-The blinded LingxiDiag psychiatrist annotation study described in Section~\ref{sec:clinical-evaluation-plan} is the only clinician-facing study retained in this thesis. It uses a purposively selected sample of synthetic disagreement cases. Until completed, it provides no clinician evidence. Even after completion, it can assess how psychiatrists interpret the selected synthetic cases, but it cannot estimate clinical accuracy, diagnostic prevalence, workflow benefit, or performance in a representative patient population.
+No psychiatrist review was completed within the thesis period, so the present thesis contains no clinician-derived evidence. Section~\ref{sec:clinical-evaluation-plan} documents a proposed single-psychiatrist benchmark-label alignment review with a blinded initial assessment as future work. Because the proposed review uses one psychiatrist and a purposively selected sample of synthetic disagreement cases, even a completed review would characterize one expert's transcript-only assessment of those cases rather than establish dataset-wide label validity, clinical accuracy, diagnostic prevalence, workflow benefit, or performance in a representative patient population.
 
 HiED does not have a clinically validated unknown-class detector, abstention rule, referral policy, confidence calibration, or targeted follow-up policy. The \emph{Others} class is used only for evaluation and cannot be emitted by the current system. No claim is made about treatment decisions, patient outcomes, subgroup fairness, hospital workflow, clinician workload, or safety.
 
@@ -2145,11 +2144,11 @@ The same stage-wise output views remain applicable to MDD-5k and support the sam
 
 \section{Future Work}
 
-Within the current thesis project, the only retained follow-up study is the blinded LingxiDiag psychiatrist annotation described below. The other items are broader directions for independent future research and are not part of the completed experimental scope.
+The proposed single-psychiatrist LingxiDiag review described below is documented as future work. It was not conducted within the thesis period and contributes no clinician-derived evidence to the completed thesis. The other items are broader directions for independent future research and are not part of the completed experimental scope.
 
-\paragraph{Complete and report the LingxiDiag psychiatrist annotation study.}
+\paragraph{Conduct a single-psychiatrist review of benchmark-label alignment.}
 
-Psychiatrists will review selected synthetic disagreement cases, judge whether the transcript supports one primary diagnosis or remains insufficient, rank plausible diagnoses, and mark relevant criterion states. Their judgments can be compared with the dataset references and HiED records without treating any source as automatic clinical truth. Because the sample is purposively selected and synthetic, the completed study will characterize clinician interpretation of these cases rather than estimate clinical diagnostic accuracy.
+A proposed follow-up review will examine whether the benchmark diagnoses assigned to twenty selected synthetic disagreement cases are concordant with one psychiatrist's transcript-only diagnostic assessment. The initial assessment will be completed without access to the benchmark labels or HiED outputs. After that assessment is locked, benchmark-label alignment will be summarized as primary agreement, presence in the ranked differential or comorbidity set, plausible-but-not-primary alignment, unsupported labeling, or insufficient transcript evidence. The detailed protocol is documented in Section~\ref{sec:clinical-evaluation-plan}. Because the review uses one psychiatrist and a purposively selected synthetic sample, it will not establish dataset-wide label validity or clinical diagnostic accuracy.
 
 \paragraph{Model direct comparisons among candidates.}
 
@@ -2163,7 +2162,7 @@ A fixed transcript may not contain enough evidence to separate the leading diagn
 
 Evaluation on natural psychiatric consultations, workflow impact, safety, fairness, privacy, and governance requires a separate clinical protocol and is outside the current thesis project. Such studies should use independent clinician adjudication, preserve uncertainty and disagreement, and should not assume that agreement with one benchmark diagnosis is equivalent to clinical correctness.
 
-HiED's completed contribution is a stage-wise and inspectable output contract rather than a clinically validated diagnostic tool. The retained LingxiDiag annotation study will examine how clinicians interpret selected records; broader clinical validation and deployment remain independent future research.
+HiED's completed contribution is a stage-wise and inspectable output contract rather than a clinically validated diagnostic tool. The proposed single-psychiatrist review may provide a preliminary audit of benchmark-label alignment in selected synthetic disagreement cases, while broader clinical validation and deployment remain independent future research.
 
 \appendix
 \titleformat{\chapter}[display]{\raggedright\bfseries\LARGE}{Appendix \thechapter}{0.5em}{}
