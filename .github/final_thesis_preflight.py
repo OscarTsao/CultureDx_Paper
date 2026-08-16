@@ -15,6 +15,17 @@ def replace_once(text: str, old: str, new: str, label: str) -> str:
 def patch_thesis(path: Path) -> None:
     text = path.read_text(encoding="utf-8")
 
+    scope_old = (
+        r"\paragraph{Diagnostic-scope expansion.}"
+        "\n"
+        "A configuration-level experiment expands the profile from 14 to 33 configured categories by adding category-specific checker definitions without changing model weights. This supporting analysis tests whether newly representable benchmark diagnoses enter the ranked candidates or become the committed primary diagnosis. It is evaluated separately from the primary 14-category external analysis."
+    )
+    scope_new = (
+        r"\paragraph{Diagnostic-scope boundary.}"
+        "\n"
+        "An earlier exploratory configuration expanded the profile from 14 to 33 configured categories by adding category-specific checker definitions without changing model weights. Because the corresponding source artifact was not preserved with sufficient provenance, this experiment is excluded from the supported quantitative analyses. The retained methodological boundary is that a diagnosis absent from the configured output space cannot be ranked, checked, or emitted; expanding the scope alone does not establish accurate selection."
+    )
+
     replacements = [
         (
             r"\newif\ifshowcomments \showcommentstrue",
@@ -57,10 +68,8 @@ def patch_thesis(path: Path) -> None:
             "narrow RQ5 definition",
         ),
         (
-            r"\paragraph{Diagnostic-scope expansion.}
-A configuration-level experiment expands the profile from 14 to 33 configured categories by adding category-specific checker definitions without changing model weights. This supporting analysis tests whether newly representable benchmark diagnoses enter the ranked candidates or become the committed primary diagnosis. It is evaluated separately from the primary 14-category external analysis.",
-            r"\paragraph{Diagnostic-scope boundary.}
-An earlier exploratory configuration expanded the profile from 14 to 33 configured categories by adding category-specific checker definitions without changing model weights. Because the corresponding source artifact was not preserved with sufficient provenance, this experiment is excluded from the supported quantitative analyses. The retained methodological boundary is that a diagnosis absent from the configured output space cannot be ranked, checked, or emitted; expanding the scope alone does not establish accurate selection.",
+            scope_old,
+            scope_new,
             "remove unsupported scope-expansion experiment claim",
         ),
         (
@@ -84,6 +93,11 @@ An earlier exploratory configuration expanded the profile from 14 to 33 configur
             "use future tense for pending clinician protocol",
         ),
         (
+            "Reviewers first read the transcript and record whether the available information supports a unique primary diagnosis, a provisional primary diagnosis, possible comorbid diagnoses, and up to three ranked differential diagnoses. They then label prespecified canonical evidence items and diagnosis-specific qualifiers as \\texttt{met}, \\texttt{not\\_met}, or \\texttt{insufficient\\_evidence}. After the evidence annotation, they may revise their diagnostic judgments. Both provisional and final responses are retained.",
+            "Reviewers will first read the transcript and record whether the available information supports a unique primary diagnosis, a provisional primary diagnosis, possible comorbid diagnoses, and up to three ranked differential diagnoses. They will then label prespecified canonical evidence items and diagnosis-specific qualifiers as \\texttt{met}, \\texttt{not\\_met}, or \\texttt{insufficient\\_evidence}. After the evidence annotation, they may revise their diagnostic judgments. Both provisional and final responses will be retained.",
+            "complete future tense for pending clinician protocol",
+        ),
+        (
             "This chapter reports the internal results in the order needed to interpret the study. Retrieval configurations are selected first on the public-validation split (RQ3). The frozen configurations are then compared on the fixed internal held-out set (RQ1). The remaining sections localize disagreement across the recorded output views (RQ2), evaluate primary-selection interventions (RQ4), and report the internal model-scale and diagnostic-confusion analyses that contribute to RQ5. All results in this chapter measure agreement with projected benchmark labels on synthetic LingxiDiag dialogues; they are not estimates of clinical diagnostic accuracy.",
             "This chapter reports the internal results in the order needed to interpret the study. Retrieval configurations are selected first on the public-validation split (RQ3). The frozen configurations are then compared on the fixed internal held-out set (RQ1). The remaining sections localize disagreement across the recorded output views (RQ2), evaluate primary-selection interventions (RQ4), and report supporting internal model-scale and diagnostic-confusion analyses. All results in this chapter measure agreement with projected benchmark labels on synthetic LingxiDiag dialogues; they are not estimates of clinical diagnostic accuracy.",
             "remove model scale from direct RQ5 answer",
@@ -104,8 +118,8 @@ An earlier exploratory configuration expanded the profile from 14 to 33 configur
             "rename supporting internal analyses",
         ),
         (
-            "This section reports the internal model-scale and diagnostic-confusion results that contribute to RQ5. External synthetic transfer, diagnostic-scope expansion, and lexical transfer are reported in Chapter~\\ref{ch:external}.",
-            "This section reports supporting internal model-scale and diagnostic-confusion results. These analyses describe internal boundary conditions but do not directly answer RQ5; the second-synthetic-source stage-wise analysis is reported in Chapter~\\ref{ch:external}.",
+            r"This section reports the internal model-scale and diagnostic-confusion results that contribute to RQ5. External synthetic transfer, diagnostic-scope expansion, and lexical transfer are reported in Chapter~\ref{ch:external}.",
+            r"This section reports supporting internal model-scale and diagnostic-confusion results. These analyses describe internal boundary conditions but do not directly answer RQ5; the second-synthetic-source stage-wise analysis is reported in Chapter~\ref{ch:external}.",
             "separate internal sensitivity from RQ5",
         ),
         (
@@ -119,8 +133,8 @@ An earlier exploratory configuration expanded the profile from 14 to 33 configur
             "qualify Chapter 6 summary",
         ),
         (
-            "\\label{tab:external-trace-sensitivity}\n\\label{tab:scope-expansion-results}",
-            "\\label{tab:external-trace-sensitivity}",
+            r"\label{tab:external-trace-sensitivity}" + "\n" + r"\label{tab:scope-expansion-results}",
+            r"\label{tab:external-trace-sensitivity}",
             "remove stale scope-expansion label",
         ),
         (
@@ -133,7 +147,6 @@ An earlier exploratory configuration expanded the profile from 14 to 33 configur
     for old, new, label in replacements:
         text = replace_once(text, old, new, label)
 
-    # Final source-level consistency gates.
     required = [
         r"\showcommentsfalse",
         "same-case stage-wise output and evaluation contract",
@@ -149,7 +162,7 @@ An earlier exploratory configuration expanded the profile from 14 to 33 configur
             raise RuntimeError(f"missing required thesis text: {needle}")
 
     forbidden = [
-        r"\showcommentstrue",
+        r"\newif\ifshowcomments \showcommentstrue",
         "Retrieval provides a clear Top-1 benefit for the direct Single configuration.",
         r"\label{tab:scope-expansion-results}",
         r"\section{Blinded Psychiatrist Annotation Pilot}",
@@ -160,7 +173,6 @@ An earlier exploratory configuration expanded the profile from 14 to 33 configur
         if needle in text:
             raise RuntimeError(f"obsolete thesis text remains: {needle}")
 
-    # Fail on duplicate LaTeX labels, which can silently redirect references.
     labels = re.findall(r"\\label\{([^}]+)\}", text)
     duplicates = sorted({label for label in labels if labels.count(label) > 1})
     if duplicates:
