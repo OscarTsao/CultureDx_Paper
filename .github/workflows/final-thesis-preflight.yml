@@ -1,6 +1,6 @@
 name: Final thesis preflight
 
-# Retry after normalizing BibTeX field indentation in the one-time patch script.
+# Retry after matching the aligned BibTeX author field exactly.
 on:
   push:
     branches:
@@ -23,7 +23,7 @@ jobs:
 
       - name: Apply final source corrections
         run: |
-          sed -i 's/"author  = {Ozgun/"  author  = {Ozgun/g' .github/final_thesis_preflight.py
+          sed -i 's/"author  = {Ozgun/"  author    = {Ozgun/g' .github/final_thesis_preflight.py
           python3 .github/final_thesis_preflight.py school/main.tex school/references.bib
 
       - name: Validate source consistency
