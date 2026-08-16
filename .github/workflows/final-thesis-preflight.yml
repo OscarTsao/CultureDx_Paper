@@ -1,6 +1,6 @@
 name: Final thesis preflight
 
-# Retry after matching the aligned BibTeX author field exactly.
+# Final retry: remove all generated LaTeX files before staging the source patch.
 on:
   push:
     branches:
@@ -96,7 +96,9 @@ jobs:
         run: |
           cd school
           latexmk -C main.tex || true
-          rm -f main.pdf preflight-report.txt preflight-layout-warnings.txt preflight-fonts.txt
+          rm -f main.aux main.bbl main.blg main.fdb_latexmk main.fls main.log \
+            main.lof main.lot main.out main.pdf main.toc main.xdv \
+            preflight-report.txt preflight-layout-warnings.txt preflight-fonts.txt
           cd ..
           rm -f .github/final_thesis_preflight.py
           rm -f .github/workflows/final-thesis-preflight.yml
