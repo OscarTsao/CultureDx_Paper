@@ -45,7 +45,7 @@
 \caption{#3}\label{#4}\end{figure}}
 
 % Guard 1: set \showcommentstrue for mentor-review builds; switch to \showcommentsfalse only for clean defense exports.
-\newif\ifshowcomments \showcommentstrue
+\newif\ifshowcomments \showcommentsfalse
 \newcommand{\ct}[1]{\ifshowcomments\textcolor{red}{{[CT: #1]}}\fi}
 \newcommand{\wl}[1]{\ifshowcomments\textcolor{blue}{{[WL: #1]}}\fi}
 
@@ -193,7 +193,7 @@ vLLM & High-throughput LLM inference and serving framework\\
 
 \section{Background and Motivation}
 
-Psychiatric outpatient care is easy to access in Taiwan, but large hospitals also face a heavy workload. During a first psychiatric visit, the clinician must collect the patient's history, understand the current symptoms, observe the mental state, check immediate risks, and form an initial diagnosis within limited time. Important facts may still be missing, such as when the symptoms began, how long they have lasted, how they have changed, and whether another cause may explain them~\citep{lin2020outpatient}.
+Taiwan's National Health Insurance system allows patients to access specialists and higher-tier medical facilities directly, while large medical centers can face high outpatient volumes. During a first psychiatric visit, the clinician must collect the patient's history, understand the current symptoms, observe the mental state, check immediate risks, and form an initial diagnosis within limited time. Important facts may still be missing, such as when the symptoms began, how long they have lasted, how they have changed, and whether another cause may explain them~\citep{lin2020outpatient}.
 
 Patients may also describe emotional distress through everyday or physical complaints. In Chinese-speaking settings, they may first report poor sleep, fatigue, dizziness, chest tightness, or stomach problems instead of saying that they feel depressed or anxious~\citep{kleinman1982neurasthenia,ryder2008somatic}. The same symptom may also be described in different ways. The clinician must therefore turn a free-form conversation into clinical evidence while keeping the full context of the interview in view.
 
@@ -236,7 +236,7 @@ HiED is motivated by Chinese-language psychiatric care in the Taiwanese outpatie
 
 This thesis makes two main contributions.
 
-First, it presents a two-path and stage-wise architecture for psychiatric decision support. Compared with a Single LLM that mainly returns a final diagnostic output, HiED separately records the ranked candidate list, criterion-checking results, criterion-compatible set, and committed primary diagnosis. This design allows candidate generation, criterion checking, and primary diagnosis selection to be studied separately. Using these outputs, this thesis finds that primary commitment contains the largest recorded benchmark-disagreement profile in the two tested synthetic datasets. This is a benchmark finding under the evaluated settings, not a claim about the true clinical primary diagnosis in every case.
+First, this thesis defines a same-case stage-wise output and evaluation contract, implemented through a two-path architecture for psychiatric decision support. Compared with a Single LLM that mainly returns a final diagnostic output, HiED separately records the ranked candidate list, criterion-checking results, criterion-compatible set, and committed primary diagnosis. This design allows candidate generation, criterion checking, and primary diagnosis selection to be studied separately. Using these outputs, this thesis finds that primary commitment contains the largest recorded benchmark-disagreement profile in the two tested synthetic datasets. This is a benchmark finding under the evaluated settings, not a claim about the true clinical primary diagnosis in every case.
 
 Second, HiED provides structured diagnostic information for clinical review instead of only one final diagnosis. It returns ranked possible diagnoses and marks each diagnostic criterion as \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_evidence}. It also keeps the criterion-compatible set and the final selection record. These outputs are designed to help clinicians screen possible diagnoses, review supporting or conflicting evidence, and identify what information is still missing. Their effect on clinical speed, accuracy, and safety still requires direct clinical evaluation.
 
@@ -1125,7 +1125,7 @@ Holm correction is applied when multiple prespecified tests belong to the same c
 \chapter{Experimental Design}
 \label{ch:experimental}
 
-This chapter separates configuration selection, held-out evaluation, supporting sensitivity analyses, and clinician review. These parts use different populations and support different claims. Validation results select configurations; the internal held-out set provides the main internal estimate; MDD-5k tests synthetic cross-corpus transfer; and the psychiatrist study examines a small, selected synthetic disagreement sample.
+This chapter separates configuration selection, held-out evaluation, supporting sensitivity analyses, and a pending clinician-review protocol. These parts use different populations and support different claims. Validation results select configurations; the internal held-out set provides the main internal estimate; MDD-5k provides the second-synthetic-source stage-wise analysis; and the pending psychiatrist protocol defines a planned review of a small, selected synthetic disagreement sample.
 
 \section{Study Sequence and Analysis Populations}
 \label{sec:experimental-overview}
@@ -1147,9 +1147,9 @@ Internal benchmark positioning (RQ1) & Fixed LingxiDiag internal held-out set, $
 \hline
 Recorded-output and primary-selection analyses (RQ2--RQ4) & Same internal $N=1000$; analyses using $I$ are restricted to 915 checker-eligible cases & Localizes disagreement among recorded output views and tests primary-selection policies under stated artifact and inference contracts\\
 \hline
-Sensitivity, scope, and transfer analyses (RQ5) & Internal $N=1000$; MDD-5k all cases $N=925$, in-scope cases $N=878$, and F32--F41 subset $N=490$ & Examines model scale and synthetic distribution shift; does not establish real-patient validity\\
+External stage-wise portability (RQ5) and supporting boundary analyses & Internal $N=1000$; MDD-5k all cases $N=925$, in-scope cases $N=878$, and F32--F41 subset $N=490$ & RQ5 applies the same output views to MDD-5k; model scale, lexical transfer, and descriptive disagreement analyses provide supporting boundary evidence and do not establish real-patient validity\\
 \hline
-Blinded psychiatrist annotation pilot & Twenty cases sampled from the 272-case $D_3=1$, $I=1$, $S=0$ group & Feasibility and exploratory agreement study on a selected synthetic sample; not a population-level clinical-accuracy estimate\\
+Pending blinded psychiatrist annotation protocol & Twenty cases to be sampled from the 272-case $D_3=1$, $I=1$, $S=0$ group & Pending protocol for a selected synthetic disagreement sample; no clinician results are included in the completed evidence\\
 \hline
 \end{tabularx}
 \end{table}
@@ -1262,10 +1262,10 @@ Forced pairwise override is reported only in the external MDD-5k analysis, where
 
 Committed Top-1 Accuracy is the common RQ4 measure. A paired interval or McNemar test is reported only when both methods retain complete outputs for the same case identifiers. When only aggregate results remain, the comparison is descriptive. Detailed method rules, inference budgets, tie-breaking procedures, and retained paired statistics are reported in Appendix~\ref{app:supporting}.
 
-\section{Sensitivity, Scope, and Transfer Analyses}
+\section{External Portability and Supporting Boundary Analyses}
 \label{sec:sensitivity-transfer-design}
 
-RQ5 examines how the observed patterns change with model scale, synthetic corpus, configured diagnostic scope, and lexical transfer.
+RQ5 asks whether the same stage-wise output views remain applicable under a second synthetic source. The MDD-5k stage-wise analysis directly answers this question. Model-scale sensitivity, lexical transfer, and descriptive disagreement analyses are reported as supporting boundary analyses rather than as separate components of RQ5.
 
 \paragraph{Within-family model-scale sensitivity.}
 Qwen3-4B, 8B, 14B, and 32B are evaluated on the same fixed 1,000-case internal held-out set while holding the prompt family, configured diagnostic scope, retrieval policy, decoding contract, and evaluation metrics constant. Committed Top-1 Accuracy, genuine ranked Top-3 Accuracy, structured-output failures, and abstention events are recorded. This analysis is restricted to the evaluated Qwen3 family and serving setup.
@@ -1275,8 +1275,8 @@ MDD-5k is evaluated under a different Chinese synthetic dialogue-generation proc
 
 The external trace records the Diagnostician ranking, criterion states, criterion-compatible set, and committed primary diagnosis. It supports candidate detection, gold-label inclusion, committed-primary agreement, and matched policy replays on the same synthetic cases. A validated matched bundle for external retrieval-policy comparison is unavailable, so retrieval-policy transfer is not claimed.
 
-\paragraph{Diagnostic-scope expansion.}
-A configuration-level experiment expands the profile from 14 to 33 configured categories by adding category-specific checker definitions without changing model weights. This supporting analysis tests whether newly representable benchmark diagnoses enter the ranked candidates or become the committed primary diagnosis. It is evaluated separately from the primary 14-category external analysis.
+\paragraph{Diagnostic-scope boundary.}
+An earlier exploratory configuration expanded the profile from 14 to 33 configured categories by adding category-specific checker definitions without changing model weights. Because the corresponding source artifact was not preserved with sufficient provenance, this experiment is excluded from the supported quantitative analyses. The retained methodological boundary is that a diagnosis absent from the configured output space cannot be ranked, checked, or emitted; expanding the scope alone does not establish accurate selection.
 
 \paragraph{Cross-corpus lexical transfer.}
 The same TF--IDF classifier family is trained separately on each synthetic corpus and evaluated both within corpus and on the other corpus. This analysis tests whether lexical associations learned under one synthetic generation process transfer to the other; it does not repair the absence of real-patient validation.
@@ -1284,17 +1284,17 @@ The same TF--IDF classifier family is trained separately on each synthetic corpu
 \paragraph{Descriptive disagreement patterns.}
 A first-listed-label confusion matrix, frequent reference-to-prediction pairs, and the $D_3$--$I$--$S$ profiles characterize the remaining disagreements. The first-listed label is used only to create a one-label visualization and is not substituted for the main multilabel evaluation.
 
-The model-scale and MDD-5k analyses provide the main evidence for RQ5. Scope expansion, lexical transfer, and confusion-pattern analyses provide supporting evidence about the boundaries of the evaluated synthetic setting.
+The MDD-5k stage-wise analysis provides the direct evidence for RQ5. Model-scale, lexical-transfer, and confusion-pattern analyses provide supporting evidence about the boundaries of the evaluated synthetic setting. The earlier scope-expansion run is excluded from quantitative claims because its source artifact was not preserved with sufficient provenance.
 
-\section{Blinded Psychiatrist Annotation Pilot}
+\section{Blinded Psychiatrist Annotation Protocol (Pending)}
 \label{sec:clinical-evaluation-plan}
 \label{sec:lingxidiag-pilot-review}
 
-The blinded annotation of 20 selected LingxiDiag cases is the only clinician-facing evaluation included in this thesis. It examines the feasibility of the review procedure and provides psychiatrist characterization of one selected synthetic disagreement population.
+The planned blinded annotation of 20 selected LingxiDiag cases is the only clinician-facing study protocol retained in this thesis. Case annotation and analysis remain pending. The protocol is designed to examine the feasibility of the review procedure and to characterize psychiatrist interpretation of one selected synthetic disagreement population.
 
-Twenty cases are sampled without replacement from the 272-case group satisfying $D_3=1$, $I=1$, and $S=0$. The random seed and case identifiers are fixed before review. Two psychiatrists independently review all cases in separately randomized orders. They remain blinded to the benchmark labels, HiED outputs, computational disagreement profile, case-selection rationale, and the other reviewer's responses.
+Twenty cases will be sampled without replacement from the 272-case group satisfying $D_3=1$, $I=1$, and $S=0$. The random seed and case identifiers will be fixed before review. Two psychiatrists will independently review all cases in separately randomized orders. They will remain blinded to the benchmark labels, HiED outputs, computational disagreement profile, case-selection rationale, and the other reviewer's responses.
 
-Reviewers first read the transcript and record whether the available information supports a unique primary diagnosis, a provisional primary diagnosis, possible comorbid diagnoses, and up to three ranked differential diagnoses. They then label prespecified canonical evidence items and diagnosis-specific qualifiers as \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_evidence}. After the evidence annotation, they may revise their diagnostic judgments. Both provisional and final responses are retained.
+Reviewers will first read the transcript and record whether the available information supports a unique primary diagnosis, a provisional primary diagnosis, possible comorbid diagnoses, and up to three ranked differential diagnoses. They will then label prespecified canonical evidence items and diagnosis-specific qualifiers as \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_evidence}. After the evidence annotation, they may revise their diagnostic judgments. Both provisional and final responses will be retained.
 
 Shared symptom and impairment concepts are annotated once, while diagnosis-specific duration, frequency, temporal, relational, threshold, and exclusion conditions remain separate. The mapping between the physician-facing evidence items and the original Criterion Checker items is frozen before annotation.
 
@@ -1305,7 +1305,7 @@ Planned analyses include final transcript-only primary-diagnosis agreement, rank
 \chapter{Internal Evaluation Results}
 \label{ch:results}
 
-This chapter reports the internal results in the order needed to interpret the study. Retrieval configurations are selected first on the public-validation split (RQ3). The frozen configurations are then compared on the fixed internal held-out set (RQ1). The remaining sections localize disagreement across the recorded output views (RQ2), evaluate primary-selection interventions (RQ4), and report the internal model-scale and diagnostic-confusion analyses that contribute to RQ5. All results in this chapter measure agreement with projected benchmark labels on synthetic LingxiDiag dialogues; they are not estimates of clinical diagnostic accuracy.
+This chapter reports the internal results in the order needed to interpret the study. Retrieval configurations are selected first on the public-validation split (RQ3). The frozen configurations are then compared on the fixed internal held-out set (RQ1). The remaining sections localize disagreement across the recorded output views (RQ2), evaluate primary-selection interventions (RQ4), and report supporting internal model-scale and diagnostic-confusion analyses. All results in this chapter measure agreement with projected benchmark labels on synthetic LingxiDiag dialogues; they are not estimates of clinical diagnostic accuracy.
 
 \section{Retrieval-Configuration Results}
 \label{sec:retrieval-results}
@@ -1366,7 +1366,7 @@ Held-out & Parent-balanced$^{\dagger}$ & 0.518 & 0.802 & 0.409 & 0.178 & 0.434\\
 \end{table}
 
 \paragraph{Single.}
-Global Top-5 was retained for Single. On validation, it produced the highest Top-1 Accuracy (0.519), Exact Match (0.030), Macro-F1 (0.209), and Weighted-F1 (0.456). Parent-balanced retrieval produced the highest emitted-label hit@3 (0.741), but this measure describes the final emitted labels rather than a genuine ranked differential. The held-out results show the same overall pattern: global Top-5 has the highest Top-1, Exact Match, Macro-F1, and Weighted-F1, whereas parent-balanced retrieval has the highest emitted-label hit@3. Both retrieval configurations improve held-out Top-1 over no retrieval, by 5.1 and 4.2 percentage points, respectively.
+Global Top-5 was retained for Single. On validation, it produced the highest Top-1 Accuracy (0.519), Exact Match (0.030), Macro-F1 (0.209), and Weighted-F1 (0.456). Parent-balanced retrieval produced the highest emitted-label hit@3 (0.741), but this measure describes the final emitted labels rather than a genuine ranked differential. The held-out results show the same overall pattern: global Top-5 has the highest Top-1, Exact Match, Macro-F1, and Weighted-F1, whereas parent-balanced retrieval has the highest emitted-label hit@3. Both retrieval configurations have higher held-out Top-1 point estimates than no retrieval, by 5.1 and 4.2 percentage points, respectively.
 
 \paragraph{HiED--DA.}
 Parent-balanced retrieval was the initially retained HiED--DA configuration. On validation, global Top-5 is higher on Top-1 Accuracy (0.525 versus 0.523) and Exact Match (0.432 versus 0.428). Parent-balanced retrieval is higher on genuine ranked Top-3 Accuracy (0.800 versus 0.797), Macro-F1 (0.181 versus 0.178), and Weighted-F1 (0.440 versus 0.435). Global Top-5 therefore does not satisfy the all-five promotion condition defined in Chapter~\ref{ch:experimental}, and parent-balanced retrieval remains the retained configuration.
@@ -1374,7 +1374,7 @@ Parent-balanced retrieval was the initially retained HiED--DA configuration. On 
 On the held-out set, global Top-5 is higher than parent-balanced retrieval on all five HiED measures. The differences are 0.6 percentage points for Top-1, 1.3 for ranked Top-3, 2.6 for Exact Match, 1.8 for Macro-F1, and 0.3 for Weighted-F1. This validation--held-out rank reversal is a post-selection sensitivity result. It is not used to replace the configuration selected on validation.
 
 \paragraph{Answer to RQ3.}
-Retrieval provides a clear Top-1 benefit for the direct Single configuration. For HiED--DA, the differences among no retrieval, global Top-5, and parent-balanced retrieval are smaller and depend on the split and metric. The results do not establish one retrieval policy as universally superior for HiED. Parent-balanced retrieval is used in the primary HiED analyses because it is the configuration retained by the predefined validation procedure, not because it has the highest held-out point estimates.
+Retrieval produces higher Top-1 point estimates for the direct Single configuration than no retrieval on both the validation and held-out splits. For HiED--DA, the differences among no retrieval, global Top-5, and parent-balanced retrieval are smaller and depend on the split and metric. The results do not establish one retrieval policy as universally superior for HiED. Parent-balanced retrieval is used in the primary HiED analyses because it is the configuration retained by the predefined validation procedure, not because it has the highest held-out point estimates.
 
 \section{Benchmark Positioning and Main Internal Performance}
 \label{sec:validation-retrieval-selection}
@@ -1595,10 +1595,10 @@ Deterministic fusion is 0.4 percentage points below DA, but a complete paired ca
 \paragraph{Answer to RQ4.}
 None of the evaluated methods provides a clear and attributable improvement over DA on the internal held-out set. The matched NtS comparison consistently lowers Top-1, deterministic fusion is slightly lower without retained paired records, the small independent-pairwise increase is statistically inconclusive and confounded by a complete rerun, and debate performs below DA. The observed candidate and compatibility headroom therefore was not converted into a reliable gain by the tested selectors.
 
-\section{Model-Scale and Diagnostic Disagreement Analysis}
+\section{Supporting Model-Scale and Diagnostic Disagreement Analyses}
 \label{sec:model-scale-disagreement}
 
-This section reports the internal model-scale and diagnostic-confusion results that contribute to RQ5. External synthetic transfer, diagnostic-scope expansion, and lexical transfer are reported in Chapter~\ref{ch:external}.
+This section reports supporting internal model-scale and diagnostic-confusion results. These analyses describe internal boundary conditions but do not directly answer RQ5; the second-synthetic-source stage-wise analysis is reported in Chapter~\ref{ch:external}.
 
 \paragraph{Model scale.}
 \ThesisFigure{fig_a_size_robustness.pdf}{Held-out Top-1 across Qwen3 model sizes for the Single baseline and HiED--DA. Shaded bands indicate the observed minimum-to-maximum range across the evaluated model sizes and are not confidence intervals.}{fig:size-robustness}
@@ -1614,12 +1614,12 @@ The first-listed-label confusion analysis has agreement 0.509, compared with the
 
 The largest direction is F41$\rightarrow$F32 with 178 cases, compared with 24 cases in the reverse F32$\rightarrow$F41 direction. Other frequent directions are F39$\rightarrow$F32 (43), \emph{Others}$\rightarrow$F32 (37), and \emph{Others}$\rightarrow$F41 (26). These counts show that the disagreements are not distributed symmetrically and that F32 is a frequent destination. Because the matrix uses one first-listed benchmark label, it is descriptive rather than the primary multilabel evaluation. Chapter~\ref{ch:error} examines the candidate ranks, selection pairs, and criterion-state patterns behind these directions.
 
-\paragraph{Internal contribution to RQ5.}
+\paragraph{Supporting internal boundary findings.}
 Within the evaluated Qwen3 family, HiED's ranked Top-3 coverage changes little across model sizes, while committed Top-1 varies over a narrower range than the Single baseline. The internal disagreements are also concentrated in a small number of diagnostic directions, especially F41$\rightarrow$F32. These findings define the internal boundary conditions; Chapter~\ref{ch:external} tests whether the broader stage-wise pattern persists under a second synthetic corpus and other diagnostic settings.
 
 \section{Chapter Summary}
 
-The internal results give five main answers. Retrieval improves the Single baseline more clearly than HiED, and parent-balanced retrieval remains the primary HiED configuration because of the validation contract rather than the held-out ranking. TF--IDF with logistic regression provides the strongest same-corpus primary-label and class-level F1 performance, while Single and HiED have almost identical committed Top-1 performance. HiED nevertheless exposes a large difference between candidate availability, criterion compatibility, and committed-primary agreement: 272 of 915 checker-eligible cases contain a benchmark gold parent in both the Top-3 and compatible set but commit another diagnosis. The tested primary-selection interventions do not provide a clear attributable improvement over DA. Finally, HiED's Top-3 coverage is comparatively stable across the evaluated Qwen3 sizes, while the remaining disagreements are concentrated toward a small number of diagnostic directions. Chapter~\ref{ch:external} examines whether these patterns persist under external synthetic distribution shift.
+The internal results give five main answers. Retrieval is associated with larger Top-1 point-estimate differences for Single than for HiED, and parent-balanced retrieval remains the primary HiED configuration because of the validation contract rather than the held-out ranking. TF--IDF with logistic regression provides the strongest same-corpus primary-label and class-level F1 performance, while Single and HiED have almost identical committed Top-1 performance. HiED nevertheless exposes a large difference between candidate availability, criterion compatibility, and committed-primary agreement: 272 of 915 checker-eligible cases contain a benchmark gold parent in both the Top-3 and compatible set but commit another diagnosis. The tested primary-selection interventions do not provide a clear attributable improvement over DA. Finally, HiED's Top-3 coverage is comparatively stable across the evaluated Qwen3 sizes, while the remaining disagreements are concentrated toward a small number of diagnostic directions. Chapter~\ref{ch:external} examines whether these patterns persist under external synthetic distribution shift.
 
 \chapter{External Synthetic Evaluation}
 \label{ch:external}
@@ -1806,7 +1806,6 @@ The matched method-comparison trace is not the only archived MDD-5k output. Tabl
 \centering
 \caption{Sensitivity of external results to the archived trace lineage under the same any-gold scoring contract.}
 \label{tab:external-trace-sensitivity}
-\label{tab:scope-expansion-results}
 \small
 \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{4.1cm}|c|c|c|c|}
 \hline
@@ -2235,7 +2234,7 @@ This appendix gives details needed to read the supporting experiments. It lists 
 It does not repeat the complete software implementation. Full prompts, case-level outputs, seed schedules, evaluation scripts, and executable configurations remain in the versioned project repository.
 
 {\footnotesize
-\noindent\textit{TF--IDF baseline configuration:} The model is trained on 13,000 source cases. It uses character-boundary 1--2-grams, at most 10,000 features, \texttt{min\_df=2}, \texttt{max\_df=0.95}, and sublinear term frequency. Twelve class-balanced one-vs-rest L-BFGS logistic-regression classifiers use $C=1.0$ and a 2,000-iteration limit. Their probabilities define the ranked labels and thresholded multilabel output.
+\noindent\textit{TF--IDF baseline configuration:} The model is trained on 13,000 source cases. It uses character-boundary 1--2-grams, at most 10,000 features, \texttt{min\_df=2}, \texttt{max\_df=0.95}, and sublinear term frequency. Twelve class-balanced one-vs-rest L-BFGS logistic-regression classifiers use $C=1.0$ and a 2,000-iteration limit. Their probabilities define the ranked labels. The highest-probability class is always emitted as the primary label, and the second-ranked class is additionally emitted when its probability is at least 0.30; no more than two labels are emitted. Ranked Top-3 uses the three highest class scores independently of this emission rule, whereas Exact Match and F1 use the emitted set.
 \par}
 
 The internal held-out set was created by largest-remainder allocation and sampling without replacement with NumPy seed 42. Its ordered case-ID fingerprint is \texttt{317a7633a339ae9a}.
