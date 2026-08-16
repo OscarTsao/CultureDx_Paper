@@ -1,5 +1,6 @@
 name: Final thesis preflight
 
+# Retry after correcting the one-time source patch script.
 on:
   push:
     branches:
