@@ -1,6 +1,6 @@
 name: Final thesis preflight
 
-# Retry after correcting the one-time source patch script.
+# Retry after normalizing BibTeX field indentation in the one-time patch script.
 on:
   push:
     branches:
@@ -22,7 +22,9 @@ jobs:
           fetch-depth: 0
 
       - name: Apply final source corrections
-        run: python3 .github/final_thesis_preflight.py school/main.tex school/references.bib
+        run: |
+          sed -i 's/"author  = {Ozgun/"  author  = {Ozgun/g' .github/final_thesis_preflight.py
+          python3 .github/final_thesis_preflight.py school/main.tex school/references.bib
 
       - name: Validate source consistency
         run: |
