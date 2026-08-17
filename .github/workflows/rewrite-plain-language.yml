@@ -21,8 +21,20 @@ jobs:
       - name: Apply thesis rewrite
         shell: bash
         run: |
+          set +e
+          python3 .github/scripts/rewrite_plain_language.py > rewrite-error.log 2>&1
+          status=$?
+          cat rewrite-error.log
+          if [[ $status -ne 0 ]]; then
+            git config user.name 'OpenAI Codex'
+            git config user.email 'noreply@openai.com'
+            git add rewrite-error.log
+            git commit -m 'Record plain-language rewrite failure'
+            git push origin HEAD:agent/plain-language-main-chapters
+            exit $status
+          fi
+          rm -f rewrite-error.log
           set -euo pipefail
-          python3 .github/scripts/rewrite_plain_language.py
           git diff --check
 
       - name: Install LaTeX toolchain
@@ -68,10 +80,11 @@ jobs:
           cd ..
           rm -f .github/workflows/rewrite-plain-language.yml
           rm -f .github/scripts/rewrite_plain_language.py
+          rm -f rewrite-error.log
           rmdir .github/scripts 2>/dev/null || true
           git add -A
           git diff --cached --check
-          unexpected=$(git diff --cached --name-only | grep -Ev '^(school/main.tex|figures/src/fig_pipeline_round20c_tikz.tex|figures/fig_pipeline_round20c.pdf|\.github/workflows/rewrite-plain-language.yml|\.github/scripts/rewrite_plain_language.py)$' || true)
+          unexpected=$(git diff --cached --name-only | grep -Ev '^(school/main.tex|figures/src/fig_pipeline_round20c_tikz.tex|figures/fig_pipeline_round20c.pdf|\.github/workflows/rewrite-plain-language.yml|\.github/scripts/rewrite_plain_language.py|rewrite-error.log)$' || true)
           test -z "$unexpected"
           git config user.name 'OpenAI Codex'
           git config user.email 'noreply@openai.com'
