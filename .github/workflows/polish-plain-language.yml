@@ -1,0 +1,76 @@
+name: Polish plain-language thesis rewrite
+
+on:
+  push:
+    branches:
+      - agent/plain-language-main-chapters
+
+permissions:
+  contents: write
+
+jobs:
+  polish:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out revision branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/plain-language-main-chapters
+          fetch-depth: 0
+
+      - name: Apply final prose polish
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/polish_plain_text.py
+          git diff --check
+
+      - name: Install thesis toolchain
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            latexmk texlive-xetex texlive-latex-extra texlive-pictures \
+            texlive-publishers texlive-lang-chinese \
+            fonts-liberation fonts-noto-cjk fonts-urw-base35 poppler-utils
+
+      - name: Compile and validate thesis
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd school
+          latexmk -xelatex -interaction=nonstopmode -halt-on-error -file-line-error main.tex
+          test -s main.pdf
+          test -s main.log
+          if grep -E -q 'LaTeX Warning: (Citation|Reference).*undefined|Package natbib Warning: Citation.*undefined|There were undefined references|There were undefined citations|multiply defined|Missing character:' main.log; then
+            grep -E 'LaTeX Warning: (Citation|Reference).*undefined|Package natbib Warning: Citation.*undefined|There were undefined references|There were undefined citations|multiply defined|Missing character:' main.log || true
+            exit 1
+          fi
+          test "$(grep -c 'Overfull \\hbox' main.log || true)" -eq 0
+          test "$(grep -c 'Overfull \\vbox' main.log || true)" -eq 0
+          pdfinfo main.pdf | grep -E '^(Pages|Page size):'
+          grep -Fq 'Select the eligible diagnosis with the highest criterion \textit{met ratio}' main.tex
+          grep -Fq 'Run the Diagnostician $K$ times, with $K=3$ or $5$, and use majority voting' main.tex
+          grep -Fq 'One advocate represents the diagnosis path and one represents the criterion path; after their debate, a judge agent selects the final diagnosis' main.tex
+          ! grep -Eiq '\bcontract\b|\blineage\b|\bposthoc\b|emitted-label hit@3|genuine ranked Top-3|Trace-Lineage|forced-commit sweep|Evidence contract|saved resultsd|under this rules|archived saved results|one matched case-level results|canonical saved results is|broad or saved results-sensitive' main.tex
+
+      - name: Commit source-only polish
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd school
+          latexmk -C main.tex || true
+          rm -f main.aux main.bbl main.blg main.fdb_latexmk main.fls main.log \
+            main.lof main.lot main.out main.pdf main.toc main.xdv
+          cd ..
+          rm -f .github/workflows/polish-plain-language.yml
+          rm -f .github/scripts/polish_plain_text.py
+          rmdir .github/scripts 2>/dev/null || true
+          git add -A
+          git diff --cached --check
+          unexpected=$(git diff --cached --name-only | grep -Ev '^(school/main.tex|\.github/workflows/polish-plain-language.yml|\.github/scripts/polish_plain_text.py)$' || true)
+          test -z "$unexpected"
+          git config user.name 'OpenAI Codex'
+          git config user.email 'noreply@openai.com'
+          git commit -m 'Polish thesis wording after structural rewrite'
+          git push origin HEAD:agent/plain-language-main-chapters
