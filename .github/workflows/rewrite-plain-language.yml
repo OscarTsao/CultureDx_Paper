@@ -1,4 +1,4 @@
-name: Dump thesis rewrite source
+name: Rewrite thesis in plain language
 
 on:
   push:
@@ -9,32 +9,87 @@ permissions:
   contents: write
 
 jobs:
-  dump:
+  revise:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out revision branch
+        uses: actions/checkout@v4
         with:
           ref: agent/plain-language-main-chapters
           fetch-depth: 0
-      - name: Decompress rewrite source
+
+      - name: Apply thesis rewrite
+        shell: bash
+        run: |
+          set +e
+          python3 .github/scripts/rewrite_plain_language_v3.py > rewrite-error.log 2>&1
+          status=$?
+          cat rewrite-error.log
+          if [[ $status -ne 0 ]]; then
+            git config user.name 'OpenAI Codex'
+            git config user.email 'noreply@openai.com'
+            git add rewrite-error.log
+            git commit -m 'Record plain-language rewrite failure'
+            git push origin HEAD:agent/plain-language-main-chapters
+            exit $status
+          fi
+          rm -f rewrite-error.log
+          set -euo pipefail
+          git diff --check
+
+      - name: Install LaTeX toolchain
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            latexmk texlive-xetex texlive-latex-extra texlive-pictures \
+            texlive-lang-chinese fonts-liberation fonts-noto-cjk \
+            fonts-urw-base35 poppler-utils
+
+      - name: Build Figure 3.1 and thesis
         shell: bash
         run: |
           set -euo pipefail
-          if [[ -f .github/scripts/rewrite-source-debug.py ]]; then
-            echo 'debug source already exists'
-            exit 0
+          cd figures/src
+          xelatex -interaction=nonstopmode -halt-on-error -file-line-error fig_pipeline_round20c_tikz.tex
+          mv -f fig_pipeline_round20c_tikz.pdf ../fig_pipeline_round20c.pdf
+          rm -f fig_pipeline_round20c_tikz.aux fig_pipeline_round20c_tikz.log fig_pipeline_round20c_tikz.xdv
+          cd ../../school
+          latexmk -xelatex -interaction=nonstopmode -halt-on-error -file-line-error main.tex
+          test -s main.pdf
+          test -s main.log
+          if grep -E -q 'LaTeX Warning: (Citation|Reference).*undefined|Package natbib Warning: Citation.*undefined|There were undefined references|There were undefined citations|multiply defined|Missing character:' main.log; then
+            grep -E 'LaTeX Warning: (Citation|Reference).*undefined|Package natbib Warning: Citation.*undefined|There were undefined references|There were undefined citations|multiply defined|Missing character:' main.log || true
+            exit 1
           fi
-          python3 - <<'PY'
-          import ast, base64, re, zlib
-          from pathlib import Path
-          wrapper = Path('.github/scripts/rewrite_plain_language.py').read_text(encoding='utf-8')
-          match = re.search(r"b64decode\((?P<payload>'[^']+')\)", wrapper)
-          payload = ast.literal_eval(match.group('payload'))
-          source = zlib.decompress(base64.b64decode(payload)).decode('utf-8')
-          Path('.github/scripts/rewrite-source-debug.py').write_text(source, encoding='utf-8')
-          PY
+          test "$(grep -c 'Overfull \\hbox' main.log || true)" -eq 0
+          test "$(grep -c 'Overfull \\vbox' main.log || true)" -eq 0
+          pdfinfo main.pdf | grep -E '^(Pages|Page size):'
+          grep -Fq 'Primary-diagnosis selection methods' main.tex
+          grep -Fq 'Run the Diagnostician $K$ times' main.tex
+          ! grep -Eiq '\bcontract\b|\blineage\b|\bposthoc\b|emitted-label hit@3|genuine ranked Top-3|Trace-Lineage|forced-commit sweep' main.tex
+
+      - name: Commit source-only revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd school
+          latexmk -C main.tex || true
+          rm -f main.aux main.bbl main.blg main.fdb_latexmk main.fls main.log \
+            main.lof main.lot main.out main.pdf main.toc main.xdv
+          cd ..
+          rm -f .github/workflows/rewrite-plain-language.yml
+          rm -f .github/scripts/rewrite_plain_language.py
+          rm -f .github/scripts/rewrite_plain_language_v2.py
+          rm -f .github/scripts/rewrite_plain_language_v3.py
+          rm -f .github/scripts/rewrite-source-debug.py
+          rm -f rewrite-error.log
+          rmdir .github/scripts 2>/dev/null || true
+          git add -A
+          git diff --cached --check
+          unexpected=$(git diff --cached --name-only | grep -Ev '^(school/main.tex|figures/src/fig_pipeline_round20c_tikz.tex|figures/fig_pipeline_round20c.pdf|\.github/workflows/rewrite-plain-language.yml|\.github/scripts/rewrite_plain_language.py|\.github/scripts/rewrite_plain_language_v2.py|\.github/scripts/rewrite_plain_language_v3.py|\.github/scripts/rewrite-source-debug.py|rewrite-error.log)$' || true)
+          test -z "$unexpected"
           git config user.name 'OpenAI Codex'
           git config user.email 'noreply@openai.com'
-          git add .github/scripts/rewrite-source-debug.py
-          git commit -m 'Expose rewrite source for repair'
+          git commit -m 'Simplify thesis methods and results narrative'
           git push origin HEAD:agent/plain-language-main-chapters
