@@ -89,26 +89,26 @@ Common Mental Disorders in the Taiwanese Context\par}
 \pagenumbering{roman}
 \chapter*{中文摘要}
 \addcontentsline{toc}{chapter}{中文摘要}
-精神科初診逐字稿的鑑別診斷，需在資訊不完整下比較多個可能疾病並選擇主診斷。症狀持續時間、出現順序、病程、排除病因與共病關係可能未被完整記錄。現有精神科大型語言模型研究多以最終診斷準確率評估，因而無法區分分歧是來自候選遺漏、準則不相容，或參考診斷已存在但未被選為主診斷。
+精神科初診逐字稿的鑑別診斷，是在證據不完整下比較多個可能疾病，而非只辨識一個標籤。醫師需整理症狀、病程、時序、功能影響、排除病因與共病，但這些資訊未必能在一次晤談中完整取得。大型語言模型可整理候選診斷與證據，但流暢輸出不保證鑑別診斷完整、準則判斷有逐字稿支持，或主診斷選擇恰當。只看最終準確率也無法區分候選遺漏、準則不相容，或參考診斷已存在但未被確立為主診斷。
 
-本研究提出 HiED，一套用於中文精神科初診逐字稿的分階段決策支援架構。HiED 將流程分為候選形成、準則核對與主診斷選擇，並保留排序後的候選診斷、逐項準則狀態、準則相容集合與最後的主診斷，使各階段能被分開檢查與分析。
+本研究提出 HiED，一套用於中文精神科初診逐字稿的混合式、以證據為基礎的多代理框架。其雙路徑分階段流程，結合透過相似案例檢索產生排序鑑別診斷的診斷路徑，以及 14 個診斷類別專屬的 Criterion Checker，將各項準則判定為符合、不符合或資訊不足。確定性規則據此形成準則相容集合，最後確立主診斷並可保留共病。HiED 保存同一病例的排序候選、準則狀態、證據說明、相容集合與最終輸出，使各階段能分開評估。
 
-在 LingxiDiag-16K 內部測試集上，HiED 的 Top-1 Accuracy 為 51.8\%，genuine Top-3 Accuracy 為 80.2\%。TF--IDF 加邏輯迴歸在同語料內的標籤預測較強，但跨語料表現明顯下降，且不提供準則狀態或診斷階段紀錄。在 915 個可進行準則分析的案例中，有 272 例（29.7\%）的參考診斷已進入前三個候選並通過準則相容檢查，但沒有參考診斷被確立為主診斷；MDD-5k 的 878 個可分析案例中，也有 225 例（25.6\%）出現相同型態。
+在固定的 1,000 例 LingxiDiag-16K 內部保留測試集上，HiED 的 committed Top-1 Accuracy 為 51.8\%，genuine ranked Top-3 Accuracy 為 80.2\%。其 Top-1 與直接 Single LLM 幾乎相同；TF--IDF 加邏輯迴歸在同來源評估中較強，但跨來源時明顯下降。在 915 個可進行準則分析的案例中，有 272 例（29.7\%）的參考診斷已同時進入 Top-3 與準則相容集合，卻未被確立為主診斷；MDD-5k 的 878 個可分析案例中，也有 225 例（25.6\%）出現相同型態。所測試的確定性、成對比較、辯論與重複生成策略，均未明確優於 Direct-Answer。
 
-HiED 的主要貢獻，是將候選形成、準則核對與主診斷選擇分開記錄，並提供排序候選、準則狀態、資訊不足項目與最終選擇，讓診斷分歧與待補資訊可被檢視。HiED 旨在支援而非取代醫師。量化結果來自合成中文逐字稿；針對部分 LingxiDiag 合成案例的單一精神科醫師標籤一致性審查（初始診斷階段採盲性設計）列為後續工作，未納入本論文結果；真實病人評估亦不在本論文範圍內。
+因此，HiED 並未證明最終標籤準確率較高。其主要貢獻是同病例的分階段輸出與評估契約，使候選遺漏、準則不相容、資訊不足及主診斷確立分歧可被分別檢視。本研究證據來自合成中文逐字稿，不構成臨床驗證；單一精神科醫師的基準標籤一致性審查列為後續工作。
 
-\noindent\textbf{關鍵詞：}大型語言模型、多代理系統、精神科鑑別診斷、臨床決策支援、ICD-10、可稽核人工智慧
+\noindent\textbf{關鍵詞：}大型語言模型、多代理系統、精神科鑑別診斷、診斷準則、臨床決策支援、可稽核人工智慧
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
-Differential diagnosis from a first psychiatric interview transcript requires comparing several possible disorders and choosing a primary diagnosis from incomplete information. Important facts, including symptom duration, temporal order, illness course, exclusionary causes, and comorbidity, may be missing. Most psychiatric LLM studies report only final diagnosis accuracy and therefore cannot distinguish candidate omission, criterion incompatibility, and disagreement after a reference diagnosis is already available.
+Psychiatric differential diagnosis from a first-interview transcript requires comparing plausible disorders under incomplete evidence, not simply assigning one label. Clinicians must organize symptoms, course, timing, impairment, exclusionary causes, and comorbidity, but these details may not be fully elicited in one visit. Large language models can organize candidates and evidence; however, fluent output does not guarantee a complete differential, grounded criterion judgments, or appropriate primary selection. Final accuracy alone cannot localize candidate omission, criterion incompatibility, or disagreement after the reference diagnosis is already available.
 
-We propose HiED, a stage-wise decision-support framework for Chinese psychiatric interview transcripts. HiED separates candidate generation, criterion checking, and primary diagnosis selection. It records ranked candidates, criterion states, the criterion-compatible set, and the committed primary diagnosis so that each output stage can be examined separately.
+This thesis proposes HiED, a hybrid, evidence-grounded multi-agent framework for Chinese psychiatric interview transcripts. Its two-path, stage-wise process combines a diagnostic path that retrieves similar cases and produces a ranked differential with fourteen diagnosis-specific Criterion Checkers that label criteria as met, not met, or insufficient evidence. Deterministic rules form a criterion-compatible set, and finalization commits a primary diagnosis and may retain a comorbidity. HiED preserves these same-case outputs for separate stage-wise evaluation.
 
-On the LingxiDiag-16K internal test set, HiED achieved 51.8\% Top-1 Accuracy and 80.2\% genuine Top-3 Accuracy. TF--IDF with logistic regression provided stronger same-corpus label prediction, but its performance dropped substantially across corpora and it did not provide criterion states or stage-wise records. Among 915 internal cases available for criterion analysis, 272 cases (29.7\%) contained a reference diagnosis in both the Top-3 and the criterion-compatible set, but no reference diagnosis was committed as primary. The same pattern appeared in 225 of 878 MDD-5k cases (25.6\%).
+On a fixed 1,000-case LingxiDiag-16K held-out set, HiED achieved 51.8\% committed Top-1 Accuracy and 80.2\% genuine ranked Top-3 Accuracy. Top-1 was almost identical to the direct Single LLM, whereas TF--IDF with logistic regression was stronger under same-source evaluation but declined substantially across sources. Among 915 checker-eligible LingxiDiag cases, 272 (29.7\%) contained a benchmark-reference diagnosis in both the Top-3 and criterion-compatible set, but no reference diagnosis was committed as primary. The same profile appeared in 225 of 878 MDD-5k cases (25.6\%). Tested deterministic, pairwise, debate, and repeated-generation strategies did not clearly improve on Direct-Answer.
 
-HiED's main contribution is to record candidate generation, criterion checking, and primary commitment separately while providing ranked alternatives, criterion states, missing-information records, and the final decision for review. It is designed to support, not replace, clinicians. The quantitative evidence comes from synthetic Chinese transcripts. A proposed single-psychiatrist benchmark-label alignment review with a blinded initial assessment is documented as future work and contributes no clinician-derived result to this thesis; real-patient evaluation is also outside its scope.
+HiED therefore does not establish superior final-label accuracy. Its main contribution is a same-case stage-wise output and evaluation contract that makes candidate omission, criterion incompatibility, missing information, and primary-commitment disagreement separately inspectable. The evidence comes from synthetic Chinese transcripts and is not clinical validation; a single-psychiatrist benchmark-label alignment review remains future work.
 
-\noindent\textbf{Keywords:} Large language models, multi-agent systems, psychiatric differential diagnosis, clinical decision support, ICD-10, auditable AI
+\noindent\textbf{Keywords:} Large language models, multi-agent systems, psychiatric differential diagnosis, diagnostic criteria, clinical decision support, auditable AI
 
 \chapter*{Acknowledgements}
 \addcontentsline{toc}{chapter}{Acknowledgements}
