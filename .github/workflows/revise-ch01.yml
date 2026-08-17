@@ -1,0 +1,71 @@
+name: Revise Chapter 1 introduction
+
+on:
+  push:
+    branches:
+      - agent/ch01-introduction-review
+
+permissions:
+  contents: write
+
+jobs:
+  revise:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out revision branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/ch01-introduction-review
+          fetch-depth: 0
+
+      - name: Apply Chapter 1 patch
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/revise_ch01.py
+          git diff --check
+          changed=$(git diff --name-only)
+          test "$changed" = "school/main.tex"
+
+      - name: Install thesis toolchain
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            latexmk texlive-xetex texlive-latex-extra texlive-publishers \
+            texlive-lang-chinese fonts-liberation fonts-noto-cjk \
+            fonts-urw-base35 poppler-utils
+
+      - name: Compile and validate full thesis
+        run: |
+          set -euo pipefail
+          cd school
+          latexmk -xelatex -interaction=nonstopmode -halt-on-error -file-line-error main.tex
+          test -s main.pdf
+          test -s main.log
+          if grep -E -q 'LaTeX Warning: (Citation|Reference).*undefined|Package natbib Warning: Citation.*undefined|There were undefined references|There were undefined citations|multiply defined|Missing character:' main.log; then
+            grep -E 'LaTeX Warning: (Citation|Reference).*undefined|Package natbib Warning: Citation.*undefined|There were undefined references|There were undefined citations|multiply defined|Missing character:' main.log || true
+            exit 1
+          fi
+          test "$(grep -c 'Overfull \\hbox' main.log || true)" -eq 0
+          test "$(grep -c 'Overfull \\vbox' main.log || true)" -eq 0
+          pdfinfo main.pdf | grep -E '^(Pages|Page size):'
+
+      - name: Commit source-only revision
+        run: |
+          set -euo pipefail
+          cd school
+          latexmk -C main.tex || true
+          rm -f main.aux main.bbl main.blg main.fdb_latexmk main.fls main.log \
+            main.lof main.lot main.out main.pdf main.toc main.xdv
+          cd ..
+          rm -f .github/scripts/revise_ch01.py
+          rm -f .github/workflows/revise-ch01.yml
+          rmdir .github/scripts 2>/dev/null || true
+          git add -A
+          git diff --cached --check
+          unexpected=$(git diff --cached --name-only | grep -Ev '^(school/main.tex|\.github/scripts/revise_ch01.py|\.github/workflows/revise-ch01.yml)$' || true)
+          test -z "$unexpected"
+          git config user.name 'OpenAI Codex'
+          git config user.email 'noreply@openai.com'
+          git commit -m 'Refine Chapter 1 introduction'
+          git push origin HEAD:agent/ch01-introduction-review
