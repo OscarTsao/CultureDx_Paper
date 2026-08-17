@@ -17,24 +17,24 @@ if text.count(start_marker) != 1 or text.count(end_marker) != 1:
 
 abstract = r"""\chapter*{中文摘要}
 \addcontentsline{toc}{chapter}{中文摘要}
-精神科初診逐字稿的鑑別診斷，不是單純從文字中辨識一個疾病標籤，而是在證據不完整下比較多個可能診斷。醫師需從自由敘述中整理症狀、病程、時序與功能影響，對照診斷準則，判斷哪些疾病仍可能成立，再選出主診斷並考量共病。然而，症狀持續時間、發病順序、過去發作、排除病因及不同症候群之間的關係，未必會在一次晤談中被完整引出。大型語言模型可協助閱讀長篇逐字稿、形成候選診斷並整理相關證據，但流暢的輸出不代表候選診斷完整、準則判斷確實由逐字稿支持，或主診斷選擇正確。現有研究多只報告最終診斷準確率，因此無法辨別分歧是來自候選遺漏、準則不相容，或資料集參考診斷已存在卻未被確立為主診斷。
+精神科初診逐字稿的鑑別診斷，是在證據不完整下比較多個可能疾病，而非只辨識一個標籤。醫師需整理症狀、病程、時序、功能影響、排除病因與共病，但這些資訊未必能在一次晤談中完整取得。大型語言模型可整理候選診斷與證據，但流暢輸出不保證鑑別診斷完整、準則判斷有逐字稿支持，或主診斷選擇恰當。只看最終準確率也無法區分候選遺漏、準則不相容，或參考診斷已存在但未被確立為主診斷。
 
-本研究提出 HiED，一套用於中文精神科初診逐字稿的混合式、以證據為基礎的多代理鑑別診斷框架。HiED 採用雙路徑的分階段流程：診斷路徑透過相似案例檢索與 Diagnostician 產生排序後的鑑別診斷；準則路徑則由 14 個診斷類別專屬的 Criterion Checker，將各項準則判定為符合、不符合或資訊不足，再由確定性規則形成準則相容集合。最後，系統確立一個主診斷，並可保留共病診斷。HiED 針對同一批案例保存排序候選、準則狀態、證據說明、相容集合與最終診斷，使候選形成、準則相容性與主診斷確立可以分開評估。
+本研究提出 HiED，一套用於中文精神科初診逐字稿的混合式、以證據為基礎的多代理框架。其雙路徑分階段流程，結合透過相似案例檢索產生排序鑑別診斷的診斷路徑，以及 14 個診斷類別專屬的 Criterion Checker，將各項準則判定為符合、不符合或資訊不足。確定性規則據此形成準則相容集合，最後確立主診斷並可保留共病。HiED 保存同一病例的排序候選、準則狀態、證據說明、相容集合與最終輸出，使各階段能分開評估。
 
-在固定的 1,000 例 LingxiDiag-16K 內部保留測試集上，HiED 的 committed Top-1 Accuracy 為 51.8\%，genuine ranked Top-3 Accuracy 為 80.2\%。其 Top-1 與直接 Single LLM 幾乎相同；TF--IDF 加邏輯迴歸則在同來源資料上具有較強的標籤預測表現，但跨語料轉移時明顯下降，顯示其對語料特定詞彙訊號的依賴。在 915 個可進行準則分析的 LingxiDiag 案例中，有 272 例（29.7\%）的資料集參考診斷已同時出現在 genuine Top-3 與準則相容集合中，卻沒有參考診斷被確立為主診斷；在 MDD-5k 的 878 個可分析案例中，也有 225 例（25.6\%）出現相同型態。所測試的確定性規則、成對比較、辯論與重複生成策略，皆未能相較 Direct-Answer 帶來明確且可歸因的改善。
+在固定的 1,000 例 LingxiDiag-16K 內部保留測試集上，HiED 的 committed Top-1 Accuracy 為 51.8\%，genuine ranked Top-3 Accuracy 為 80.2\%。其 Top-1 與直接 Single LLM 幾乎相同；TF--IDF 加邏輯迴歸在同來源評估中較強，但跨來源時明顯下降。在 915 個可進行準則分析的案例中，有 272 例（29.7\%）的參考診斷已同時進入 Top-3 與準則相容集合，卻未被確立為主診斷；MDD-5k 的 878 個可分析案例中，也有 225 例（25.6\%）出現相同型態。所測試的確定性、成對比較、辯論與重複生成策略，均未明確優於 Direct-Answer。
 
-因此，HiED 並未證明其最終標籤準確率優於其他方法。其主要貢獻，是在同一病例上保存並分別評估候選形成、準則核對與主診斷確立的輸出，使候選遺漏、準則不相容、資訊不足及主診斷確立分歧可以被檢視。本研究證據來自合成中文逐字稿，不構成臨床驗證；單一精神科醫師的基準標籤一致性審查列為後續工作。
+因此，HiED 並未證明最終標籤準確率較高。其主要貢獻是同病例的分階段輸出與評估契約，使候選遺漏、準則不相容、資訊不足及主診斷確立分歧可被分別檢視。本研究證據來自合成中文逐字稿，不構成臨床驗證；單一精神科醫師的基準標籤一致性審查列為後續工作。
 
 \noindent\textbf{關鍵詞：}大型語言模型、多代理系統、精神科鑑別診斷、診斷準則、臨床決策支援、可稽核人工智慧
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
-Differential diagnosis from a first psychiatric interview transcript is not simply the assignment of one disease label. It is a comparative decision under incomplete evidence. Clinicians must extract symptoms, illness course, temporal relations, and functional effects from free-form descriptions, compare them with diagnosis-specific criteria, determine which disorders remain plausible, and select a primary diagnosis while considering possible comorbidity. However, symptom duration, temporal order, previous episodes, exclusionary causes, and relations among syndromes may not be fully elicited in one interview. Large language models can help read long transcripts, generate candidate diagnoses, and organize relevant evidence, but fluent output does not ensure a complete differential, transcript-grounded criterion judgments, or correct primary selection. Evaluations based only on final diagnosis accuracy also cannot reveal where disagreement arises.
+Psychiatric differential diagnosis from a first-interview transcript requires comparing plausible disorders under incomplete evidence, not simply assigning one label. Clinicians must organize symptoms, course, timing, impairment, exclusionary causes, and comorbidity, but these details may not be fully elicited in one visit. Large language models can organize candidates and evidence; however, fluent output does not guarantee a complete differential, grounded criterion judgments, or appropriate primary selection. Final accuracy alone cannot localize candidate omission, criterion incompatibility, or disagreement after the reference diagnosis is already available.
 
-This thesis proposes HiED, a hybrid, evidence-grounded multi-agent framework for differential diagnosis from Chinese psychiatric interview transcripts. HiED implements a two-path, stage-wise process. The diagnostic path retrieves similar cases and uses a Diagnostician to produce a ranked differential diagnosis. In parallel, diagnosis-specific Criterion Checkers classify each criterion as met, not met, or insufficient evidence, after which deterministic rules form a criterion-compatible set. A finalization stage commits one primary diagnosis and may retain a comorbid diagnosis. HiED preserves the ranked candidates, criterion states, evidence notes, compatible set, and committed output for the same cases, allowing candidate generation, criterion compatibility, and primary commitment to be evaluated separately.
+This thesis proposes HiED, a hybrid, evidence-grounded multi-agent framework for Chinese psychiatric interview transcripts. Its two-path, stage-wise process combines a diagnostic path that retrieves similar cases and produces a ranked differential with fourteen diagnosis-specific Criterion Checkers that label criteria as met, not met, or insufficient evidence. Deterministic rules form a criterion-compatible set, and finalization commits a primary diagnosis and may retain a comorbidity. HiED preserves these same-case outputs for separate stage-wise evaluation.
 
-On a fixed 1,000-case LingxiDiag-16K held-out set, HiED achieved 51.8\% committed Top-1 Accuracy and 80.2\% genuine ranked Top-3 Accuracy. Its Top-1 performance was almost identical to that of the direct Single LLM configuration. TF--IDF with logistic regression produced stronger same-source label prediction, but its performance decreased substantially under cross-source transfer, indicating sensitivity to corpus-specific lexical signals. Among 915 checker-eligible LingxiDiag cases, 272 cases (29.7\%) contained a benchmark-reference diagnosis in both the genuine Top-3 and the criterion-compatible set, but no benchmark-reference diagnosis was committed as primary. The same recorded profile appeared in 225 of 878 checker-eligible MDD-5k cases (25.6\%). None of the tested deterministic, pairwise, debate, or repeated-generation selection strategies provided a clear and attributable improvement over Direct-Answer.
+On a fixed 1,000-case LingxiDiag-16K held-out set, HiED achieved 51.8\% committed Top-1 Accuracy and 80.2\% genuine ranked Top-3 Accuracy. Top-1 was almost identical to the direct Single LLM, whereas TF--IDF with logistic regression was stronger under same-source evaluation but declined substantially across sources. Among 915 checker-eligible LingxiDiag cases, 272 (29.7\%) contained a benchmark-reference diagnosis in both the Top-3 and criterion-compatible set, but no reference diagnosis was committed as primary. The same profile appeared in 225 of 878 MDD-5k cases (25.6\%). Tested deterministic, pairwise, debate, and repeated-generation strategies did not clearly improve on Direct-Answer.
 
-HiED therefore does not establish superior final-label accuracy. Its main contribution is a same-case stage-wise output and evaluation framework that makes candidate omission, criterion incompatibility, missing information, and primary-commitment disagreement separately inspectable. The completed evidence is based on synthetic Chinese transcripts and does not constitute clinical validation. A single-psychiatrist benchmark-label alignment review remains future work.
+HiED therefore does not establish superior final-label accuracy. Its main contribution is a same-case stage-wise output and evaluation contract that makes candidate omission, criterion incompatibility, missing information, and primary-commitment disagreement separately inspectable. The evidence comes from synthetic Chinese transcripts and is not clinical validation; a single-psychiatrist benchmark-label alignment review remains future work.
 
 \noindent\textbf{Keywords:} Large language models, multi-agent systems, psychiatric differential diagnosis, diagnostic criteria, clinical decision support, auditable AI
 
@@ -45,13 +45,15 @@ end = text.index(end_marker, start)
 text = text[:start] + abstract + text[end:]
 
 required = [
-    "不是單純從文字中辨識一個疾病標籤",
-    "混合式、以證據為基礎的多代理鑑別診斷框架",
-    "所測試的確定性規則、成對比較、辯論與重複生成策略",
-    "is not simply the assignment of one disease label",
+    "而非只辨識一個標籤",
+    "混合式、以證據為基礎的多代理框架",
+    "其雙路徑分階段流程",
+    "所測試的確定性、成對比較、辯論與重複生成策略",
+    "not simply assigning one label",
     "a hybrid, evidence-grounded multi-agent framework",
-    "None of the tested deterministic, pairwise, debate, or repeated-generation selection strategies",
-    "A single-psychiatrist benchmark-label alignment review remains future work.",
+    "Its two-path, stage-wise process",
+    "Tested deterministic, pairwise, debate, and repeated-generation strategies",
+    "a single-psychiatrist benchmark-label alignment review remains future work.",
 ]
 for item in required:
     if item not in text:
