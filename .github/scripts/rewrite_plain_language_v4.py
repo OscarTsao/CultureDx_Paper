@@ -11,10 +11,8 @@ for target in [Path('school/main.tex'), Path('paper/school/HiED_school_version.t
         continue
     text = target.read_text(encoding='utf-8')
     text = text.replace('fig_system_round20c', 'fig_pipeline_round20c')
+    text = text.replace('tab:configured-profile-summary', 'tab:configured-profile')
 
-    # Plain-language substitutions may change words inside LaTeX labels and
-    # references. Keep those identifiers valid and matched by replacing any
-    # introduced spaces with hyphens in both definitions and uses.
     def clean_identifier(match: re.Match[str]) -> str:
         command = match.group(1)
         value = re.sub(r'\s+', '-', match.group(2).strip())
