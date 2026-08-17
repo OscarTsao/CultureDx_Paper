@@ -1,4 +1,4 @@
-name: Audit rewritten thesis references
+name: Finalize plain-language thesis rewrite
 
 on:
   push:
@@ -9,61 +9,76 @@ permissions:
   contents: write
 
 jobs:
-  audit:
+  revise:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out revision branch
+        uses: actions/checkout@v4
         with:
           ref: agent/plain-language-main-chapters
           fetch-depth: 0
-      - name: Apply rewrite and record audit
-        shell: bash
+
+      - name: Apply thesis rewrite
         run: |
           set -euo pipefail
           python3 .github/scripts/rewrite_plain_language_v4.py
-          python3 - <<'PY'
-          from collections import Counter
-          from pathlib import Path
-          import re
+          git diff --check
 
-          path = Path('school/main.tex')
-          text = path.read_text(encoding='utf-8')
-          labels = re.findall(r'\\label\{([^{}]+)\}', text)
-          refs = []
-          for raw in re.findall(r'\\(?:ref|pageref|autoref|cref|Cref)\{([^{}]+)\}', text):
-              refs.extend(x.strip() for x in raw.split(',') if x.strip())
-          counts = Counter(labels)
-          missing = sorted(set(refs) - set(labels))
-          duplicates = sorted(k for k, v in counts.items() if v > 1)
-          forbidden_patterns = [
-              r'\bcontract\b', r'\blineage\b', r'\bposthoc\b',
-              r'emitted-label hit@3', r'genuine ranked Top-3',
-              r'Trace-Lineage', r'forced-commit sweep', r'Evidence contract',
-          ]
-          forbidden = []
-          for pattern in forbidden_patterns:
-              for match in re.finditer(pattern, text, flags=re.IGNORECASE):
-                  line = text.count('\n', 0, match.start()) + 1
-                  forbidden.append(f'{line}: {pattern}: {text[match.start():match.end()]}')
-          graphics = re.findall(r'\\includegraphics(?:\[[^\]]*\])?\{([^{}]+)\}', text)
-          missing_graphics = []
-          for name in graphics:
-              candidates = [Path('school') / name, Path('figures') / name, Path(name)]
-              if not any(p.exists() or p.with_suffix('.pdf').exists() or p.with_suffix('.png').exists() or p.with_suffix('.jpg').exists() for p in candidates):
-                  missing_graphics.append(name)
-          report = [
-              f'labels={len(labels)} unique_labels={len(set(labels))}',
-              f'references={len(refs)}',
-              'MISSING REFERENCES:', *(missing or ['none']),
-              'DUPLICATE LABELS:', *(duplicates or ['none']),
-              'FORBIDDEN WORDING:', *(forbidden or ['none']),
-              'MISSING GRAPHICS:', *(sorted(set(missing_graphics)) or ['none']),
-          ]
-          Path('static-rewrite-audit.log').write_text('\n'.join(report) + '\n', encoding='utf-8')
-          print('\n'.join(report))
-          PY
+      - name: Install LaTeX toolchain
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            latexmk texlive-xetex texlive-latex-extra texlive-pictures \
+            texlive-publishers texlive-lang-chinese \
+            fonts-liberation fonts-noto-cjk fonts-urw-base35 poppler-utils
+
+      - name: Build Figure 3.1 and full thesis
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd figures/src
+          xelatex -interaction=nonstopmode -halt-on-error -file-line-error fig_pipeline_round20c_tikz.tex
+          mv -f fig_pipeline_round20c_tikz.pdf ../fig_pipeline_round20c.pdf
+          rm -f fig_pipeline_round20c_tikz.aux fig_pipeline_round20c_tikz.log fig_pipeline_round20c_tikz.xdv
+          cd ../../school
+          latexmk -xelatex -interaction=nonstopmode -halt-on-error -file-line-error main.tex
+          test -s main.pdf
+          test -s main.log
+          if grep -E -q 'LaTeX Warning: (Citation|Reference).*undefined|Package natbib Warning: Citation.*undefined|There were undefined references|There were undefined citations|multiply defined|Missing character:' main.log; then
+            grep -E 'LaTeX Warning: (Citation|Reference).*undefined|Package natbib Warning: Citation.*undefined|There were undefined references|There were undefined citations|multiply defined|Missing character:' main.log || true
+            exit 1
+          fi
+          test "$(grep -c 'Overfull \\hbox' main.log || true)" -eq 0
+          test "$(grep -c 'Overfull \\vbox' main.log || true)" -eq 0
+          pdfinfo main.pdf | grep -E '^(Pages|Page size):'
+          grep -Fq 'Primary-diagnosis selection methods' main.tex
+          grep -Fq 'Run the Diagnostician $K$ times' main.tex
+          grep -Fq 'One advocate represents the diagnosis path' main.tex
+          grep -Fq 'criterion \textit{met ratio}' main.tex
+          ! grep -Eiq '\bcontract\b|\blineage\b|\bposthoc\b|emitted-label hit@3|genuine ranked Top-3|Trace-Lineage|forced-commit sweep|Evidence contract' main.tex
+
+      - name: Commit final source files
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd school
+          latexmk -C main.tex || true
+          rm -f main.aux main.bbl main.blg main.fdb_latexmk main.fls main.log \
+            main.lof main.lot main.out main.pdf main.toc main.xdv
+          cd ..
+          rm -f .github/workflows/rewrite-plain-language.yml
+          rm -f .github/scripts/rewrite_plain_language.py
+          rm -f .github/scripts/rewrite_plain_language_v2.py
+          rm -f .github/scripts/rewrite_plain_language_v3.py
+          rm -f .github/scripts/rewrite_plain_language_v4.py
+          rm -f .github/scripts/rewrite-source-debug.py
+          rm -f rewrite-error.log build-error.log figure-build.log thesis-build.log static-rewrite-audit.log
+          rmdir .github/scripts 2>/dev/null || true
+          git add -A
+          git diff --cached --check
+          unexpected=$(git diff --cached --name-only | grep -Ev '^(school/main.tex|figures/src/fig_pipeline_round20c_tikz.tex|figures/fig_pipeline_round20c.pdf|\.github/workflows/rewrite-plain-language.yml|\.github/scripts/rewrite_plain_language.py|\.github/scripts/rewrite_plain_language_v2.py|\.github/scripts/rewrite_plain_language_v3.py|\.github/scripts/rewrite_plain_language_v4.py|\.github/scripts/rewrite-source-debug.py|rewrite-error.log|build-error.log|figure-build.log|thesis-build.log|static-rewrite-audit.log)$' || true)
+          test -z "$unexpected"
           git config user.name 'OpenAI Codex'
           git config user.email 'noreply@openai.com'
-          git add static-rewrite-audit.log
-          git commit -m 'Record rewritten thesis reference audit'
+          git commit -m 'Simplify thesis methods and results narrative'
           git push origin HEAD:agent/plain-language-main-chapters
