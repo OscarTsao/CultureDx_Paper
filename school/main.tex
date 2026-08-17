@@ -1025,9 +1025,6 @@ Held-out & Parent-balanced$^{\dagger}$ & 0.518 & 0.802 & 0.409 & 0.178 & 0.434\\
 
 Global Top-5 was selected for Single and increased held-out Top-1 from 0.466 to 0.517. Parent-balanced retrieval was selected for HiED on validation. Global Top-5 later had slightly higher held-out values, but the test set was not used to change the selected setting.
 
-\paragraph{Answer to RQ3.}
-Retrieval gives higher Top-1 point estimates for Single. The differences among the three HiED settings are smaller and depend on the split and measure.
-
 \section{Main Internal Performance}
 \label{sec:validation-retrieval-selection}
 \label{sec:matched-baselines-retrieval}
@@ -1058,9 +1055,6 @@ HiED--DA & Parent-balanced & 0.518 & 0.802 & 0.409 & 0.178 & 0.434\\
 \end{table}
 
 TF--IDF with logistic regression has the highest same-source Top-1, Top-3, Macro-F1, and Weighted-F1. Single and HiED have almost the same Top-1 result. HiED does not show an overall accuracy advantage; its added value is the Top-3 and criterion information used in the analyses below.
-
-\paragraph{Answer to RQ1.}
-TF--IDF with logistic regression is the strongest same-source classifier in this comparison. HiED and Single have almost identical Top-1 results.
 
 \section{Stage-Wise Disagreement Results}
 \label{sec:stage-wise-disagreement-results}
@@ -1101,9 +1095,6 @@ Reference diagnosis in both views but not selected as primary & 272 & 29.7\%\\
 The largest disagreement group contains 272 cases. In these cases, a reference diagnosis is already present in both the Top-3 and the compatible set, but another diagnosis is selected as primary. This does not prove that the finalization step alone caused the difference. It shows where the difference is visible in the saved outputs.
 
 The full six-profile table and the gold-informed upper-bound analysis are reported in Appendix~\ref{app:supporting}.
-
-\paragraph{Answer to RQ2.}
-Differences occur at more than one stage, but the largest group appears after the reference diagnosis is already present in the Top-3 and the compatible set.
 
 \section{Primary-Diagnosis Selection Results}
 \label{sec:nts-factorial}
@@ -1154,9 +1145,6 @@ Two-view debate & 0.485 & $-0.033$ [$-0.049$, $-0.018$]\\
 \end{table}
 
 Deterministic fusion is slightly below DA. The small pairwise increase is uncertain because its confidence interval includes zero. Debate performs below DA. Repeated-generation results also do not show a clear improvement and are listed in Appendix~\ref{app:supporting}.
-
-\paragraph{Answer to RQ4.}
-None of the tested selection methods gives a clear and reliable improvement over DA.
 
 \section{Supporting Internal Analyses}
 \label{sec:model-scale-disagreement}
