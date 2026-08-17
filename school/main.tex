@@ -41,7 +41,7 @@
 \titleformat{\chapter}[display]{\raggedright\bfseries\LARGE}{Chapter \thechapter}{0.5em}{}
 \newcommand{\placeholder}[1]{\textcolor{red!70!black}{[#1]}}
 \newcommand{\ThesisFigure}[4][0.88\textwidth]{\begin{figure}[htbp]\centering
-\IfFileExists{#2}{\includegraphics[width=#1]{#2}}{\fbox{\parbox[c][5.2cm][c]{0.84\textwidth}{\centering Figure placeholder for \texttt{\detokenize{#2}}\\[0.4em]The compiled thesis inserts the figure output.}}}
+\IfFileExists{#2}{\includegraphics[width=#1]{#2}}{\fbox{\parbox[c][5.2cm][c]{0.84\textwidth}{\centering Figure placeholder for \texttt{\detokenize{#2}}\\[0.4em]The figure file is missing.}}}
 \caption{#3}\label{#4}\end{figure}}
 
 % Guard 1: set \showcommentstrue for mentor-review builds; switch to \showcommentsfalse only for clean defense exports.
@@ -106,7 +106,7 @@ This thesis proposes HiED, a hybrid, evidence-grounded multi-agent framework for
 
 On a fixed 1,000-case LingxiDiag-16K held-out set, HiED achieved 51.8\% committed Top-1 Accuracy and 80.2\% Top-3 Accuracy. Top-1 was almost identical to the direct Single LLM, whereas TF--IDF with logistic regression was stronger under same-source evaluation but declined substantially across sources. Among 915 checker-eligible LingxiDiag cases, 272 (29.7\%) contained a reference diagnosis in both the Top-3 and criterion-compatible set, but no reference diagnosis was committed as primary. The same profile appeared in 225 of 878 MDD-5k cases (25.6\%). Tested deterministic, pairwise, debate, and repeated-generation strategies did not clearly improve on Direct-Answer.
 
-HiED therefore does not establish superior final-label accuracy. Its main contribution is a stage-wise evaluation framework that records the same outputs for every case that makes candidate omission, criterion incompatibility, missing information, and primary-selection disagreement separately inspectable. The evidence comes from synthetic Chinese transcripts and is not clinical validation; a single-psychiatrist benchmark-label alignment review remains future work.
+HiED therefore does not establish superior final-label accuracy. Its main contribution is a stage-wise evaluation framework that records the same outputs for every case. This makes candidate omission, criterion incompatibility, missing information, and primary-selection disagreement separately visible. The evidence comes from synthetic Chinese transcripts and is not clinical validation; a single-psychiatrist benchmark-label alignment review remains future work.
 
 \noindent\textbf{Keywords:} Large language models, multi-agent systems, psychiatric differential diagnosis, diagnostic criteria, clinical decision support, auditable AI
 
@@ -403,7 +403,7 @@ The complete fallback order and tie-handling rules are reported in the experimen
 
 DA and NtS reuse the same upstream HiED outputs. They receive the same Diagnostician ranking, proposed primary diagnosis, criterion states, and criterion-compatible set. Their difference is how these recorded outputs are used to commit one primary diagnosis.
 
-This shared upstream information makes DA and NtS useful for studying the primary-selection stage. A difference between their final primary diagnoses can be saved resultsd to the finalization policy rather than to a different transcript, a different candidate ranking, or a different criterion-checking result.
+This shared upstream information makes DA and NtS useful for studying the primary-selection stage. Because the earlier outputs are the same, any difference in the final primary diagnosis comes from the final selection rule.
 
 However, their comparison is not a pure comparison of primary selection for every evaluation measure. DA may retain an optional comorbid diagnosis, whereas NtS returns only one diagnosis. Their committed Top-1 results can be compared directly, but differences in Exact Match, Macro-F1, and Weighted-F1 may also reflect their different output sizes.
 
@@ -511,7 +511,7 @@ Optional additional diagnosis & F32 Depressive episode\\
 \hline
 Diagnosis-specific criterion states & Not produced\\
 \hline
-Standardized ranked differential & Not produced under this rules\\
+Standardized ranked differential & Not produced\\
 \hline
 \end{tabularx}
 \end{table}
@@ -933,7 +933,7 @@ Direct-Answer (DA) & Keep the primary diagnosis proposed by the Diagnostician\\
 \hline
 Nominate-then-Select (NtS) & Choose the highest-ranked diagnosis that is also in the criterion-compatible set\\
 \hline
-Deterministic fusion & Choose among eligible candidates using the criterion \textit{met ratio}; ranking is used when needed\\
+Deterministic fusion & Select the eligible diagnosis with the highest criterion \textit{met ratio}\\
 \hline
 Pairwise comparison & Ask an additional LLM to compare close candidates and select the stronger diagnosis\\
 \hline
@@ -1334,7 +1334,7 @@ Chapter~\ref{ch:results} divided the 915 checker-eligible cases into mutually ex
 
 Particular attention is given to the 272 cases with $D_3=1$, $I=1$, and $S=0$. In these cases, a reference diagnosis is present in both the Top-3 and the criterion-compatible set, but no reference parent is committed as the primary diagnosis. $S=0$ does not imply that every reference diagnosis is absent from the optional comorbid output. The analysis therefore describes a primary-selection disagreement rather than the complete removal of the reference diagnosis.
 
-The analysis uses one frozen 1,000-case internal held-out results. The 349-case gold-informed oracle population reported in Chapter~\ref{ch:results} is not an observed system group and is not used here.
+The analysis uses the saved case-level results from the 1,000-case internal held-out set. The 349-case gold-informed oracle population reported in Chapter~\ref{ch:results} is not an observed system group and is not used here.
 
 \section{Rank and Diagnostic Direction within the Primary-Commitment Disagreement Group}
 \label{sec:ch8-primary-selection}
@@ -1400,7 +1400,7 @@ The benchmark contains one projected parent in 912 cases, two in 83 cases, and t
 \section{Criterion-State Composition}
 \label{sec:ch8-criterion-evidence}
 
-The Criterion Checker records each item as \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_\allowbreak{}evidence}. Figure~\ref{fig:ch8-criterion-composition} compares mean within-case proportions across the four mutually exclusive analysis groups. For each case, the states are aggregated across all fourteen configured Criterion Checkers; the saved case-level results contains 77,998 diagnosis-by-criterion states. Each case is summarized before group averaging so that cases with more recorded criterion items do not receive more weight. The corresponding medians and interquartile ranges are reported in Appendix~\ref{app:supporting}, Table~\ref{tab:ch8-criterion-ratios}.
+The Criterion Checker records each item as \texttt{met}, \texttt{not\_met}, or \texttt{insufficient\_\allowbreak{}evidence}. Figure~\ref{fig:ch8-criterion-composition} compares mean within-case proportions across the four mutually exclusive analysis groups. For each case, the states are aggregated across all fourteen configured Criterion Checkers; the saved case-level results contain 77,998 diagnosis-by-criterion states. Each case is summarized before group averaging so that cases with more recorded criterion items do not receive more weight. The corresponding medians and interquartile ranges are reported in Appendix~\ref{app:supporting}, Table~\ref{tab:ch8-criterion-ratios}.
 
 \begin{figure}[htbp]
 \centering
@@ -1412,10 +1412,10 @@ The Criterion Checker records each item as \texttt{met}, \texttt{not\_met}, or \
 
 At this coarse aggregate level, no clear separation is visible between the committed-primary-agreement group and the 272-case primary-selection disagreement group. Their mean proportions of \texttt{met}, \texttt{not\_met}, and \texttt{insufficient\_\allowbreak{}evidence} states are similar. Top-3 candidate misses are also broadly similar. The 12-case ranked-but-not-compatible disagreement group has fewer \texttt{met} states and more unresolved evidence on average, but its small size does not support a stable group-level conclusion.
 
-Because this analysis aggregates criterion states across all fourteen configured diagnoses, it may conceal diagnosis-specific or candidate-pair-specific differences. The result shows the limitation of a global state-composition summary; it does not show that criterion-level evidence is uninformative. Compatible-set size and aggregate criterion-state proportions do not identify which compatible diagnosis will be committed as primary in this saved results, and these summaries do not establish that one state pattern caused the final commitment.
+Because this analysis aggregates criterion states across all fourteen configured diagnoses, it may conceal diagnosis-specific or candidate-pair-specific differences. The result shows the limitation of a global state-composition summary; it does not show that criterion-level evidence is uninformative. Compatible-set size and aggregate criterion-state proportions do not identify which compatible diagnosis will be committed as primary in these saved results, and these summaries do not establish that one state pattern caused the final commitment.
 
-\paragraph{Frozen-record examples.}
-Deterministically selected examples from four recorded-output profiles are provided in Appendix~\ref{app:supporting}, Table~\ref{tab:audit-saved-results-examples}. These examples document how the indicators map to individual frozen records without treating them as representative clinical cases.
+\paragraph{Selected examples.}
+Deterministically selected examples from four recorded-output profiles are provided in Appendix~\ref{app:supporting}, Table~\ref{tab:audit-saved-results-examples}. These examples document how the indicators map to individual saved records without treating them as representative clinical cases.
 
 \section{Chapter Summary}
 \label{sec:ch8-summary}
@@ -1429,7 +1429,7 @@ These findings characterize the recorded outputs but do not identify clinically 
 
 The results support a stage-wise interpretation of HiED rather than an accuracy-leading claim. TF--IDF with logistic regression provides the strongest same-source primary-label and class-level F1 performance in the main internal comparison, while Single and HiED have almost the same committed Top-1 result. HiED's distinct contribution is therefore not higher final-label accuracy, but the set of recorded outputs that makes candidate generation, criterion checking, compatibility analysis, and primary-diagnosis selection separately observable.
 
-The internal and external analyses show the same broad type of benchmark disagreement: a reference diagnosis can remain present in both the ranked candidates and the criterion-compatible set while another diagnosis is committed as primary. The frequency of this profile differs across datasets and archived saved results. The stage-wise questions therefore transfer more clearly than the numerical rates themselves.
+The internal and external analyses show the same broad type of benchmark disagreement: a reference diagnosis can remain present in both the ranked candidates and the criterion-compatible set while another diagnosis is committed as primary. The frequency of this profile differs across datasets and saved runs. The stage-wise questions therefore transfer more clearly than the numerical rates themselves.
 
 \section{Interpreting Compatibility and Primary Commitment}
 \label{sec:discussion-primary-selection}
@@ -1470,9 +1470,9 @@ The experiments therefore do not show that additional reasoning or every future 
 
 Primary commitment is only one part of the diagnostic output. Diagnostic-set construction determines which additional diagnoses are emitted, and 109 cases retain benchmark-consistent primary-diagnosis selection while differing from the complete benchmark diagnosis set. Diagnostic scope is another boundary because a diagnosis that is absent from the configured output space cannot be ranked, checked, or emitted. Source dependence is a third boundary: the TF--IDF baseline is strong under same-source evaluation but shows limited and asymmetric transfer between the two tested synthetic corpora.
 
-These results identify several separate problems---candidate absence, broad or saved results-sensitive compatibility, primary-diagnosis selection, complete-set construction, diagnostic scope, and source-specific prediction. They should not all be described as one finalization problem, because they require different evidence and different interventions.
+These results identify several separate problems: missing candidates, broad compatibility rules, primary-diagnosis selection, complete-set construction, diagnostic scope, and source-specific prediction. They should not all be described as one finalization problem, because they require different evidence and different interventions.
 
-HiED preserves a ranked differential, criterion states, short evidence notes, a criterion-compatible set, and the finalization source. A reviewer can inspect whether a diagnosis was absent from the ranking, absent from the compatible set, or present in both views but not committed as primary. This is more informative than a final label alone.
+HiED preserves a ranked differential, criterion states, short evidence notes, a criterion-compatible set, and a record of the final selection. A reviewer can inspect whether a diagnosis was absent from the ranking, absent from the compatible set, or present in both views but not committed as primary. This is more informative than a final label alone.
 
 However, inspectability is not correctness or full interpretability. The saved criterion states and evidence notes are model-generated, may contain unsupported evidence or incorrect states, and do not reveal the model's hidden reasoning. Auditability in this thesis means that observable outputs are retained for review and analysis; it does not mean that the system has been clinically validated.
 
@@ -1507,7 +1507,7 @@ The main internal set is a fixed 1,000-case held-out subset sampled from the Lin
 
 The public-validation split was repeatedly used for prompt development, rule refinement, sensitivity analysis, and retrieval selection. It is therefore development evidence rather than an independent performance estimate, and repeated use may have adapted design decisions to the specific cases in that split. The reversal between validation and held-out retrieval ordering illustrates the uncertainty of selecting a configuration from one limited development split.
 
-MDD-5k provides a second synthetic source, not a clinical cohort. The archived MDD-5k outputs also contain more than one saved run. The matched method-comparison saved results, canonical rescore, and historical output are not interchangeable. The main external claims use one matched case-level results, while the canonical saved results is reported only as sensitivity evidence. Mixing fields across these saved results would not reproduce one system run.
+MDD-5k provides a second synthetic source, not a clinical cohort. More than one saved MDD-5k run exists, and their outputs differ. The main external results use one matched set of case-level outputs. A separate recalculation is used only as a sensitivity check. Outputs from different runs are not combined.
 
 The cross-corpus TF--IDF results show that same-source prediction can depend strongly on wording and label priors. The completed evidence therefore supports same-source held-out analysis and a bounded second-synthetic-source test. It does not establish generalization to real psychiatric consultations, independent hospitals, spontaneous or code-switched Taiwanese conversations, or Taiwanese coding practice.
 
@@ -1524,9 +1524,9 @@ DA versus NtS is the most controlled finalization comparison because the upstrea
 
 Deterministic fusion applies one fixed rule. Pairwise comparison, debate, self-consistency, and confidence-informed self-consistency change prompts, inference calls, context, aggregation, or budget. They are complete-configuration comparisons. The model-scale analysis is limited to the tested Qwen3 family and does not establish robustness across unrelated models or deployment settings.
 
-No supported quantitative conclusion is drawn from the earlier F60 scope-expansion experiment because its source file was not preserved in the saved repository results.
+No supported quantitative conclusion is drawn from the earlier F60 scope-expansion experiment because the source results were not preserved.
 
-\section{Statistical, saved outputs, and Reproducibility Limitations}
+\section{Statistical and Reproducibility Limitations}
 \label{sec:statistical-reproducibility-limitations}
 
 Confidence intervals and tests describe uncertainty over the observed cases under fixed outputs. They do not include uncertainty from benchmark validity, prompt design, model selection, synthetic generation, or a future population. A confidence interval that includes zero is not evidence of equivalence. A difference with an interval that excludes zero still does not identify a causal component when several parts of a configuration changed.
@@ -1535,7 +1535,7 @@ The 77,998 diagnosis-by-criterion states are clustered within cases, configured 
 
 Some groups are small or imbalanced. In particular, the 12-case $D_3=1,I=0,S=0$ group cannot support a stable class-specific conclusion. The repeated F41-to-F32 direction is a benchmark-relative pattern, not a clinically adjudicated confusion mechanism.
 
-availability of saved results also differs across analyses. The internal HiED headline row, the internal $D_3/I/S$ profiles, the paired DA--NtS comparison, and the matched external case-level results have case-level support. Several baseline and supporting results remain available only as aggregate summaries or incomplete records. These results cannot support new paired confidence intervals, case-overlap claims, or claims about which individual cases changed.
+Case-level outputs are available for the main HiED result, the internal $D_3/I/S$ groups, the DA--NtS comparison, and the main external analysis. Some baseline and supporting results are available only as summary values. Those results cannot support new paired confidence intervals or case-by-case comparisons.
 
 Reproduction requires the same data split, model, prompt, retrieval setting, diagnostic scope, label mapping, eligible cases, metric definitions, and statistical procedure. A similar number is not the same result when the Top-3 definition, denominator, saved run, or compatibility rule is different.
 
@@ -1563,9 +1563,9 @@ This thesis presented HiED, a stage-wise decision-support framework for Chinese 
 
 On the fixed internal held-out set, TF--IDF with logistic regression provides the strongest same-source primary-label and class-level F1 performance, while Single and HiED have almost identical committed Top-1 results. The separate cross-corpus analysis shows that the lexical advantage of TF--IDF with logistic regression is strongly source-sensitive and should not be interpreted as source-independent diagnostic performance. HiED therefore does not establish an overall final-label accuracy advantage.
 
-HiED's completed technical contribution is a stage-wise evaluation framework that records the same outputs for every case. Ranked candidates, criterion states, the criterion-compatible set, and the final primary diagnosis are retained for the same cases and evaluated separately. This makes it possible to distinguish candidate absence, compatibility disagreement, and primary-selection disagreement without claiming access to hidden model reasoning.
+HiED's main contribution is a stage-wise evaluation framework that records the same outputs for every case. Ranked candidates, criterion states, the criterion-compatible set, and the final primary diagnosis are retained for the same cases and evaluated separately. This makes it possible to distinguish candidate absence, compatibility disagreement, and primary-selection disagreement without claiming access to hidden model reasoning.
 
-The largest internal benchmark-disagreement profile contains 272 of 915 checker-eligible cases. In these cases, a reference diagnosis is present in both the Top-3 and the criterion-compatible set, but no reference parent is committed as primary. A corresponding profile contains 225 of 878 checker-eligible cases in the matched MDD-5k saved results. The repeated profile supports the portability of the stage-wise analysis questions across two synthetic sources, but the numerical rates are not stable across corpora or saved runs.
+The largest internal benchmark-disagreement profile contains 272 of 915 checker-eligible cases. In these cases, a reference diagnosis is present in both the Top-3 and the criterion-compatible set, but no reference parent is committed as primary. A corresponding profile contains 225 of 878 checker-eligible cases in the main MDD-5k evaluation. The repeated profile supports the portability of the stage-wise analysis questions across two synthetic sources, but the numerical rates are not stable across corpora or saved runs.
 
 None of the tested primary-selection methods provides a clear and attributable improvement over Direct-Answer. In particular, Nominate-then-Select lowers committed Top-1 under all three internal retrieval conditions. The experiments show that candidate availability and criterion compatibility create decision room for improvement, but do not provide a simple or automatically recoverable rule for primary-diagnosis selection.
 
@@ -1573,13 +1573,13 @@ The structured outputs are intended to support review by showing possible diagno
 
 \section{Answers to the Research Questions}
 
-The answers below apply only to the tested synthetic datasets, label mappings, output formats, and preserved saved results.
+The answers below apply only to the tested synthetic datasets, label mappings, output formats, and saved results.
 
 \begin{description}[style=nextline,leftmargin=1.5cm,labelwidth=1.1cm,itemsep=0.2em,parsep=0pt]
 
 \item[RQ1] \textbf{How does HiED perform relative to conventional classification and a Single LLM on the same internal split and parent-label evaluation?}
 
-TF--IDF with logistic regression provides the strongest same-source primary-label and class-level F1 performance. Single and HiED have almost identical committed Top-1 values. HiED does not establish an overall internal accuracy advantage, but it provides a genuine ranked differential, criterion states, a criterion-compatible set, and a final commitment record for stage-wise analysis. The separate cross-corpus analysis shows that the lexical advantage of TF--IDF with logistic regression is source-sensitive rather than source-independent.
+TF--IDF with logistic regression provides the strongest same-source primary-label and class-level F1 performance. Single and HiED have almost identical committed Top-1 values. HiED does not establish an overall internal accuracy advantage, but it provides a Top-3 diagnoses, criterion states, a criterion-compatible set, and a final commitment record for stage-wise analysis. The separate cross-corpus analysis shows that the lexical advantage of TF--IDF with logistic regression is source-sensitive rather than source-independent.
 
 \item[RQ2] \textbf{Where is benchmark disagreement recorded across candidate generation, criterion checking, compatibility analysis, and primary-diagnosis selection?}
 
@@ -1595,7 +1595,7 @@ No tested strategy provides a clear and attributable improvement over Direct-Ans
 
 \item[RQ5] \textbf{Does the stage-wise analysis remain useful under a second synthetic source?}
 
-The same stage-wise output views remain applicable to MDD-5k and support the same form of disagreement localization. The largest external disagreement profile also contains a ranked and compatible reference diagnosis while no reference parent is committed as primary. However, the profile rates and compatibility inclusion differ from the internal case-level results and across archived MDD-5k runs. The result supports portability of the analysis framework, not stable numerical behavior, superior generalization by HiED, or clinical validity.
+The same stage-wise output views remain applicable to MDD-5k and support the same form of disagreement localization. The largest external disagreement profile also contains a ranked and compatible reference diagnosis while no reference parent is committed as primary. However, the profile rates and compatibility inclusion differ from the internal case-level results and across saved MDD-5k runs. The result supports portability of the analysis framework, not stable numerical behavior, superior generalization by HiED, or clinical validity.
 
 \end{description}
 
@@ -1627,7 +1627,7 @@ HiED's completed contribution is a stage-wise and inspectable set of outputs rat
 \chapter{Configured Diagnostic Categories and Operational Compatibility Rules}
 \label{app:configured-profile}
 
-The evaluated HiED setup contains fourteen ICD-10 diagnostic categories. Each category has one Criterion Checker and one fixed compatibility rule. F41 and F43 subtypes are mapped to shared parent labels only for scoring. Criterion checking and rule application remain at the configured category level. The item counts and thresholds below match the frozen ontology used by the rule engine.
+The evaluated HiED setup contains fourteen ICD-10 diagnostic categories. Each category has one Criterion Checker and one fixed compatibility rule. F41 and F43 subtypes are mapped to shared parent labels only for scoring. Criterion checking and rule application remain at the configured category level. The item counts and thresholds below match the fixed study rule set.
 
 These are study rules based on ICD-10 descriptions~\citep{who2019icd10}. They are not copied verbatim from the ICD-10 manual, have not been independently validated by clinicians, and are not clinical diagnostic standards. Passing a rule means only that the recorded criterion states satisfy that rule for the available transcript. It does not show that the diagnosis is clinically correct or should be selected as primary.
 
@@ -1676,7 +1676,7 @@ Z71 & Z71 & Counseling & 3 & $\geq$2 configured indicators met; exclusion of a d
 \end{longtable}
 \endgroup
 
-This table defines the rules used in the criterion-checking and compatibility analyses. The complete machine-readable criterion definitions, prompts, and rule-engine configuration remain in the versioned project repository.
+This table defines the rules used in the criterion-checking and compatibility analyses. The full criterion definitions and prompts are available in the project files.
 
 F41 and F43 subtype predictions are mapped to their parent labels only for evaluation. Together with the nine other configured parent labels and \emph{Others}, they form the twelve scored classes defined in Chapter~\ref{ch:data}. \emph{Others} is used only for scoring; HiED cannot emit it.
 
@@ -1687,7 +1687,7 @@ Several categories may pass their rules for the same transcript. The criterion-c
 
 This appendix gives details needed to read the supporting experiments. It lists the main differences among the tested primary-selection methods, the full paired-comparison statistics, and the exact model-scale results that are shortened in the main chapters.
 
-It does not repeat the complete software implementation. Full prompts, case-level outputs, seed schedules, evaluation scripts, and executable configurations remain in the versioned project repository.
+This appendix summarizes the settings needed to understand the supporting experiments. Full project files are stored separately.
 
 {\footnotesize
 \noindent\textit{TF--IDF baseline configuration:} The model is trained on 13,000 source cases. It uses character-boundary 1--2-grams, at most 10,000 features, \texttt{min\_df=2}, \texttt{max\_df=0.95}, and sublinear term frequency. Twelve class-balanced one-vs-rest L-BFGS logistic-regression classifiers use $C=1.0$ and a 2,000-iteration limit. Their probabilities define the ranked labels. The highest-probability class is always emitted as the primary label, and the second-ranked class is additionally emitted when its probability is at least 0.30; no more than two labels are emitted. Top-3 uses the three highest class scores independently of this emission rule, whereas Exact Match and F1 use the emitted set.
@@ -1720,10 +1720,10 @@ Ranked and compatible, not primary & 272 & 50.0 [46.2, 53.8] & 21.8 [19.2, 26.9]
 \renewcommand{\arraystretch}{1.0}
 \end{table}
 
-\section{Selected Frozen-Output Examples}
+\section{Selected Output Examples}
 \label{sec:ch8-saved-results-boundaries}
 
-Table~\ref{tab:audit-saved-results-examples} presents four deterministic examples from the same frozen internal case-level results. For each profile, the example is the first matching source record. No transcript text or checker evidence text is reproduced. The rows illustrate the meaning of the recorded profiles; they do not support population estimates or clinical conclusions.
+Table~\ref{tab:audit-saved-results-examples} presents four deterministic examples from the same internal case-level results. For each profile, the example is the first matching source record. No transcript text or checker evidence text is reproduced. The rows illustrate the meaning of the recorded profiles; they do not support population estimates or clinical conclusions.
 
 \begingroup
 \footnotesize
@@ -1772,7 +1772,7 @@ Analysis & Configuration & Interpretation boundary\\
 \endhead
 Independent pairwise comparison & Re-runs the HiED system with a pairwise stage after criterion checking. Candidates need a met ratio of at least 0.50 and enter comparison when an adjacent support gap is below 0.10. & Upstream outputs are regenerated, so this is a complete-configuration comparison.\\
 \hline
-additional pairwise re-selection check & External-only deterministic replay that promotes each valid preference already stored in the matched MDD-5k pairwise saved results. & Fixed-saved results policy replay; not a separately executed model configuration and not reported as an internal result.\\
+Pairwise re-selection check & External-only deterministic replay that promotes each valid preference already stored in the saved MDD-5k pairwise results. & Reuses saved pairwise choices; not a separate model run and not reported as an internal result.\\
 \hline
 Two-view debate & Uses at most two advocate rounds and a judge when needed, with a 24,576-token external context window. & Uses more calls and a larger context budget than DA.\\
 \hline
@@ -1789,9 +1789,9 @@ Deterministic fusion & Uses a validation-selected rule that combines rank, compa
 The rule keeps the DA primary unless that diagnosis is absent from the criterion-compatible set. It then checks compatible alternatives in the Diagnostician Top-3. An alternative replaces the DA primary only when its criterion met ratio is at least 0.20 higher. The diagnosis with the highest eligible ratio is selected. Ties are broken by Diagnostician rank, then the fixed category order, and then the diagnostic code.
 
 \paragraph{Pairwise configurations.}
-Pairwise comparison starts with diagnoses whose criterion met ratio is at least 0.50. A diagnosis enters the close comparison cluster when the gap to the next met-ratio value is below 0.10. The pairwise Differential agent compares that cluster. Independent pairwise analysis re-runs the HiED path with deterministic decoding (temperature 0, \texttt{top\_k}=1) and a 1,536-token output budget. Its upstream ranking may therefore differ from the saved DA saved results.
+Pairwise comparison starts with diagnoses whose criterion met ratio is at least 0.50. A diagnosis enters the close comparison cluster when the gap to the next met-ratio value is below 0.10. The pairwise Differential agent compares that cluster. Independent pairwise analysis re-runs the HiED path with deterministic decoding (temperature 0, \texttt{top\_k}=1) and a 1,536-token output budget. Its upstream ranking may therefore differ from the saved DA results.
 
-The additional forced-commit result is different. It replays valid preferences already stored in the matched MDD-5k pairwise saved results and adds no model call. It is not a separately executed system, and no matching internal result is reported.
+A separate pairwise re-selection check reuses saved pairwise choices without another model call. It is not a separate system run, and no matching internal result is reported.
 
 \paragraph{Two-view debate.}
 The debate pool is the union of the Diagnostician Top-5 and the criterion-compatible diagnoses. One advocate receives the ranking, reasoning summary, and retrieval gist. The other receives the criterion evidence. The advocates run for at most two rounds. Agreement sets the primary diagnosis; otherwise a judge decides. A case uses at most four advocate calls and one judge call, not counting malformed-output reasks. Decoding uses temperature 0, \texttt{top\_k}=1, and a 1,536-token output budget. The internal and external context windows are 8,192 and 24,576 tokens.
@@ -1835,7 +1835,7 @@ DA versus two-view debate & 49 & 16 & $5.08\times10^{-5}$ & Exact\\
 
 \begin{table}[htbp]
 \centering
-\caption{Detailed external paired-test results on the common 925-case MDD-5k saved results. All $p$-values are unadjusted two-sided exact McNemar tests.}
+\caption{Detailed external paired-test results on the same 925 MDD-5k cases. All $p$-values are unadjusted two-sided exact McNemar tests.}
 \label{tab:external-paired-tests}
 \footnotesize
 \renewcommand{\arraystretch}{1.08}
@@ -1849,7 +1849,7 @@ DA versus deterministic fusion & 122 & 30 & $2.3\times10^{-14}$\\
 \hline
 DA versus independent pairwise & 0 & 0 & $1.00$\\
 \hline
-DA versus additional pairwise re-selection check & 28 & 5 & $6.6\times10^{-5}$\\
+DA versus Pairwise re-selection check & 28 & 5 & $6.6\times10^{-5}$\\
 \hline
 DA versus two-view debate & 230 & 52 & $7.0\times10^{-28}$\\
 \hline
