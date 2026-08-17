@@ -83,7 +83,7 @@ replacements = [
     (r'artifacts?', 'saved outputs'),
     (r'provenance boundaries?', 'comparison limits'),
     (r'provenance', 'source information'),
-    (r'post[- ]hoc', 'additional'),
+    (r'post[- ]?hoc', 'additional'),
     (r'forced-commit sweep', 'pairwise re-selection check'),
     (r'forced commit sweep', 'pairwise re-selection check'),
     (r'fixed-trace', 'saved-result'),
