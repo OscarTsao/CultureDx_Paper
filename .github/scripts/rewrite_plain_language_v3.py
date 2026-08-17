@@ -22,16 +22,13 @@ ns: dict[str, object] = {}
 try:
     exec(compile(source, '<rewrite_plain_language_v3>', 'exec'), ns, ns)
 except SystemExit:
-    # The main rewrite performs all structural edits before its final wording
-    # check. Finish the wording cleanup here, then run a stricter validation.
     pass
 
 text = ns.get('text')
-target = ns.get('target')
+target = ns.get('thesis')
 if not isinstance(text, str) or not isinstance(target, Path):
     raise SystemExit('The structural rewrite did not produce thesis text')
 
-# Use one name for the same metric throughout the thesis.
 for old, new in [
     ('Genuine ranked Top-3 Accuracy', 'Top-3 Accuracy'),
     ('Genuine Top-3 Accuracy', 'Top-3 Accuracy'),
@@ -51,7 +48,6 @@ for old, new in [
 ]:
     text = text.replace(old, new)
 
-# Replace engineering terms with the actual academic meaning.
 replacements = [
     (r'output and evaluation contracts?', 'stage-wise evaluation framework'),
     (r'evaluation contracts?', 'evaluation framework'),
@@ -100,7 +96,6 @@ replacements = [
 for pattern, repl in replacements:
     text = re.sub(pattern, repl, text, flags=re.IGNORECASE)
 
-# Clean a few awkward results created by broad replacements.
 for old, new in [
     ('under the DA ranking rules', 'under the DA ranking rule'),
     ('under the recorded DA ranking rules', 'under the DA ranking rule'),
@@ -114,7 +109,6 @@ for old, new in [
 ]:
     text = text.replace(old, new)
 
-# Keep the main text free of repository-management language.
 forbidden = [
     r'\bcontract\b', r'\bcontracts\b', r'\blineage\b', r'\blineages\b',
     r'\bposthoc\b', r'emitted-label hit@3', r'genuine ranked Top-3',
@@ -131,7 +125,7 @@ required = [
     'Primary-diagnosis selection methods',
     'Run the Diagnostician $K$ times',
     'one advocate represents the diagnosis path',
-    'selects the diagnosis with the highest criterion met ratio',
+    'criterion \\textit{met ratio}',
     '\\section{Proposed Psychiatrist Review}',
     '\\chapter{Internal Evaluation Results}',
     '\\chapter{External Synthetic Evaluation}',
@@ -140,7 +134,6 @@ for item in required:
     if item not in text:
         raise SystemExit(f'Missing required rewritten text: {item}')
 
-# The removed Ch7 section and Figure 7.1 must not return.
 for item in ['Trace-Lineage and Diagnostic-Scope Boundaries', 'fig:internal-external-gap', 'Evidence contract']:
     if item in text:
         raise SystemExit(f'Removed main-text item remains: {item}')
