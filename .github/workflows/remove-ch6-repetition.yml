@@ -1,0 +1,62 @@
+name: Remove repeated Chapter 6 text
+
+on:
+  push:
+    branches:
+      - agent/plain-language-main-chapters
+
+permissions:
+  contents: write
+
+jobs:
+  revise:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/plain-language-main-chapters
+          fetch-depth: 0
+      - name: Remove repeated Chapter 6 answers
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/remove_ch6_repetition.py
+          git diff --check
+      - name: Install LaTeX
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            latexmk texlive-xetex texlive-latex-extra texlive-publishers \
+            texlive-lang-chinese fonts-liberation fonts-noto-cjk fonts-urw-base35
+      - name: Compile thesis
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd school
+          latexmk -xelatex -interaction=nonstopmode -halt-on-error -file-line-error main.tex
+          test -s main.pdf
+          test "$(grep -c 'Overfull \\hbox' main.log || true)" -eq 0
+          test "$(grep -c 'Overfull \\vbox' main.log || true)" -eq 0
+          ! grep -E -q 'LaTeX Warning: (Citation|Reference).*undefined|There were undefined references|multiply defined|Missing character:' main.log
+          ! grep -Fq 'Answer to RQ1.' main.tex
+          ! grep -Fq 'Answer to RQ2.' main.tex
+          ! grep -Fq 'Answer to RQ3.' main.tex
+          ! grep -Fq 'Answer to RQ4.' main.tex
+      - name: Commit cleanup
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd school
+          latexmk -C main.tex || true
+          rm -f main.aux main.bbl main.blg main.fdb_latexmk main.fls main.log main.lof main.lot main.out main.pdf main.toc main.xdv
+          cd ..
+          rm -f .github/workflows/remove-ch6-repetition.yml
+          rm -f .github/scripts/remove_ch6_repetition.py
+          rmdir .github/scripts 2>/dev/null || true
+          git add -A
+          git diff --cached --check
+          unexpected=$(git diff --cached --name-only | grep -Ev '^(school/main.tex|\.github/workflows/remove-ch6-repetition.yml|\.github/scripts/remove_ch6_repetition.py)$' || true)
+          test -z "$unexpected"
+          git config user.name 'OpenAI Codex'
+          git config user.email 'noreply@openai.com'
+          git commit -m 'Remove repeated Chapter 6 text'
+          git push origin HEAD:agent/plain-language-main-chapters
