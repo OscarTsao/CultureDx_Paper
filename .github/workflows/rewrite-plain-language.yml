@@ -22,7 +22,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          python3 .github/scripts/rewrite_plain_language_v3.py > rewrite-error.log 2>&1
+          python3 .github/scripts/rewrite_plain_language_v4.py > rewrite-error.log 2>&1
           status=$?
           cat rewrite-error.log
           if [[ $status -ne 0 ]]; then
@@ -82,12 +82,13 @@ jobs:
           rm -f .github/scripts/rewrite_plain_language.py
           rm -f .github/scripts/rewrite_plain_language_v2.py
           rm -f .github/scripts/rewrite_plain_language_v3.py
+          rm -f .github/scripts/rewrite_plain_language_v4.py
           rm -f .github/scripts/rewrite-source-debug.py
           rm -f rewrite-error.log
           rmdir .github/scripts 2>/dev/null || true
           git add -A
           git diff --cached --check
-          unexpected=$(git diff --cached --name-only | grep -Ev '^(school/main.tex|figures/src/fig_pipeline_round20c_tikz.tex|figures/fig_pipeline_round20c.pdf|\.github/workflows/rewrite-plain-language.yml|\.github/scripts/rewrite_plain_language.py|\.github/scripts/rewrite_plain_language_v2.py|\.github/scripts/rewrite_plain_language_v3.py|\.github/scripts/rewrite-source-debug.py|rewrite-error.log)$' || true)
+          unexpected=$(git diff --cached --name-only | grep -Ev '^(school/main.tex|figures/src/fig_pipeline_round20c_tikz.tex|figures/fig_pipeline_round20c.pdf|\.github/workflows/rewrite-plain-language.yml|\.github/scripts/rewrite_plain_language.py|\.github/scripts/rewrite_plain_language_v2.py|\.github/scripts/rewrite_plain_language_v3.py|\.github/scripts/rewrite_plain_language_v4.py|\.github/scripts/rewrite-source-debug.py|rewrite-error.log)$' || true)
           test -z "$unexpected"
           git config user.name 'OpenAI Codex'
           git config user.email 'noreply@openai.com'
