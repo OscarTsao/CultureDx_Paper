@@ -1,0 +1,73 @@
+from __future__ import annotations
+
+import os
+from pathlib import Path
+
+
+if os.environ.get("GITHUB_REPOSITORY") == "OscarTsao/CultureDx_Paper":
+    target = Path("school/main.tex")
+else:
+    target = Path("paper/school/HiED_school_version.tex")
+
+text = target.read_text(encoding="utf-8")
+start_marker = r"\chapter*{中文摘要}"
+end_marker = r"\chapter*{Acknowledgements}"
+if text.count(start_marker) != 1 or text.count(end_marker) != 1:
+    raise SystemExit("Abstract boundary markers are not unique")
+
+abstract = r"""\chapter*{中文摘要}
+\addcontentsline{toc}{chapter}{中文摘要}
+精神科初診逐字稿的鑑別診斷，不是單純從文字中辨識一個疾病標籤，而是在證據不完整下比較多個可能診斷。醫師需從自由敘述中整理症狀、病程、時序與功能影響，對照診斷準則，判斷哪些疾病仍可能成立，再選出主診斷並考量共病。然而，症狀持續時間、發病順序、過去發作、排除病因及不同症候群之間的關係，未必會在一次晤談中被完整引出。大型語言模型可協助閱讀長篇逐字稿、形成候選診斷並整理相關證據，但流暢的輸出不代表候選診斷完整、準則判斷確實由逐字稿支持，或主診斷選擇正確。現有研究多只報告最終診斷準確率，因此無法辨別分歧是來自候選遺漏、準則不相容，或資料集參考診斷已存在卻未被確立為主診斷。
+
+本研究提出 HiED，一套用於中文精神科初診逐字稿的混合式、以證據為基礎的多代理鑑別診斷框架。HiED 採用雙路徑的分階段流程：診斷路徑透過相似案例檢索與 Diagnostician 產生排序後的鑑別診斷；準則路徑則由 14 個診斷類別專屬的 Criterion Checker，將各項準則判定為符合、不符合或資訊不足，再由確定性規則形成準則相容集合。最後，系統確立一個主診斷，並可保留共病診斷。HiED 針對同一批案例保存排序候選、準則狀態、證據說明、相容集合與最終診斷，使候選形成、準則相容性與主診斷確立可以分開評估。
+
+在固定的 1,000 例 LingxiDiag-16K 內部保留測試集上，HiED 的 committed Top-1 Accuracy 為 51.8\%，genuine ranked Top-3 Accuracy 為 80.2\%。其 Top-1 與直接 Single LLM 幾乎相同；TF--IDF 加邏輯迴歸則在同來源資料上具有較強的標籤預測表現，但跨語料轉移時明顯下降，顯示其對語料特定詞彙訊號的依賴。在 915 個可進行準則分析的 LingxiDiag 案例中，有 272 例（29.7\%）的資料集參考診斷已同時出現在 genuine Top-3 與準則相容集合中，卻沒有參考診斷被確立為主診斷；在 MDD-5k 的 878 個可分析案例中，也有 225 例（25.6\%）出現相同型態。所測試的確定性規則、成對比較、辯論與重複生成策略，皆未能相較 Direct-Answer 帶來明確且可歸因的改善。
+
+因此，HiED 並未證明其最終標籤準確率優於其他方法。其主要貢獻，是在同一病例上保存並分別評估候選形成、準則核對與主診斷確立的輸出，使候選遺漏、準則不相容、資訊不足及主診斷確立分歧可以被檢視。本研究證據來自合成中文逐字稿，不構成臨床驗證；單一精神科醫師的基準標籤一致性審查列為後續工作。
+
+\noindent\textbf{關鍵詞：}大型語言模型、多代理系統、精神科鑑別診斷、診斷準則、臨床決策支援、可稽核人工智慧
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+Differential diagnosis from a first psychiatric interview transcript is not simply the assignment of one disease label. It is a comparative decision under incomplete evidence. Clinicians must extract symptoms, illness course, temporal relations, and functional effects from free-form descriptions, compare them with diagnosis-specific criteria, determine which disorders remain plausible, and select a primary diagnosis while considering possible comorbidity. However, symptom duration, temporal order, previous episodes, exclusionary causes, and relations among syndromes may not be fully elicited in one interview. Large language models can help read long transcripts, generate candidate diagnoses, and organize relevant evidence, but fluent output does not ensure a complete differential, transcript-grounded criterion judgments, or correct primary selection. Evaluations based only on final diagnosis accuracy also cannot reveal where disagreement arises.
+
+This thesis proposes HiED, a hybrid, evidence-grounded multi-agent framework for differential diagnosis from Chinese psychiatric interview transcripts. HiED implements a two-path, stage-wise process. The diagnostic path retrieves similar cases and uses a Diagnostician to produce a ranked differential diagnosis. In parallel, diagnosis-specific Criterion Checkers classify each criterion as met, not met, or insufficient evidence, after which deterministic rules form a criterion-compatible set. A finalization stage commits one primary diagnosis and may retain a comorbid diagnosis. HiED preserves the ranked candidates, criterion states, evidence notes, compatible set, and committed output for the same cases, allowing candidate generation, criterion compatibility, and primary commitment to be evaluated separately.
+
+On a fixed 1,000-case LingxiDiag-16K held-out set, HiED achieved 51.8\% committed Top-1 Accuracy and 80.2\% genuine ranked Top-3 Accuracy. Its Top-1 performance was almost identical to that of the direct Single LLM configuration. TF--IDF with logistic regression produced stronger same-source label prediction, but its performance decreased substantially under cross-source transfer, indicating sensitivity to corpus-specific lexical signals. Among 915 checker-eligible LingxiDiag cases, 272 cases (29.7\%) contained a benchmark-reference diagnosis in both the genuine Top-3 and the criterion-compatible set, but no benchmark-reference diagnosis was committed as primary. The same recorded profile appeared in 225 of 878 checker-eligible MDD-5k cases (25.6\%). None of the tested deterministic, pairwise, debate, or repeated-generation selection strategies provided a clear and attributable improvement over Direct-Answer.
+
+HiED therefore does not establish superior final-label accuracy. Its main contribution is a same-case stage-wise output and evaluation framework that makes candidate omission, criterion incompatibility, missing information, and primary-commitment disagreement separately inspectable. The completed evidence is based on synthetic Chinese transcripts and does not constitute clinical validation. A single-psychiatrist benchmark-label alignment review remains future work.
+
+\noindent\textbf{Keywords:} Large language models, multi-agent systems, psychiatric differential diagnosis, diagnostic criteria, clinical decision support, auditable AI
+
+"""
+
+start = text.index(start_marker)
+end = text.index(end_marker, start)
+text = text[:start] + abstract + text[end:]
+
+required = [
+    "不是單純從文字中辨識一個疾病標籤",
+    "混合式、以證據為基礎的多代理鑑別診斷框架",
+    "所測試的確定性規則、成對比較、辯論與重複生成策略",
+    "is not simply the assignment of one disease label",
+    "a hybrid, evidence-grounded multi-agent framework",
+    "None of the tested deterministic, pairwise, debate, or repeated-generation selection strategies",
+    "A single-psychiatrist benchmark-label alignment review remains future work.",
+]
+for item in required:
+    if item not in text:
+        raise SystemExit(f"Missing required abstract text: {item}")
+
+forbidden = [
+    "精神科初診逐字稿的鑑別診斷，需在資訊不完整下比較多個可能疾病並選擇主診斷。",
+    "Differential diagnosis from a first psychiatric interview transcript requires comparing several possible disorders and choosing a primary diagnosis from incomplete information.",
+    "A proposed single-psychiatrist benchmark-label alignment review with a blinded initial assessment is documented as future work",
+]
+for item in forbidden:
+    if item in text:
+        raise SystemExit(f"Legacy short abstract text remains: {item}")
+
+if text.count(start_marker) != 1 or text.count(r"\chapter*{Abstract}") != 1:
+    raise SystemExit("Abstract chapter count is not one")
+
+target.write_text(text, encoding="utf-8")
+print(f"updated {target}")
