@@ -1,1 +1,4 @@
-The structural rewrite did not produce thesis text
+Forbidden wording remains: \bposthoc\b
+ 0.10. & Upstream outputs are regenerated, so this is a complete-configuration comparison.\\
+\hline
+Posthoc pairwise re-selection check & External-only deterministic replay that promotes each valid preferenc
