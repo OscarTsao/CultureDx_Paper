@@ -45,13 +45,13 @@ jobs:
           fi
           test "$(grep -c 'Overfull \\hbox' school/main.log || true)" -eq 0
           test "$(grep -c 'Overfull \\vbox' school/main.log || true)" -eq 0
-          grep -q 'final-primary-output disagreement profile' school/main.tex
-          grep -q 'L_{\\mathrm{cat}}(x)' school/main.tex
-          grep -q 'L_{\\mathrm{par}}(x)' school/main.tex
-          grep -q 'Main-System Configuration' school/main.tex
-          grep -q 'Complete internal $D_3/I/S$ profiles' school/main.tex
-          ! grep -q 'Supplementary Upper-Bound Analysis' school/main.tex
-          ! grep -q 'A secondary F32--F41 analysis is reported separately' school/main.tex
+          grep -Fq 'final-primary-output disagreement profile' school/main.tex
+          grep -Fq 'L_{\mathrm{cat}}(x)' school/main.tex
+          grep -Fq 'L_{\mathrm{par}}(x)' school/main.tex
+          grep -Fq 'Main-System Configuration' school/main.tex
+          grep -Fq 'Complete internal $D_3/I/S$ profiles' school/main.tex
+          ! grep -Fq 'Supplementary Upper-Bound Analysis' school/main.tex
+          ! grep -Fq 'A secondary F32--F41 analysis is reported separately' school/main.tex
 
       - name: Commit source-only patch
         run: |
