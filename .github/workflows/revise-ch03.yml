@@ -1,0 +1,112 @@
+name: Revise Chapter 3 architecture
+
+on:
+  push:
+    branches:
+      - agent/ch03-architecture-review
+
+permissions:
+  contents: write
+
+jobs:
+  revise:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out revision branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/ch03-architecture-review
+          fetch-depth: 0
+
+      - name: Apply Chapter 3 patch
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/revise_ch03.py
+          git diff --check
+
+      - name: Install thesis toolchain
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            latexmk texlive-xetex texlive-latex-extra texlive-publishers \
+            texlive-lang-chinese fonts-liberation fonts-noto-cjk \
+            fonts-urw-base35 poppler-utils
+
+      - name: Build Figure 3.1
+        run: |
+          set -euo pipefail
+          if [ -f school/main.tex ]; then
+            FIG_SRC_DIR=figures/src
+            FIG_OUT=figures/fig_pipeline_round20c.pdf
+          else
+            FIG_SRC_DIR=paper/figures/src
+            FIG_OUT=paper/figures/fig_pipeline_round20c.pdf
+          fi
+          pushd "$FIG_SRC_DIR"
+          xelatex -interaction=nonstopmode -halt-on-error -file-line-error fig_pipeline_round20c_tikz.tex
+          popd
+          cp "$FIG_SRC_DIR/fig_pipeline_round20c_tikz.pdf" "$FIG_OUT"
+          test -s "$FIG_OUT"
+
+      - name: Compile and validate full thesis
+        run: |
+          set -euo pipefail
+          if [ -f school/main.tex ]; then
+            THESIS_DIR=school
+            THESIS=main.tex
+            LOG=main.log
+            PDF=main.pdf
+          else
+            THESIS_DIR=paper/school
+            THESIS=HiED_school_version.tex
+            LOG=HiED_school_version.log
+            PDF=HiED_school_version.pdf
+          fi
+          pushd "$THESIS_DIR"
+          latexmk -xelatex -interaction=nonstopmode -halt-on-error -file-line-error "$THESIS"
+          test -s "$PDF"
+          test -s "$LOG"
+          if grep -E -q 'LaTeX Warning: (Citation|Reference).*undefined|Package natbib Warning: Citation.*undefined|There were undefined references|There were undefined citations|multiply defined|Missing character:' "$LOG"; then
+            grep -E 'LaTeX Warning: (Citation|Reference).*undefined|Package natbib Warning: Citation.*undefined|There were undefined references|There were undefined citations|multiply defined|Missing character:' "$LOG" || true
+            exit 1
+          fi
+          test "$(grep -c 'Overfull \\hbox' "$LOG" || true)" -eq 0
+          test "$(grep -c 'Overfull \\vbox' "$LOG" || true)" -eq 0
+          pdfinfo "$PDF" | grep -E '^(Pages|Page size):'
+          popd
+
+      - name: Commit source-only revision
+        run: |
+          set -euo pipefail
+          if [ -f school/main.tex ]; then
+            THESIS_DIR=school
+            THESIS=main.tex
+            FIG_SRC_DIR=figures/src
+            FIG_OUT=figures/fig_pipeline_round20c.pdf
+            ALLOWED='^(school/main.tex|figures/src/fig_pipeline_round20c_tikz.tex|figures/fig_pipeline_round20c.pdf|\.github/scripts/revise_ch03.py|\.github/workflows/revise-ch03.yml)$'
+          else
+            THESIS_DIR=paper/school
+            THESIS=HiED_school_version.tex
+            FIG_SRC_DIR=paper/figures/src
+            FIG_OUT=paper/figures/fig_pipeline_round20c.pdf
+            ALLOWED='^(paper/school/HiED_school_version.tex|paper/figures/src/fig_pipeline_round20c_tikz.tex|paper/figures/fig_pipeline_round20c.pdf|\.github/scripts/revise_ch03.py|\.github/workflows/revise-ch03.yml)$'
+          fi
+          pushd "$THESIS_DIR"
+          latexmk -C "$THESIS" || true
+          rm -f *.aux *.bbl *.blg *.fdb_latexmk *.fls *.log *.lof *.lot *.out *.pdf *.toc *.xdv
+          popd
+          rm -f "$FIG_SRC_DIR"/fig_pipeline_round20c_tikz.aux \
+            "$FIG_SRC_DIR"/fig_pipeline_round20c_tikz.log \
+            "$FIG_SRC_DIR"/fig_pipeline_round20c_tikz.pdf
+          rm -f .github/scripts/revise_ch03.py
+          rm -f .github/workflows/revise-ch03.yml
+          rmdir .github/scripts 2>/dev/null || true
+          git add -A
+          git diff --cached --check
+          unexpected=$(git diff --cached --name-only | grep -Ev "$ALLOWED" || true)
+          test -z "$unexpected"
+          git config user.name 'OpenAI Codex'
+          git config user.email 'noreply@openai.com'
+          git commit -m 'Rewrite Chapter 3 architecture'
+          git push origin HEAD:agent/ch03-architecture-review
