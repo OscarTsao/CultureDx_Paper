@@ -45,20 +45,47 @@ jobs:
           compiler: latexmk
           args: -xelatex -file-line-error -halt-on-error -interaction=nonstopmode
           os: debian
-          extra_system_packages: "fonts-liberation fonts-noto-cjk poppler-utils"
+          extra_system_packages: "fonts-liberation fonts-noto-cjk"
 
-      - name: Validate thesis log
+      - name: Check generated thesis files
         run: |
           set -euo pipefail
           test -s school/main.pdf
           test -s school/main.log
-          if grep -E -q 'LaTeX Warning: (Citation|Reference).*undefined|Package natbib Warning: Citation.*undefined|There were undefined references|There were undefined citations|multiply defined|Missing character:' school/main.log; then
-            grep -E 'LaTeX Warning: (Citation|Reference).*undefined|Package natbib Warning: Citation.*undefined|There were undefined references|There were undefined citations|multiply defined|Missing character:' school/main.log || true
+
+      - name: Check citations and references
+        run: |
+          set -euo pipefail
+          if grep -E -q 'LaTeX Warning: (Citation|Reference).*undefined|Package natbib Warning: Citation.*undefined|There were undefined references|There were undefined citations|multiply defined' school/main.log; then
+            grep -E 'LaTeX Warning: (Citation|Reference).*undefined|Package natbib Warning: Citation.*undefined|There were undefined references|There were undefined citations|multiply defined' school/main.log || true
             exit 1
           fi
-          test "$(grep -c 'Overfull \\hbox' school/main.log || true)" -eq 0
-          test "$(grep -c 'Overfull \\vbox' school/main.log || true)" -eq 0
-          pdfinfo school/main.pdf | grep -E '^(Pages|Page size):'
+
+      - name: Check missing glyphs
+        run: |
+          set -euo pipefail
+          if grep -q 'Missing character:' school/main.log; then
+            grep -n 'Missing character:' school/main.log || true
+            exit 1
+          fi
+
+      - name: Check overfull horizontal boxes
+        run: |
+          set -euo pipefail
+          count=$(grep -c 'Overfull \\hbox' school/main.log || true)
+          if [ "$count" -ne 0 ]; then
+            grep -n 'Overfull \\hbox' school/main.log || true
+            exit 1
+          fi
+
+      - name: Check overfull vertical boxes
+        run: |
+          set -euo pipefail
+          count=$(grep -c 'Overfull \\vbox' school/main.log || true)
+          if [ "$count" -ne 0 ]; then
+            grep -n 'Overfull \\vbox' school/main.log || true
+            exit 1
+          fi
 
       - name: Commit source-only integration
         run: |
