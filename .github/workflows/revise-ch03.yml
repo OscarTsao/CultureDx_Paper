@@ -1,10 +1,16 @@
-# trigger run
 name: Revise Chapter 3 architecture
 
 on:
   push:
     branches:
       - agent/ch03-architecture-review
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 permissions:
   contents: write
