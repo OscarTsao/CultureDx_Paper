@@ -28,6 +28,32 @@ jobs:
       - name: Apply approved thesis fixes
         run: |
           set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('.github/final_structure_patch.py')
+          source = path.read_text(encoding='utf-8')
+          start = source.index('if r"\\end{tabularx}')
+          end = source.index('text = text[:lexical_block_start]', start)
+          replacement = '''table_separator = "\\\\end{tabularx}" + chr(10) * 2 + "\\\\parbox"
+          if table_separator not in lexical_block:
+              raise RuntimeError("Unexpected Table 7.4 structure.")
+          replacement_separator = (
+              "\\\\end{tabularx}"
+              + chr(10)
+              + "\\\\endgroup"
+              + chr(10) * 2
+              + "\\\\parbox"
+          )
+          lexical_block_new = lexical_block.replace(
+              table_separator,
+              replacement_separator,
+              1,
+          )
+          '''
+          source = source[:start] + replacement + source[end:]
+          path.write_text(source, encoding='utf-8')
+          PY
           python3 .github/final_structure_patch.py
           git diff --check
 
