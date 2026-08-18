@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - agent/abstract-top3-consistency
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 permissions:
   contents: write
