@@ -10,10 +10,14 @@ payload = ''.join(
 )
 code = zlib.decompress(base64.b64decode(payload)).decode('utf-8')
 code, substitutions = re.subn(
-    r',\s*3,\s*["\']chapter 8 group term["\']\)',
-    ', 1, "chapter 8 group term")',
+    r'3(?=[^\n]{0,160}chapter 8 group term)',
+    '1',
     code,
 )
 if substitutions != 1:
-    raise RuntimeError(f'expected one chapter 8 count guard, changed {substitutions}')
+    index = code.find('chapter 8 group term')
+    context = code[max(0, index - 240): index + 80] if index >= 0 else 'label not found'
+    raise RuntimeError(
+        f'expected one chapter 8 count guard, changed {substitutions}; context={context!r}'
+    )
 exec(compile(code, '<apply_validity_repro_patch>', 'exec'))
