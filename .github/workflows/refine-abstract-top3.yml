@@ -80,7 +80,7 @@ jobs:
           rmdir .github/scripts 2>/dev/null || true
           git add -A
           git diff --cached --check
-          unexpected=$(git diff --cached --name-only | grep -Ev '^school/main.tex$' || true)
+          unexpected=$(git diff --cached --name-only | grep -Ev '^(school/main.tex|\.github/scripts/refine_abstract_top3.py|\.github/workflows/refine-abstract-top3.yml)$' || true)
           test -z "$unexpected"
           git config user.name 'OpenAI Codex'
           git config user.email 'noreply@openai.com'
