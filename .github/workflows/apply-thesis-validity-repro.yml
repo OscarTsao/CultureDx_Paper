@@ -63,17 +63,18 @@ jobs:
       - name: Commit source-only patch
         run: |
           set -euo pipefail
-          pushd school
-          latexmk -C main.tex || true
-          rm -f main.pdf main.log main.aux main.bbl main.blg main.fdb_latexmk main.fls main.lof main.lot main.out main.toc main.xdv
-          popd
+          git clean -fdx school
           rm -rf .github/thesis_patch
           rm -f .github/thesis_patch_loader.py
           rm -f .github/workflows/apply-thesis-validity-repro.yml
           git add -A
           git diff --cached --check
-          unexpected=$(git diff --cached --name-only | grep -Ev '^school/main\.tex$' || true)
-          test -z "$unexpected"
+          git status --short
+          unexpected=$(git diff --cached --name-only | grep -Ev '^(school/main\.tex|\.github/thesis_patch/.*|\.github/thesis_patch_loader\.py|\.github/workflows/apply-thesis-validity-repro\.yml)$' || true)
+          if [ -n "$unexpected" ]; then
+            printf 'Unexpected staged files:\n%s\n' "$unexpected"
+            exit 1
+          fi
           git config user.name 'OpenAI Codex'
           git config user.email 'noreply@openai.com'
           git commit -m 'Clarify thesis validity and reproducibility boundaries'
