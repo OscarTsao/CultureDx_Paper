@@ -93,7 +93,7 @@ Common Mental Disorders in the Taiwanese Context\par}
 
 本研究提出 HiED，一套用於中文精神科逐字稿的混合式、以證據為基礎的多代理框架。診斷路徑透過相似案例檢索產生 Top-3 與初步主診斷；準則核對路徑使用 14 個診斷類別專屬的 Criterion Checker，將準則判定為符合、不符合或資訊不足，並形成準則相容集合。HiED 保存這些輸出，分別評估候選覆蓋、準則相容與主診斷選擇。
 
-在固定的 1,000 例 LingxiDiag-16K 內部保留測試集上，HiED 的 Top-1 Accuracy 為 51.8\%，Top-3 Accuracy 為 80.2\%。其 Top-1 與 Single LLM 幾乎相同；TF--IDF 加邏輯迴歸在同來源資料上較強，但跨來源時明顯下降。最大分歧類型為參考診斷已進入 Top-3 並通過準則核對，卻未被選為最終主診斷；在可進行準則分析的案例中，此類型占內部案例的 29.7\%，在 MDD-5k 中占 25.6\%。所測試的主診斷選擇方法均未明確優於 Direct-Answer。
+在固定的 1,000 例 LingxiDiag-16K 內部保留測試集上，HiED 的 Top-1 Accuracy 為 51.8\%，Top-3 Accuracy 為 80.2\%。其 Top-1 與 Single LLM 幾乎相同；TF--IDF 加邏輯迴歸在同來源資料上較強，但跨來源時明顯下降。最大已記錄的基準分歧類型為參考診斷已進入 Top-3 並通過準則核對，卻未被選為最終主診斷；在可進行準則分析的案例中，此類型占內部案例的 29.7\%，在 MDD-5k 中占 25.6\%。此模式支持主診斷選擇可能是瓶頸的假設，但不能證明 finalization 單獨造成分歧。所測試的主診斷選擇方法均未明確優於 Direct-Answer。
 
 HiED 並未證明最終診斷準確率較高。其主要貢獻是提出可稽核的雙路徑架構與分階段評估框架，使候選遺漏、準則不相容、資訊不足與主診斷選擇分歧能在同一病例中分別檢視。所有結果皆來自合成中文逐字稿，不構成臨床驗證。
 
@@ -104,7 +104,7 @@ Psychiatric differential diagnosis from a first-interview transcript requires co
 
 This thesis proposes HiED, a hybrid, evidence-grounded multi-agent framework for Chinese psychiatric transcripts. The diagnosis path retrieves similar cases and produces a Top-3 list and a proposed primary diagnosis. The criterion-checking path uses fourteen diagnosis-specific Criterion Checkers to label criteria as met, not met, or insufficient evidence and form a criterion-compatible set. HiED preserves these outputs and separately evaluates candidate coverage, criterion compatibility, and primary-diagnosis selection.
 
-On a fixed 1,000-case LingxiDiag-16K held-out set, HiED achieved 51.8\% Top-1 Accuracy and 80.2\% Top-3 Accuracy. Its Top-1 was almost identical to that of the Single LLM, while TF--IDF with logistic regression was stronger on same-source data but declined across sources. The largest disagreement group contained cases in which a reference diagnosis appeared in the Top-3 and passed criterion checking but was not selected as the final primary diagnosis. Among cases available for criterion analysis, this group accounted for 29.7\% internally and 25.6\% on MDD-5k. None of the tested primary-diagnosis selection methods clearly improved over Direct-Answer.
+On a fixed 1,000-case LingxiDiag-16K held-out set, HiED achieved 51.8\% Top-1 Accuracy and 80.2\% Top-3 Accuracy. Its Top-1 was almost identical to that of the Single LLM, while TF--IDF with logistic regression was stronger on same-source data but declined across sources. The largest recorded benchmark-disagreement group contained cases in which a reference diagnosis appeared in the Top-3 and passed criterion checking but was not selected as the final primary diagnosis. Among cases available for criterion analysis, this group accounted for 29.7\% internally and 25.6\% on MDD-5k. This pattern motivates the hypothesis of a primary-diagnosis selection bottleneck, but it does not establish a causal or clinically validated bottleneck. None of the tested primary-diagnosis selection methods clearly improved over Direct-Answer.
 
 HiED does not establish superior final-diagnosis accuracy. Its main contribution is an auditable two-path architecture and stage-wise evaluation framework that makes candidate omission, criterion incompatibility, missing information, and primary-diagnosis selection disagreement separately inspectable for the same case. All results come from synthetic Chinese transcripts and do not constitute clinical validation.
 
@@ -274,7 +274,7 @@ Multi-agent systems can also repeat the same mistake. Agents that use the same m
 
 This makes the source of a performance change hard to identify. If the candidate generator, evidence record, discussion process, and final rule all change together, a higher or lower final score is a result of the whole system. It does not show which part caused the change. A comparison with a Single LLM may also change the prompt, context, number of model calls, and compute.
 
-For this reason, candidate generation, criterion checking, and final commitment should be saved and evaluated separately. This does not make the components independent, but it shows more clearly where the recorded disagreement appears.
+For this reason, candidate generation, criterion checking, and final-primary selection should be saved and evaluated separately. This does not make the components independent, but it shows more clearly where the recorded disagreement appears.
 
 \section{Auditability and Criterion-Level Records}
 \label{sec:auditability-definition}
@@ -287,7 +287,7 @@ These records are useful only when the criteria and evidence links are reasonabl
 
 An auditable system should keep the source evidence, criterion states, rule results, intermediate diagnoses, and final decision. Even then, the record does not reveal hidden model reasoning. A criterion layer may be used only for review, or it may also affect final selection. These two roles should be tested separately because good evidence recording or high compatibility inclusion does not guarantee a good primary diagnosis.
 
-The remaining gap is therefore not only whether a system keeps intermediate records. The records must also be evaluated together on the same cases: Was the diagnosis available as a candidate? Did it enter the compatible set? Was it finally committed as primary?
+The remaining gap is therefore not only whether a system keeps intermediate records. The records must also be evaluated together on the same cases: Was the diagnosis available as a candidate? Did it enter the compatible set? Was it selected as the final primary diagnosis?
 
 \section{Primary Diagnosis Selection}
 
@@ -295,9 +295,9 @@ Criterion compatibility and primary-diagnosis selection answer different questio
 
 Structured medical knowledge can help organize evidence. MedKGI combines a medical knowledge graph, guided questions, and a structured dialogue state to seek useful information during diagnosis~\citep{wang2025medkgi}. DKEC builds knowledge graphs from outside medical sources and uses their links for multilabel diagnosis prediction~\citep{ge2024dkec}. These studies show how structured information can help collect evidence or predict labels. Their tested goals are different from choosing one primary diagnosis among several criterion-compatible psychiatric candidates in a fixed transcript.
 
-A primary selector may need to compare the candidates directly. Useful information may include symptom timing, duration, illness course, past episodes, other possible causes, which syndrome explains the case best, and whether more than one disorder is present. The reviewed methods can organize evidence or find plausible labels, but they do not directly test the case in which a benchmark-reference diagnosis remains ranked and criterion-compatible while another diagnosis is committed as primary.
+A primary selector may need to compare the candidates directly. Useful information may include symptom timing, duration, illness course, past episodes, other possible causes, which syndrome explains the case best, and whether more than one disorder is present. The reviewed methods can organize evidence or find plausible labels, but they do not directly test the case in which a benchmark-reference diagnosis remains ranked and criterion-compatible while another diagnosis is selected as the final primary diagnosis.
 
-This gap motivates three separate measures: genuine Top-3 candidate coverage, benchmark-reference inclusion in the criterion-compatible set, and committed-primary agreement.
+This gap motivates three separate measures: Top-3 candidate coverage, reference-diagnosis inclusion in the parent-level criterion-compatible set, and final-primary agreement.
 
 \section{Research Gap and Research Questions}
 
@@ -333,7 +333,7 @@ Constraint-logic CDSS~\citep{kim2025clp} & Structured patient facts & None & Ins
 \vspace{0.4em}
 \begin{minipage}{0.98\textwidth}
 \footnotesize
-\textit{Note.} ``Partial'' means that a study reports intermediate diagnostic or criterion-related outputs but does not separately evaluate candidate detection, criterion checking, and primary commitment on the same cases. ``Not reported'' refers only to the published evaluation and does not show that the implementation lacks the capability.
+\textit{Note.} ``Partial'' means that a study reports intermediate diagnostic or criterion-related outputs but does not separately evaluate candidate detection, criterion checking, and final-primary selection on the same cases. ``Not reported'' refers only to the published evaluation and does not show that the implementation lacks the capability.
 \end{minipage}
 \end{table}
 \FloatBarrier
@@ -342,19 +342,19 @@ The reviewed work leaves five questions that are directly related to this thesis
 
 \begin{enumerate}
     \item Conventional classifiers, Single LLMs, and multi-stage systems often use different prompts, model calls, retrieval settings, and output contracts. A final score therefore compares complete systems, not one isolated component.
-    \item Final-label accuracy does not show whether a reference diagnosis was missing from the candidates, absent from the criterion-compatible set, or available in both views but not committed as primary.
+    \item Final-label accuracy does not show whether a reference diagnosis was missing from the candidates, absent from the criterion-compatible set, or available in both views but not selected as the final primary diagnosis.
     \item Example retrieval depends on which examples are selected. Global similarity retrieval and label-aware balancing should therefore be compared within each architecture.
     \item Multi-agent and criterion-based selection methods often change several parts of the workflow at once. This makes it hard to claim that one final-selection component caused the result.
     \item A stage-wise analysis should be checked on a second synthetic source. One corpus cannot show whether the same output views remain useful after the data source changes.
 \end{enumerate}
 
-HiED addresses these questions by saving the ranked candidates, criterion states, criterion-compatible set, and final commitment under clear comparison rules.
+HiED addresses these questions by saving the ranked candidates, criterion states, criterion-compatible set, and final primary diagnosis under clear comparison rules.
 
 This thesis uses the following research questions:
 
 \begin{description}[style=nextline,leftmargin=1.5cm,labelwidth=1.1cm,itemsep=0pt,parsep=0pt,topsep=0pt,partopsep=0pt]
 \item[RQ1] How does HiED perform relative to conventional classification and a Single LLM on the same internal split and parent-label evaluation?
-\item[RQ2] Where is benchmark disagreement recorded across candidate generation, criterion checking, compatibility analysis, and primary commitment?
+\item[RQ2] Where is benchmark disagreement recorded across candidate generation, criterion checking, compatibility analysis, and final-primary selection?
 \item[RQ3] How do similar-case retrieval strategies affect Single and HiED?
 \item[RQ4] Do the tested primary-selection strategies reduce the recorded selection disagreement?
 \item[RQ5] Does the stage-wise analysis remain useful under a second synthetic source?
@@ -811,7 +811,7 @@ G_{\mathrm{in}}(x), & G_{\mathrm{in}}(x)\neq\varnothing,\\
 \{\mathrm{Others}\}, & G_{\mathrm{in}}(x)=\varnothing.
 \end{cases}
 \]
-Thus, when a case contains both an out-of-scope code and F41.1, its scored gold-label set is $\{\mathrm{F41}\}$ rather than $\{\mathrm{Others},\mathrm{F41}\}$. A case is in scope when $G_{\mathrm{in}}(x)$ is nonempty and out of scope otherwise. Because the main system has neither an \emph{Others} output nor a trained unknown detector, it cannot correctly represent an out-of-scope case.
+Thus, when a case contains both an out-of-scope code and F41.1, its scored gold-label set is $\{\mathrm{F41}\}$ rather than $\{\mathrm{Others},\mathrm{F41}\}$. A case is in scope when $G_{\mathrm{in}}(x)$ is nonempty and out of scope otherwise. Because the main system has neither an \emph{Others} output nor a trained unknown detector, it cannot correctly represent an out-of-scope case. TF--IDF with logistic regression is trained with \emph{Others} as a scoring class, whereas the Majority, Single, and HiED systems cannot emit \emph{Others}. The full 1,000-case comparison therefore combines in-scope diagnosis prediction with out-of-scope handling; it is not a common eleven-class in-scope comparison.
 
 For case $x$, $G(x)$ is the deduplicated gold-label set after parent-level projection; we refer to the individual labels in $G(x)$ as \emph{benchmark gold parents}. LingxiDiag cases may contain more than one gold parent label, and neither dataset provides a psychiatrist-reviewed unique clinical primary diagnosis. The first-listed gold parent is used only for explicitly single-label descriptive analyses such as the confusion matrix.
 
@@ -912,7 +912,7 @@ The evaluator keeps four output views separate:
 \begin{enumerate}[label=(\arabic*)]
 \item The \emph{primary view}, $p_1(x)$, is the final primary diagnosis.
 \item The \emph{ranked view}, $R_3(x)$, contains the first three distinct parent labels in a method's ranked output. TF--IDF with logistic regression obtains this view from ranked class scores. HiED obtains it from the Diagnostician ranking before DA or NtS finalization. A method that does not produce a ranked diagnostic list has no $R_3(x)$ view.
-\item The \emph{compatibility view}, $L(x)$, is the set of scoring parent labels classified as criterion-compatible by the Compatibility Auditor under the configured study rules.
+\item The \emph{compatibility view} has two levels. $L_{\mathrm{cat}}(x)$ is the set of the fourteen configured ICD-10 categories that pass their study-specific rules. The parent-level set is $L_{\mathrm{par}}(x)=\{\pi(c):c\in L_{\mathrm{cat}}(x)\}$ after subtype projection and deduplication. NtS uses $L_{\mathrm{cat}}(x)$ to compare configured category codes, while benchmark inclusion and $I(x)$ use $L_{\mathrm{par}}(x)$.
 \item The \emph{multilabel view}, $M(x)$, is the complete set of emitted parent labels used for Exact Match and F1. For DA, it contains the final primary diagnosis and any emitted comorbid parent label. For a single-label method, it contains one label.
 \end{enumerate}
 
@@ -939,7 +939,7 @@ Top-1 Accuracy & Final primary diagnosis, $p_1(x)$ & $p_1(x)\in G(x)$\\
 \hline
 Top-3 Accuracy & Ranked candidates, $R_3(x)$ & $R_3(x)\cap G(x)\neq\varnothing$\\
 \hline
-Gold-label inclusion & Criterion-compatible set, $L(x)$ & $L(x)\cap G(x)\neq\varnothing$\\
+Gold-label inclusion & Parent-level compatible set, $L_{\mathrm{par}}(x)$ & $L_{\mathrm{par}}(x)\cap G(x)\neq\varnothing$\\
 \hline
 Exact Match & Complete emitted set, $M(x)$ & $M(x)=G(x)$\\
 \hline
@@ -950,7 +950,7 @@ Weighted-F1 & Complete emitted set, $M(x)$ & The same label-level F1 scores weig
 \end{tabularx}
 \end{table}
 
-Top-1 and Top-3 Accuracy are computed over all evaluation cases. Top-3 Accuracy is reported only for a method with a ranked diagnostic list. Gold-label inclusion in the criterion-compatible set is computed over the cases with at least one non-\emph{Others} gold parent covered by a corresponding Criterion Checker.
+Top-1 and Top-3 Accuracy are computed over all evaluation cases. Top-3 Accuracy is reported only for a method with a ranked diagnostic list. Gold-label inclusion is computed with $L_{\mathrm{par}}(x)$ over cases with at least one non-\emph{Others} gold parent covered by a corresponding Criterion Checker. Category-level and parent-level compatible-set sizes are reported separately because subtype projection can collapse several configured categories into one scoring parent.
 
 \[
 \mathrm{Top\text{-}1\ Accuracy}=\frac{1}{N}\sum_{x=1}^{N}\mathbb{1}[p_1(x)\in G(x)],
@@ -1003,24 +1003,24 @@ First-listed-label agreement compares the final primary diagnosis only with the 
 \section{Case-Level Indicators for Disagreement Localization}
 \label{sec:case-level-indicators}
 
-The measures defined in the preceding section summarize performance across evaluation cases. For case-level disagreement localization, this thesis uses three corresponding binary indicators: Top-3 candidate detection, gold-label inclusion in the criterion-compatible set, and committed-primary agreement.
+The measures defined in the preceding section summarize performance across evaluation cases. For case-level disagreement localization, this thesis uses three corresponding binary indicators: Top-3 candidate detection, reference-diagnosis inclusion in the parent-level compatible set, and final-primary agreement.
 
 For case $x$,
 \[
 \begin{aligned}
 D_3(x) &= \mathbb{1}[R_3(x)\cap G(x)\neq\varnothing],\\
-I(x) &= \mathbb{1}[L(x)\cap G(x)\neq\varnothing],\\
+I(x) &= \mathbb{1}[L_{\mathrm{par}}(x)\cap G(x)\neq\varnothing],\\
 S(x) &= \mathbb{1}[p_1(x)\in G(x)].
 \end{aligned}
 \]
 
-$D_3(x)$ is the case-level indicator underlying Top-3 Accuracy: it equals one when at least one benchmark gold label appears in the genuine ranked Top-3. $I(x)$ equals one when the criterion-compatible set contains at least one benchmark gold label. $S(x)$ is the case-level indicator underlying committed Top-1 Accuracy: it equals one when the committed primary diagnosis matches at least one benchmark gold label.
+$D_3(x)$ is the case-level indicator underlying Top-3 Accuracy: it equals one when at least one benchmark gold label appears in the ranked Top-3. $I(x)$ equals one when the parent-level compatible set contains at least one benchmark gold label. $S(x)$ is the case-level indicator underlying Top-1 Accuracy: it equals one when the final primary diagnosis matches at least one benchmark gold label.
 
-Accordingly, Top-3 Accuracy is the mean of $D_3(x)$ across all evaluation cases, and committed Top-1 Accuracy is the mean of $S(x)$. The gold-label inclusion rate is the mean of $I(x)$ over checker-eligible cases.
+Accordingly, Top-3 Accuracy is the mean of $D_3(x)$ across all evaluation cases, and Top-1 Accuracy is the mean of $S(x)$. The reference-diagnosis inclusion rate is the mean of $I(x)$ over checker-eligible cases.
 
 $D_3$ and $S$ are available for all 1,000 internal evaluation cases, whereas $I$ is defined only for the 915 checker-eligible cases whose benchmark gold-label set contains at least one non-\emph{Others} parent represented by a corresponding Criterion Checker. The three aggregate rates therefore use different denominators and must not be interpreted as consecutive stages of one numerical funnel.
 
-These indicators describe complementary recorded output views for the same case. They do not imply that every finalization policy executes candidate ranking, criterion checking, and primary selection in this chronological order.
+These indicators describe complementary recorded output views for the same case. They do not imply that every finalization policy executes candidate ranking, criterion checking, and primary selection in this chronological order. In the preserved 1,000-case internal output, every benchmark-consistent final primary diagnosis also appeared in the recorded Top-3; no $D_3=0,S=1$ case occurred. The $D_3=1,I=1,S=0$ profile is therefore a final-primary-output disagreement profile. It motivates the hypothesis of a primary-diagnosis selection bottleneck, but it does not prove a causal or clinically validated bottleneck.
 
 \section{Statistical Analysis}
 
@@ -1120,10 +1120,12 @@ settings rather than the effect of label balance alone.
 Single and HiED select their retrieval settings separately because they
 produce different outputs.
 
-For Single, Global Top-5 is selected from the validation results. For
-HiED--DA, parent-balanced retrieval is retained by the predefined
-validation rule. The exact selection rule is reported in
-Appendix~\ref{app:supporting}.
+For Single, Global Top-5 was retained because it had the highest
+validation Top-1 Accuracy (0.519). For HiED--DA, parent-balanced
+retrieval was retained because it had the highest validation Top-3
+Accuracy (0.800), Macro-F1 (0.181), and Weighted-F1 (0.440), although
+Global Top-5 had a slightly higher Top-1 point estimate (0.525 versus
+0.523). These choices were fixed before the held-out set was evaluated.
 
 After these settings are selected, they are fixed before the internal
 held-out set is evaluated. RQ3 compares the three retrieval settings
@@ -1232,18 +1234,6 @@ diagnosis selection. However, it does not prove that the finalization
 method alone caused the disagreement. The Top-3, criterion states,
 compatible set, and final diagnosis are connected model outputs.
 
-\subsection{Supplementary Upper-Bound Analysis}
-\label{sec:oracle-design}
-
-A supplementary gold-informed analysis estimates how much improvement
-would be possible if every eligible reference diagnosis could be selected
-without creating a new error.
-
-This analysis directly uses the reference labels. It is therefore not a
-deployable selection method and is reported only as an optimistic upper
-bound. Its detailed rules are provided in
-Appendix~\ref{app:supporting}.
-
 \section{Primary-Diagnosis Selection Experiments}
 \label{sec:primary-selection-intervention-design}
 
@@ -1347,9 +1337,6 @@ The same $D_3$, $I$, and $S$ definitions are used for the internal and
 external datasets. The purpose is to compare the type of disagreement,
 not to assume that the two datasets should produce the same numerical
 rates.
-
-A secondary F32--F41 analysis is reported separately. It is not used as
-the main RQ5 result.
 
 The thesis also includes three supporting analyses:
 
@@ -1560,13 +1547,19 @@ HiED--DA & Parent-balanced & 0.518 & 0.802 & 0.409 & 0.178 & 0.434\\
 \parbox{0.96\textwidth}{\footnotesize
 \textit{Note.} TF--IDF + LR forms its Top-3 from the three highest class
 scores. HiED forms its Top-3 from the Diagnostician ranking. Exact Match
-and F1 use the complete diagnosis set produced by each method.
+and F1 use the complete diagnosis set produced by each method. The table
+also includes 85 \emph{Others} cases. TF--IDF + LR can emit
+\emph{Others}, whereas Majority, Single, and HiED cannot; the table is
+therefore a full benchmark comparison rather than a common in-scope-only
+comparison.
 }
 \end{table}
 
 TF--IDF with logistic regression has the highest same-source Top-1,
 Top-3, Macro-F1, and Weighted-F1. Single and HiED have almost the same
-Top-1 result, at 0.517 and 0.518.
+Top-1 result, at 0.517 and 0.518. Because the full table contains the
+\emph{Others} class, the TF--IDF advantage combines in-scope
+classification with out-of-scope handling.
 
 HiED therefore does not show an overall internal accuracy advantage.
 Its added value is that it also records the Top-3, criterion states, and
@@ -1613,9 +1606,12 @@ method.
 \subsection{Criterion-Compatible Set}
 \label{sec:criterion-checking}
 
-Among the 915 checker-eligible cases, the criterion-compatible set
-contains a reference diagnosis in 857 cases, or 93.7\%. The median
-compatible set contains six of the fourteen configured diagnoses.
+Among the 915 checker-eligible cases, the parent-level compatible set
+$L_{\mathrm{par}}(x)$ contains a reference diagnosis in 857 cases, or
+93.7\%. The median category-level set $L_{\mathrm{cat}}(x)$ contains
+six of fourteen configured categories, while the median parent-level
+set contains six of eleven scoring parents. The medians are equal, but
+they refer to different units.
 
 The criterion-checking path therefore usually retains a reference
 diagnosis, but it also retains several alternatives. It is useful for
@@ -1626,7 +1622,8 @@ enough to identify one primary diagnosis by itself.
 
 Table~\ref{tab:d3rs-joint} divides the 915 checker-eligible cases into
 four mutually exclusive groups using Top-3 detection ($D_3$),
-criterion-compatible inclusion ($I$), and final-primary agreement ($S$).
+parent-level compatible-set inclusion ($I$), and final-primary agreement
+($S$).
 
 \begin{table}[htbp]
 \centering
@@ -1669,13 +1666,15 @@ The largest disagreement group contains 272 cases. In these cases, a
 reference diagnosis is already present in both the Top-3 and the
 criterion-compatible set, but another diagnosis is selected as primary.
 
-This result locates the largest recorded disagreement at the final
-selection output. It does not prove that the finalization method alone
-caused the disagreement. The ranking, criterion states, compatible set,
-and final diagnosis are connected model outputs.
+This result locates the largest recorded benchmark disagreement at the
+final-primary output. It supports the hypothesis that primary-diagnosis
+selection may be a bottleneck under the tested setting, but it does not
+prove that finalization alone caused the disagreement. The ranking,
+criterion states, compatible set, and final diagnosis are connected
+model outputs.
 
-The complete six-profile distribution and the gold-informed optimistic
-upper-bound analysis are reported in Appendix~\ref{app:supporting}.
+The complete six-profile distribution is reported in
+Appendix~\ref{app:supporting}.
 
 \section{Primary-Diagnosis Selection Results}
 \label{sec:nts-factorial}
@@ -1823,8 +1822,10 @@ same-source classifier, while Single and HiED have almost the same
 Top-1 result.
 
 Third, HiED often places a reference diagnosis in both the Top-3 and the
-criterion-compatible set without selecting it as the final primary
-diagnosis. This is the largest recorded stage-wise disagreement group.
+parent-level compatible set without selecting it as the final primary
+diagnosis. This is the largest recorded final-primary-output
+disagreement profile and motivates, but does not prove, a causal
+selection-bottleneck interpretation.
 
 Fourth, none of the tested rules, LLM comparisons, debates, or repeated
 generation methods provides a clear and reliable improvement over
@@ -1870,8 +1871,8 @@ test population.
 \textbf{Top-3} &
 \shortstack{\textbf{Reference diagnosis}\\
 \textbf{in compatible set}} &
-\shortstack{\textbf{Median compatible}\\
-\textbf{set size}}\\
+\shortstack{\textbf{Median parent-level}\\
+\textbf{compatible-set size}}\\
 \hline
 LingxiDiag internal held-out &
 1,000 &
@@ -1912,9 +1913,9 @@ The difference between the two measures is 0.280, which is close to the
 internal difference of 0.284.
 
 Among the 878 checker-eligible MDD-5k cases, a reference diagnosis
-appears in the criterion-compatible set in 78.6\% of cases. This is
-lower than the internal value of 93.7\%. The median compatible set still
-contains six diagnoses.
+appears in the parent-level compatible set in 78.6\% of cases. This is
+lower than the internal value of 93.7\%. The median parent-level set
+contains six of the eleven scoring parents.
 
 These results show that candidate coverage, criterion compatibility, and
 the final primary diagnosis remain different output views on MDD-5k.
@@ -1931,7 +1932,8 @@ that are covered by the configured Criterion Checkers.
 \begin{table}[htbp]
 \centering
 \caption{Stage-wise results on the internal and external
-checker-eligible cases.}
+checker-eligible cases. The indicator $I$ uses the parent-level
+compatible set.}
 \label{tab:external-disagreement-profiles}
 \small
 \renewcommand{\arraystretch}{1.12}
@@ -1980,8 +1982,10 @@ the criterion-compatible set, but another diagnosis is selected as the
 final primary diagnosis.
 
 This group contains 272 internal cases, or 29.7\%, and 225 external
-cases, or 25.6\%. The exact rates are different, but the same form of
-primary-diagnosis selection disagreement remains visible.
+cases, or 25.6\%. The exact rates are different, but the same
+final-primary-output disagreement profile remains visible. This profile
+motivates a selection-bottleneck hypothesis; it does not establish one
+as a causal or clinically validated finding.
 
 The external data also contain more cases in which a reference diagnosis
 appears in the Top-3 but does not enter the criterion-compatible set:
@@ -2059,7 +2063,7 @@ improvement over DA.
 
 NtS, deterministic fusion, and debate all reduce Top-1. The large
 decreases show that passing the compatibility rules is not enough to
-identify the correct primary diagnosis.
+select a benchmark-consistent primary diagnosis.
 
 Pairwise comparison produces the same Top-1 as DA. Self-consistency has
 small positive point estimates, but the confidence intervals for both
@@ -2151,8 +2155,9 @@ The external results answer RQ5 with a limited conclusion. The same
 stage-wise analysis can be applied to MDD-5k, and the largest external
 disagreement group has the same form as the largest internal group: a
 reference diagnosis is already present in both the Top-3 and the
-criterion-compatible set but is not selected as the final primary
-diagnosis.
+parent-level compatible set but is not selected as the final primary
+diagnosis. This is an observed output profile rather than proof of a
+causal selection bottleneck.
 
 The numerical rates are not identical. In particular, reference-diagnosis
 inclusion in the criterion-compatible set is lower on MDD-5k. The result
@@ -2199,7 +2204,7 @@ $D_3=1$, $I=1$, and $S=0$. In these cases, a reference diagnosis is
 already present in both the Top-3 and the criterion-compatible set, but
 another diagnosis is selected as the final primary diagnosis.
 
-These cases are described as \emph{primary-diagnosis disagreements}.
+These cases are described as \emph{final-primary-output disagreements}.
 They should not be treated as complete omissions of the reference
 diagnosis. In some cases, a reference diagnosis may still appear as an
 optional comorbid diagnosis even though it is not selected as primary.
@@ -2244,7 +2249,7 @@ primary diagnosis.
 \begin{table}[htbp]
 \centering
 \caption{Most frequent diagnosis directions in the 272-case
-primary-diagnosis disagreement group.}
+final-primary-output disagreement group.}
 \label{tab:ch8-selection-pairs}
 \small
 \renewcommand{\arraystretch}{1.12}
@@ -2282,7 +2287,7 @@ and should not be interpreted as class-specific error rates.
 The five directions account for 222 of the 272 cases (81.6\%).
 F41-to-F32 alone accounts for 158 cases (58.1\%).
 
-This concentration shows that the primary-diagnosis disagreements are
+This concentration shows that the final-primary-output disagreements are
 not evenly distributed across diagnosis pairs. F32 is a frequent final
 choice, especially when the reference diagnosis is F41 or F39.
 
@@ -2418,7 +2423,7 @@ Table~\ref{tab:audit-trace-examples}.
 This chapter adds four findings to the stage-wise results reported in
 Chapter~\ref{ch:results}.
 
-First, in the 272-case primary-diagnosis disagreement group, the
+First, in the 272-case final-primary-output disagreement group, the
 reference diagnosis is more often ranked second than third. The system
 therefore often keeps the reference diagnosis as a close alternative.
 
@@ -2506,11 +2511,11 @@ is not selected as primary should be interpreted carefully. They show
 that candidate availability and criterion compatibility do not uniquely
 determine the final primary diagnosis.
 
-This supports describing primary diagnosis selection as the main
-observed bottleneck under the tested HiED setting. It does not prove that
-the finalization step alone caused every disagreement. It also does not
-prove that the dataset reference is the only clinically correct primary
-diagnosis.
+This supports the hypothesis that primary-diagnosis selection may be a
+bottleneck under the tested HiED setting. It does not establish a causal
+or clinically validated bottleneck, prove that finalization alone caused
+every disagreement, or show that the dataset reference is the only
+clinically correct primary diagnosis.
 
 The Chapter~\ref{ch:error} analysis shows another important distinction.
 In 109 internal cases, the final primary diagnosis matches a reference
@@ -3076,10 +3081,11 @@ criterion-compatible set. The largest internal disagreement group
 contains 272 of the 915 checker-eligible cases, or 29.7\%. In these cases,
 another diagnosis is selected as the final primary diagnosis.
 
-This is the largest observed disagreement group under the tested HiED
-setting. It does not prove that the finalization step alone caused the
-disagreement or that the dataset reference is the only clinically
-correct primary diagnosis.
+This is the largest observed final-primary-output disagreement profile
+under the tested HiED setting. It motivates the hypothesis of a
+primary-diagnosis selection bottleneck, but it does not prove that
+finalization alone caused the disagreement or that the dataset reference
+is the only clinically correct primary diagnosis.
 
 \item[RQ3]
 \textbf{How does similar-case retrieval affect Single and HiED?}
@@ -3273,7 +3279,7 @@ Several categories may pass their rules for the same transcript. The criterion-c
 \chapter{Supporting Experimental Configurations and Statistical Details}
 \label{app:supporting}
 
-This appendix gives details needed to read the supporting experiments. It lists the main differences among the tested primary-selection methods, the full paired-comparison statistics, and the exact model-scale results that are shortened in the main chapters.
+This appendix gives details needed to reproduce and interpret the main and supporting experiments. It records the main HiED configuration, transcript and retrieval procedures, complete stage-wise profiles, differences among the tested primary-selection methods, paired-comparison statistics, and exact model-scale results.
 
 It does not repeat the complete software implementation. Full prompts, case-level outputs, seed schedules, evaluation scripts, and executable configurations remain in the versioned project repository.
 
@@ -3282,6 +3288,145 @@ It does not repeat the complete software implementation. Full prompts, case-leve
 \par}
 
 The internal held-out set was created by largest-remainder allocation and sampling without replacement with NumPy seed 42. Its ordered case-ID fingerprint is \texttt{317a7633a339ae9a}.
+
+\section{Main-System Configuration}
+\label{sec:main-system-config}
+
+Table~\ref{tab:main-system-config} records the configuration used for the
+main internal HiED--DA result. The Diagnostician and Criterion Checkers
+use the same Qwen3-32B-AWQ backend. The Compatibility Auditor is the
+deterministic rule engine described in Appendix~\ref{app:configured-profile}.
+
+\begin{table}[htbp]
+\centering
+\caption{Main internal HiED--DA configuration.}
+\label{tab:main-system-config}
+\small
+\renewcommand{\arraystretch}{1.10}
+\begin{tabularx}{\textwidth}{|p{4.3cm}|X|}
+\hline
+\textbf{Setting} & \textbf{Value}\\
+\hline
+Model and serving & Qwen/Qwen3-32B-AWQ served with vLLM\\
+\hline
+LLM roles & The same backend is used by the Diagnostician and all Criterion Checkers\\
+\hline
+Diagnostic scope & Fourteen configured ICD-10 categories; manual closed-set scope\\
+\hline
+Prompt & \texttt{primary\_commit\_v1}, Traditional-Chinese output instructions\\
+\hline
+Decoding & Temperature 0, \texttt{top\_k}=1, thinking disabled\\
+\hline
+Generation limits & 8,192-token context, 1,536 maximum output tokens, at most three retries\\
+\hline
+Retrieval & Validation-selected parent-balanced case retrieval over the 13,000-case training index\\
+\hline
+Embedding and index & BGE-M3 normalized dense embeddings with a FAISS inner-product index\\
+\hline
+Run identifiers & Seed 42; configuration fingerprint \texttt{d5de4426a6695904}; case-order fingerprint \texttt{317a7633a339ae9a}\\
+\hline
+Final output & Direct-Answer keeps the Diagnostician's emitted primary diagnosis and optional comorbidity\\
+\hline
+\end{tabularx}
+\renewcommand{\arraystretch}{1.0}
+\end{table}
+
+The retrieval index and metadata each contain 13,000 training cases. The
+preserved run records store SHA-256 fingerprints beginning with
+\texttt{918d8513} for the FAISS index and \texttt{44e2cf6c} for the
+metadata. Global Top-5 returns the five nearest cases. Parent-balanced
+retrieval returns at most one case per represented scoring parent and
+orders the returned examples by similarity. The retrieved examples are
+provided only to the diagnosis path.
+
+\paragraph{Transcript construction and prompt budget.}
+Doctor and patient turns are kept in their recorded order. With the
+8,192-token context and 1,536-token output limit, the main prompt-budget
+procedure allows 10,137 transcript characters for the general and
+criterion-checking inputs. The Diagnostician and retrieval query use a
+10,598-character budget because they reserve a smaller safety margin.
+When a transcript exceeds the limit, complete turns are retained from the
+beginning and end in a 60/40 split, and an explicit omission marker is
+inserted between them. The same deterministic procedure is used for the
+internal and MDD-5k runs.
+
+\section{Compatibility-Set Units and Complete Stage-Wise Profiles}
+\label{sec:complete-stage-profiles}
+
+The Compatibility Auditor first produces the category-level set
+$L_{\mathrm{cat}}(x)$ over fourteen configured ICD-10 categories. The
+evaluator then projects and deduplicates it to the parent-level set
+$L_{\mathrm{par}}(x)$ over eleven scoring parents. On the 915 internal
+checker-eligible cases, the median category-level size is 6 of 14 and the
+median parent-level size is 6 of 11. Their means are 6.402 and 5.773,
+respectively. The inclusion indicator $I$ and all tables below use the
+parent-level set.
+
+Table~\ref{tab:internal-six-profiles} reports all observed internal
+$D_3/I/S$ combinations. The four-group table in Chapter~\ref{ch:results}
+combines the two $S=1$ rows because criterion compatibility is not needed
+to determine Top-1 agreement. The case-level audit found no
+$D_3=0,S=1$ case.
+
+\begin{table}[htbp]
+\centering
+\caption{Complete internal $D_3/I/S$ profiles on the 915 checker-eligible cases.}
+\label{tab:internal-six-profiles}
+\small
+\begin{tabular}{|c|c|c|r|r|}
+\hline
+$D_3$ & $I$ & $S$ & Cases & Share\\
+\hline
+0 & 0 & 0 & 34 & 3.7\%\\
+\hline
+0 & 1 & 0 & 79 & 8.6\%\\
+\hline
+1 & 0 & 0 & 12 & 1.3\%\\
+\hline
+1 & 0 & 1 & 12 & 1.3\%\\
+\hline
+1 & 1 & 0 & 272 & 29.7\%\\
+\hline
+1 & 1 & 1 & 506 & 55.3\%\\
+\hline
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:external-six-profiles} reports the corresponding complete
+profiles for the matched 925-case MDD-5k DA run, restricted to its 878
+checker-eligible cases. This is the same run used for the external
+primary-selection comparison; it is not combined with a different
+canonical-rescore or historical output.
+
+\begin{table}[htbp]
+\centering
+\caption{Complete external $D_3/I/S$ profiles on the 878 checker-eligible MDD-5k cases.}
+\label{tab:external-six-profiles}
+\small
+\begin{tabular}{|c|c|c|r|r|}
+\hline
+$D_3$ & $I$ & $S$ & Cases & Share\\
+\hline
+0 & 0 & 0 & 20 & 2.3\%\\
+\hline
+0 & 1 & 0 & 71 & 8.1\%\\
+\hline
+1 & 0 & 0 & 34 & 3.9\%\\
+\hline
+1 & 0 & 1 & 134 & 15.3\%\\
+\hline
+1 & 1 & 0 & 225 & 25.6\%\\
+\hline
+1 & 1 & 1 & 394 & 44.9\%\\
+\hline
+\end{tabular}
+\end{table}
+
+The $D_3=1,I=1,S=0$ rows in these tables are observed
+final-primary-output disagreement profiles. They support further study of
+primary-diagnosis selection, but they do not establish that finalization
+alone caused the disagreement or that the benchmark label is the unique
+clinical primary diagnosis.
 
 Table~\ref{tab:ch8-criterion-ratios} reports case-level distributions for Figure~\ref{fig:ch8-criterion-composition}. The 77,998 diagnosis-by-criterion states are not independent observations. In Table~\ref{tab:qwen-size-results}, parse recovery removes duplicate or invalid checker items while keeping valid records. Abstention and recovery are execution events, not diagnostic recovery. The model-scale analysis is limited to the Qwen3 family.
 
@@ -3296,7 +3441,7 @@ Table~\ref{tab:ch8-criterion-ratios} reports case-level distributions for Figure
 \hline
 Group & $N$ & \texttt{met} & \texttt{not\_met} & \shortstack{\texttt{insufficient\_}\\\texttt{evidence}}\\
 \hline
-Committed-primary agreement & 518 & 50.0 [46.2, 52.6] & 23.1 [19.2, 26.9] & 26.9 [23.1, 30.8]\\
+Final-primary agreement & 518 & 50.0 [46.2, 52.6] & 23.1 [19.2, 26.9] & 26.9 [23.1, 30.8]\\
 \hline
 Top-3 candidate miss & 113 & 48.7 [43.6, 52.6] & 21.8 [17.9, 26.9] & 28.2 [23.1, 35.9]\\
 \hline
@@ -3328,13 +3473,13 @@ Profile & Frozen record & Recorded outputs\\
 Profile & Frozen record & Recorded outputs\\
 \hline
 \endhead
-$D_3=0,I=0,S=0$ & Source line 6\newline Case \texttt{302945002} & Benchmark parent F31; Top-3 F32, F39, F41; compatible parents F43, F51, F32, F39, F98, F41; committed primary F32; no F31 criterion was marked \texttt{insufficient\_\allowbreak{}evidence}.\\
+$D_3=0,I=0,S=0$ & Source line 6\newline Case \texttt{302945002} & Benchmark parent F31; Top-3 F32, F39, F41; compatible parents F43, F51, F32, F39, F98, F41; final primary F32; no F31 criterion was marked \texttt{insufficient\_\allowbreak{}evidence}.\\
 \hline
-$D_3=1,I=0,S=0$ & Source line 26\newline Case \texttt{396572486} & Benchmark parent F32; Top-3 F39, F32, F41; compatible parents F51, Z71, F98; committed primary F39; F32 criteria B1, C2, C5, and C7 were marked \texttt{insufficient\_\allowbreak{}evidence}.\\
+$D_3=1,I=0,S=0$ & Source line 26\newline Case \texttt{396572486} & Benchmark parent F32; Top-3 F39, F32, F41; compatible parents F51, Z71, F98; final primary F39; F32 criteria B1, C2, C5, and C7 were marked \texttt{insufficient\_\allowbreak{}evidence}.\\
 \hline
-$D_3=1,I=0,S=1$ & Source line 46\newline Case \texttt{393127297} & Benchmark parent F32; Top-3 F32, F39, F51; compatible parents F51, F98, F39, F41; committed primary F32; all eleven recorded F32 criteria were marked \texttt{insufficient\_\allowbreak{}evidence}.\\
+$D_3=1,I=0,S=1$ & Source line 46\newline Case \texttt{393127297} & Benchmark parent F32; Top-3 F32, F39, F51; compatible parents F51, F98, F39, F41; final primary F32; all eleven recorded F32 criteria were marked \texttt{insufficient\_\allowbreak{}evidence}.\\
 \hline
-$D_3=1,I=1,S=0$ & Source line 25\newline Case \texttt{342807095} & Benchmark parent F32; Top-3 F20, F32, F41; compatible parents F43, F20, F32, F41, F39; committed primary F20; F32 criteria C2 and C7 were marked \texttt{insufficient\_\allowbreak{}evidence}.\\
+$D_3=1,I=1,S=0$ & Source line 25\newline Case \texttt{342807095} & Benchmark parent F32; Top-3 F20, F32, F41; compatible parents F43, F20, F32, F41, F39; final primary F20; F32 criteria C2 and C7 were marked \texttt{insufficient\_\allowbreak{}evidence}.\\
 \hline
 \end{longtable}
 \endgroup
