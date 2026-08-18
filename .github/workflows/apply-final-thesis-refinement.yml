@@ -66,8 +66,8 @@ jobs:
           rm -f school/main.aux school/main.bbl school/main.blg school/main.fdb_latexmk \
             school/main.fls school/main.log school/main.lof school/main.lot school/main.out \
             school/main.pdf school/main.toc school/main.xdv school/main.synctex.gz
+          rm -rf .github/scripts/final_rewrite_parts
           rm -f .github/scripts/apply_final_rewrite.py
-          rm -f .github/scripts/final_rewrite_payload.txt
           rm -f .github/workflows/apply-final-thesis-refinement.yml
           rmdir .github/scripts 2>/dev/null || true
           git add -A
