@@ -29,7 +29,7 @@ jobs:
       - name: Apply Chapter 3 patch
         run: |
           set -euo pipefail
-          python3 .github/scripts/revise_ch03.py
+          python3 .github/scripts/revise_ch03_loader.py
           git diff --check
 
       - name: Install thesis toolchain
@@ -90,14 +90,12 @@ jobs:
             THESIS_DIR=school
             THESIS=main.tex
             FIG_SRC_DIR=figures/src
-            FIG_OUT=figures/fig_pipeline_round20c.pdf
-            ALLOWED='^(school/main.tex|figures/src/fig_pipeline_round20c_tikz.tex|figures/fig_pipeline_round20c.pdf|\.github/scripts/revise_ch03.py|\.github/workflows/revise-ch03.yml)$'
+            ALLOWED='^(school/main.tex|figures/src/fig_pipeline_round20c_tikz.tex|figures/fig_pipeline_round20c.pdf|\.github/scripts/.*|\.github/workflows/revise-ch03.yml)$'
           else
             THESIS_DIR=paper/school
             THESIS=HiED_school_version.tex
             FIG_SRC_DIR=paper/figures/src
-            FIG_OUT=paper/figures/fig_pipeline_round20c.pdf
-            ALLOWED='^(paper/school/HiED_school_version.tex|paper/figures/src/fig_pipeline_round20c_tikz.tex|paper/figures/fig_pipeline_round20c.pdf|\.github/scripts/revise_ch03.py|\.github/workflows/revise-ch03.yml)$'
+            ALLOWED='^(paper/school/HiED_school_version.tex|paper/figures/src/fig_pipeline_round20c_tikz.tex|paper/figures/fig_pipeline_round20c.pdf|\.github/scripts/.*|\.github/workflows/revise-ch03.yml)$'
           fi
           pushd "$THESIS_DIR"
           latexmk -C "$THESIS" || true
@@ -106,7 +104,9 @@ jobs:
           rm -f "$FIG_SRC_DIR"/fig_pipeline_round20c_tikz.aux \
             "$FIG_SRC_DIR"/fig_pipeline_round20c_tikz.log \
             "$FIG_SRC_DIR"/fig_pipeline_round20c_tikz.pdf
+          rm -rf .github/scripts/ch03_parts
           rm -f .github/scripts/revise_ch03.py
+          rm -f .github/scripts/revise_ch03_loader.py
           rm -f .github/workflows/revise-ch03.yml
           rmdir .github/scripts 2>/dev/null || true
           git add -A
