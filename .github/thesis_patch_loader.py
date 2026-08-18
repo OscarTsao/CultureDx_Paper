@@ -10,8 +10,8 @@ payload = ''.join(
 )
 code = zlib.decompress(base64.b64decode(payload)).decode('utf-8')
 code, substitutions = re.subn(
-    r'3(?=[^\n]{0,160}chapter 8 group term)',
-    '1',
+    r'3,\s*\n\s*"chapter 8 group term"',
+    '1,\n    "chapter 8 group term"',
     code,
 )
 if substitutions != 1:
