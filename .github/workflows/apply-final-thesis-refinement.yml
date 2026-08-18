@@ -1,0 +1,73 @@
+name: Apply final approved thesis refinements
+
+on:
+  push:
+    branches:
+      - agent/final-thesis-approved-chapters
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-validate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out integration branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/final-thesis-approved-chapters
+          fetch-depth: 0
+
+      - name: Fetch approved Chapter 1 branch
+        run: |
+          set -euo pipefail
+          git fetch origin agent/ch01-introduction-review:refs/remotes/origin/agent/ch01-introduction-review
+
+      - name: Apply approved chapter rewrites
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/apply_final_rewrite.py
+          git diff --check
+
+      - name: Compile full thesis with XeLaTeX
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: main.tex
+          working_directory: school
+          compiler: latexmk
+          args: -xelatex -file-line-error -halt-on-error -interaction=nonstopmode
+          os: debian
+          extra_system_packages: "fonts-liberation fonts-noto-cjk poppler-utils"
+
+      - name: Validate thesis log
+        run: |
+          set -euo pipefail
+          test -s school/main.pdf
+          test -s school/main.log
+          if grep -E -q 'LaTeX Warning: (Citation|Reference).*undefined|Package natbib Warning: Citation.*undefined|There were undefined references|There were undefined citations|multiply defined|Missing character:' school/main.log; then
+            grep -E 'LaTeX Warning: (Citation|Reference).*undefined|Package natbib Warning: Citation.*undefined|There were undefined references|There were undefined citations|multiply defined|Missing character:' school/main.log || true
+            exit 1
+          fi
+          test "$(grep -c 'Overfull \\hbox' school/main.log || true)" -eq 0
+          test "$(grep -c 'Overfull \\vbox' school/main.log || true)" -eq 0
+          pdfinfo school/main.pdf | grep -E '^(Pages|Page size):'
+
+      - name: Commit source-only integration
+        run: |
+          set -euo pipefail
+          rm -f school/main.aux school/main.bbl school/main.blg school/main.fdb_latexmk \
+            school/main.fls school/main.log school/main.lof school/main.lot school/main.out \
+            school/main.pdf school/main.toc school/main.xdv school/main.synctex.gz
+          rm -f .github/scripts/apply_final_rewrite.py
+          rm -f .github/scripts/final_rewrite_payload.txt
+          rm -f .github/workflows/apply-final-thesis-refinement.yml
+          rmdir .github/scripts 2>/dev/null || true
+          git add -A
+          git diff --cached --check
+          unexpected=$(git diff --cached --name-only | grep -Ev '^(school/main.tex|\.github/scripts/.*|\.github/workflows/apply-final-thesis-refinement.yml)$' || true)
+          test -z "$unexpected"
+          git config user.name 'OpenAI Codex'
+          git config user.email 'noreply@openai.com'
+          git commit -m 'Apply approved thesis chapter refinements'
+          git push origin HEAD:agent/final-thesis-approved-chapters
