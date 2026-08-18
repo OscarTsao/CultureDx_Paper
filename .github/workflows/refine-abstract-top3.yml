@@ -1,0 +1,76 @@
+name: Refine abstracts and Top-3 metric
+
+on:
+  push:
+    branches:
+      - agent/abstract-top3-consistency
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-validate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out revision branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/abstract-top3-consistency
+          fetch-depth: 0
+
+      - name: Apply approved consistency patch
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/refine_abstract_top3.py
+          git diff --check
+
+      - name: Compile full thesis with XeLaTeX
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: main.tex
+          working_directory: school
+          compiler: latexmk
+          args: -xelatex -file-line-error -halt-on-error -interaction=nonstopmode
+          os: debian
+          extra_system_packages: "fonts-liberation fonts-noto-cjk poppler-utils"
+
+      - name: Validate thesis build and abstract pagination
+        run: |
+          set -euo pipefail
+          test -s school/main.pdf
+          test -s school/main.log
+          if grep -E -q 'LaTeX Warning: (Citation|Reference).*undefined|Package natbib Warning: Citation.*undefined|There were undefined references|There were undefined citations|multiply defined|Missing character:' school/main.log; then
+            grep -E 'LaTeX Warning: (Citation|Reference).*undefined|Package natbib Warning: Citation.*undefined|There were undefined references|There were undefined citations|multiply defined|Missing character:' school/main.log || true
+            exit 1
+          fi
+          test "$(grep -c 'Overfull \\hbox' school/main.log || true)" -eq 0
+          test "$(grep -c 'Overfull \\vbox' school/main.log || true)" -eq 0
+          pdftotext -f 2 -l 2 school/main.pdf /tmp/zh-abstract.txt
+          pdftotext -f 3 -l 3 school/main.pdf /tmp/en-abstract.txt
+          grep -q '中文摘要' /tmp/zh-abstract.txt
+          grep -q '關鍵詞' /tmp/zh-abstract.txt
+          grep -q 'Abstract' /tmp/en-abstract.txt
+          grep -q 'Keywords' /tmp/en-abstract.txt
+          if grep -q 'Acknowledgements' /tmp/en-abstract.txt; then
+            echo 'English abstract overflowed onto the acknowledgements page'
+            exit 1
+          fi
+
+      - name: Commit source-only patch
+        run: |
+          set -euo pipefail
+          rm -f school/main.aux school/main.bbl school/main.blg school/main.fdb_latexmk \
+            school/main.fls school/main.log school/main.lof school/main.lot school/main.out \
+            school/main.pdf school/main.toc school/main.xdv school/main.synctex.gz
+          rm -f .github/scripts/refine_abstract_top3.py
+          rm -f .github/workflows/refine-abstract-top3.yml
+          rmdir .github/scripts 2>/dev/null || true
+          git add -A
+          git diff --cached --check
+          unexpected=$(git diff --cached --name-only | grep -Ev '^school/main.tex$' || true)
+          test -z "$unexpected"
+          git config user.name 'OpenAI Codex'
+          git config user.email 'noreply@openai.com'
+          git commit -m 'Align abstracts and Top-3 metric definition'
+          git push origin HEAD:agent/abstract-top3-consistency
