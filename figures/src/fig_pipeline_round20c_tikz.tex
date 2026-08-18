@@ -82,7 +82,7 @@
 {\OutputTitle{Final primary}\\[-1pt]\OutputSub{diagnosis}};
 
 \draw[mainarrow] (transcript.north) |- (retriever.west);
-\draw[mainarrow] (transcript.east) -- (diagnostician.south);
+\draw[mainarrow] (transcript.east) -| (diagnostician.south);
 \draw[mainarrow] (transcript.south) |- (checker.west);
 \draw[mainarrow] (retriever.east) -- (retrieved.west);
 \draw[mainarrow] (retrieved.east) -- (diagnostician.west);
