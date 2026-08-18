@@ -207,15 +207,36 @@ For this reason, a useful decision-support system should provide more informatio
 \section{Problem Definition and Challenges}
 \label{sec:problem-definition}
 
-Large language models can process clinical dialogue and produce diagnostic outputs. Medical multi-agent systems can also divide tasks across several model calls and combine their outputs~\citep{li2024taiwan,raballo2025,sarma2025,tang2024medagents,kim2024mdagents}. These methods are useful for psychiatric transcript analysis, but a final diagnosis alone does not show where a disagreement appears.
+Large language models can process clinical dialogue, and medical
+multi-agent systems can divide diagnostic tasks across several model
+calls~\citep{li2024taiwan,raballo2025,sarma2025,tang2024medagents,kim2024mdagents}.
+However, a final diagnosis alone does not show how the system reached
+that result or where a benchmark disagreement became visible.
 
-A benchmark disagreement can appear at different stages. A dataset reference diagnosis may never enter the candidate list. It may enter the list but fail the criterion check. It may also appear in both the candidate list and the criterion-compatible set, but another diagnosis may still be selected as primary. These cases require different improvements, but one final accuracy score groups them together.
+The first challenge is incomplete evidence. This thesis studies
+differential diagnosis from one fixed psychiatric interview transcript.
+The system cannot ask follow-up questions or use information that is
+absent from the transcript. Important distinctions, such as symptom
+onset, duration, episode history, symptom order, and exclusionary causes,
+may therefore remain unresolved.
 
-In this thesis, a benchmark or dataset reference label is a diagnosis supplied by the dataset for scoring. It is not an independently reviewed clinical diagnosis. The recorded outputs therefore show where HiED agrees or disagrees with the benchmark; they do not by themselves show which diagnosis is clinically correct.
+The second challenge is comparison among compatible diagnoses. Several
+disorders may pass their own rules for the same transcript. The system
+must still decide which diagnosis best explains the current presentation,
+which diagnoses should remain differential alternatives, and whether
+another diagnosis should be recorded as comorbid.
 
-A strong same-source score may also reflect wording and label patterns that are specific to one dataset. It should not be treated as evidence of performance across different data sources. Same-source label prediction, cross-source transfer, and the amount of information provided for review are different questions.
+The third challenge is evaluation. A final accuracy score does not show
+whether a reference diagnosis was omitted from the candidate list, did
+not enter the criterion-compatible set, or remained available but was
+not selected as the final primary diagnosis. These patterns require
+different improvements.
 
-The main technical problem studied in this thesis is how to make the three diagnostic decisions separately visible. This allows us to identify whether a benchmark disagreement appears during candidate generation, criterion checking, or primary diagnosis selection. Cross-source testing is used as an additional boundary analysis rather than as the main contribution of HiED.
+The main problem addressed in this thesis is therefore how to keep
+candidate formation, criterion checking, and primary-diagnosis selection
+separately visible for the same case. The resulting analysis describes
+agreement with dataset reference labels and does not determine the
+clinically correct diagnosis.
 
 \section{Overview of HiED and Study Scope}
 
@@ -235,7 +256,7 @@ Second, it introduces a stage-wise evaluation method for locating benchmark disa
 
 \section{Thesis Organization}
 
-Chapter~\ref{ch:related} reviews related work on psychiatric large language models, medical multi-agent systems, criterion-based diagnosis, and auditable decision support. Chapter~\ref{ch:architecture} compares the Single LLM and HiED study architectures and follows a complete transcript through the recorded outputs. Chapter~\ref{ch:data} defines the datasets, label mapping, output views, evaluation measures, and statistical methods. Chapter~\ref{ch:experimental} describes the experimental design and the proposed future psychiatrist review. Chapters~\ref{ch:results} and~\ref{ch:external} report the internal and external synthetic results. Chapter~\ref{ch:error} examines the main recorded disagreement patterns. Chapters~\ref{ch:discussion}--\ref{ch:conclusion} discuss the findings, limitations, conclusions, and future work.
+Chapter~\ref{ch:related} reviews related work on psychiatric large language models, medical multi-agent systems, criterion-based diagnosis, and auditable decision support. Chapter~\ref{ch:architecture} compares the Single LLM and HiED study architectures and follows a complete transcript through the recorded outputs. Chapter~\ref{ch:data} defines the datasets, label mapping, output views, evaluation measures, and statistical methods. Chapter~\ref{ch:experimental} describes the experimental design for the completed computational studies. Chapters~\ref{ch:results} and~\ref{ch:external} report the internal and external synthetic results. Chapter~\ref{ch:error} examines the main recorded disagreement patterns. Chapters~\ref{ch:discussion}--\ref{ch:conclusion} discuss the findings, limitations, conclusions, and future work.
 
 \chapter{Related Work}
 \label{ch:related}
@@ -684,94 +705,109 @@ benchmark disagreement, not a confirmed clinical error. The transcript
 may be incomplete, and the dataset may not provide a unique
 psychiatrist-reviewed primary diagnosis.
 
-\section{Illustrative Example}
+\section{Worked Example of the Two-Path Workflow}
 \label{sec:running-example}
 \label{sec:worked-example}
 
-This section uses a constructed transcript to show how the two paths can
-lead to different final choices. The example is not a patient record, a
-LingxiDiag case, or a quantitative result.
+This constructed example follows one transcript through the diagnosis
+path, the criterion-checking path, and the final selection step. It is
+not a patient record, a LingxiDiag case, or a quantitative result.
 
-Table~\ref{tab:worked-example-criteria} summarizes the main information
-in the example.
+Table~\ref{tab:worked-example-flow} summarizes the outputs produced at
+each stage.
 
 \begin{table}[htbp]
 \centering
-\caption{Selected evidence and criterion states in the constructed
-example.}
-\label{tab:worked-example-criteria}
+\caption{Illustrative outputs from the two-path workflow.}
+\label{tab:worked-example-flow}
 \small
+\renewcommand{\arraystretch}{1.10}
 \begin{tabularx}{\textwidth}
-{|>{\raggedright\arraybackslash}p{2.4cm}|
- >{\raggedright\arraybackslash}p{5.0cm}|
+{|>{\raggedright\arraybackslash}p{3.35cm}|
  >{\raggedright\arraybackslash}X|}
 \hline
-\textbf{Diagnosis} & \textbf{Information in the transcript} &
-\textbf{Criterion result}\\
+\textbf{Stage} & \textbf{Illustrative output}\\
 \hline
-F32 &
+Transcript evidence &
 Low mood and loss of interest have continued for two weeks. Sleep,
-energy, concentration, and work function are affected. &
-The main symptoms and duration are supported. F32 is compatible.\\
+energy, concentration, and work function are affected. Worry is present,
+but its onset and related physical symptoms are unclear. The patient
+denies earlier periods of elevated mood and reduced need for sleep.\\
 \hline
-F41.1 &
-The patient reports worry about work and family, but cannot state when
-it began. The related physical symptoms are unclear. &
-Some evidence is present, but duration and associated symptoms remain
-insufficient.\\
+Similar-case retrieval &
+Similar training cases are supplied only to the Diagnostician. They guide
+candidate formation but are not treated as evidence about the current
+patient.\\
 \hline
-F31 &
-The patient denies earlier periods of elevated mood, increased activity,
-and reduced need for sleep. &
-A previous manic episode is not supported.\\
+Diagnostician &
+Ranked Top-3: F41.1, F32, F51. Proposed primary: F41.1. No optional
+comorbid diagnosis is emitted.\\
+\hline
+F32 Criterion Checker &
+Core symptoms, associated symptoms, two-week duration, and functional
+impairment are marked \texttt{met}.\\
+\hline
+F41.1 Criterion Checker &
+Worry is supported, but the required duration and associated symptoms
+are marked \texttt{insufficient evidence}.\\
+\hline
+F51 Criterion Checker &
+Sleep disturbance is present, but the configured frequency and duration
+requirements are marked \texttt{insufficient evidence}.\\
+\hline
+F31 Criterion Checker &
+A previous manic episode is marked \texttt{not met}.\\
+\hline
+Compatibility Auditor &
+The category-level set is
+$L_{\mathrm{cat}}=\{\mathrm{F32}\}$. After projection, the parent-level
+set is $L_{\mathrm{par}}=\{\mathrm{F32}\}$.\\
 \hline
 \end{tabularx}
+\renewcommand{\arraystretch}{1.0}
 \end{table}
 
-The diagnosis path and criterion-checking path then produce the outputs
-shown in Table~\ref{tab:worked-example-finalization}.
+The two finalization policies use the same transcript, ranked candidates,
+criterion states, and compatible set. Table~\ref{tab:worked-example-finalization}
+shows how their selection rules produce different final outputs.
 
 \begin{table}[htbp]
 \centering
-\caption{Illustrative outputs and final diagnoses.}
+\caption{Finalization of the illustrative example.}
 \label{tab:running-example}
 \label{tab:worked-example-finalization}
 \small
-\begin{tabularx}{0.9\textwidth}
-{|>{\raggedright\arraybackslash}p{4.2cm}|
- >{\raggedright\arraybackslash}X|}
+\renewcommand{\arraystretch}{1.10}
+\begin{tabularx}{0.92\textwidth}
+{|>{\raggedright\arraybackslash}p{2.4cm}|
+ >{\raggedright\arraybackslash}X|
+ >{\centering\arraybackslash}p{2.7cm}|}
 \hline
-\textbf{Output} & \textbf{Illustrative result}\\
+\textbf{Policy} & \textbf{Selection rule} & \textbf{Final primary}\\
 \hline
-Top-3 & F41.1, F32, F51\\
+Direct-Answer &
+Keep the primary diagnosis proposed by the Diagnostician. &
+F41.1\\
 \hline
-Diagnostician's proposed primary & F41.1\\
-\hline
-Criterion-compatible set & \{F32\}\\
-\hline
-DA final primary & F41.1\\
-\hline
-NtS final primary & F32\\
-\hline
-Main missing information &
-The onset and duration of the anxiety symptoms remain unclear.\\
+Nominate-then-Select &
+Select the highest-ranked Top-3 category that also belongs to
+$L_{\mathrm{cat}}$. &
+F32\\
 \hline
 \end{tabularx}
+\renewcommand{\arraystretch}{1.0}
 \end{table}
 
-DA keeps F41.1 because it is the Diagnostician's proposed primary
-diagnosis. NtS selects F32 because it is the highest-ranked candidate in
-the criterion-compatible set.
-
-The example shows why the outputs must remain separate. F32 is already
-present in the Top-3, while the criterion-checking path provides stronger
-support for F32 than for F41.1. The different final diagnoses come from
-the final selection rule, not from different transcripts or different
-criterion results.
+The example shows the role of every recorded output. Retrieval supports
+candidate formation, the Criterion Checkers produce diagnosis-specific
+states, the Compatibility Auditor forms the compatible set, and the
+finalization policy determines which available diagnosis becomes the
+final primary diagnosis.
 
 The example does not show that F32 is the clinically correct diagnosis
-or that NtS is the better method. It is used only to explain the system
-flow.
+or that NtS is the better method. It shows only how the same upstream
+outputs can lead to different final diagnoses when the selection rule
+changes.
 
 \section{Chapter Summary}
 
@@ -990,16 +1026,11 @@ This zero case matches the scoring implementation's \texttt{zero\_division=0} se
 \]
 Macro-F1 gives equal weight to all twelve scoring classes, including rare classes and \emph{Others}. Weighted-F1 gives more influence to classes with greater gold support and is therefore driven mainly by the frequent F32 and F41 labels in this study. Both measures evaluate the complete emitted set $M(x)$ and are sensitive to how many diagnoses a method emits.
 
-\subsection{Case-Level Metric Audit and Recalculation Boundary}
-\label{sec:metric-audit-boundary}
+The preserved HiED case-level outputs were independently rescored and
+reproduced the reported metrics. Detailed recalculation results,
+output-cardinality statistics, and result-provenance boundaries are
+reported in Appendix~\ref{app:supporting}.
 
-The 1,000-case output of the validation-selected HiED--DA parent-balanced configuration was independently rescored using the definitions above. The recalculation produced Top-1 Accuracy 0.518000, Top-3 Accuracy 0.802000, Exact Match 0.409000, Macro-F1 0.177577, and Weighted-F1 0.433738. These values reproduce the reported three-decimal results of 0.518, 0.802, 0.409, 0.178, and 0.434.
-
-The same audit found a mean gold-set size of 1.093 and a mean predicted-set size of 1.136. HiED--DA emitted one diagnosis for 864 cases and two diagnoses for 136 cases. These counts confirm that Exact Match, Macro-F1, and Weighted-F1 in the main table are complete-set measures rather than primary-only measures. Primary-only F1 was also calculated as an exploratory check, but it is not substituted for the prespecified set-based F1 values.
-
-For Majority, TF--IDF with logistic regression, and the validation-selected Single Global Top-5 configuration, only the retained aggregate headline results are used in this thesis. The available records do not support new paired case-level, output-overlap, or output-cardinality claims for those rows.
-
-First-listed-label agreement compares the final primary diagnosis only with the first-listed projected gold parent. It is used for the confusion matrix but not for the main result. It may differ from any-gold Top-1 Accuracy when a case contains more than one gold parent label.
 \section{Case-Level Indicators for Disagreement Localization}
 \label{sec:case-level-indicators}
 
@@ -1033,62 +1064,17 @@ Holm correction is applied when multiple prespecified tests belong to the same c
 \chapter{Experimental Design}
 \label{ch:experimental}
 
-This chapter describes how the experiments are organized. It explains
-which data are used for each analysis, how the retrieval settings are
-selected, how the main systems are compared, how stage-wise disagreement
-is measured, and how the primary-diagnosis selection methods are tested.
+This chapter explains how the completed computational experiments address
+RQ1--RQ5. Chapter~\ref{ch:data} defines the datasets, data splits,
+evaluation populations, label mapping, and measures. The validation set
+is used only for configuration selection, the fixed LingxiDiag held-out
+set is used for internal evaluation, and MDD-5k is used for external
+synthetic evaluation.
 
-All completed experiments use synthetic Chinese psychiatric dialogues.
-The proposed psychiatrist review at the end of this chapter is future
-work and provides no clinician-derived result in this thesis.
-
-\section{Study Sequence and Analysis Populations}
-\label{sec:experimental-overview}
-
-The study uses separate data for system development, internal evaluation,
-and external evaluation. Table~\ref{tab:analysis-populations} summarizes
-the three main analysis populations.
-
-\begin{table}[htbp]
-\centering
-\caption{Main analysis populations and their purposes.}
-\label{tab:analysis-populations}
-\small
-\renewcommand{\arraystretch}{1.12}
-\begin{tabularx}{\textwidth}
-{|>{\raggedright\arraybackslash}p{3.6cm}|
- >{\raggedright\arraybackslash}p{4.1cm}|
- >{\raggedright\arraybackslash}X|}
-\hline
-\textbf{Analysis} & \textbf{Data} & \textbf{Purpose}\\
-\hline
-Retrieval selection &
-LingxiDiag validation set,
-$N=1{,}000$ &
-Select one retrieval setting for Single and one for HiED.\\
-\hline
-Internal evaluation &
-LingxiDiag held-out set,
-$N=1{,}000$; $N=915$ for analyses that require Criterion Checker results &
-Compare the main systems, locate stage-wise disagreement, and test
-primary-diagnosis selection methods.\\
-\hline
-External evaluation &
-MDD-5k, $N=925$; $N=878$ for analyses that require Criterion Checker results &
-Test whether the same stage-wise analysis can be applied to a second
-synthetic dataset.\\
-\hline
-\end{tabularx}
-\renewcommand{\arraystretch}{1.0}
-\end{table}
-
-The validation set is used only to choose system settings. The selected
-settings are then evaluated on the fixed internal held-out set. The
-held-out results are not used to change the selected settings.
-
-MDD-5k does not take part in prompt, retrieval, or rule selection. It is
-used only as a second synthetic data source. None of these populations
-contains real-patient transcripts.
+All completed experiments use synthetic Chinese psychiatric dialogues,
+and no clinician-derived evaluation was conducted. The proposed
+psychiatrist review is described as future work in
+Chapter~\ref{ch:conclusion}.
 
 \section{Retrieval Selection and Internal Comparison}
 \label{sec:benchmark-retrieval-design}
@@ -1358,50 +1344,7 @@ The model-size and TF--IDF analyses help explain the limits of the
 observed results. They do not provide evidence of performance on natural
 clinical conversations.
 
-\section{Proposed Psychiatrist Review}
-\label{sec:clinical-evaluation-plan}
-\label{sec:lingxidiag-pilot-review}
 
-This review was not completed within the thesis period. It is included
-as a detailed plan for future work and provides no clinician-derived
-result in the present thesis.
-
-Twenty cases will be sampled from the 272 cases with
-$D_3=1$, $I=1$, and $S=0$. These are selected cases in which a reference
-diagnosis appears in both the Top-3 and the criterion-compatible set but
-is not selected as the final primary diagnosis.
-
-One psychiatrist will review the transcripts in a randomized order.
-During the first assessment, the psychiatrist will not see the dataset
-labels, HiED outputs, or the reason why the case was selected.
-
-For each transcript, the psychiatrist will record:
-
-\begin{enumerate}
-    \item whether the transcript supports one clear primary diagnosis,
-    only a provisional diagnosis, or no unique diagnosis;
-    \item one primary diagnosis;
-    \item up to three differential diagnoses; and
-    \item important missing information.
-\end{enumerate}
-
-After the first assessment is fixed, the dataset label will be compared
-with the psychiatrist's response. The analysis will report whether the
-dataset label:
-
-\begin{enumerate}
-    \item matches the psychiatrist's primary diagnosis;
-    \item appears in the psychiatrist's differential diagnosis;
-    \item is considered plausible but not primary;
-    \item is not supported by the transcript; or
-    \item cannot be judged because the transcript lacks enough
-    information.
-\end{enumerate}
-
-This review uses one psychiatrist and twenty selected synthetic cases.
-It can provide a preliminary check of benchmark-label alignment, but it
-cannot establish dataset-wide label validity, clinical diagnostic
-accuracy, or clinical validation of HiED.
 
 \chapter{Internal Evaluation Results}
 \label{ch:results}
@@ -2090,10 +2033,15 @@ datasets differ.
 synthetic datasets.}
 \label{tab:lexical-transfer-rewrite}
 \small
+\begingroup
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
 \begin{tabularx}{\textwidth}
-{|>{\raggedright\arraybackslash}p{3.3cm}|
- >{\raggedright\arraybackslash}p{3.3cm}|
- c|c|c|}
+{|>{\raggedright\arraybackslash}X|
+ >{\raggedright\arraybackslash}X|
+ >{\centering\arraybackslash}p{1.45cm}|
+ >{\centering\arraybackslash}p{1.45cm}|
+ >{\centering\arraybackslash}p{1.45cm}|}
 \hline
 \textbf{Training dataset} &
 \textbf{Evaluation dataset} &
@@ -2126,6 +2074,7 @@ LingxiDiag held-out &
 0.676\\
 \hline
 \end{tabularx}
+\endgroup
 
 \parbox{0.96\textwidth}{\footnotesize
 \textit{Note.} The MDD-5k source-matched result uses an 80/20 split and
@@ -3138,6 +3087,8 @@ research.
 
 \paragraph{Conduct a single-psychiatrist review of benchmark-label
 alignment.}
+\label{sec:clinical-evaluation-plan}
+\label{sec:lingxidiag-pilot-review}
 
 A future review will examine twenty selected LingxiDiag cases from the
 group with $D_3=1$, $I=1$, and $S=0$. These are cases in which a
@@ -3288,6 +3239,17 @@ It does not repeat the complete software implementation. Full prompts, case-leve
 \par}
 
 The internal held-out set was created by largest-remainder allocation and sampling without replacement with NumPy seed 42. Its ordered case-ID fingerprint is \texttt{317a7633a339ae9a}.
+
+\section{Metric Recalculation and Result Provenance}
+\label{sec:metric-audit-boundary}
+
+The 1,000-case output of the validation-selected HiED--DA parent-balanced configuration was independently rescored using the definitions above. The recalculation produced Top-1 Accuracy 0.518000, Top-3 Accuracy 0.802000, Exact Match 0.409000, Macro-F1 0.177577, and Weighted-F1 0.433738. These values reproduce the reported three-decimal results of 0.518, 0.802, 0.409, 0.178, and 0.434.
+
+The same audit found a mean gold-set size of 1.093 and a mean predicted-set size of 1.136. HiED--DA emitted one diagnosis for 864 cases and two diagnoses for 136 cases. These counts confirm that Exact Match, Macro-F1, and Weighted-F1 in the main table are complete-set measures rather than primary-only measures. Primary-only F1 was also calculated as an exploratory check, but it is not substituted for the prespecified set-based F1 values.
+
+For Majority, TF--IDF with logistic regression, and the validation-selected Single Global Top-5 configuration, only the retained aggregate headline results are used in this thesis. The available records do not support new paired case-level, output-overlap, or output-cardinality claims for those rows.
+
+First-listed-label agreement compares the final primary diagnosis only with the first-listed projected gold parent. It is used for the confusion matrix but not for the main result. It may differ from any-gold Top-1 Accuracy when a case contains more than one gold parent label.
 
 \section{Main-System Configuration}
 \label{sec:main-system-config}
