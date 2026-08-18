@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - agent/final-thesis-validity-repro-patch
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 permissions:
   contents: write
