@@ -7,6 +7,7 @@ on:
 permissions:
   contents: write
 
+# Temporary self-removing workflow for the approved abstract update.
 jobs:
   apply:
     runs-on: ubuntu-latest
