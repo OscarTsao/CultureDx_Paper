@@ -1,0 +1,61 @@
+name: PR-target apply Chapter 6-7 interpretation patch
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: write
+
+jobs:
+  patch-build-push:
+    if: github.event.pull_request.head.ref == 'agent/clarify-ch6-ch7-meaning-20260819'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/clarify-ch6-ch7-meaning-20260819
+
+      - name: Apply approved edits
+        run: python3 scripts/apply_ch6_ch7_meaning.py school/main.tex
+
+      - name: Install XeLaTeX and PDF tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            texlive-xetex texlive-lang-chinese texlive-latex-extra \
+            texlive-fonts-recommended texlive-bibtex-extra texlive-publishers \
+            fonts-noto-cjk fonts-liberation2 fonts-urw-base35 poppler-utils
+          fc-cache -f
+
+      - name: Build and validate thesis
+        working-directory: school
+        run: |
+          xelatex -interaction=nonstopmode -halt-on-error main.tex
+          bibtex main
+          xelatex -interaction=nonstopmode -halt-on-error main.tex
+          xelatex -interaction=nonstopmode -halt-on-error main.tex
+          if grep -Eq "Undefined control sequence|LaTeX Error|Package .* Error|Emergency stop|Fatal error|There were undefined references|Citation .* undefined|Reference .* undefined|Missing character|Overfull \\\\hbox|Overfull \\\\vbox" main.log; then exit 1; fi
+          pdftotext main.pdf main.txt
+          grep -F "409 of 518 HiED cases" main.txt
+          grep -F "190 losses versus 38 gains" main.txt
+
+      - name: Upload validation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chapter-6-7-interpretation-review
+          path: |
+            school/main.pdf
+            school/main.log
+            school/main.txt
+          if-no-files-found: error
+          retention-days: 2
+
+      - name: Commit thesis-only change
+        run: |
+          git config user.name "Yu-Ning Tsao"
+          git config user.email "186167885+OscarTsao@users.noreply.github.com"
+          git rm -f .github/workflows/apply-ch6-ch7-meaning.yml scripts/apply_ch6_ch7_meaning.py
+          git add school/main.tex
+          git commit -m "docs: clarify the meaning of Chapter 6 and 7 results"
+          git push origin HEAD:agent/clarify-ch6-ch7-meaning-20260819
