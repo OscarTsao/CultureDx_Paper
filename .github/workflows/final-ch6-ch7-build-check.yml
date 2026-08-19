@@ -1,0 +1,47 @@
+name: Final Chapter 6-7 thesis build check
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XeLaTeX and PDF tools
+        shell: bash
+        run: |
+          sudo -E apt-get update -qq
+          sudo -E apt-get install -y --no-install-recommends \
+            texlive-xetex texlive-lang-chinese texlive-latex-extra \
+            texlive-fonts-recommended texlive-bibtex-extra texlive-publishers \
+            fonts-noto-cjk fonts-liberation2 fonts-urw-base35 poppler-utils
+          fc-cache -f
+      - name: Build and validate thesis
+        shell: bash
+        working-directory: school
+        run: |
+          xelatex -interaction=nonstopmode -halt-on-error main.tex
+          bibtex main
+          xelatex -interaction=nonstopmode -halt-on-error main.tex
+          xelatex -interaction=nonstopmode -halt-on-error main.tex
+          if grep -Eq "Undefined control sequence|LaTeX Error|Package .* Error|Emergency stop|Fatal error|There were undefined references|Citation .* undefined|Reference .* undefined|Missing character|Overfull \\\\hbox|Overfull \\\\vbox" main.log; then exit 1; fi
+          pdftotext main.pdf main.txt
+          grep -F "518 HiED cases (79.0%)" main.txt
+          grep -F "190 losses versus 38 gains for NtS" main.txt
+      - name: Upload validation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-ch6-ch7-thesis-build
+          path: |
+            school/main.pdf
+            school/main.log
+            school/main.txt
+          if-no-files-found: error
+          retention-days: 2
