@@ -715,9 +715,11 @@ psychiatrist-reviewed primary diagnosis.
 
 A complete case-level example is provided in
 Appendix~\ref{app:workflow-example}. It reproduces the speaker-labeled
-transcript for synthetic LingxiDiag case P015 and the corresponding raw
-HiED-generated system report. The two source documents are the input and
-system-output views of the same case rather than two different cases.
+transcript for LingxiDiag source case 364295726 and the corresponding raw
+HiED-generated system report. This case was assigned the blinded study
+identifier P015 for review materials. The two source documents are the
+input and system-output views of the same case rather than two different
+cases.
 
 The appendix links the transcript, ranked candidates, criterion states,
 compatibility outputs, and final primary diagnosis. It is placed outside
@@ -3507,8 +3509,10 @@ Size & Single Top-1 & HiED--DA Top-1 & HiED Top-3 & Recorded execution event\\
 \label{app:workflow-example}
 
 This appendix reproduces the complete textual content of two attached
-source documents for the same synthetic LingxiDiag case, P015. The first
-is the two-page speaker-labeled transcript supplied to the system. The
+source documents for the same synthetic LingxiDiag source case,
+364295726. The case was assigned the blinded study identifier P015 in the
+review materials. The first is the two-page speaker-labeled transcript
+supplied to the system. The
 second is the five-page HiED-generated report produced from that
 transcript. Original source-page divisions are retained. The documents
 are included to illustrate the case-level workflow, not as a quantitative
@@ -3521,7 +3525,7 @@ the architecture described in Chapter~\ref{ch:architecture}.
 
 \begin{table}[htbp]
 \centering
-\caption{Crosswalk between the P015 artifacts and the HiED workflow.}
+\caption{Crosswalk between LingxiDiag source case 364295726 (blinded study ID P015) and the HiED workflow.}
 \label{tab:p015-artifact-crosswalk}
 \small
 \renewcommand{\arraystretch}{1.12}
@@ -3531,7 +3535,7 @@ the architecture described in Chapter~\ref{ch:architecture}.
 \hline
 \textbf{Workflow view} & \textbf{Artifact content}\\
 \hline
-Input & A two-page, speaker-labeled synthetic LingxiDiag transcript for blinded case P015.\\
+Input & A two-page, speaker-labeled synthetic LingxiDiag transcript for source case 364295726, presented under blinded study ID P015.\\
 \hline
 Diagnosis path & A ranked Top-5, an emitted primary diagnosis of F32, a confidence field, and an optional-comorbidity field.\\
 \hline
@@ -3541,7 +3545,7 @@ Compatibility output & Diagnosis-level threshold statements printed in the raw r
 \hline
 Final output & F32 is recorded as the system primary diagnosis.\\
 \hline
-Interpretation boundary & Both documents concern a synthetic case. The report is automatically generated and has not been reviewed or validated by a psychiatrist.\\
+Interpretation boundary & Both documents concern LingxiDiag source case 364295726. P015 is the blinded study ID used in the review materials. The report is automatically generated and has not been reviewed or validated by a psychiatrist.\\
 \hline
 \end{tabularx}
 \renewcommand{\arraystretch}{1.0}
@@ -3550,9 +3554,11 @@ Interpretation boundary & Both documents concern a synthetic case. The report is
 The source report was supplied under a filename containing
 \texttt{doctor\_review}, but its content contains no psychiatrist annotation
 or psychiatrist diagnosis. It is therefore described here as the
-\emph{HiED-generated system report for case P015}. The source case
-identifier printed in the report is retained because the case is
-synthetic; P015 remains the blinded identifier used in this thesis.
+\emph{HiED-generated system report for blinded study case P015}. The
+corresponding LingxiDiag source case ID is 364295726. P015 is a blinded
+study identifier, not the original dataset case ID. The mapping is shown
+in this appendix for reproducibility; reviewer-facing blinded materials
+should display P015 without the source ID.
 
 The report is reproduced without silently correcting its outputs. Several
 printed diagnosis-level threshold statements are internally inconsistent
@@ -3566,11 +3572,12 @@ the rules used in the thesis evaluation. Preserving these discrepancies
 shows why an inspectable report is not equivalent to a correct or
 clinically validated report.
 
-\section{Synthetic Input Transcript for Case P015}
+\section{Synthetic Input Transcript for LingxiDiag Source Case 364295726 (Blinded ID P015)}
 
 The following pages reproduce the attached transcript in searchable text.
-Spacing and line breaks follow the source-page extraction as closely as
-possible; the wording is unchanged.
+The source pages display the blinded study ID P015; the corresponding
+LingxiDiag source case ID is 364295726. Spacing and line breaks follow the
+source-page extraction as closely as possible; the wording is unchanged.
 
 \subsection*{Transcript source page 1 of 2}
 \VerbatimInput[breaklines=true,breakanywhere=true,fontsize=\footnotesize]{appendix_artifacts/p015_transcript_page1.txt}
@@ -3579,10 +3586,11 @@ possible; the wording is unchanged.
 \VerbatimInput[breaklines=true,breakanywhere=true,fontsize=\footnotesize]{appendix_artifacts/p015_transcript_page2.txt}
 \clearpage
 
-\section{Raw HiED-Generated System Report for Case P015}
+\section{Raw HiED-Generated System Report for LingxiDiag Source Case 364295726 (Blinded ID P015)}
 
 The following pages reproduce the attached system report in searchable
-text. The report is included as a workflow artifact only. Its diagnostic
+text. Unlike the transcript, the report prints both P015 and source case ID
+364295726. The report is included as a workflow artifact only. Its diagnostic
 labels, criterion states, supporting text, confidence value, and threshold
 statements are model-generated outputs and must not be interpreted as
 medical advice or clinical validation.
