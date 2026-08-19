@@ -73,8 +73,7 @@ Common Mental Disorders in the Taiwanese Context\par}
 \begin{tabular}{@{}r@{\quad}l@{\quad}l@{}}
 指導教授 & 林維暘 & 博士\\[0.25cm]
          & 蔡佳玲 & 博士
-\end{tabular}\par
-}
+\end{tabular}\par}
 
 \vspace{0.9cm}
 
@@ -89,24 +88,28 @@ Common Mental Disorders in the Taiwanese Context\par}
 \pagenumbering{roman}
 \chapter*{中文摘要}
 \addcontentsline{toc}{chapter}{中文摘要}
-精神科初診逐字稿中的鑑別診斷，需要在證據不完整下比較多個可能疾病，而非只辨識一個標籤。醫師需整合症狀、病程、時序、功能影響、排除病因與共病，但一次晤談未必能取得所有必要資訊。大型語言模型能整理候選診斷與證據，但流暢輸出不代表候選完整、準則判斷有逐字稿支持，或主診斷選擇恰當。只看最終準確率，也無法判斷分歧出現在哪個階段。
+精神科初診逐字稿中的鑑別診斷，是在證據不完整下進行的比較式決策。多個疾病可能同時與同一份逐字稿相容，但系統仍須選出一個最終主診斷，並視需要保留共病。用來區分疾病的病程、發病時序、排除病因與共病關係，未必會在單次晤談中被完整引出。大型語言模型雖能處理這類逐字稿，但流暢輸出不代表可靠的鑑別診斷能力。
 
-本研究提出 HiED，一套用於中文精神科逐字稿的混合式、以證據為基礎的多代理框架。診斷路徑透過相似案例檢索產生 Top-3 與初步主診斷；準則核對路徑使用 14 個診斷類別專屬的 Criterion Checker，將準則判定為符合、不符合或資訊不足，並形成準則相容集合。HiED 保存這些輸出，分別評估候選覆蓋、準則相容與主診斷選擇。
+既有基準顯示，模型從粗粒度分類進入疾病層級鑑別時，表現會明顯下降。然而，多數評估仍只呈現最終診斷結果，無法說明分歧是因為參考診斷未進入候選、未通過準則核對，或已被保留卻未被選為最終主診斷。這些情況對應不同的系統問題，也需要不同的改善方法。
 
-在固定的 1,000 例 LingxiDiag-16K 內部保留測試集上，HiED 的 Top-1 Accuracy 為 51.8\%，Top-3 Accuracy 為 80.2\%。其 Top-1 與 Single LLM 幾乎相同；TF--IDF 加邏輯迴歸在同來源資料上較強，但跨來源時明顯下降。最大已記錄的基準分歧類型為參考診斷已進入 Top-3 並通過準則核對，卻未被選為最終主診斷；在可進行準則分析的案例中，此類型占內部案例的 29.7\%，在 MDD-5k 中占 25.6\%。此模式支持主診斷選擇可能是瓶頸的假設，但不能證明 finalization 單獨造成分歧。所測試的主診斷選擇方法均未明確優於 Direct-Answer。
+本研究提出 HiED，一套用於中文精神科逐字稿的混合式、以證據為基礎的多代理框架。診斷路徑產生排序候選與初步主診斷；準則核對路徑將診斷準則判定為符合、不符合或資訊不足，並形成準則相容集合。HiED 分別保存 Top-3、準則狀態、準則相容集合與最終主診斷，使候選覆蓋、準則相容與主診斷選擇能被分開評估。
 
-HiED 並未證明最終診斷準確率較高。其主要貢獻是提出可稽核的雙路徑架構與分階段評估框架，使候選遺漏、準則不相容、資訊不足與主診斷選擇分歧能在同一病例中分別檢視。所有結果皆來自合成中文逐字稿，不構成臨床驗證。
+在固定的 1,000 例 LingxiDiag-16K 內部保留測試集上，HiED 的 Top-1 Accuracy 為 51.8\%，Top-3 Accuracy 為 80.2\%。其 Top-1 與 Single LLM 幾乎相同；TF--IDF 搭配 logistic regression（LR）在同來源資料上較強，但跨來源時明顯下降。最大已記錄分歧類型為參考診斷已進入 Top-3 並存在於準則相容集合，卻未被選為最終主診斷；此類型占內部案例的 29.7\%，在 MDD-5k 中占 25.6\%。所測試的主診斷選擇方法均未明確優於 Direct-Answer。
+
+HiED 並未證明最終診斷準確率較高，也不能證明最終選擇模組單獨造成分歧。其兩項主要貢獻是提出可稽核的雙路徑架構，以及用於定位基準分歧的分階段評估框架。本文所稱的臺灣脈絡是預期應用情境；所有完成的量化結果皆來自合成中文逐字稿，不構成臺灣臨床驗證。
 
 \noindent\textbf{關鍵詞：}大型語言模型、多代理系統、精神科鑑別診斷、診斷準則、臨床決策支援、可稽核人工智慧
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
-Psychiatric differential diagnosis from a first-interview transcript requires comparing plausible disorders under incomplete evidence rather than assigning one label. Clinicians must integrate symptoms, course, timing, impairment, exclusionary causes, and comorbidity, but one interview may not provide all necessary information. Large language models can organize candidate diagnoses and evidence, but fluent output does not guarantee complete candidates, transcript-grounded criterion judgments, or appropriate primary-diagnosis selection. Final accuracy alone cannot show where disagreement appears.
+Differential diagnosis from an initial psychiatric interview transcript is a comparative decision under incomplete evidence. Several disorders may fit the same transcript, yet one must still be selected as the primary diagnosis. Key distinctions---illness course, onset timing, exclusionary causes, and comorbidity---may not be fully elicited in one interview. Large language models can process such transcripts, but fluent output does not guarantee reliable differential diagnosis.
 
-This thesis proposes HiED, a hybrid, evidence-grounded multi-agent framework for Chinese psychiatric transcripts. The diagnosis path retrieves similar cases and produces a Top-3 list and a proposed primary diagnosis. The criterion-checking path uses fourteen diagnosis-specific Criterion Checkers to label criteria as met, not met, or insufficient evidence and form a criterion-compatible set. HiED preserves these outputs and separately evaluates candidate coverage, criterion compatibility, and primary-diagnosis selection.
+Existing benchmarks show a marked drop from coarse classification to disorder-level differential diagnosis. Most evaluations still report only the final diagnosis and cannot show whether disagreement arose because a reference diagnosis was omitted from the candidates, rejected by criterion checking, or retained but not selected as the final primary diagnosis.
 
-On a fixed 1,000-case LingxiDiag-16K held-out set, HiED achieved 51.8\% Top-1 Accuracy and 80.2\% Top-3 Accuracy. Its Top-1 was almost identical to that of the Single LLM, while TF--IDF with logistic regression was stronger on same-source data but declined across sources. The largest recorded benchmark-disagreement group contained cases in which a reference diagnosis appeared in the Top-3 and passed criterion checking but was not selected as the final primary diagnosis. Among cases available for criterion analysis, this group accounted for 29.7\% internally and 25.6\% on MDD-5k. This pattern motivates the hypothesis of a primary-diagnosis selection bottleneck, but it does not establish a causal or clinically validated bottleneck. None of the tested primary-diagnosis selection methods clearly improved over Direct-Answer.
+This thesis proposes HiED, a hybrid, evidence-grounded multi-agent framework for Chinese psychiatric transcripts. The diagnosis path produces ranked candidates and a proposed primary diagnosis. The criterion-checking path assigns met, not met, or insufficient evidence states and forms a criterion-compatible set. HiED preserves the Top-3, criterion states, criterion-compatible set, and final primary diagnosis for stage-wise evaluation.
 
-HiED does not establish superior final-diagnosis accuracy. Its main contribution is an auditable two-path architecture and stage-wise evaluation framework that makes candidate omission, criterion incompatibility, missing information, and primary-diagnosis selection disagreement separately inspectable for the same case. All results come from synthetic Chinese transcripts and do not constitute clinical validation.
+On a 1,000-case LingxiDiag-16K held-out set, HiED achieved 51.8\% Top-1 Accuracy and 80.2\% Top-3 Accuracy. Its Top-1 was almost identical to that of the Single LLM, while TF--IDF with logistic regression was stronger on same-source data but declined across sources. The largest recorded disagreement group contained cases in which a reference diagnosis appeared in both the Top-3 and the criterion-compatible set but was not selected as the final primary diagnosis. This group accounted for 29.7\% internally and 25.6\% on MDD-5k. None of the tested selection methods clearly improved over Direct-Answer.
+
+HiED does not establish superior final-diagnosis accuracy or a clinically validated causal bottleneck. Its two main contributions are an auditable two-path architecture and a stage-wise evaluation framework for locating benchmark disagreement. The Taiwanese context denotes the intended application setting; all quantitative results come from synthetic Chinese transcripts and do not constitute clinical validation in Taiwan.
 
 \noindent\textbf{Keywords:} Large language models, multi-agent systems, psychiatric differential diagnosis, diagnostic criteria, clinical decision support, auditable AI
 \chapter*{Acknowledgements}
