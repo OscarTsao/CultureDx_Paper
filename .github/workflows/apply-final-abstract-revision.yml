@@ -1,9 +1,8 @@
-name: Apply final abstract revision
+name: Apply approved abstract revision
 
 on:
-  pull_request:
+  push:
     branches: [main]
-    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
@@ -14,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: agent/final-abstract-revision
+          ref: main
           fetch-depth: 0
 
       - name: Replace Chinese and English abstracts
@@ -65,11 +64,11 @@ HiED does not establish superior final-diagnosis accuracy or a clinically valida
           assert 'The Taiwanese context denotes the intended application setting' in updated
           PY
 
-      - name: Commit source-only revision
+      - name: Commit source and remove temporary workflow
         run: |
           git config user.name 'Yu-Ning Tsao'
           git config user.email '186167885+OscarTsao@users.noreply.github.com'
           git add school/main.tex
           git rm .github/workflows/apply-final-abstract-revision.yml
           git commit -m 'Refine Chinese and English abstracts'
-          git push origin agent/final-abstract-revision
+          git push origin main
