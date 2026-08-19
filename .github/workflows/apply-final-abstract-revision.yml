@@ -2,7 +2,7 @@ name: Apply approved abstract revision
 
 on:
   issues:
-    types: [opened]
+    types: [opened, reopened]
 
 permissions:
   contents: write
