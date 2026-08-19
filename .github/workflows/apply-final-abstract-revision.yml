@@ -1,9 +1,9 @@
 name: Apply final abstract revision
 
 on:
-  push:
-    branches:
-      - agent/final-abstract-revision
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
