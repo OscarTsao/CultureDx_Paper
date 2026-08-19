@@ -15,6 +15,7 @@
 \makeatother
 \usepackage{booktabs,array,tabularx,longtable,multirow,adjustbox,float,placeins}
 \usepackage{enumitem,setspace}
+\usepackage{fvextra}
 % CCU 學位論文格式規範（90 年版）版面：上 2.5 / 下 2.5 / 左 3 / 右 2 cm；
 % footskip=1cm 使頁碼落於版面底端上方 1.5 cm 處。若系所模板另有規定，以模板為準。
 \usepackage[top=2.5cm,bottom=2.5cm,left=3cm,right=2cm,footskip=1cm]{geometry}
@@ -708,109 +709,22 @@ benchmark disagreement, not a confirmed clinical error. The transcript
 may be incomplete, and the dataset may not provide a unique
 psychiatrist-reviewed primary diagnosis.
 
-\section{Worked Example of the Two-Path Workflow}
+\section{End-to-End Workflow Example}
 \label{sec:running-example}
 \label{sec:worked-example}
 
-This constructed example follows one transcript through the diagnosis
-path, the criterion-checking path, and the final selection step. It is
-not a patient record, a LingxiDiag case, or a quantitative result.
+A complete case-level example is provided in
+Appendix~\ref{app:workflow-example}. It reproduces the speaker-labeled
+transcript for synthetic LingxiDiag case P015 and the corresponding raw
+HiED-generated system report. The two source documents are the input and
+system-output views of the same case rather than two different cases.
 
-Table~\ref{tab:worked-example-flow} summarizes the outputs produced at
-each stage.
-
-\begin{table}[htbp]
-\centering
-\caption{Illustrative outputs from the two-path workflow.}
-\label{tab:worked-example-flow}
-\small
-\renewcommand{\arraystretch}{1.10}
-\begin{tabularx}{\textwidth}
-{|>{\raggedright\arraybackslash}p{3.35cm}|
- >{\raggedright\arraybackslash}X|}
-\hline
-\textbf{Stage} & \textbf{Illustrative output}\\
-\hline
-Transcript evidence &
-Low mood and loss of interest have continued for two weeks. Sleep,
-energy, concentration, and work function are affected. Worry is present,
-but its onset and related physical symptoms are unclear. The patient
-denies earlier periods of elevated mood and reduced need for sleep.\\
-\hline
-Similar-case retrieval &
-Similar training cases are supplied only to the Diagnostician. They guide
-candidate formation but are not treated as evidence about the current
-patient.\\
-\hline
-Diagnostician &
-Ranked Top-3: F41.1, F32, F51. Proposed primary: F41.1. No optional
-comorbid diagnosis is emitted.\\
-\hline
-F32 Criterion Checker &
-Core symptoms, associated symptoms, two-week duration, and functional
-impairment are marked \texttt{met}.\\
-\hline
-F41.1 Criterion Checker &
-Worry is supported, but the required duration and associated symptoms
-are marked \texttt{insufficient evidence}.\\
-\hline
-F51 Criterion Checker &
-Sleep disturbance is present, but the configured frequency and duration
-requirements are marked \texttt{insufficient evidence}.\\
-\hline
-F31 Criterion Checker &
-A previous manic episode is marked \texttt{not met}.\\
-\hline
-Compatibility Auditor &
-The category-level set is
-$L_{\mathrm{cat}}=\{\mathrm{F32}\}$. After projection, the parent-level
-set is $L_{\mathrm{par}}=\{\mathrm{F32}\}$.\\
-\hline
-\end{tabularx}
-\renewcommand{\arraystretch}{1.0}
-\end{table}
-
-The two finalization policies use the same transcript, ranked candidates,
-criterion states, and compatible set. Table~\ref{tab:worked-example-finalization}
-shows how their selection rules produce different final outputs.
-
-\begin{table}[htbp]
-\centering
-\caption{Finalization of the illustrative example.}
-\label{tab:running-example}
-\label{tab:worked-example-finalization}
-\small
-\renewcommand{\arraystretch}{1.10}
-\begin{tabularx}{0.92\textwidth}
-{|>{\raggedright\arraybackslash}p{2.4cm}|
- >{\raggedright\arraybackslash}X|
- >{\centering\arraybackslash}p{2.7cm}|}
-\hline
-\textbf{Policy} & \textbf{Selection rule} & \textbf{Final primary}\\
-\hline
-Direct-Answer &
-Keep the primary diagnosis proposed by the Diagnostician. &
-F41.1\\
-\hline
-Nominate-then-Select &
-Select the highest-ranked Top-3 category that also belongs to
-$L_{\mathrm{cat}}$. &
-F32\\
-\hline
-\end{tabularx}
-\renewcommand{\arraystretch}{1.0}
-\end{table}
-
-The example shows the role of every recorded output. Retrieval supports
-candidate formation, the Criterion Checkers produce diagnosis-specific
-states, the Compatibility Auditor forms the compatible set, and the
-finalization policy determines which available diagnosis becomes the
-final primary diagnosis.
-
-The example does not show that F32 is the clinically correct diagnosis
-or that NtS is the better method. It shows only how the same upstream
-outputs can lead to different final diagnoses when the selection rule
-changes.
+The appendix links the transcript, ranked candidates, criterion states,
+compatibility outputs, and final primary diagnosis. It is placed outside
+the main chapter so that the architecture description remains concise.
+The report is a model-generated research output, not a psychiatrist review
+or a clinical diagnosis. Its wording is preserved, while the appendix
+notes distinguish inspectability from correctness.
 
 \section{Chapter Summary}
 
@@ -3588,6 +3502,106 @@ Size & Single Top-1 & HiED--DA Top-1 & HiED Top-3 & Recorded execution event\\
 \end{tabularx}
 \renewcommand{\arraystretch}{1.0}
 \end{table}
+
+\chapter{End-to-End Workflow Example and Case-Level System Outputs}
+\label{app:workflow-example}
+
+This appendix reproduces the complete textual content of two attached
+source documents for the same synthetic LingxiDiag case, P015. The first
+is the two-page speaker-labeled transcript supplied to the system. The
+second is the five-page HiED-generated report produced from that
+transcript. Original source-page divisions are retained. The documents
+are included to illustrate the case-level workflow, not as a quantitative
+result, psychiatrist annotation, or clinical validation.
+
+\section{Artifact Crosswalk and Interpretation Boundary}
+
+Table~\ref{tab:p015-artifact-crosswalk} links the two source documents to
+the architecture described in Chapter~\ref{ch:architecture}.
+
+\begin{table}[htbp]
+\centering
+\caption{Crosswalk between the P015 artifacts and the HiED workflow.}
+\label{tab:p015-artifact-crosswalk}
+\small
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\textwidth}
+{|>{\raggedright\arraybackslash}p{3.4cm}|
+ >{\raggedright\arraybackslash}X|}
+\hline
+\textbf{Workflow view} & \textbf{Artifact content}\\
+\hline
+Input & A two-page, speaker-labeled synthetic LingxiDiag transcript for blinded case P015.\\
+\hline
+Diagnosis path & A ranked Top-5, an emitted primary diagnosis of F32, a confidence field, and an optional-comorbidity field.\\
+\hline
+Criterion-checking path & Criterion states and model-selected supporting text for all fourteen configured diagnostic categories.\\
+\hline
+Compatibility output & Diagnosis-level threshold statements printed in the raw report.\\
+\hline
+Final output & F32 is recorded as the system primary diagnosis.\\
+\hline
+Interpretation boundary & Both documents concern a synthetic case. The report is automatically generated and has not been reviewed or validated by a psychiatrist.\\
+\hline
+\end{tabularx}
+\renewcommand{\arraystretch}{1.0}
+\end{table}
+
+The source report was supplied under a filename containing
+\texttt{doctor\_review}, but its content contains no psychiatrist annotation
+or psychiatrist diagnosis. It is therefore described here as the
+\emph{HiED-generated system report for case P015}. The source case
+identifier printed in the report is retained because the case is
+synthetic; P015 remains the blinded identifier used in this thesis.
+
+The report is reproduced without silently correcting its outputs. Several
+printed diagnosis-level threshold statements are internally inconsistent
+with the criterion states shown in the same report and with the frozen
+operational rules in Appendix~\ref{app:configured-profile}. For example,
+F41.1 and F51 are printed as reaching the threshold even though their
+required duration criteria are shown as not met, and F31 is printed as
+reaching the threshold despite the manic-episode criteria being shown as
+not met. Appendix~\ref{app:configured-profile} remains authoritative for
+the rules used in the thesis evaluation. Preserving these discrepancies
+shows why an inspectable report is not equivalent to a correct or
+clinically validated report.
+
+\section{Synthetic Input Transcript for Case P015}
+
+The following pages reproduce the attached transcript in searchable text.
+Spacing and line breaks follow the source-page extraction as closely as
+possible; the wording is unchanged.
+
+\subsection*{Transcript source page 1 of 2}
+\VerbatimInput[breaklines=true,breakanywhere=true,fontsize=\footnotesize]{appendix_artifacts/p015_transcript_page1.txt}
+\clearpage
+\subsection*{Transcript source page 2 of 2}
+\VerbatimInput[breaklines=true,breakanywhere=true,fontsize=\footnotesize]{appendix_artifacts/p015_transcript_page2.txt}
+\clearpage
+
+\section{Raw HiED-Generated System Report for Case P015}
+
+The following pages reproduce the attached system report in searchable
+text. The report is included as a workflow artifact only. Its diagnostic
+labels, criterion states, supporting text, confidence value, and threshold
+statements are model-generated outputs and must not be interpreted as
+medical advice or clinical validation.
+
+\subsection*{System-report source page 1 of 5}
+\VerbatimInput[breaklines=true,breakanywhere=true,fontsize=\scriptsize]{appendix_artifacts/p015_report_page1.txt}
+\clearpage
+\subsection*{System-report source page 2 of 5}
+\VerbatimInput[breaklines=true,breakanywhere=true,fontsize=\scriptsize]{appendix_artifacts/p015_report_page2.txt}
+\clearpage
+\subsection*{System-report source page 3 of 5}
+\VerbatimInput[breaklines=true,breakanywhere=true,fontsize=\scriptsize]{appendix_artifacts/p015_report_page3.txt}
+\clearpage
+\subsection*{System-report source page 4 of 5}
+\VerbatimInput[breaklines=true,breakanywhere=true,fontsize=\scriptsize]{appendix_artifacts/p015_report_page4.txt}
+\clearpage
+\subsection*{System-report source page 5 of 5}
+\VerbatimInput[breaklines=true,breakanywhere=true,fontsize=\scriptsize]{appendix_artifacts/p015_report_page5.txt}
+\clearpage
 
 \renewcommand{\bibname}{References} % IEEE 慣例與 CCU「參考文獻」對齊
 \clearpage\phantomsection
