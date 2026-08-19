@@ -1,0 +1,83 @@
+name: Apply workflow example appendix
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - school/main.tex
+      - school/appendix_artifacts/**
+      - .github/apply_workflow_appendix_text.py
+      - .github/workflows/apply-workflow-appendix.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: workflow-appendix-culturedx-paper
+  cancel-in-progress: false
+
+jobs:
+  patch-build-commit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Apply approved workflow appendix patch
+        run: |
+          set -euo pipefail
+          python3 .github/apply_workflow_appendix_text.py school/main.tex
+          git diff --check
+          grep -Fq '\usepackage{fvextra}' school/main.tex
+          grep -Fq '\label{app:workflow-example}' school/main.tex
+          grep -Fq 'appendix_artifacts/p015_transcript_page1.txt' school/main.tex
+          grep -Fq 'appendix_artifacts/p015_report_page5.txt' school/main.tex
+
+      - name: Compile full thesis
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: main.tex
+          working_directory: school
+          compiler: latexmk
+          args: -xelatex -file-line-error -halt-on-error -interaction=nonstopmode
+          extra_system_packages: fonts-liberation fonts-noto-cjk
+
+      - name: Validate PDF and appendix content
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq poppler-utils
+          test -s school/main.pdf
+          test -s school/main.log
+          if grep -E -q 'LaTeX Warning: (Citation|Reference).*undefined|Package natbib Warning: Citation.*undefined|There were undefined references|There were undefined citations|multiply defined|Missing character:' school/main.log; then
+            grep -E 'LaTeX Warning: (Citation|Reference).*undefined|Package natbib Warning: Citation.*undefined|There were undefined references|There were undefined citations|multiply defined|Missing character:' school/main.log || true
+            exit 1
+          fi
+          test "$(grep -c 'Overfull \\hbox' school/main.log || true)" -eq 0
+          test "$(grep -c 'Overfull \\vbox' school/main.log || true)" -eq 0
+          pdftotext school/main.pdf school/main.txt
+          grep -Fq 'End-to-End Workflow Example and Case-Level System Outputs' school/main.txt
+          grep -Fq 'Artifact Crosswalk and Interpretation Boundary' school/main.txt
+          grep -Fq '病例代碼' school/main.txt
+          grep -Fq 'AI 診斷輔助系統輸出報告' school/main.txt
+          pages=$(pdfinfo school/main.pdf | awk '/^Pages:/ {print $2}')
+          echo "Compiled thesis pages: $pages"
+
+      - name: Commit final source and appendix artifacts
+        run: |
+          set -euo pipefail
+          rm -f school/main.pdf school/main.log school/main.txt school/main.aux school/main.bbl school/main.blg \
+            school/main.fdb_latexmk school/main.fls school/main.lof school/main.lot \
+            school/main.out school/main.toc school/main.xdv
+          rm -f .github/apply_workflow_appendix_text.py
+          rm -f .github/workflows/apply-workflow-appendix.yml
+          git add -A
+          git diff --cached --check
+          unexpected=$(git diff --cached --name-only | grep -Ev '^(school/main\.tex|school/appendix_artifacts/p015_(transcript|report)_page[1-5]\.txt|\.github/apply_workflow_appendix_text\.py|\.github/workflows/apply-workflow-appendix\.yml)$' || true)
+          test -z "$unexpected"
+          git config user.name 'OpenAI Codex'
+          git config user.email 'noreply@openai.com'
+          git commit -m 'Move workflow example to appendix and add P015 artifacts'
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
