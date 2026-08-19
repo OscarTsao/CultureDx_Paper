@@ -1,15 +1,15 @@
 name: Apply approved abstract revision
 
 on:
-  push:
-    branches: [main]
+  issues:
+    types: [opened]
 
 permissions:
   contents: write
 
-# Temporary self-removing workflow for the approved abstract update.
 jobs:
   apply:
+    if: github.event.issue.title == 'Apply approved abstract revision'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
