@@ -1,0 +1,27 @@
+name: Quick apply Chapter 6-7 interpretation patch
+
+on:
+  push:
+    branches:
+      - agent/clarify-ch6-ch7-meaning-20260819
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/clarify-ch6-ch7-meaning-20260819
+      - name: Apply and commit approved thesis edits
+        shell: bash
+        run: |
+          python3 scripts/apply_ch6_ch7_meaning.py school/main.tex
+          git config user.name "Yu-Ning Tsao"
+          git config user.email "186167885+OscarTsao@users.noreply.github.com"
+          git rm -f .github/workflows/apply-ch6-ch7-meaning.yml .github/workflows/quick-apply-ch6-ch7.yml scripts/apply_ch6_ch7_meaning.py
+          git add school/main.tex
+          git commit -m "docs: clarify the meaning of Chapter 6 and 7 results"
+          git push origin HEAD:agent/clarify-ch6-ch7-meaning-20260819
