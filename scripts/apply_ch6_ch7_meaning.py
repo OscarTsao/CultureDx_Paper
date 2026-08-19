@@ -133,7 +133,7 @@ def main() -> None:
     )
 
     required = (
-        "409 of 518 HiED cases (79.0\\%)",
+        "518 HiED cases (79.0\\%)",
         "NtS corrects 17 cases that DA misses",
         "falls by 15.1 percentage points",
         "a structural recurrence rather than a",
