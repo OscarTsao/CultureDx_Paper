@@ -1,0 +1,155 @@
+name: Fix P015 source-ID wording
+
+on:
+  push:
+    branches:
+      - agent/fix-p015-source-id-20260819
+
+permissions:
+  contents: write
+
+jobs:
+  patch-build-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - name: Correct source and blinded case identifiers
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("school/main.tex")
+          text = path.read_text(encoding="utf-8")
+
+          replacements = [
+              (
+                  """transcript for synthetic LingxiDiag case P015 and the corresponding raw
+          HiED-generated system report. The two source documents are the input and
+          system-output views of the same case rather than two different cases.""",
+                  """transcript for LingxiDiag source case 364295726 and the corresponding raw
+          HiED-generated system report. This case was assigned the blinded study
+          identifier P015 for review materials. The two source documents are the
+          input and system-output views of the same case rather than two different
+          cases.""",
+              ),
+              (
+                  """This appendix reproduces the complete textual content of two attached
+          source documents for the same synthetic LingxiDiag case, P015. The first
+          is the two-page speaker-labeled transcript supplied to the system.""",
+                  """This appendix reproduces the complete textual content of two attached
+          source documents for the same synthetic LingxiDiag source case,
+          364295726. The case was assigned the blinded study identifier P015 in the
+          review materials. The first is the two-page speaker-labeled transcript
+          supplied to the system.""",
+              ),
+              (
+                  r"\caption{Crosswalk between the P015 artifacts and the HiED workflow.}",
+                  r"\caption{Crosswalk between LingxiDiag source case 364295726 (blinded study ID P015) and the HiED workflow.}",
+              ),
+              (
+                  r"Input & A two-page, speaker-labeled synthetic LingxiDiag transcript for blinded case P015.\\",
+                  r"Input & A two-page, speaker-labeled synthetic LingxiDiag transcript for source case 364295726, presented under blinded study ID P015.\\",
+              ),
+              (
+                  r"Interpretation boundary & Both documents concern a synthetic case. The report is automatically generated and has not been reviewed or validated by a psychiatrist.\\",
+                  r"Interpretation boundary & Both documents concern LingxiDiag source case 364295726. P015 is the blinded study ID used in the review materials. The report is automatically generated and has not been reviewed or validated by a psychiatrist.\\",
+              ),
+              (
+                  """\emph{HiED-generated system report for case P015}. The source case
+          identifier printed in the report is retained because the case is
+          synthetic; P015 remains the blinded identifier used in this thesis.""",
+                  """\emph{HiED-generated system report for blinded study case P015}. The
+          corresponding LingxiDiag source case ID is 364295726. P015 is a blinded
+          study identifier, not the original dataset case ID. The mapping is shown
+          in this appendix for reproducibility; reviewer-facing blinded materials
+          should display P015 without the source ID.""",
+              ),
+              (
+                  r"\section{Synthetic Input Transcript for Case P015}",
+                  r"\section{Synthetic Input Transcript for LingxiDiag Source Case 364295726 (Blinded ID P015)}",
+              ),
+              (
+                  """The following pages reproduce the attached transcript in searchable text.
+          Spacing and line breaks follow the source-page extraction as closely as
+          possible; the wording is unchanged.""",
+                  """The following pages reproduce the attached transcript in searchable text.
+          The source pages display the blinded study ID P015; the corresponding
+          LingxiDiag source case ID is 364295726. Spacing and line breaks follow the
+          source-page extraction as closely as possible; the wording is unchanged.""",
+              ),
+              (
+                  r"\section{Raw HiED-Generated System Report for Case P015}",
+                  r"\section{Raw HiED-Generated System Report for LingxiDiag Source Case 364295726 (Blinded ID P015)}",
+              ),
+              (
+                  """The following pages reproduce the attached system report in searchable
+          text. The report is included as a workflow artifact only. Its diagnostic""",
+                  """The following pages reproduce the attached system report in searchable
+          text. Unlike the transcript, the report prints both P015 and source case ID
+          364295726. The report is included as a workflow artifact only. Its diagnostic""",
+              ),
+          ]
+
+          for old, new in replacements:
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"Expected one occurrence, found {count}: {old[:100]!r}")
+              text = text.replace(old, new)
+
+          path.write_text(text, encoding="utf-8")
+          PY
+
+      - name: Validate identifier wording
+        shell: bash
+        run: |
+          grep -F "LingxiDiag source case 364295726" school/main.tex
+          grep -F "blinded study identifier P015" school/main.tex
+          grep -F "P015 is a blinded" school/main.tex
+          if grep -Fq "synthetic LingxiDiag case P015" school/main.tex; then
+            echo "Outdated wording remains" >&2
+            exit 1
+          fi
+
+      - name: Install XeLaTeX dependencies
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            texlive-xetex texlive-latex-extra texlive-fonts-recommended \
+            texlive-bibtex-extra fonts-noto-cjk fonts-liberation2 fonts-urw-base35
+          fc-cache -f
+
+      - name: Compile full thesis
+        shell: bash
+        working-directory: school
+        run: |
+          xelatex -interaction=nonstopmode -halt-on-error main.tex
+          bibtex main
+          xelatex -interaction=nonstopmode -halt-on-error main.tex
+          xelatex -interaction=nonstopmode -halt-on-error main.tex
+          if grep -Eq "Undefined control sequence|LaTeX Error|Package .* Error|Emergency stop|Fatal error" main.log; then
+            exit 1
+          fi
+          if grep -Eq "There were undefined references|Citation .* undefined|Reference .* undefined" main.log; then
+            exit 1
+          fi
+          if grep -Fq "Missing character" main.log; then
+            exit 1
+          fi
+
+      - name: Remove temporary workflow and commit final thesis change
+        shell: bash
+        run: |
+          rm .github/workflows/fix-p015-source-id.yml
+          git config user.name "Yu-Ning Tsao"
+          git config user.email "186167885+OscarTsao@users.noreply.github.com"
+          git add school/main.tex .github/workflows/fix-p015-source-id.yml
+          git diff --cached --check
+          git commit -m "Clarify LingxiDiag source and blinded case IDs"
+          git push origin HEAD:${GITHUB_REF_NAME}
