@@ -51,11 +51,10 @@ jobs:
           if-no-files-found: error
           retention-days: 2
 
-      - name: Commit thesis-only change
+      - name: Commit thesis change
         run: |
           git config user.name "Yu-Ning Tsao"
           git config user.email "186167885+OscarTsao@users.noreply.github.com"
-          git rm -f .github/workflows/apply-ch6-ch7-meaning.yml scripts/apply_ch6_ch7_meaning.py
           git add school/main.tex
           git commit -m "docs: clarify the meaning of Chapter 6 and 7 results"
           git push origin HEAD:agent/clarify-ch6-ch7-meaning-20260819
