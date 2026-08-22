@@ -24,7 +24,7 @@
 \newcommand{\OutputTitle}[1]{{\bfseries\fontsize{11.2}{12.6}\selectfont #1}}
 \newcommand{\OutputSub}[1]{{\fontsize{9.2}{10.5}\selectfont #1}}
 \newcommand{\LegendText}[1]{{\fontsize{9.2}{10.4}\selectfont #1}}
-\newcommand{\LaneLabel}[1]{{\bfseries\fontsize{14.5}{16.0}\selectfont #1}}
+\newcommand{\LaneLabel}[1]{{\bfseries\fontsize{11.7}{12.8}\selectfont #1}}
 
 \begin{document}
 \begin{tikzpicture}[
@@ -45,8 +45,10 @@
 \fill[lanefill, rounded corners=6pt] (3.07,1.91) rectangle (18.05,4.17);
 \fill[lanefill, rounded corners=6pt] (3.07,-4.15) rectangle (18.45,-1.68);
 
-\node[text=laneBlue, anchor=west] at (0.18,3.73) {\LaneLabel{診斷線}};
-\node[text=laneBlue, anchor=west] at (0.18,-3.85) {\LaneLabel{準則驗證線}};
+\node[text=laneBlue, anchor=west] at (0.18,3.88) {\LaneLabel{DIAGNOSIS}};
+\node[text=laneBlue, anchor=west] at (0.18,3.43) {\LaneLabel{PATH}};
+\node[text=laneBlue, anchor=west] at (0.18,-3.47) {\LaneLabel{CRITERION-}};
+\node[text=laneBlue, anchor=west] at (0.18,-3.92) {\LaneLabel{CHECKING PATH}};
 
 \node[io, minimum width=2.30cm] (transcript) at (1.15,0.10)
 {\ModuleTitle{Transcript}\\[-1pt]\ModuleSub{Input}};
@@ -54,8 +56,8 @@
 \node[deterministic, minimum width=2.85cm] (retriever) at (4.50,2.90)
 {\ModuleTitle{Similar-Case}\\[-1pt]\ModuleTitle{Retriever}\\[-1pt]\ModuleSub{Fixed retrieval}};
 
-\node[outputbox, minimum width=1.95cm] (retrieved) at (8.26,2.90)
-{\OutputTitle{Similar}\\[-1pt]\OutputTitle{Cases}};
+\node[outputbox, minimum width=2.55cm] (retrieved) at (8.26,2.90)
+{\OutputTitle{Retrieved}\\[-1pt]\OutputTitle{Similar Cases}};
 
 \node[llm, minimum width=2.65cm] (diagnostician) at (11.93,2.90)
 {\ModuleTitle{Diagnostician}\\[-1pt]\ModuleTitle{Agent}};
@@ -64,7 +66,7 @@
 {\OutputTitle{Ranked Top-3}\\[-1pt]\OutputSub{Proposed primary}\\[-1pt]\OutputSub{Optional comorbidity}};
 
 \node[llm, minimum width=3.10cm] (checker) at (4.62,-2.70)
-{\ModuleTitle{Criterion Checker}\\[-1pt]\ModuleTitle{Agent}};
+{\ModuleTitle{Criterion Checker}\\[-1pt]\ModuleTitle{Agents}};
 
 \node[outputbox, minimum width=3.35cm, minimum height=1.48cm] (states) at (8.60,-2.70)
 {\OutputTitle{Criterion states}\\[-1pt]\OutputSub{met / not met}\\[-1pt]\OutputSub{insufficient evidence}};
@@ -78,8 +80,8 @@
 \node[deterministic, minimum width=2.95cm] (finalization) at (16.20,0.10)
 {\ModuleTitle{Finalization}\\[-1pt]\ModuleSub{DA / NtS}};
 
-\node[finalout, minimum width=2.95cm] (finalprimary) at (19.90,0.10)
-{\OutputTitle{Final primary}\\[-1pt]\OutputSub{diagnosis}};
+\node[finalout, minimum width=3.25cm] (finalprimary) at (19.90,0.10)
+{\OutputTitle{Committed Primary}\\[-1pt]\OutputSub{Diagnosis}};
 
 \draw[mainarrow] (transcript.north) |- (retriever.west);
 \draw[mainarrow] (transcript.east) -| (diagnostician.south);
