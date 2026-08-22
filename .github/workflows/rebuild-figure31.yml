@@ -1,0 +1,70 @@
+name: Rebuild Figure 3.1
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Install XeLaTeX and PDF tools
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo -E apt-get update -qq
+          sudo -E apt-get install -y --no-install-recommends \
+            texlive-xetex texlive-lang-chinese texlive-latex-extra \
+            texlive-fonts-recommended texlive-bibtex-extra texlive-publishers \
+            fonts-noto-cjk fonts-liberation2 poppler-utils
+          fc-cache -f
+
+      - name: Rebuild and validate Figure 3.1
+        run: |
+          cd figures/src
+          xelatex -interaction=nonstopmode -halt-on-error fig_pipeline_round20c_tikz.tex
+          cp fig_pipeline_round20c_tikz.pdf ../fig_pipeline_round20c.pdf
+          cd ../..
+          pdftotext figures/fig_pipeline_round20c.pdf figure31.txt
+          grep -F "DIAGNOSIS" figure31.txt
+          grep -F "CHECKING PATH" figure31.txt
+          grep -F "Retrieved" figure31.txt
+          grep -F "Committed Primary" figure31.txt
+          if grep -Eq "診斷線|準則驗證線" figures/src/fig_pipeline_round20c_tikz.tex; then
+            exit 1
+          fi
+
+      - name: Compile the thesis
+        working-directory: school
+        run: |
+          xelatex -interaction=nonstopmode -halt-on-error main.tex
+          bibtex main
+          xelatex -interaction=nonstopmode -halt-on-error main.tex
+          xelatex -interaction=nonstopmode -halt-on-error main.tex
+          if grep -Eq "Undefined control sequence|LaTeX Error|Package .* Error|Emergency stop|Fatal error|There were undefined references|Citation .* undefined|Reference .* undefined|Missing character|Overfull \\\\hbox|Overfull \\\\vbox" main.log; then
+            exit 1
+          fi
+
+      - name: Commit the rebuilt figure and remove this temporary workflow
+        run: |
+          rm .github/workflows/rebuild-figure31.yml
+          git add figures/src/fig_pipeline_round20c_tikz.tex \
+                  figures/fig_pipeline_round20c.pdf \
+                  .github/workflows/rebuild-figure31.yml
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "docs: rebuild Figure 3.1 with English labels"
+          git push origin HEAD:${{ github.head_ref }}
