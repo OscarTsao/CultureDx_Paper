@@ -26,7 +26,7 @@ jobs:
           sudo -E apt-get install -y --no-install-recommends \
             texlive-xetex texlive-lang-chinese texlive-latex-extra \
             texlive-fonts-recommended texlive-bibtex-extra texlive-publishers \
-            fonts-noto-cjk fonts-liberation2 poppler-utils
+            fonts-noto-cjk fonts-liberation2 fonts-urw-base35 poppler-utils
           fc-cache -f
 
       - name: Rebuild and validate Figure 3.1
